@@ -25,8 +25,8 @@ One particle system runs from the top of the page to the How We Work
 section. The same ~60k particles physically morph through six forms and stop
 on the last one:
 
-rocket → sphere → Services (radial dotted ring) → Staffing (3D wireframe
-handshake) → Why us (segmented block ring) → How we work (four-stage path).
+rocket → sphere → Services (radial dotted ring) → Staffing (a wireframe
+hand holding a globe) → Why us (segmented block ring) → How we work (four-stage path).
 
 They never fade: every particle breaks away, scatters, drifts, curves back and
 reassembles. Each particle keeps the rocket's colour (orange / blue / white)
@@ -76,7 +76,7 @@ story slot. `ParticleStory` renders an empty, sticky
 values blend across the same transition, from `HERO_LOOK` to `STORY_LOOK`:
 point size, noise, curve, pointer strength, tilt and bloom. The hero's spin
 slows and settles on a full turn, and a gentle sway takes over, so the
-handshake and path face the reader.
+hand-and-globe and the path face the reader.
 
 **Phones.** Once the band is pinned (`data-stuck`), it turns opaque so text
 scrolling beneath it is hidden. The layer then moves above the page (`z-20`)
@@ -91,7 +91,7 @@ nothing jumps at the handoff.
 | File | Role |
 |---|---|
 | `generateRocketParticles.ts` | Rocket from Lathe (ogive nose), Cylinder (body, nozzle), Extrude (4 fins), Sphere/Torus (porthole) + a volume exhaust plume; also its per-part colours |
-| `forms/*.ts` | `services`, `handshake`, `segmentedRing`, `process` |
+| `forms/*.ts` | `services`, `globeHand` (open hand under a globe: dotted continents from a noise land-mask on a lat/long dot grid, geodesic network cage, low-poly wireframe hand), `segmentedRing`, `process` |
 | `geometryToParticles.ts` | `geometryToParticlePositions` (area-weighted surface sampling, seeded), `geometryEdgesToParticlePositions` (points along triangle edges → wireframe look), merge/transform helpers |
 | `generateTarget.ts` | `FORMS` registry, `alignByHeight`, colours (`colorsForSequence`, `monochromeColors`) |
 | `stars.ts`, `palette.ts`, `random.ts` | Background stars, colours, seeded PRNG |
