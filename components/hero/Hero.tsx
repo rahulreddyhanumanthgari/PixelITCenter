@@ -46,7 +46,7 @@ export function Hero() {
 
             <h1
               id="hero-title"
-              className="font-display text-[clamp(3.1rem,11vw,5.25rem)] font-bold uppercase leading-[0.92] tracking-tight lg:text-[clamp(5rem,7.4vw,7.25rem)]"
+              className="font-display text-[clamp(3.1rem,11vw,5.25rem)] font-bold uppercase leading-[0.92] tracking-tight md:text-[clamp(3rem,min(7.4vw,10.5svh),5.25rem)] lg:text-[clamp(3.5rem,min(7.4vw,10.5svh),7.25rem)]"
             >
               {hero.headline.map((line) => (
                 <span key={line.text} className={cn("block", line.outline && "text-outline")}>
