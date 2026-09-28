@@ -5,10 +5,56 @@ import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import vertexShader from "@/shaders/particle.vert.glsl";
 import fragmentShader from "@/shaders/particle.frag.glsl";
-import { colorsForSequence, generateForm } from "@/lib/particles/generateTarget";
-import { ParticleController, createMorphGeometry } from "./ParticleController";
-import { MORPH_SEQUENCE, MORPH_TIMELINE, PARTICLE_CONFIG, SCENE_LAYOUT } from "./particle-config";
-import type { PointerState, ScrollState } from "./types";
+import {
+  colorsForSequence,
+  generateForm,
+  monochromeColors,
+  type FormName,
+} from "@/lib/particles/generateTarget";
+import { MorphController, createMorphGeometry, type MorphResolver } from "./MorphController";
+import type { PointerState, ProgressState } from "./types";
+
+/** How a particle system looks and moves. Every number is tunable. */
+export interface ParticleLook {
+  /** Point size in pixels for a particle 1 world unit from the camera. */
+  particleSize: number;
+  /** "form" = colours from the first form; "monochrome" = white/off-white. */
+  colors: "form" | "monochrome";
+  /** "spin" turns continuously; "sway" rocks gently so forms stay front-on. */
+  rotation: { mode: "spin" | "sway"; speed: number; amount: number };
+  wobbleAmount: number;
+  /** Resting tilt of the whole system, radians. */
+  baseTilt: readonly [number, number, number];
+  formNoise: number;
+  fieldNoise: number;
+  noiseScale: number;
+  curve: number;
+  mouseInfluence: number;
+  mouseRadius: number;
+  mouseTilt: number;
+  /** Small positional shift toward the pointer (world units). */
+  mouseParallax: number;
+  /** Fraction of the gap closed toward a target per frame at 60fps. */
+  damping: number;
+  /** Multiplier applied to motion, scatter and curves under reduced motion. */
+  reducedMotionFactor: number;
+  cameraZ: number;
+}
+
+interface ParticleSystemProps {
+  forms: readonly FormName[];
+  count: number;
+  look: ParticleLook;
+  resolve: MorphResolver;
+  /** The driving value (scroll), written by GSAP, read here every frame. */
+  progress: RefObject<ProgressState>;
+  pointer: RefObject<PointerState>;
+  offset: readonly [number, number, number];
+  scale: number;
+  scatter: number;
+  pixelRatio: number;
+  reducedMotion: boolean;
+}
 
 export interface MorphUniforms {
   [uniform: string]: THREE.IUniform;
@@ -28,17 +74,6 @@ export interface MorphUniforms {
   uMouse: THREE.IUniform<THREE.Vector3>;
 }
 
-interface ParticleMorphProps {
-  count: number;
-  offset: readonly [number, number, number];
-  scale: number;
-  scatter: number;
-  pixelRatio: number;
-  reducedMotion: boolean;
-  pointer: RefObject<PointerState>;
-  scroll: RefObject<ScrollState>;
-}
-
 /** Anywhere far from the particles, so the pointer push is off. */
 const MOUSE_PARKED = new THREE.Vector3(100, 100, 100);
 
@@ -52,48 +87,51 @@ function dampFactor(damping: number, delta: number): number {
 }
 
 /**
- * One THREE.Points whose particles morph between the forms in MORPH_SEQUENCE
- * as the hero is scrolled. All particle motion is in the vertex shader; this
- * component only feeds it progress, time, pointer and rotation.
+ * One THREE.Points whose particles physically morph between `forms`. All
+ * per-particle motion is in the vertex shader; this component only feeds it
+ * the morph progress, time, pointer and rotation.
  */
-export function ParticleMorph({
+export function ParticleSystem({
+  forms: formNames,
   count,
+  look,
+  resolve,
+  progress,
+  pointer,
   offset,
   scale,
   scatter,
   pixelRatio,
   reducedMotion,
-  pointer,
-  scroll,
-}: ParticleMorphProps) {
+}: ParticleSystemProps) {
   const rootRef = useRef<THREE.Group>(null);
   const tiltRef = useRef<THREE.Group>(null);
   const pointsRef = useRef<THREE.Points>(null);
 
-  const motion = reducedMotion ? PARTICLE_CONFIG.reducedMotionFactor : 1;
+  const motion = reducedMotion ? look.reducedMotionFactor : 1;
 
   // Every form is sampled once per mount with the same particle count.
   const { geometry, forms } = useMemo(() => {
-    const forms = MORPH_SEQUENCE.map((name, i) => generateForm(name, count, 101 + i * 7919));
-    const colors = colorsForSequence(MORPH_SEQUENCE[0], forms[0]);
+    const forms = formNames.map((name, i) => generateForm(name, count, 101 + i * 7919));
+    const colors = look.colors === "monochrome" ? monochromeColors(count) : colorsForSequence(formNames[0], forms[0]);
     return { geometry: createMorphGeometry(forms, colors), forms };
-  }, [count]);
+  }, [formNames, count, look.colors]);
 
   const material = useMemo(() => {
     const uniforms: MorphUniforms = {
       uTime: { value: 0 },
       uProgress: { value: 0 },
-      uSize: { value: PARTICLE_CONFIG.particleSize },
+      uSize: { value: look.particleSize },
       uPixelRatio: { value: 1 },
       uMotion: { value: 1 },
       uScatter: { value: 1 },
-      uCurve: { value: PARTICLE_CONFIG.curve },
-      uFormNoise: { value: PARTICLE_CONFIG.formNoise },
-      uFieldNoise: { value: PARTICLE_CONFIG.fieldNoise },
-      uNoiseScale: { value: PARTICLE_CONFIG.noiseScale },
-      uMouseInfluence: { value: PARTICLE_CONFIG.mouseInfluence },
-      uMouseRadius: { value: PARTICLE_CONFIG.mouseRadius },
-      uFocusDepth: { value: SCENE_LAYOUT.cameraZ },
+      uCurve: { value: look.curve },
+      uFormNoise: { value: look.formNoise },
+      uFieldNoise: { value: look.fieldNoise },
+      uNoiseScale: { value: look.noiseScale },
+      uMouseInfluence: { value: look.mouseInfluence },
+      uMouseRadius: { value: look.mouseRadius },
+      uFocusDepth: { value: look.cameraZ },
       uMouse: { value: MOUSE_PARKED.clone() },
     };
     return new THREE.ShaderMaterial({
@@ -104,16 +142,16 @@ export function ParticleMorph({
       depthWrite: false,
       blending: THREE.AdditiveBlending,
     });
-  }, []);
+  }, [look]);
 
   // Plain object held in a ref: the controller mutates geometry attributes.
-  const controllerRef = useRef<ParticleController | null>(null);
+  const controllerRef = useRef<MorphController | null>(null);
   useEffect(() => {
-    controllerRef.current = new ParticleController(geometry, forms, MORPH_TIMELINE);
+    controllerRef.current = new MorphController(geometry, forms, resolve);
     return () => {
       controllerRef.current = null;
     };
-  }, [geometry, forms]);
+  }, [geometry, forms, resolve]);
 
   // Settings that change rarely go into uniforms here, reached through the
   // ref so React never sees a hook value being mutated.
@@ -124,9 +162,9 @@ export function ParticleMorph({
     u.uPixelRatio.value = pixelRatio;
     u.uMotion.value = motion;
     u.uScatter.value = scatter * (reducedMotion ? 0.35 : 1);
-    u.uCurve.value = PARTICLE_CONFIG.curve * (reducedMotion ? 0.2 : 1);
-    u.uMouseInfluence.value = reducedMotion ? 0 : PARTICLE_CONFIG.mouseInfluence;
-  }, [pixelRatio, motion, scatter, reducedMotion]);
+    u.uCurve.value = look.curve * (reducedMotion ? 0.2 : 1);
+    u.uMouseInfluence.value = reducedMotion ? 0 : look.mouseInfluence;
+  }, [pixelRatio, motion, scatter, reducedMotion, look]);
 
   useEffect(() => () => geometry.dispose(), [geometry]);
   useEffect(() => () => material.dispose(), [material]);
@@ -139,7 +177,7 @@ export function ParticleMorph({
     plane: new THREE.Plane(new THREE.Vector3(0, 0, 1), 0),
     hit: new THREE.Vector3(),
     center: new THREE.Vector3(),
-    smoothScroll: 0,
+    smoothProgress: 0,
     spin: 0,
   });
 
@@ -155,38 +193,45 @@ export function ParticleMorph({
     const delta = Math.min(rawDelta, 1 / 20);
     const u = uniformsOf(points);
     u.uTime.value += delta;
+    const time = u.uTime.value;
 
-    const k = dampFactor(PARTICLE_CONFIG.damping, delta);
+    const k = dampFactor(look.damping, delta);
 
-    // --- morph: scroll progress → (form pair, transition progress) --------
+    // --- morph: driving value → (form pair, transition progress) ----------
     // Eased again on top of GSAP's scrub so fast wheel flicks stay smooth.
-    s0.smoothScroll += (scroll.current.progress - s0.smoothScroll) * k;
-    u.uProgress.value = controller.update(s0.smoothScroll);
+    s0.smoothProgress += (progress.current.value - s0.smoothProgress) * k;
+    u.uProgress.value = controller.update(s0.smoothProgress);
 
     // --- pointer: eased tilt/parallax, never mapped 1:1 -------------------
     const p = pointer.current;
     s0.smoothNdc.x += ((p.active ? p.x : 0) - s0.smoothNdc.x) * k;
     s0.smoothNdc.y += ((p.active ? p.y : 0) - s0.smoothNdc.y) * k;
-    const tiltAmount = PARTICLE_CONFIG.mouseTilt * (reducedMotion ? 0.25 : 1);
+    const tiltAmount = look.mouseTilt * (reducedMotion ? 0.25 : 1);
     tilt.rotation.set(
-      SCENE_LAYOUT.baseTilt[0] - s0.smoothNdc.y * tiltAmount,
-      SCENE_LAYOUT.baseTilt[1] + s0.smoothNdc.x * tiltAmount,
-      SCENE_LAYOUT.baseTilt[2],
+      look.baseTilt[0] - s0.smoothNdc.y * tiltAmount,
+      look.baseTilt[1] + s0.smoothNdc.x * tiltAmount,
+      look.baseTilt[2],
     );
     root.position.set(
-      offset[0] + s0.smoothNdc.x * 0.12 * motion,
-      offset[1] + s0.smoothNdc.y * 0.08 * motion,
+      offset[0] + s0.smoothNdc.x * look.mouseParallax * motion,
+      offset[1] + s0.smoothNdc.y * look.mouseParallax * 0.7 * motion,
       offset[2],
     );
 
-    // --- slow spin around the form's own axis + faint wobble --------------
-    s0.spin += delta * PARTICLE_CONFIG.rotationSpeed * motion;
-    const time = u.uTime.value;
-    const wobble = PARTICLE_CONFIG.wobbleAmount * motion;
-    points.rotation.set(Math.sin(time * 0.13) * wobble, s0.spin, Math.cos(time * 0.11) * wobble * 0.6);
+    // --- rotation: continuous spin, or a gentle sway that keeps forms ----
+    // --- facing the viewer; plus a faint wobble ---------------------------
+    const wobble = look.wobbleAmount * motion;
+    let yaw: number;
+    if (look.rotation.mode === "spin") {
+      s0.spin += delta * look.rotation.speed * motion;
+      yaw = s0.spin;
+    } else {
+      yaw = Math.sin(time * look.rotation.speed) * look.rotation.amount * motion;
+    }
+    points.rotation.set(Math.sin(time * 0.13) * wobble, yaw, Math.cos(time * 0.11) * wobble * 0.6);
 
     // --- pointer position in the particles' own space ---------------------
-    if (p.active && !reducedMotion) {
+    if (p.active && !reducedMotion && look.mouseInfluence > 0) {
       root.getWorldPosition(s0.center);
       s0.plane.constant = -s0.center.z;
       s0.ndc.set(s0.smoothNdc.x, s0.smoothNdc.y);
@@ -201,7 +246,7 @@ export function ParticleMorph({
 
   return (
     <group ref={rootRef} position={[offset[0], offset[1], offset[2]]} scale={scale}>
-      <group ref={tiltRef} rotation={[SCENE_LAYOUT.baseTilt[0], SCENE_LAYOUT.baseTilt[1], SCENE_LAYOUT.baseTilt[2]]}>
+      <group ref={tiltRef} rotation={[look.baseTilt[0], look.baseTilt[1], look.baseTilt[2]]}>
         <points ref={pointsRef} geometry={geometry} material={material} frustumCulled={false} />
       </group>
     </group>

@@ -1,4 +1,5 @@
 import { Hero } from "@/components/hero/Hero";
+import { ParticleStory } from "@/components/story/ParticleStory";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { ClientProof } from "@/components/sections/ClientProof";
@@ -18,10 +19,12 @@ export default function HomePage() {
       <main className="flex-1">
         <Hero />
         <ClientProof />
-        <Services />
-        <Staffing />
-        <WhyUs />
-        <Process />
+        <ParticleStory>
+          <Services />
+          <Staffing />
+          <WhyUs />
+          <Process />
+        </ParticleStory>
         <About />
         <Testimonials />
         <ContactCta />

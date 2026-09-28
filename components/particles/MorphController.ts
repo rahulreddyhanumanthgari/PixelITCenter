@@ -1,5 +1,8 @@
 import * as THREE from "three";
 import { mulberry32, randomUnitVector } from "@/lib/particles/random";
+import type { MorphState } from "./types";
+
+export type { MorphState };
 
 /** Relative lengths of the pieces of the scroll timeline. */
 export interface MorphTimeline {
@@ -9,11 +12,20 @@ export interface MorphTimeline {
   transition: number;
 }
 
-export interface MorphState {
-  from: number;
-  to: number;
-  /** 0 = fully `from`, 1 = fully `to`. Fed to the shader as uProgress. */
-  t: number;
+/** Turns a driving value into the (from, to, t) the shader needs. */
+export type MorphResolver = (value: number, formCount: number) => MorphState;
+
+/**
+ * Resolver for a "form position": 0 = first form, 1 = second, 2.5 = halfway
+ * between the third and fourth… Used when separate scroll triggers each
+ * drive one transition and their progress values are simply added up.
+ */
+export function resolveFormPosition(position: number, formCount: number): MorphState {
+  const last = formCount - 1;
+  if (last <= 0) return { from: 0, to: 0, t: 0 };
+  const p = Math.min(Math.max(position, 0), last);
+  const from = Math.min(Math.floor(p), last - 1);
+  return { from, to: from + 1, t: p - from };
 }
 
 /**
@@ -89,21 +101,21 @@ export function createMorphGeometry(forms: Float32Array[], colors: Float32Array,
  * form data only when the pair changes — i.e. once per transition boundary,
  * where from and to are visually identical, so the swap is invisible.
  */
-export class ParticleController {
+export class MorphController {
   private from = 0;
   private to = 1;
 
   constructor(
     private readonly geometry: THREE.BufferGeometry,
     private readonly forms: Float32Array[],
-    private readonly timeline: MorphTimeline,
+    private readonly resolve: MorphResolver,
   ) {
     this.to = Math.min(1, forms.length - 1);
   }
 
-  /** Returns the shader progress for this scroll position. */
-  update(progress: number): number {
-    const state = resolveMorph(progress, this.forms.length, this.timeline);
+  /** Returns the shader progress for this driving value. */
+  update(value: number): number {
+    const state = this.resolve(value, this.forms.length);
     if (state.from !== this.from || state.to !== this.to) {
       this.from = state.from;
       this.to = state.to;

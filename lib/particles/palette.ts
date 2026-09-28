@@ -4,6 +4,7 @@ export const PALETTE = {
   orange: "#ff7a2e",
   gold: "#ffb45c",
   white: "#f2f6ff",
+  offWhite: "#e5e7eb",
   blue: "#3b7cff",
   deepBlue: "#1f4fd6",
   background: "#05060a",
@@ -14,6 +15,7 @@ export const PALETTE_LINEAR = {
   orange: new THREE.Color(PALETTE.orange),
   gold: new THREE.Color(PALETTE.gold),
   white: new THREE.Color(PALETTE.white),
+  offWhite: new THREE.Color(PALETTE.offWhite),
   blue: new THREE.Color(PALETTE.blue),
   deepBlue: new THREE.Color(PALETTE.deepBlue),
 };

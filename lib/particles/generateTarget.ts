@@ -3,13 +3,25 @@ import { geometryToParticlePositions } from "./geometryToParticles";
 import { colorRocketParticles, generateRocketParticles } from "./generateRocketParticles";
 import { PALETTE_LINEAR, pushColor } from "./palette";
 import { mulberry32, smoothstep, type Rand } from "./random";
+import { generateServicesParticles } from "./forms/services";
+import { generateHandshakeParticles } from "./forms/handshake";
+import { generateSegmentedRingParticles } from "./forms/segmentedRing";
+import { generateProcessParticles } from "./forms/process";
 
 /**
  * Every form the particles can assemble into. To add one: write a generator
  * that returns `count` xyz positions (roughly within a radius of ~2.5 units)
  * and add it here; then list it in MORPH_SEQUENCE (particle-config.ts).
  */
-export type FormName = "rocket" | "sphere" | "torus" | "sculpture";
+export type FormName =
+  | "rocket"
+  | "sphere"
+  | "torus"
+  | "sculpture"
+  | "services"
+  | "handshake"
+  | "segmentedRing"
+  | "process";
 
 interface FormDefinition {
   generate: (count: number, rand: Rand) => Float32Array;
@@ -46,6 +58,11 @@ export const FORMS: Record<FormName, FormDefinition> = {
   sculpture: {
     generate: (count, rand) => sampleWithDepth(new THREE.TorusKnotGeometry(1.25, 0.34, 320, 32, 2, 3), count, rand, 0.1),
   },
+  // Section story forms (Services → Staffing → Why us → How we work).
+  services: { generate: generateServicesParticles },
+  handshake: { generate: generateHandshakeParticles },
+  segmentedRing: { generate: generateSegmentedRingParticles },
+  process: { generate: generateProcessParticles },
 };
 
 /**
@@ -112,6 +129,28 @@ export function colorsForSequence(firstForm: FormName, positions: Float32Array, 
     c.lerp(white, smoothstep(0.3, 1, n) * 0.6);
     const s = rand();
     pushColor(colors, i, c, s > 0.97 ? 1.7 : s < 0.22 ? 0.5 : 0.8 + rand() * 0.3);
+  }
+  return colors;
+}
+
+
+/**
+ * Monochrome colours for the section story: white and off-white points with
+ * a spread of brightness, and a very faint brand tint on a few percent of
+ * particles (the site's orange/blue accents, barely perceptible).
+ */
+export function monochromeColors(count: number, seed = 9): Float32Array {
+  const rand = mulberry32(seed);
+  const colors = new Float32Array(count * 3);
+  const c = new THREE.Color();
+  const { white, offWhite, orange, blue } = PALETTE_LINEAR;
+  for (let i = 0; i < count; i++) {
+    c.copy(white).lerp(offWhite, rand() * 0.8);
+    const tint = rand();
+    if (tint < 0.025) c.lerp(orange, 0.22);
+    else if (tint < 0.05) c.lerp(blue, 0.22);
+    const s = rand();
+    pushColor(colors, i, c, s > 0.97 ? 1.6 : s < 0.25 ? 0.45 : 0.7 + rand() * 0.35);
   }
   return colors;
 }

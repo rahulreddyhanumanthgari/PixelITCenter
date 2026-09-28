@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { SceneErrorBoundary } from "./SceneErrorBoundary";
+import { SceneErrorBoundary } from "@/components/particles/SceneErrorBoundary";
 
 // ssr: false has to live in a Client Component in the App Router. This keeps
 // three.js entirely out of the server render while the hero text stays SSR.

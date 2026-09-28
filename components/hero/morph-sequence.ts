@@ -2,7 +2,7 @@
 // it (to size the pinned scroll area) without pulling three into the server.
 
 import type { FormName } from "@/lib/particles/generateTarget";
-import type { MorphTimeline } from "./ParticleController";
+import type { MorphTimeline } from "@/components/particles/MorphController";
 
 /**
  * The forms the particles move through as the visitor scrolls the hero.

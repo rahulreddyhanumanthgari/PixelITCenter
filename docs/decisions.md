@@ -25,7 +25,7 @@ server-rendered HTML, so SEO does not depend on the 3D scene.
 in the App Router, hence the small wrapper. three.js never runs on the server,
 so there are no `window is not defined` or hydration errors.
 
-**No WebGL.** `ParticleScene` checks for WebGL before rendering, and
+**No WebGL.** `ParticleCanvas` checks for WebGL before rendering, and
 `SceneErrorBoundary` catches any other WebGL failure. Either way only the
 canvas is dropped — without this, a WebGL error takes down the whole page.
 
@@ -40,13 +40,58 @@ hold. They never fade — every particle physically travels.
 | File | Role |
 |---|---|
 | `generateRocketParticles.ts` | Rocket from Lathe (ogive nose), Cylinder (body, nozzle), Extrude (4 fins), Sphere/Torus (porthole) + a volume exhaust plume; also its per-part colours |
-| `geometryToParticles.ts` | `geometryToParticlePositions(geometry, count)` — area-weighted surface sampling (MeshSurfaceSampler), seeded, any vertex count |
-| `generateTarget.ts` | `FORMS` registry (rocket, sphere, torus, sculpture) and `alignByHeight` |
+| `geometryToParticles.ts` | `geometryToParticlePositions` (area-weighted surface sampling, seeded), `geometryEdgesToParticlePositions` (points along triangle edges → wireframe look), merge/transform helpers |
+| `forms/*.ts` | Section story forms: `services` (radial dotted ring), `handshake`, `segmentedRing`, `process` |
+| `generateTarget.ts` | `FORMS` registry, `alignByHeight`, colour schemes (`colorsForSequence`, `monochromeColors`) |
 | `stars.ts`, `palette.ts`, `random.ts` | Background stars, colours, seeded PRNG |
 
+**Shared components** (`components/particles/`): `ParticleSystem` (one
+`THREE.Points` + shader, configured by a `ParticleLook`), `ParticleCanvas`
+(camera, bloom, WebGL check, pauses off-screen), `MorphController`
+(`resolveMorph` for hold/transition timelines, `resolveFormPosition` for a
+0..N form position), `hooks.ts` (device tier, reduced motion, pointer) and
+`SceneErrorBoundary`. The hero and the section story are both built from
+these.
+
 **Adding a form:** add a generator to `FORMS`, then list it in
-`MORPH_SEQUENCE` (`components/hero/morph-sequence.ts`). The pinned scroll
-length grows automatically.
+`MORPH_SEQUENCE` (`components/hero/morph-sequence.ts`) or `STORY_FORMS`
+(`components/story/story-config.ts`). The hero's pinned scroll length grows
+automatically.
+
+### Section particle story
+
+One persistent particle system runs beside the Services, Staffing &
+Consulting, Why Pixel IT Center and How We Work sections. The same particles
+morph through four forms and stop on the last one:
+
+radial dotted ring → 3D wireframe handshake → segmented block ring →
+connected four-stage process path.
+
+- **Layout** (`components/story/ParticleStory.tsx`). On desktop the sections
+  sit in the left column and the canvas is sticky in the right column. On
+  phones the canvas is a sticky band under the header, with the text
+  scrolling beneath it. Either way, particles never sit on top of text.
+- **Scroll.** There is one ScrollTrigger per transition. Each scrubs 0→1 as
+  the next section's top moves from 92% to 22% of the viewport. Their sum is
+  the form position (0 = Services … 3 = How we work). It is reversible, and it
+  holds wherever the visitor stops.
+- **Holding.** Each section is at least a screen tall on desktop, so each form
+  holds before the next one assembles.
+- **Look.** Monochrome white/off-white points (`monochromeColors`), with
+  about 5% of particles faintly tinted with the brand orange or blue. The
+  forms sway rather than spin, so the handshake always faces the reader.
+  Bloom uses a high threshold and low intensity.
+- **Quality tiers:**
+
+  | Tier | Particles | DPR cap |
+  |---|---|---|
+  | Desktop | 55k | 2 |
+  | Tablet | 30k | 1.75 |
+  | Mobile | 14k | 1.5 |
+
+  Bloom and scatter also drop per tier.
+- **Two canvases.** The hero and the story each have a canvas. Only the
+  visible one renders; the other is paused by IntersectionObserver.
 
 **Shared particle order.** Every form is sorted by height (with jitter), so
 particle *i* sits at a similar height in each form. Colours are fixed per
