@@ -11,11 +11,11 @@ interface SectionHeaderProps {
 export function SectionHeader({ eyebrow, title, body, id, className }: SectionHeaderProps) {
   return (
     <div className={cn("max-w-2xl", className)}>
-      <p className="mb-3 text-xs font-medium uppercase tracking-[0.22em] text-brand-orange">{eyebrow}</p>
-      <h2 id={id} className="font-display text-4xl font-semibold uppercase leading-[1.02] tracking-tight sm:text-5xl">
+      <p data-reveal="0" className="mb-3 text-xs font-medium uppercase tracking-[0.22em] text-brand-orange">{eyebrow}</p>
+      <h2 data-reveal="1" id={id} className="font-display text-4xl font-semibold uppercase leading-[1.02] tracking-tight sm:text-5xl">
         {title}
       </h2>
-      {body && <p className="mt-5 text-base leading-relaxed text-muted-foreground sm:text-lg">{body}</p>}
+      {body && <p data-reveal="2" className="mt-5 text-base leading-relaxed text-muted-foreground sm:text-lg">{body}</p>}
     </div>
   );
 }

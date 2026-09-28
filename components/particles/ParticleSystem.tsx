@@ -56,6 +56,13 @@ export interface Placement {
 export interface LayoutState {
   from: Placement;
   to: Placement;
+  /**
+   * Optional alternating composition after the handoff: world x of the left
+   * and right slots, and which slot (0 = left, 1 = right) each form after the
+   * handoff uses. The system glides between slots during each transition.
+   * Null = always `to.x`.
+   */
+  sides: { left: number; right: number; byForm: readonly number[] } | null;
 }
 
 interface ParticleSystemProps {
@@ -75,7 +82,7 @@ interface ParticleSystemProps {
   pixelRatio: number;
   reducedMotion: boolean;
   /** Called every frame with the handoff blend (0 = `look`, 1 = `lookTo`). */
-  onBlend?: (blend: number) => void;
+  onBlend?: (blend: number, field: number) => void;
   /**
    * Step progress for a stepped form (the process path): 0 = first step
    * active … N = all steps done. Written by the section's scroll triggers.
@@ -257,7 +264,20 @@ export function ParticleSystem({
 
     // --- handoff blend: placement + look glide across one transition ------
     const b = smooth(Math.min(Math.max(s0.smoothProgress - handoffAt, 0), 1));
-    onBlend?.(b);
+    // How scattered the particles are right now (0 = a form, 1 = mid-field).
+    const frac = s0.smoothProgress - Math.floor(s0.smoothProgress);
+    const field = Math.min(Math.max(4 * frac * (1 - frac), 0), 1);
+    onBlend?.(b, field);
+
+    // Alternating composition: which slot the current/next form uses.
+    let toX = L.to.x;
+    if (L.sides) {
+      const s = Math.max(s0.smoothProgress - (handoffAt + 1), 0);
+      const i = Math.min(Math.floor(s), L.sides.byForm.length - 1);
+      const j = Math.min(i + 1, L.sides.byForm.length - 1);
+      const side = mix(L.sides.byForm[i] ?? 1, L.sides.byForm[j] ?? 1, smooth(Math.min(s - i, 1)));
+      toX = mix(L.sides.left, L.sides.right, side);
+    }
     const rf = reducedMotion ? 0.2 : 1;
     u.uSize.value = mix(look.particleSize, lookTo.particleSize, b);
     u.uFormNoise.value = mix(look.formNoise, lookTo.formNoise, b);
@@ -279,7 +299,7 @@ export function ParticleSystem({
     );
     const parallax = mix(look.mouseParallax, lookTo.mouseParallax, b) * motion;
     root.position.set(
-      mix(L.from.x, L.to.x, b) + s0.smoothNdc.x * parallax,
+      mix(L.from.x, toX, b) + s0.smoothNdc.x * parallax,
       mix(L.from.y, L.to.y, b) + s0.smoothNdc.y * parallax * 0.7,
       0,
     );

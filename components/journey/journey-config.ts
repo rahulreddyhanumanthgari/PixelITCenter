@@ -23,6 +23,20 @@ export const JOURNEY_FORMS: readonly FormName[] = [
 export const STORY_HANDOFF = 1;
 
 /**
+ * Desktop composition for each story form (0 = particles left, text right;
+ * 1 = particles right, text left), in JOURNEY_FORMS order after the handoff.
+ * Services continues from the hero on the right, then the story alternates.
+ * Keep in sync with the `side` of each section in components/sections.
+ */
+export const STORY_SIDES: readonly number[] = [1, 0, 1, 0];
+
+/** Where the particles sit inside the story area, as a fraction of its width. */
+export const STORY_SLOTS = { left: 0.24, right: 0.76 } as const;
+
+/** Subtle camera: pointer drift and a small pull-back while particles scatter. */
+export const CAMERA_MOTION = { pointerX: 0.14, pointerY: 0.09, fieldPullBack: 0.35, damping: 0.03 } as const;
+
+/**
  * Scroll windows for each transition (ScrollTrigger syntax). The hero one is
  * a fraction of the hero's pinned scroll; the story ones run while the
  * section that owns the *next* form scrolls into view.
@@ -102,7 +116,7 @@ export interface JourneyTier {
 const TIERS: Record<DeviceTier, JourneyTier> = {
   desktop: {
     particleCount: 60_000,
-    starCount: 1_600,
+    starCount: 2_600,
     maxDpr: 2,
     scatter: 1,
     bloom: { hero: 0.85, story: 0.55 },
@@ -112,7 +126,7 @@ const TIERS: Record<DeviceTier, JourneyTier> = {
   },
   tablet: {
     particleCount: 34_000,
-    starCount: 1_100,
+    starCount: 1_700,
     maxDpr: 1.75,
     scatter: 0.85,
     bloom: { hero: 0.7, story: 0.45 },
@@ -122,7 +136,7 @@ const TIERS: Record<DeviceTier, JourneyTier> = {
   },
   mobile: {
     particleCount: 18_000,
-    starCount: 600,
+    starCount: 800,
     maxDpr: 1.5,
     scatter: 0.7,
     bloom: { hero: 0.5, story: 0.35 },

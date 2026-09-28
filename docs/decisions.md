@@ -110,6 +110,46 @@ scrolls the four steps (Discover, Plan, Deliver, Support).
   `uStageMix` fades these effects in only as the process form lands, so
   earlier forms are unaffected.
 
+### Presentation layer
+
+These are enhancements on top of the journey. None of them change the forms
+or the morph.
+
+- **Ambient star field** (`StarField`, `lib/particles/stars.ts`,
+  `shaders/stars.vert.glsl`). It is a second `THREE.Points` in the same
+  canvas: white/off-white points spread through real depth (z −2.5 … −26,
+  mostly far).
+  - Far points are dim; near ones are slightly larger and move more.
+  - It drifts very slowly, and shifts a little with the eased pointer.
+  - It brightens slightly while the main particles are scattered. The main
+    system reports this `field` amount every frame through `onBlend`.
+- **Camera** (`CameraRig` in `JourneyScene`). It drifts a tiny amount with the
+  pointer and eases back a little while particles are scattered. It is off
+  with reduced motion and halved on phones.
+- **Alternating composition** (desktop). The story anchor spans the whole
+  story area. Each section takes 52% of the width on the side opposite its
+  particles (`storySectionClass(side)`). The particles glide between the
+  left and right slots during each transition (`LayoutState.sides`,
+  `STORY_SIDES`):
+
+  | Section | Particles |
+  |---|---|
+  | Services | Right |
+  | Staffing | Left |
+  | Why us | Right |
+  | How we work | Left |
+
+  Phones and tablets (below `lg`) keep the band. The band detection now uses
+  the layout breakpoint instead of the device tier, which fixes tablets.
+- **Content choreography** (`StoryChoreography`). Any `[data-reveal="n"]`
+  inside the story is animated:
+  - *Order:* label 0, heading 1, text 2, content 3 and up. Higher orders
+    start slightly later.
+  - *Enter:* a 18–26px rise, plus a 6px blur clearing on the header items.
+  - *Exit:* a slight drift up, fading to 12% opacity.
+
+  Everything is scrubbed and reverses. Reduced motion gets a fade-in only.
+
 ### Engine
 
 **`lib/particles/`** (independent of site content)

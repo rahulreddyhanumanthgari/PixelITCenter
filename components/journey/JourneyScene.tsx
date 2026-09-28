@@ -1,13 +1,14 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type RefObject } from "react";
+import { useFrame } from "@react-three/fiber";
 import type { BloomEffect } from "postprocessing";
 import { gsap } from "@/lib/gsap";
 import { ParticleCanvas } from "@/components/particles/ParticleCanvas";
 import { ParticleSystem, type LayoutState } from "@/components/particles/ParticleSystem";
-import { StarField } from "@/components/particles/StarField";
+import { StarField, type Atmosphere } from "@/components/particles/StarField";
 import { useDeviceTier, usePointer, useReducedMotion } from "@/components/particles/hooks";
-import type { ProgressState } from "@/components/particles/types";
+import type { PointerState, ProgressState } from "@/components/particles/types";
 import { PALETTE } from "@/lib/particles/palette";
 import { processProgress } from "@/lib/processProgress";
 import {
@@ -15,8 +16,11 @@ import {
   JOURNEY_BLOOM,
   JOURNEY_CAMERA,
   JOURNEY_FORMS,
+  CAMERA_MOTION,
   STORY_HANDOFF,
   STORY_LOOK,
+  STORY_SIDES,
+  STORY_SLOTS,
   TRANSITIONS,
   getJourneyTier,
 } from "./journey-config";
@@ -25,6 +29,36 @@ import {
 function worldPerPx(): number {
   const visibleHeight = 2 * JOURNEY_CAMERA.z * Math.tan(((JOURNEY_CAMERA.fov / 2) * Math.PI) / 180);
   return visibleHeight / window.innerHeight;
+}
+
+/** Desktop column layout vs the phone/tablet band (matches the lg: breakpoint). */
+const isColumnLayout = () => window.matchMedia("(min-width: 1024px)").matches;
+
+/**
+ * Very subtle camera: drifts a touch with the pointer and eases back a little
+ * while the main particles are scattered, so transitions gain a hint of depth.
+ */
+function CameraRig({
+  pointer,
+  atmosphere,
+  strength,
+}: {
+  pointer: RefObject<PointerState>;
+  atmosphere: RefObject<Atmosphere>;
+  strength: number;
+}) {
+  useFrame((state, rawDelta) => {
+    const cam = state.camera;
+    const k = 1 - Math.pow(1 - CAMERA_MOTION.damping, Math.min(rawDelta, 1 / 20) * 60);
+    const p = pointer.current;
+    const tx = (p.active ? p.x : 0) * CAMERA_MOTION.pointerX * strength;
+    const ty = (p.active ? p.y : 0) * CAMERA_MOTION.pointerY * strength;
+    const tz = JOURNEY_CAMERA.z + atmosphere.current.field * CAMERA_MOTION.fieldPullBack * strength;
+    cam.position.x += (tx - cam.position.x) * k;
+    cam.position.y += (ty - cam.position.y) * k;
+    cam.position.z += (tz - cam.position.z) * k;
+  });
+  return null;
 }
 
 /**
@@ -48,13 +82,18 @@ export default function JourneyScene() {
   const layout = useRef<LayoutState>({
     from: { x: tier.heroOffset[0], y: tier.heroOffset[1], scale: tier.heroScale },
     to: { x: 0, y: 0, scale: tier.storyScale },
+    sides: null,
   });
+  // How scattered the main particles are; drives the stars and camera.
+  const atmosphere = useRef<Atmosphere>({ field: 0 });
 
-  // Bloom eases from the hero's strength to the story's with the handoff.
+  // Each frame: bloom eases from the hero's strength to the story's with the
+  // handoff, and the scatter amount is shared with the stars and camera.
   const onBlend = useCallback(
-    (blend: number) => {
+    (blend: number, field: number) => {
       const effect = bloom.current;
       if (effect) effect.intensity = tier.bloom.hero + (tier.bloom.story - tier.bloom.hero) * blend;
+      atmosphere.current.field = field;
     },
     [tier],
   );
@@ -120,21 +159,25 @@ export default function JourneyScene() {
       const rect = anchor.getBoundingClientRect();
       const stickyTop = parseFloat(getComputedStyle(anchor).top) || 0;
 
-      // Story placement: centre of the pinned column (desktop) or band
-      // (phone), measured where it sits once stuck.
+      // Story placement, measured where the anchor sits once stuck.
+      // Desktop: the anchor spans the story area and forms alternate between
+      // its left and right slots. Phones/tablets: centre of the band.
       const L = layout.current;
-      L.to.x = (rect.left + rect.width / 2 - vw / 2) * wpp;
+      const columns = isColumnLayout();
+      const xAt = (fraction: number) => (rect.left + rect.width * fraction - vw / 2) * wpp;
+      L.sides = columns ? { left: xAt(STORY_SLOTS.left), right: xAt(STORY_SLOTS.right), byForm: STORY_SIDES } : null;
+      L.to.x = columns ? xAt(STORY_SIDES[0] ? STORY_SLOTS.right : STORY_SLOTS.left) : xAt(0.5);
       L.to.y = -(stickyTop + rect.height / 2 - vh / 2) * wpp;
       L.to.scale = tier.storyScale * (rect.height / vh);
       L.from.x = tier.heroOffset[0];
-      // On phones the hero form sits exactly where the band will be.
-      L.from.y = tierName === "mobile" ? L.to.y : tier.heroOffset[1];
+      // In the band layout the hero form sits exactly where the band will be.
+      L.from.y = columns ? tier.heroOffset[1] : L.to.y;
       L.from.scale = tier.heroScale;
 
       // Phones: once the band is stuck, the text scrolls under the band's
       // opaque background — so the canvas moves above the page and is clipped
       // to the band. Before that it stays behind the page, full screen.
-      const banded = tierName === "mobile" && rect.top <= stickyTop + 1;
+      const banded = !columns && rect.top <= stickyTop + 1;
       // The band only turns opaque once pinned; while it scrolls into place
       // it stays see-through so the particles behind it never vanish.
       anchor.dataset.stuck = String(banded);
@@ -176,7 +219,18 @@ export default function JourneyScene() {
         bloom: { intensity: tier.bloom.hero, ...JOURNEY_BLOOM },
       }}
     >
-      <StarField count={tier.starCount} pixelRatio={dpr} reducedMotion={reducedMotion} />
+      <StarField
+        count={tier.starCount}
+        pixelRatio={dpr}
+        reducedMotion={reducedMotion}
+        pointer={pointer}
+        atmosphere={atmosphere}
+      />
+      <CameraRig
+        pointer={pointer}
+        atmosphere={atmosphere}
+        strength={reducedMotion ? 0 : tierName === "mobile" ? 0.5 : 1}
+      />
       <ParticleSystem
         key={tierName}
         forms={JOURNEY_FORMS}

@@ -2,7 +2,7 @@ import { Check } from "lucide-react";
 import { process } from "@/content/site";
 import { SectionHeader } from "./SectionHeader";
 import { ProcessProgress } from "./ProcessProgress";
-import { STORY_SECTION_CLASS } from "./story-section";
+import { storySectionClass } from "./story-section";
 
 /**
  * How We Work — the four steps as one vertical journey. As the visitor
@@ -12,7 +12,7 @@ import { STORY_SECTION_CLASS } from "./story-section";
  */
 export function Process() {
   return (
-    <section data-story-section aria-labelledby="process-title" className={STORY_SECTION_CLASS}>
+    <section data-story-section aria-labelledby="process-title" className={storySectionClass("left")}>
       <SectionHeader id="process-title" eyebrow={process.eyebrow} title={process.title} />
       <ProcessProgress />
       <ol className="mt-10">
@@ -21,15 +21,16 @@ export function Process() {
             key={step.title}
             data-process-step
             data-state={i === 0 ? "active" : "inactive"}
-            className="group relative flex gap-6 border-l border-white/10 py-10 pl-6 transition-[opacity,border-color] duration-500 data-[state=active]:border-brand-orange/70 data-[state=completed]:border-white/25 data-[state=inactive]:opacity-45 data-[state=completed]:opacity-80 sm:pl-8 lg:min-h-[34vh] lg:items-center"
+            className="group relative flex gap-6 border-l border-white/10 py-10 pl-6 transition-[opacity,border-color,translate] duration-500 data-[state=active]:translate-x-1.5 data-[state=active]:border-brand-orange/70 data-[state=completed]:border-white/25 data-[state=inactive]:opacity-45 data-[state=completed]:opacity-80 sm:pl-8 lg:min-h-[34vh] lg:items-center"
           >
             <span
               aria-hidden="true"
+              data-reveal="3"
               className="font-display text-3xl font-semibold text-muted-foreground transition-colors duration-500 group-data-[state=active]:text-brand-orange group-data-[state=completed]:text-foreground sm:text-4xl"
             >
               {String(i + 1).padStart(2, "0")}
             </span>
-            <div className="max-w-md">
+            <div data-reveal="4" className="max-w-md">
               <h3 className="flex items-center gap-3 font-display text-2xl font-semibold uppercase sm:text-3xl">
                 {step.title}
                 <Check

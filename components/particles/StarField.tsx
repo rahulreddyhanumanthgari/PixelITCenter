@@ -1,20 +1,34 @@
 "use client";
 
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, type RefObject } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import vertexShader from "@/shaders/stars.vert.glsl";
 import fragmentShader from "@/shaders/particle.frag.glsl";
 import { createStarGeometry } from "@/lib/particles/stars";
 import { JOURNEY_STARS, HERO_LOOK } from "@/components/journey/journey-config";
+import type { PointerState } from "./types";
+
+/** Shared scene mood, written each frame by the main system's callback. */
+export interface Atmosphere {
+  /** 0..1 — how scattered the main particles are right now. */
+  field: number;
+}
 
 interface StarFieldProps {
   count: number;
   pixelRatio: number;
   reducedMotion: boolean;
+  pointer: RefObject<PointerState>;
+  atmosphere: RefObject<Atmosphere>;
 }
 
-export function StarField({ count, pixelRatio, reducedMotion }: StarFieldProps) {
+/**
+ * Secondary particle system: an ambient field of faint points in real depth
+ * behind the main particles. One THREE.Points, all motion on the GPU; the
+ * CPU only eases three uniforms per frame.
+ */
+export function StarField({ count, pixelRatio, reducedMotion, pointer, atmosphere }: StarFieldProps) {
   const geometry = useMemo(() => createStarGeometry(count), [count]);
 
   const material = useMemo(
@@ -25,6 +39,8 @@ export function StarField({ count, pixelRatio, reducedMotion }: StarFieldProps) 
           uSize: { value: JOURNEY_STARS.size },
           uPixelRatio: { value: 1 },
           uMotion: { value: 1 },
+          uPointer: { value: new THREE.Vector2() },
+          uField: { value: 0 },
         },
         vertexShader,
         fragmentShader,
@@ -48,9 +64,18 @@ export function StarField({ count, pixelRatio, reducedMotion }: StarFieldProps) 
   useEffect(() => () => geometry.dispose(), [geometry]);
   useEffect(() => () => material.dispose(), [material]);
 
-  useFrame((_, delta) => {
+  useFrame((_, rawDelta) => {
     const u = uniforms();
-    if (u) u.uTime.value += Math.min(delta, 1 / 20);
+    if (!u) return;
+    const delta = Math.min(rawDelta, 1 / 20);
+    u.uTime.value += delta;
+    // Heavily damped so the space never reacts sharply.
+    const k = 1 - Math.pow(0.97, delta * 60);
+    const p = pointer.current;
+    const target = u.uPointer.value as THREE.Vector2;
+    target.x += ((p.active ? p.x : 0) - target.x) * k;
+    target.y += ((p.active ? p.y : 0) - target.y) * k;
+    u.uField.value += (atmosphere.current.field - u.uField.value) * k * 2;
   });
 
   return <points ref={pointsRef} geometry={geometry} material={material} frustumCulled={false} />;

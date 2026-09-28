@@ -1,17 +1,22 @@
 import type { ReactNode } from "react";
+import { StoryChoreography } from "./StoryChoreography";
 
 /**
- * Layout for the four particle-story sections. The sections scroll in one
- * column; beside them is a pinned, empty "anchor" slot (desktop: right
- * column; phones: a band under the header). The page-wide JourneyLayer
- * places the particles in that slot, so the forms never sit on top of text.
+ * Layout for the four particle-story sections, plus the pinned, empty
+ * "anchor" the page-wide JourneyLayer places the particles in.
+ *
+ * Desktop: the anchor spans the story area (sticky, full screen height, no
+ * layout space); each section takes ~half the width on the side opposite its
+ * particle form, so the composition alternates and particles never sit on
+ * text. Phones/tablets: the anchor is a band under the header and the text
+ * scrolls beneath it.
  *
  * Children must be the four story sections, each marked `data-story-section`.
  */
 export function ParticleStory({ children }: { children: ReactNode }) {
   return (
     <div data-story className="relative border-t border-border">
-      <div className="mx-auto max-w-7xl lg:grid lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] lg:gap-8 lg:px-8">
+      <div className="mx-auto max-w-7xl lg:px-8">
         {/*
           Phones: once pinned (data-stuck, set by JourneyScene) the band turns
           opaque so text scrolling beneath it is hidden, and the particle layer
@@ -21,10 +26,11 @@ export function ParticleStory({ children }: { children: ReactNode }) {
         <div
           data-story-anchor
           aria-hidden="true"
-          className="sticky top-16 z-10 h-[34svh] border-b border-transparent data-[stuck=true]:border-border data-[stuck=true]:bg-background lg:order-2 lg:top-0 lg:h-screen lg:self-start lg:border-0 lg:data-[stuck=true]:bg-transparent"
+          className="pointer-events-none sticky top-16 z-10 h-[34svh] border-b border-transparent data-[stuck=true]:border-border data-[stuck=true]:bg-background lg:top-0 lg:-mb-[100vh] lg:h-screen lg:border-0 lg:data-[stuck=true]:bg-transparent"
         />
-        <div className="px-4 sm:px-6 lg:order-1 lg:px-0">{children}</div>
+        <div className="relative px-4 sm:px-6 lg:px-0">{children}</div>
       </div>
+      <StoryChoreography />
     </div>
   );
 }
