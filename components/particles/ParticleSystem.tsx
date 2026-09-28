@@ -11,7 +11,7 @@ import {
   monochromeColors,
   type FormName,
 } from "@/lib/particles/generateTarget";
-import { MorphController, createMorphGeometry, type MorphResolver } from "./MorphController";
+import { MorphController, createMorphGeometry, resolveFormPosition } from "./MorphController";
 import type { PointerState, ProgressState } from "./types";
 
 /** How a particle system looks and moves. Every number is tunable. */
@@ -41,19 +41,40 @@ export interface ParticleLook {
   cameraZ: number;
 }
 
+export interface Placement {
+  x: number;
+  y: number;
+  scale: number;
+}
+
+/**
+ * Where the system sits, written by the scene (from page layout) and read
+ * here every frame. `from` applies before the handoff, `to` after it; the
+ * system glides between them during the handoff transition.
+ */
+export interface LayoutState {
+  from: Placement;
+  to: Placement;
+}
+
 interface ParticleSystemProps {
   forms: readonly FormName[];
   count: number;
+  /** Look before the handoff… */
   look: ParticleLook;
-  resolve: MorphResolver;
-  /** The driving value (scroll), written by GSAP, read here every frame. */
+  /** …and after it (defaults to `look`). */
+  lookTo?: ParticleLook;
+  /** Form position where the handoff transition starts (it lasts one form). */
+  handoffAt: number;
+  layout: RefObject<LayoutState>;
+  /** Form position (0 = first form, 1 = second…), written by GSAP. */
   progress: RefObject<ProgressState>;
   pointer: RefObject<PointerState>;
-  offset: readonly [number, number, number];
-  scale: number;
   scatter: number;
   pixelRatio: number;
   reducedMotion: boolean;
+  /** Called every frame with the handoff blend (0 = `look`, 1 = `lookTo`). */
+  onBlend?: (blend: number) => void;
 }
 
 export interface MorphUniforms {
@@ -76,6 +97,7 @@ export interface MorphUniforms {
 
 /** Anywhere far from the particles, so the pointer push is off. */
 const MOUSE_PARKED = new THREE.Vector3(100, 100, 100);
+const TAU = Math.PI * 2;
 
 function uniformsOf(points: THREE.Points): MorphUniforms {
   return (points.material as THREE.ShaderMaterial).uniforms as MorphUniforms;
@@ -86,23 +108,27 @@ function dampFactor(damping: number, delta: number): number {
   return 1 - Math.pow(1 - damping, delta * 60);
 }
 
+const mix = (a: number, b: number, t: number) => a + (b - a) * t;
+const smooth = (t: number) => t * t * (3 - 2 * t);
+
 /**
  * One THREE.Points whose particles physically morph between `forms`. All
  * per-particle motion is in the vertex shader; this component only feeds it
- * the morph progress, time, pointer and rotation.
+ * the morph progress, time, pointer, placement and rotation.
  */
 export function ParticleSystem({
   forms: formNames,
   count,
   look,
-  resolve,
+  lookTo = look,
+  handoffAt,
+  layout,
   progress,
   pointer,
-  offset,
-  scale,
   scatter,
   pixelRatio,
   reducedMotion,
+  onBlend,
 }: ParticleSystemProps) {
   const rootRef = useRef<THREE.Group>(null);
   const tiltRef = useRef<THREE.Group>(null);
@@ -147,11 +173,11 @@ export function ParticleSystem({
   // Plain object held in a ref: the controller mutates geometry attributes.
   const controllerRef = useRef<MorphController | null>(null);
   useEffect(() => {
-    controllerRef.current = new MorphController(geometry, forms, resolve);
+    controllerRef.current = new MorphController(geometry, forms, resolveFormPosition);
     return () => {
       controllerRef.current = null;
     };
-  }, [geometry, forms, resolve]);
+  }, [geometry, forms]);
 
   // Settings that change rarely go into uniforms here, reached through the
   // ref so React never sees a hook value being mutated.
@@ -162,9 +188,7 @@ export function ParticleSystem({
     u.uPixelRatio.value = pixelRatio;
     u.uMotion.value = motion;
     u.uScatter.value = scatter * (reducedMotion ? 0.35 : 1);
-    u.uCurve.value = look.curve * (reducedMotion ? 0.2 : 1);
-    u.uMouseInfluence.value = reducedMotion ? 0 : look.mouseInfluence;
-  }, [pixelRatio, motion, scatter, reducedMotion, look]);
+  }, [pixelRatio, motion, scatter, reducedMotion]);
 
   useEffect(() => () => geometry.dispose(), [geometry]);
   useEffect(() => () => material.dispose(), [material]);
@@ -177,7 +201,7 @@ export function ParticleSystem({
     plane: new THREE.Plane(new THREE.Vector3(0, 0, 1), 0),
     hit: new THREE.Vector3(),
     center: new THREE.Vector3(),
-    smoothProgress: 0,
+    smoothProgress: -1,
     spin: 0,
   });
 
@@ -188,50 +212,69 @@ export function ParticleSystem({
     const controller = controllerRef.current;
     if (!root || !tilt || !points || !controller) return;
     const s0 = scratch.current;
+    const L = layout.current;
 
     // Clamp so a long tab-switch pause doesn't cause a jump.
     const delta = Math.min(rawDelta, 1 / 20);
     const u = uniformsOf(points);
     u.uTime.value += delta;
     const time = u.uTime.value;
-
     const k = dampFactor(look.damping, delta);
 
-    // --- morph: driving value → (form pair, transition progress) ----------
+    // --- morph: form position → (form pair, transition progress) ----------
     // Eased again on top of GSAP's scrub so fast wheel flicks stay smooth.
-    s0.smoothProgress += (progress.current.value - s0.smoothProgress) * k;
+    // (Starts at -1 so a page loaded mid-scroll snaps straight into place.)
+    const target = progress.current.value;
+    s0.smoothProgress = s0.smoothProgress < 0 ? target : s0.smoothProgress + (target - s0.smoothProgress) * k;
     u.uProgress.value = controller.update(s0.smoothProgress);
+
+    // --- handoff blend: placement + look glide across one transition ------
+    const b = smooth(Math.min(Math.max(s0.smoothProgress - handoffAt, 0), 1));
+    onBlend?.(b);
+    const rf = reducedMotion ? 0.2 : 1;
+    u.uSize.value = mix(look.particleSize, lookTo.particleSize, b);
+    u.uFormNoise.value = mix(look.formNoise, lookTo.formNoise, b);
+    u.uFieldNoise.value = mix(look.fieldNoise, lookTo.fieldNoise, b);
+    u.uNoiseScale.value = mix(look.noiseScale, lookTo.noiseScale, b);
+    u.uCurve.value = mix(look.curve, lookTo.curve, b) * rf;
+    u.uMouseRadius.value = mix(look.mouseRadius, lookTo.mouseRadius, b);
+    u.uMouseInfluence.value = reducedMotion ? 0 : mix(look.mouseInfluence, lookTo.mouseInfluence, b);
 
     // --- pointer: eased tilt/parallax, never mapped 1:1 -------------------
     const p = pointer.current;
     s0.smoothNdc.x += ((p.active ? p.x : 0) - s0.smoothNdc.x) * k;
     s0.smoothNdc.y += ((p.active ? p.y : 0) - s0.smoothNdc.y) * k;
-    const tiltAmount = look.mouseTilt * (reducedMotion ? 0.25 : 1);
+    const tiltAmount = mix(look.mouseTilt, lookTo.mouseTilt, b) * (reducedMotion ? 0.25 : 1);
     tilt.rotation.set(
-      look.baseTilt[0] - s0.smoothNdc.y * tiltAmount,
-      look.baseTilt[1] + s0.smoothNdc.x * tiltAmount,
-      look.baseTilt[2],
+      mix(look.baseTilt[0], lookTo.baseTilt[0], b) - s0.smoothNdc.y * tiltAmount,
+      mix(look.baseTilt[1], lookTo.baseTilt[1], b) + s0.smoothNdc.x * tiltAmount,
+      mix(look.baseTilt[2], lookTo.baseTilt[2], b),
     );
+    const parallax = mix(look.mouseParallax, lookTo.mouseParallax, b) * motion;
     root.position.set(
-      offset[0] + s0.smoothNdc.x * look.mouseParallax * motion,
-      offset[1] + s0.smoothNdc.y * look.mouseParallax * 0.7 * motion,
-      offset[2],
+      mix(L.from.x, L.to.x, b) + s0.smoothNdc.x * parallax,
+      mix(L.from.y, L.to.y, b) + s0.smoothNdc.y * parallax * 0.7,
+      0,
     );
+    root.scale.setScalar(mix(L.from.scale, L.to.scale, b));
 
-    // --- rotation: continuous spin, or a gentle sway that keeps forms ----
-    // --- facing the viewer; plus a faint wobble ---------------------------
-    const wobble = look.wobbleAmount * motion;
-    let yaw: number;
-    if (look.rotation.mode === "spin") {
-      s0.spin += delta * look.rotation.speed * motion;
-      yaw = s0.spin;
-    } else {
-      yaw = Math.sin(time * look.rotation.speed) * look.rotation.amount * motion;
-    }
+    // --- rotation ---------------------------------------------------------
+    // A "spin" look turns continuously; as it hands over to a "sway" look the
+    // spin slows and settles on the nearest full turn (so the next forms face
+    // front), and the sway fades in.
+    const spinOf = (lk: ParticleLook) => (lk.rotation.mode === "spin" ? lk.rotation.speed : 0);
+    const spinSpeed = mix(spinOf(look), spinOf(lookTo), b);
+    s0.spin += delta * spinSpeed * motion;
+    const settle = (look.rotation.mode === "spin" ? b : 0) * (lookTo.rotation.mode === "sway" ? 1 : 0);
+    if (settle > 0) s0.spin += (Math.round(s0.spin / TAU) * TAU - s0.spin) * k * settle;
+    const swayOf = (lk: ParticleLook) =>
+      lk.rotation.mode === "sway" ? Math.sin(time * lk.rotation.speed) * lk.rotation.amount : 0;
+    const yaw = s0.spin + mix(swayOf(look), swayOf(lookTo), b) * motion;
+    const wobble = mix(look.wobbleAmount, lookTo.wobbleAmount, b) * motion;
     points.rotation.set(Math.sin(time * 0.13) * wobble, yaw, Math.cos(time * 0.11) * wobble * 0.6);
 
     // --- pointer position in the particles' own space ---------------------
-    if (p.active && !reducedMotion && look.mouseInfluence > 0) {
+    if (p.active && !reducedMotion && u.uMouseInfluence.value > 0) {
       root.getWorldPosition(s0.center);
       s0.plane.constant = -s0.center.z;
       s0.ndc.set(s0.smoothNdc.x, s0.smoothNdc.y);
@@ -245,8 +288,8 @@ export function ParticleSystem({
   });
 
   return (
-    <group ref={rootRef} position={[offset[0], offset[1], offset[2]]} scale={scale}>
-      <group ref={tiltRef} rotation={[look.baseTilt[0], look.baseTilt[1], look.baseTilt[2]]}>
+    <group ref={rootRef}>
+      <group ref={tiltRef}>
         <points ref={pointsRef} geometry={geometry} material={material} frustumCulled={false} />
       </group>
     </group>

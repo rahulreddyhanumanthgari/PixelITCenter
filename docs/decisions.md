@@ -11,144 +11,150 @@ live in this repo (plan, section 02).
 
 Everything is a Server Component except:
 
-- `components/hero/*` scene files — WebGL needs the browser
+- `components/journey/*` and `components/particles/*` — WebGL needs the browser
+- `components/sections/LogoMarquee.tsx` — hover detection on the moving strip
 - `components/layout/HeaderShell.tsx` — solid header after scrolling
 - `components/layout/MobileMenu.tsx` — open/close state
 
 The homepage is statically prerendered. The hero `h1`, copy and CTAs are plain
 server-rendered HTML, so SEO does not depend on the 3D scene.
 
-## 3D hero
+## Particle journey (3D)
 
-**Loading.** `HeroCanvasLoader` (client) loads `ParticleScene` with
-`next/dynamic` and `ssr: false`. `ssr: false` is not allowed in Server Components
-in the App Router, hence the small wrapper. three.js never runs on the server,
-so there are no `window is not defined` or hydration errors.
+One particle system runs from the top of the page to the How We Work
+section. The same ~60k particles physically morph through six forms and stop
+on the last one:
 
-**No WebGL.** `ParticleCanvas` checks for WebGL before rendering, and
-`SceneErrorBoundary` catches any other WebGL failure. Either way only the
-canvas is dropped — without this, a WebGL error takes down the whole page.
+rocket → sphere → Services (radial dotted ring) → Staffing (3D wireframe
+handshake) → Why us (segmented block ring) → How we work (four-stage path).
 
-### Particle morph
+They never fade: every particle breaks away, scatters, drifts, curves back and
+reassembles. Each particle keeps the rocket's colour (orange / blue / white)
+through every form.
 
-The same particles morph between forms (rocket → sphere today) as the hero
-is scrolled: breakup → scatter → floating field → attraction → reassembly →
-hold. They never fade — every particle physically travels.
+**Layer.** `JourneyLayer` is a fixed, full-screen layer (`z-0`) behind the
+page. `main` is `z-10`.
 
-**Engine** (`lib/particles/`, independent of site content)
+- The hero, the client strip and the story sections are transparent, so the
+  particles show through.
+- Everything after the story is opaque, so it slides over the particles like
+  a curtain. Past the story, the layer hides and rendering stops.
+
+**Loading.** `JourneyLayer` loads `JourneyScene` with `next/dynamic` and
+`ssr: false`. `ssr: false` must live in a Client Component in the App Router.
+three.js never runs on the server; all page text is normal SSR HTML.
+
+**No WebGL.** `ParticleCanvas` checks for WebGL first, and
+`SceneErrorBoundary` catches any other failure. Only the particles are dropped —
+without this, a WebGL error takes down the whole page.
+
+### Scroll → form position
+
+There is one scrubbed ScrollTrigger per transition (five). Their 0→1 values
+add up to a form position, from 0 (rocket) to 5 (process). It is reversible,
+and it holds wherever the visitor stops.
+
+| Transition | Runs while |
+|---|---|
+| Rocket → sphere | The hero is pinned (18–82% of its extra 180vh) |
+| Sphere → Services | The Services section arrives (top 96% → 18%; phones 100% → 50%) |
+| Each later form | Its section's top moves from 96% to 14% of the viewport |
+
+Each story section is at least one screen tall on desktop, so every form
+holds before the next one starts.
+
+### Handoff: hero → story
+
+During sphere → Services, the system glides from its hero placement to the
+story slot. `ParticleStory` renders an empty, sticky
+`[data-story-anchor]` for it:
+
+- *Desktop:* the right column.
+- *Phones:* a band under the header.
+
+`JourneyScene` measures the anchor and converts pixels to world units. Look
+values blend across the same transition, from `HERO_LOOK` to `STORY_LOOK`:
+point size, noise, curve, pointer strength, tilt and bloom. The hero's spin
+slows and settles on a full turn, and a gentle sway takes over, so the
+handshake and path face the reader.
+
+**Phones.** Once the band is pinned (`data-stuck`), it turns opaque so text
+scrolling beneath it is hidden. The layer then moves above the page (`z-20`)
+with a `clip-path` matching the band. Before that, the band is see-through
+and the layer stays behind. The hero form sits at the band's centre, so
+nothing jumps at the handoff.
+
+### Engine
+
+**`lib/particles/`** (independent of site content)
 
 | File | Role |
 |---|---|
 | `generateRocketParticles.ts` | Rocket from Lathe (ogive nose), Cylinder (body, nozzle), Extrude (4 fins), Sphere/Torus (porthole) + a volume exhaust plume; also its per-part colours |
+| `forms/*.ts` | `services`, `handshake`, `segmentedRing`, `process` |
 | `geometryToParticles.ts` | `geometryToParticlePositions` (area-weighted surface sampling, seeded), `geometryEdgesToParticlePositions` (points along triangle edges → wireframe look), merge/transform helpers |
-| `forms/*.ts` | Section story forms: `services` (radial dotted ring), `handshake`, `segmentedRing`, `process` |
-| `generateTarget.ts` | `FORMS` registry, `alignByHeight`, colour schemes (`colorsForSequence`, `monochromeColors`) |
+| `generateTarget.ts` | `FORMS` registry, `alignByHeight`, colours (`colorsForSequence`, `monochromeColors`) |
 | `stars.ts`, `palette.ts`, `random.ts` | Background stars, colours, seeded PRNG |
 
-**Shared components** (`components/particles/`): `ParticleSystem` (one
-`THREE.Points` + shader, configured by a `ParticleLook`), `ParticleCanvas`
-(camera, bloom, WebGL check, pauses off-screen), `MorphController`
-(`resolveMorph` for hold/transition timelines, `resolveFormPosition` for a
-0..N form position), `hooks.ts` (device tier, reduced motion, pointer) and
-`SceneErrorBoundary`. The hero and the section story are both built from
-these.
+**`components/particles/`**
 
-**Adding a form:** add a generator to `FORMS`, then list it in
-`MORPH_SEQUENCE` (`components/hero/morph-sequence.ts`) or `STORY_FORMS`
-(`components/story/story-config.ts`). The hero's pinned scroll length grows
-automatically.
+- `ParticleSystem` — one `THREE.Points` plus shader, with look blending.
+- `ParticleCanvas` — camera and bloom.
+- `MorphController` — `resolveFormPosition`, plus attribute swaps.
+- `hooks.ts` — device tier, reduced motion, pointer.
+- `StarField` and `SceneErrorBoundary`.
 
-### Section particle story
+**`components/journey/`**
 
-One persistent particle system runs beside the Services, Staffing &
-Consulting, Why Pixel IT Center and How We Work sections. The same particles
-morph through four forms and stop on the last one:
+- `journey-config.ts` — forms, looks, transitions, tiers. All tuning is here.
+- `JourneyScene`, `JourneyLayer`.
+- `layout.ts` — the hero pinned height, kept free of three.js for server use.
 
-radial dotted ring → 3D wireframe handshake → segmented block ring →
-connected four-stage process path.
-
-- **Layout** (`components/story/ParticleStory.tsx`). On desktop the sections
-  sit in the left column and the canvas is sticky in the right column. On
-  phones the canvas is a sticky band under the header, with the text
-  scrolling beneath it. Either way, particles never sit on top of text.
-- **Scroll.** There is one ScrollTrigger per transition. Each scrubs 0→1 as
-  the next section's top moves from 92% to 22% of the viewport. Their sum is
-  the form position (0 = Services … 3 = How we work). It is reversible, and it
-  holds wherever the visitor stops.
-- **Holding.** Each section is at least a screen tall on desktop, so each form
-  holds before the next one assembles.
-- **Look.** Monochrome white/off-white points (`monochromeColors`), with
-  about 5% of particles faintly tinted with the brand orange or blue. The
-  forms sway rather than spin, so the handshake always faces the reader.
-  Bloom uses a high threshold and low intensity.
-- **Quality tiers:**
-
-  | Tier | Particles | DPR cap |
-  |---|---|---|
-  | Desktop | 55k | 2 |
-  | Tablet | 30k | 1.75 |
-  | Mobile | 14k | 1.5 |
-
-  Bloom and scatter also drop per tier.
-- **Two canvases.** The hero and the story each have a canvas. Only the
-  visible one renders; the other is paused by IntersectionObserver.
+**Adding a form:** add a generator to `FORMS`, list it in `JOURNEY_FORMS`, and
+add a section with `data-story-section` inside `ParticleStory` to own it.
 
 **Shared particle order.** Every form is sorted by height (with jitter), so
 particle *i* sits at a similar height in each form. Colours are fixed per
-particle, taken from the first form. So the rocket's orange plume becomes the
-bottom of the sphere and its blue nose the top — the viewer can follow the
-material between forms.
+particle, so the rocket's orange plume ends up low in every later form and
+its blue nose high. The viewer can follow the material.
 
 **GPU side** (`shaders/particle.vert.glsl`). Attributes: `position` (current
 form), `aTarget` (next form), `aColor`, `aRandom`, `aDelay`, `aScatterDir`,
 `aScatterDistance`, `aNoiseOffset`, `aScale`. JavaScript drives one number,
 `uProgress` (0..1). The shader turns it into each particle's own progress:
 
-- *Departure:* staggered over `[0, 0.48]`. The delay blends random with a
-  coarse noise field, so clumps peel off together.
+- *Departure:* staggered over `[0, 0.48]`, with clumps peeling off together.
 - *Field:* `0.48–0.52` — everything is out in the field.
 - *Arrival:* staggered over `[0.52, 1]`.
-- *Flight paths:* `mix(start, end, easeInOutCubic(p))` plus a sideways offset
-  of `sin(πp)`, so particles curve.
-- *Noise:* high in flight, tiny at rest, so landing particles "lock" into
-  place.
+- *Flight paths:* `mix(start, end, easeInOutCubic(p))` plus a sideways
+  `sin(πp)` offset, so particles curve.
+- *Noise:* high in flight, tiny at rest, so particles "lock" into place.
 
-At `uProgress` 0 a particle is exactly at A, and at 1 exactly at B. That makes
-chained forms seamless and scrubbing fully reversible.
+At `uProgress` 0 a particle is exactly at A, and at 1 exactly at B.
+`MorphController` swaps form data into `position` / `aTarget` only when the
+pair changes, at a boundary where both look identical — so the swap is
+invisible.
 
-**CPU side** (`components/hero/ParticleController.ts`).
+**Per-frame work.** `useFrame` only sets a few uniforms and transforms. There
+is no React state per frame and no per-particle JavaScript. Pointer, scroll
+and layout live in refs.
 
-- `resolveMorph()` maps scroll progress to *hold F0 · F0→F1 · hold F1 · …*.
-  It is a pure function, so reverse scrolling retraces it exactly.
-- `ParticleController` copies new form data into `position` / `aTarget` only
-  when the form pair changes. That happens at a boundary where both look
-  identical, so the swap is invisible.
+**Quality tiers** (`journey-config.ts`)
 
-**Scroll.** The hero section is `100svh` plus 180vh for each transition, with a
-sticky inner viewport. GSAP ScrollTrigger scrubs 0→1 across it (start
-`top top`, end `bottom bottom`). `useFrame` eases it once more before feeding
-the controller.
+| Tier | Particles | DPR cap | Scatter |
+|---|---|---|---|
+| Desktop | 60k | 2 | 1× |
+| Tablet | 34k | 1.75 | 0.85× |
+| Mobile | 18k | 1.5 | 0.7× |
 
-**Per-frame work.** `useFrame` only updates a handful of uniforms and
-rotations. There is no React state per frame, and no per-particle JavaScript.
-The pointer and scroll values live in refs.
-
-**Interaction.** The pointer is tracked on `window`, because the HTML layer
-covers the canvas. It is eased and drives tilt, parallax and a local push.
-It never drives the morph.
-
-**Performance.**
-- *Desktop:* 60k particles.
-- *Mobile tier* (width < 768, or a coarse pointer on a ≤ 4-core device):
-  18k particles, scatter at 0.7×, weaker bloom, and DPR capped at 1.5.
-- *Off-screen:* rendering stops (`frameloop="never"`) via IntersectionObserver.
+Bloom also drops per tier.
 
 **Reduced motion.** Noise, rotation and wobble drop to 15%. Scatter drops to
-35% and curves to 20%, so the transition is a gentle cloud. The pointer push
-is disabled.
+35% and curves to 20%, so a transition is a gentle cloud. The pointer push is
+disabled.
 
 **Cleanup.** Geometry and materials are disposed on unmount. The
-EffectComposer disposes its own passes.
+EffectComposer disposes its own passes. The layer's inline styles are reset.
 
 **Known noise.** three r0.186 logs a `THREE.Clock` deprecation warning. It
 comes from inside React Three Fiber, not from our code.

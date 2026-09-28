@@ -6,7 +6,7 @@ import * as THREE from "three";
 import vertexShader from "@/shaders/stars.vert.glsl";
 import fragmentShader from "@/shaders/particle.frag.glsl";
 import { createStarGeometry } from "@/lib/particles/stars";
-import { HERO_LOOK, HERO_STARS } from "./particle-config";
+import { JOURNEY_STARS, HERO_LOOK } from "@/components/journey/journey-config";
 
 interface StarFieldProps {
   count: number;
@@ -22,7 +22,7 @@ export function StarField({ count, pixelRatio, reducedMotion }: StarFieldProps) 
       new THREE.ShaderMaterial({
         uniforms: {
           uTime: { value: 0 },
-          uSize: { value: HERO_STARS.size },
+          uSize: { value: JOURNEY_STARS.size },
           uPixelRatio: { value: 1 },
           uMotion: { value: 1 },
         },

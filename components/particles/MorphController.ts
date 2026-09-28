@@ -4,21 +4,14 @@ import type { MorphState } from "./types";
 
 export type { MorphState };
 
-/** Relative lengths of the pieces of the scroll timeline. */
-export interface MorphTimeline {
-  /** Time a finished form holds before it starts breaking up. */
-  hold: number;
-  /** Time for one full breakup → field → reassembly transition. */
-  transition: number;
-}
-
 /** Turns a driving value into the (from, to, t) the shader needs. */
 export type MorphResolver = (value: number, formCount: number) => MorphState;
 
 /**
  * Resolver for a "form position": 0 = first form, 1 = second, 2.5 = halfway
- * between the third and fourth… Used when separate scroll triggers each
- * drive one transition and their progress values are simply added up.
+ * between the third and fourth… Each scroll trigger drives one transition
+ * 0→1 and their values are added up, so this is a pure function of scroll —
+ * scrubbing backwards retraces it exactly, and stopping midway holds midway.
  */
 export function resolveFormPosition(position: number, formCount: number): MorphState {
   const last = formCount - 1;
@@ -26,27 +19,6 @@ export function resolveFormPosition(position: number, formCount: number): MorphS
   const p = Math.min(Math.max(position, 0), last);
   const from = Math.min(Math.floor(p), last - 1);
   return { from, to: from + 1, t: p - from };
-}
-
-/**
- * Maps overall scroll progress (0..1) onto the sequence
- *   hold F0 · F0→F1 · hold F1 · F1→F2 · … · hold Fn
- * A pure function of progress, so scrubbing backwards retraces it exactly.
- */
-export function resolveMorph(progress: number, formCount: number, timeline: MorphTimeline): MorphState {
-  const last = formCount - 1;
-  if (last <= 0) return { from: 0, to: 0, t: 0 };
-
-  const total = formCount * timeline.hold + last * timeline.transition;
-  let u = Math.min(Math.max(progress, 0), 1) * total;
-
-  for (let i = 0; i < last; i++) {
-    if (u < timeline.hold) return { from: i, to: i + 1, t: 0 };
-    u -= timeline.hold;
-    if (u < timeline.transition) return { from: i, to: i + 1, t: u / timeline.transition };
-    u -= timeline.transition;
-  }
-  return { from: last - 1, to: last, t: 1 };
 }
 
 /**

@@ -3,16 +3,15 @@ import { hero } from "@/content/site";
 import { buttonVariants } from "@/components/ui/button";
 import { RichText } from "@/components/ui/rich-text";
 import { cn } from "@/lib/utils";
-import { HeroCanvasLoader } from "./HeroCanvasLoader";
-import { HERO_SCROLL_VH_PER_TRANSITION, MORPH_SEQUENCE } from "./morph-sequence";
+import { HERO_PINNED_VH } from "@/components/journey/layout";
 
 // The section is taller than the screen; its inner viewport is sticky, so the
-// hero stays pinned while the visitor scrolls through the particle morph.
-const pinnedScrollVh = Math.max(MORPH_SEQUENCE.length - 1, 0) * HERO_SCROLL_VH_PER_TRANSITION;
+// hero stays pinned while the visitor scrolls the rocket into the sphere.
 
 /**
- * Two layers: the WebGL particle scene (client-only, decorative) and the
- * server-rendered HTML content that carries the real h1, copy and CTAs.
+ * Server-rendered hero content (the real h1, copy and CTAs). The particles
+ * behind it come from the page-wide JourneyLayer, so this section is
+ * transparent.
  */
 export function Hero() {
   return (
@@ -20,15 +19,10 @@ export function Hero() {
       id="top"
       data-hero
       aria-labelledby="hero-title"
-      className="relative bg-background"
-      style={{ height: `calc(100svh + ${pinnedScrollVh}vh)` }}
+      className="relative"
+      style={{ height: `calc(100svh + ${HERO_PINNED_VH}vh)` }}
     >
       <div className="sticky top-0 isolate flex h-[100svh] overflow-hidden">
-        {/* Layer 1 — 3D scene */}
-        <div className="absolute inset-0 -z-20">
-          <HeroCanvasLoader />
-        </div>
-
         {/* Readability scrims: bottom-up on mobile, left-to-right on desktop. */}
         <div
           aria-hidden="true"
@@ -39,7 +33,7 @@ export function Hero() {
           className="pointer-events-none absolute inset-x-0 bottom-0 -z-10 h-32 bg-gradient-to-t from-background to-transparent"
         />
 
-        {/* Layer 2 — content */}
+        {/* Content */}
         <div className="mx-auto flex w-full max-w-7xl items-end px-4 pb-20 pt-28 sm:px-6 md:items-center md:pb-16 lg:px-8">
           <div className="max-w-xl md:w-[44%] md:max-w-none">
             <p className="mb-5 flex items-center gap-2.5 text-xs font-medium uppercase tracking-[0.22em] text-muted-foreground">

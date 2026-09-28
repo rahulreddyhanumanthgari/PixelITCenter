@@ -27,7 +27,7 @@ const HAND = {
   handShare: 0.72,
   /** Of the hand particles, share drawn along edges (wireframe). */
   edgeShare: 0.45,
-  scale: 0.88,
+  scale: 0.8,
 } as const;
 
 function tube(points: V[], radius: number, segments = 10): THREE.BufferGeometry {

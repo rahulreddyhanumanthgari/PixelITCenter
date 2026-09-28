@@ -1,4 +1,5 @@
 import { Hero } from "@/components/hero/Hero";
+import { JourneyLayer } from "@/components/journey/JourneyLayer";
 import { ParticleStory } from "@/components/story/ParticleStory";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
@@ -16,7 +17,12 @@ export default function HomePage() {
   return (
     <>
       <Header />
-      <main className="flex-1">
+      {/* One particle system for the whole journey, fixed behind the page. */}
+      <JourneyLayer />
+      {/* Content sits above the particle layer (z-10). The hero, client strip
+          and story are transparent so the particles show through; everything
+          after the story is opaque and slides over them like a curtain. */}
+      <main className="relative z-10 flex-1">
         <Hero />
         <ClientProof />
         <ParticleStory>
@@ -25,11 +31,15 @@ export default function HomePage() {
           <WhyUs />
           <Process />
         </ParticleStory>
-        <About />
-        <Testimonials />
-        <ContactCta />
+        <div className="relative bg-background">
+          <About />
+          <Testimonials />
+          <ContactCta />
+        </div>
       </main>
-      <Footer />
+      <div className="relative z-10">
+        <Footer />
+      </div>
     </>
   );
 }

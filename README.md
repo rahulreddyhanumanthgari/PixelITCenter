@@ -4,7 +4,7 @@ The new public website for Pixel IT Center, built from the
 [modernization plan](./Pixel_IT_Center_Website_Modernization_Plan.pdf) (Phase 0).
 
 - **Stack:** Next.js (App Router) · TypeScript · Tailwind CSS · shadcn/ui
-- **Hero:** real-time 3D particle sculpture — three.js, React Three Fiber, custom GLSL, GSAP ScrollTrigger
+- **Particle journey:** one real-time 3D particle system that morphs from the hero rocket through the story sections — three.js, React Three Fiber, custom GLSL, GSAP ScrollTrigger
 
 > Current state: **demo of Milestone 1** — homepage with header, 3D hero, services,
 > staffing, why us, process, about/careers, testimonials, contact CTA and footer.
@@ -35,7 +35,10 @@ Don't run `npm run dev` and `npm run build` at the same time — they share `.ne
 ```
 app/            routes, layout, metadata, sitemap.ts, robots.ts
 components/
-  hero/         3D hero (see docs/decisions.md)
+  hero/         hero content (h1, copy, CTAs)
+  journey/      the page-wide particle journey (see docs/decisions.md)
+  particles/    shared particle engine components
+  story/        layout for the four particle-story sections
   layout/       Header, Footer, Logo, mobile menu
   sections/     homepage sections
   ui/           shadcn/ui components
@@ -45,11 +48,12 @@ lib/            helpers (cn, gsap registration)
 docs/           workflow and decisions
 ```
 
-## Tuning the hero
+## Tuning the particles
 
-Every visual number (particle counts, size, rotation speed, noise, mouse
-influence, bloom, colours, position, scroll amounts) is in
-[`components/hero/particle-config.ts`](components/hero/particle-config.ts).
+Every visual number for the particle journey (forms, particle counts, size,
+rotation, noise, mouse influence, bloom, placement, scroll windows) is in
+[`components/journey/journey-config.ts`](components/journey/journey-config.ts).
+The shapes themselves are in `lib/particles/`.
 
 ## Contributing
 
