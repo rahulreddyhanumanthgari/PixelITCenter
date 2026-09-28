@@ -27,6 +27,7 @@ uniform float uFocusDepth;
 uniform vec3 uMouse;            // pointer, in the particles' local space
 uniform float uStage;           // process progress: 0 = Discover active … 4 = all done
 uniform float uStageMix;        // 0 = no stage effects, 1 = fully on (process form)
+uniform vec3 uAccent;           // rocket accent, for active checkpoints
 
 attribute vec3 aTarget;
 attribute vec3 aColor;
@@ -37,6 +38,7 @@ attribute float aScatterDistance;
 attribute vec3 aNoiseOffset;
 attribute float aScale;
 attribute vec2 aStage;          // (stage position, isNode) on the process form
+attribute vec3 aStageCenter;    // checkpoint centre (checkpoint particles only)
 
 varying vec3 vColor;
 varying float vAlpha;
@@ -179,17 +181,25 @@ void main() {
   float nodeOn = isNode * smoothstep(q - 0.06, q + 0.02, uStage);
   float nodeDone = isNode * smoothstep(q + 0.86, q + 0.97, uStage);
   float nodeActive = nodeOn * (1.0 - nodeDone);
-  float front = (1.0 - isNode) * exp(-pow((q - uStage) / 0.09, 2.0));
-  // Gentle movement around the active node only.
-  pos += 0.018 * nodeActive * uStageMix * uMotion * vec3(
+  // The stream only carries energy while moving between checkpoints: it
+  // fades out as a checkpoint is reached and settles at the end.
+  float energy = sin(3.14159265 * fract(uStage)) * step(uStage, 3.999);
+  float front = (1.0 - isNode) * exp(-pow((q - uStage) / 0.09, 2.0)) * energy;
+  // A small wave passes through a checkpoint the moment it is reached.
+  float hit = isNode * exp(-pow((uStage - q) / 0.07, 2.0));
+  // Active checkpoints grow a little (~115%) about their own centre.
+  vec3 fromCenter = pos - aStageCenter;
+  pos += fromCenter * (0.15 * nodeActive + 0.1 * hit) * uStageMix * isNode;
+  pos += 0.012 * nodeActive * uStageMix * uMotion * vec3(
     sin(uTime * 1.4 + aNoiseOffset.x),
     cos(uTime * 1.2 + aNoiseOffset.y),
     sin(uTime * 1.6 + aNoiseOffset.z)
   );
-  float pathLevel = mix(0.32, 0.8, passed) + front * 1.1;
-  float nodeLevel = mix(0.4, 1.0, nodeDone) + nodeActive * 0.55;
+  float pathLevel = mix(0.3, 0.75, passed) + front * 0.9;
+  float nodeLevel = mix(0.4, 0.95, nodeDone) + nodeActive * 0.4 + hit * 0.5;
   float stageLevel = mix(1.0, mix(pathLevel, nodeLevel, isNode), uStageMix);
-  float stageSize = mix(1.0, 1.0 + nodeActive * 0.2 + front * 0.3, uStageMix);
+  float stageSize = mix(1.0, 1.0 + nodeActive * 0.12 + front * 0.2, uStageMix);
+  float stageAccent = uStageMix * (isNode * (nodeActive * 0.4 + hit * 0.3) + front * 0.25);
 
   // --- pointer push -------------------------------------------------------
   vec3 away = pos - uMouse;
@@ -211,5 +221,6 @@ void main() {
   float depthFade = clamp(1.0 - (depth - uFocusDepth) * 0.2, 0.35, 1.4);
   float twinkle = 0.8 + 0.2 * sin(uTime * (0.8 + aRandom * 2.2) + aRandom * 40.0) * uMotion;
   vColor = aColor * depthFade * twinkle * (1.0 + push * 0.6 + flight * 0.25 + field * 0.6) * stageLevel;
+  vColor = mix(vColor, uAccent * length(vColor) * 0.75, clamp(stageAccent, 0.0, 0.6));
   vAlpha = clamp(depthFade, 0.0, 1.0);
 }

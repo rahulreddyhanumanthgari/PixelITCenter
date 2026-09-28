@@ -1,53 +1,47 @@
 import * as THREE from "three";
-import { transformPositions } from "../geometryToParticles";
 import type { Rand } from "../random";
 
 /**
- * How We Work — one continuous process: a flowing 3D path drawn as a dotted
- * line with a faint particle stream around it, passing through four stage
- * nodes — Discover, Plan, Deliver, Support. Each node is a particle sphere
- * with a tilted orbit ring, growing slightly along the path.
+ * How We Work — one straight particle path with exactly four checkpoints:
  *
- * `annotateProcessStages` tells every particle where it sits on the process
- * (which stage node, or how far along the path), so the shader can light the
- * stages up as the visitor scrolls through the steps.
+ *   01 ──────── 02 ──────── 03 ──────── 04
+ *
+ * A dotted spine, a soft particle stream around it and two faint parallel
+ * rails, with a small dense cluster + thin ring at each checkpoint. Tipped a
+ * little in 3D so it has depth as it sways.
+ *
+ * `annotateProcessStages` gives each particle its place on the process
+ * (checkpoint index, or position along the path in stage units) so the
+ * shader can light checkpoints up as the visitor scrolls the steps.
  */
-const PROCESS = {
-  nodes: [
-    [-1.75, -1.15, 0.35],
-    [-0.55, -0.3, -0.35],
-    [0.6, 0.35, 0.3],
-    [1.75, 1.2, -0.25],
-  ] as [number, number, number][],
-  nodeRadii: [0.24, 0.27, 0.3, 0.34],
-  ringScale: 1.75,
-  nodeShare: 0.46,
-  dotShare: 0.3,
-  // remaining share is the stream around the path
-  dotSpacing: 0.055,
-  dotJitter: 0.01,
-  streamRadius: 0.09,
+const PATH = {
+  /** Checkpoint x positions (local units). */
+  first: -1.95,
+  spacing: 1.3,
+  /** The path runs a little past the first/last checkpoint. */
+  overhang: 0.45,
+  core: 0.1,
+  ring: 0.22,
+  railOffset: 0.2,
+  dotSpacing: 0.045,
+  shares: { nodes: 0.34, dots: 0.34, stream: 0.22 }, // remainder: rails
 } as const;
 
 /** Final placement of the whole form (applied to particles and annotations). */
-const TRANSFORM = { rotation: [0.1, -0.25, 0] as const, scale: 0.78 };
+const TRANSFORM = { rotation: [0.32, -0.42, 0.02] as const, scale: 0.74 };
 
-function buildPath() {
-  const nodes = PROCESS.nodes.map((n) => new THREE.Vector3(...n));
-  // Short lead-in and tail so the path clearly continues through the ends.
-  const lead = nodes[0].clone().add(new THREE.Vector3(-0.45, -0.35, 0.1));
-  const tail = nodes[3].clone().add(new THREE.Vector3(0.45, 0.3, -0.1));
-  const curve = new THREE.CatmullRomCurve3([lead, ...nodes, tail], false, "centripetal");
-  return { nodes, curve };
+const nodeX = (k: number) => PATH.first + k * PATH.spacing;
+const START = nodeX(0) - PATH.overhang;
+const END = nodeX(3) + PATH.overhang;
+
+function placement(): THREE.Matrix4 {
+  return new THREE.Matrix4()
+    .makeRotationFromEuler(new THREE.Euler(...TRANSFORM.rotation))
+    .multiply(new THREE.Matrix4().makeScale(TRANSFORM.scale, TRANSFORM.scale, TRANSFORM.scale));
 }
 
 export function generateProcessParticles(count: number, rand: Rand): Float32Array {
-  const { nodes, curve } = buildPath();
-  const length = curve.getLength();
-
   const out = new Float32Array(count * 3);
-  const nodeCount = Math.floor(count * PROCESS.nodeShare);
-  const dotCount = Math.floor(count * PROCESS.dotShare);
   let w = 0;
   const put = (x: number, y: number, z: number) => {
     out[w * 3] = x;
@@ -55,117 +49,83 @@ export function generateProcessParticles(count: number, rand: Rand): Float32Arra
     out[w * 3 + 2] = z;
     w++;
   };
+  const gauss = () => (rand() + rand() + rand() - 1.5) / 1.5;
+  const n = (share: number) => Math.floor(count * share);
 
-  // Nodes: 65% sphere shell, 35% orbit ring, weighted toward bigger nodes.
-  const weights = PROCESS.nodeRadii.map((r) => r * r);
-  const wSum = weights.reduce((s, x) => s + x, 0);
-  const tmp = new THREE.Vector3();
-  for (let i = 0; i < nodeCount; i++) {
-    let pick = rand() * wSum;
-    let n = 0;
-    while (pick > weights[n] && n < 3) pick -= weights[n++];
-    const c = nodes[n];
-    const r = PROCESS.nodeRadii[n];
-    if (rand() < 0.65) {
-      // Shell with a little thickness.
+  // Checkpoints: 60% dense core shell, 40% thin ring facing the viewer.
+  for (let i = 0, m = n(PATH.shares.nodes); i < m; i++) {
+    const x0 = nodeX(i % 4);
+    if (rand() < 0.6) {
       const z = rand() * 2 - 1;
       const a = rand() * Math.PI * 2;
       const s = Math.sqrt(1 - z * z);
-      const rr = r * (0.92 + rand() * 0.08);
-      put(c.x + Math.cos(a) * s * rr, c.y + Math.sin(a) * s * rr, c.z + z * rr);
+      const r = PATH.core * (0.75 + rand() * 0.25);
+      put(x0 + Math.cos(a) * s * r, Math.sin(a) * s * r, z * r);
     } else {
-      // Orbit ring, tilted differently per node.
       const a = rand() * Math.PI * 2;
-      const rr = r * PROCESS.ringScale * (0.98 + rand() * 0.04);
-      tmp.set(Math.cos(a) * rr, Math.sin(a) * rr * 0.28, Math.sin(a) * rr);
-      tmp.applyAxisAngle(new THREE.Vector3(0, 0, 1), 0.5 + n * 0.35);
-      put(c.x + tmp.x, c.y + tmp.y, c.z + tmp.z);
+      const r = PATH.ring * (0.98 + rand() * 0.04);
+      put(x0 + Math.cos(a) * r * 0.35, Math.sin(a) * r, Math.cos(a) * r);
     }
   }
 
-  // Dotted line: evenly spaced dots along the path (tight clusters).
-  const dotSlots = Math.max(1, Math.floor(length / PROCESS.dotSpacing));
-  const p = new THREE.Vector3();
-  for (let i = 0; i < dotCount; i++) {
-    const u = (i % dotSlots) / dotSlots;
-    curve.getPointAt(u, p);
-    const j = PROCESS.dotJitter;
-    put(p.x + (rand() - 0.5) * j * 2, p.y + (rand() - 0.5) * j * 2, p.z + (rand() - 0.5) * j * 2);
+  // Dotted spine: evenly spaced tight dots along the straight path.
+  const slots = Math.max(1, Math.floor((END - START) / PATH.dotSpacing));
+  for (let i = 0, m = n(PATH.shares.dots); i < m; i++) {
+    const x = START + ((i % slots) / slots) * (END - START);
+    put(x + gauss() * 0.004, gauss() * 0.006, gauss() * 0.006);
   }
 
-  // Stream: a faint tube of particles flowing along the path.
+  // Stream: a soft band of particles flowing around the spine.
+  for (let i = 0, m = n(PATH.shares.stream); i < m; i++) {
+    put(START + rand() * (END - START), gauss() * 0.05, gauss() * 0.05);
+  }
+
+  // Two faint parallel rails.
   while (w < count) {
-    curve.getPointAt(rand(), p);
-    const a = rand() * Math.PI * 2;
-    const rr = PROCESS.streamRadius * Math.sqrt(rand());
-    put(p.x + Math.cos(a) * rr, p.y + Math.sin(a) * rr, p.z + (rand() - 0.5) * rr * 2);
+    const side = rand() < 0.5 ? -1 : 1;
+    put(START + rand() * (END - START), side * PATH.railOffset + gauss() * 0.01, gauss() * 0.02);
   }
 
-  return transformPositions(out, TRANSFORM.rotation, TRANSFORM.scale);
+  const m = placement();
+  const v = new THREE.Vector3();
+  for (let i = 0; i < count; i++) {
+    v.set(out[i * 3], out[i * 3 + 1], out[i * 3 + 2]).applyMatrix4(m);
+    out[i * 3] = v.x;
+    out[i * 3 + 1] = v.y;
+    out[i * 3 + 2] = v.z;
+  }
+  return out;
 }
 
 /**
  * For each particle of the (final, aligned) process form, returns
- * `[stage, isNode]`:
- * - node particles: `stage` = the node index (0 Discover … 3 Support), isNode 1
- * - path particles: `stage` = position along the process in stage units —
- *   between node k and k+1 it runs k → k+1; the lead-in is -0.5 → 0 and the
- *   tail 3 → 3.5 — isNode 0.
+ * `[stage, isNode, cx, cy, cz]` — c = its checkpoint's centre (nodes only):
+ * - checkpoint particles: `stage` = checkpoint index (0 Discover … 3 Support), isNode 1
+ * - path particles: `stage` = position along the path in stage units
+ *   (-0.35 at the start … 3.35 at the end), isNode 0.
  */
 export function annotateProcessStages(positions: Float32Array): Float32Array {
-  const { nodes, curve } = buildPath();
   const count = positions.length / 3;
-  const out = new Float32Array(count * 2);
-
-  // Put the path into the same space as the particles.
-  const place = (v: THREE.Vector3) =>
-    v.applyMatrix4(
-      new THREE.Matrix4()
-        .makeRotationFromEuler(new THREE.Euler(...TRANSFORM.rotation))
-        .multiply(new THREE.Matrix4().makeScale(TRANSFORM.scale, TRANSFORM.scale, TRANSFORM.scale)),
-    );
-  const centers = nodes.map((n) => place(n.clone()));
-  const nodeReach = PROCESS.nodeRadii.map((r) => r * PROCESS.ringScale * 1.15 * TRANSFORM.scale);
-
-  // Dense samples along the path, each with its arc-length parameter u.
-  const SAMPLES = 240;
-  const samples = Array.from({ length: SAMPLES + 1 }, (_, i) => place(curve.getPointAt(i / SAMPLES)));
-  const uOfNearest = (x: number, y: number, z: number) => {
-    let best = 0;
-    let bestD = Infinity;
-    for (let i = 0; i <= SAMPLES; i++) {
-      const s = samples[i];
-      const d = (s.x - x) ** 2 + (s.y - y) ** 2 + (s.z - z) ** 2;
-      if (d < bestD) {
-        bestD = d;
-        best = i;
-      }
-    }
-    return best / SAMPLES;
-  };
-  const nodeU = centers.map((c) => uOfNearest(c.x, c.y, c.z));
-  const stageOfU = (u: number) => {
-    if (u <= nodeU[0]) return -0.5 + 0.5 * (u / Math.max(nodeU[0], 1e-6));
-    for (let k = 0; k < 3; k++) {
-      if (u <= nodeU[k + 1]) return k + (u - nodeU[k]) / Math.max(nodeU[k + 1] - nodeU[k], 1e-6);
-    }
-    return 3 + 0.5 * ((u - nodeU[3]) / Math.max(1 - nodeU[3], 1e-6));
-  };
+  const out = new Float32Array(count * 5);
+  const m = placement();
+  const inverse = m.clone().invert();
+  const centers = [0, 1, 2, 3].map((k) => new THREE.Vector3(nodeX(k), 0, 0).applyMatrix4(m));
+  const v = new THREE.Vector3();
+  const reach = PATH.ring * 1.35;
 
   for (let i = 0; i < count; i++) {
-    const x = positions[i * 3];
-    const y = positions[i * 3 + 1];
-    const z = positions[i * 3 + 2];
-    let node = -1;
-    for (let k = 0; k < 4; k++) {
-      const c = centers[k];
-      if ((c.x - x) ** 2 + (c.y - y) ** 2 + (c.z - z) ** 2 < nodeReach[k] ** 2) {
-        node = k;
-        break;
-      }
+    v.set(positions[i * 3], positions[i * 3 + 1], positions[i * 3 + 2]).applyMatrix4(inverse);
+    const stage = (v.x - PATH.first) / PATH.spacing;
+    const k = Math.round(stage);
+    const onRail = Math.abs(Math.abs(v.y) - PATH.railOffset) < 0.06;
+    const isNode = k >= 0 && k <= 3 && !onRail && Math.hypot(v.x - nodeX(k), v.y, v.z) < reach;
+    out[i * 5] = isNode ? k : stage;
+    out[i * 5 + 1] = isNode ? 1 : 0;
+    if (isNode) {
+      out[i * 5 + 2] = centers[k].x;
+      out[i * 5 + 3] = centers[k].y;
+      out[i * 5 + 4] = centers[k].z;
     }
-    out[i * 2] = node >= 0 ? node : stageOfU(uOfNearest(x, y, z));
-    out[i * 2 + 1] = node >= 0 ? 1 : 0;
   }
   return out;
 }

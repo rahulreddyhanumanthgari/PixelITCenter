@@ -13,6 +13,7 @@ import {
   type FormName,
 } from "@/lib/particles/generateTarget";
 import { MorphController, createMorphGeometry, resolveFormPosition } from "./MorphController";
+import { PALETTE_LINEAR } from "@/lib/particles/palette";
 import type { PointerState, ProgressState } from "./types";
 
 /** How a particle system looks and moves. Every number is tunable. */
@@ -108,6 +109,7 @@ export interface MorphUniforms {
   uMouse: THREE.IUniform<THREE.Vector3>;
   uStage: THREE.IUniform<number>;
   uStageMix: THREE.IUniform<number>;
+  uAccent: THREE.IUniform<THREE.Color>;
 }
 
 /** Anywhere far from the particles, so the pointer push is off. */
@@ -182,6 +184,7 @@ export function ParticleSystem({
       uMouse: { value: MOUSE_PARKED.clone() },
       uStage: { value: 0 },
       uStageMix: { value: 0 },
+      uAccent: { value: PALETTE_LINEAR.orange.clone() },
     };
     return new THREE.ShaderMaterial({
       uniforms,

@@ -4,9 +4,9 @@ import { cn } from "@/lib/utils";
 import { Container, SectionHeader } from "./SectionHeader";
 
 /**
- * About Us — editorial text on the left, a large particle robot on the right.
- * The robot is drawn by the page-wide particle layer over the empty
- * [data-robot-anchor] slot, so this section is transparent. Content enters
+ * About Us — editorial text on the left, a large 3D particle orbit on the
+ * right. The orbit is drawn by the page-wide particle layer over the empty
+ * [data-orbit-anchor] slot, so this section is transparent. Content enters
  * with the same scroll choreography as the story sections ([data-reveal]).
  */
 export function About() {
@@ -27,11 +27,11 @@ export function About() {
           className="lg:col-start-1 lg:row-start-1"
         />
 
-        {/* Robot slot: phones between heading and details, desktop the whole right column. */}
+        {/* Orbit slot: phones between heading and details, desktop the whole right column. */}
         <div
-          data-robot-anchor
+          data-orbit-anchor
           aria-hidden="true"
-          className="my-4 h-[380px] sm:h-[440px] lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:my-0 lg:h-[82vh] lg:self-center"
+          className="my-4 h-[300px] sm:h-[380px] lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:my-0 lg:h-[70vh] lg:self-center"
         />
 
         <div className="flex flex-col gap-10 lg:col-start-1 lg:row-start-2 lg:mt-12">

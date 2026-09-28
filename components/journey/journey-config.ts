@@ -111,32 +111,32 @@ export interface JourneyTier {
   heroScale: number;
   /** Story scale relative to the pinned story column/band height. */
   storyScale: number;
-  /** Particles in the About Us robot. */
-  robotCount: number;
+  /** Particles in the About Us orbit. */
+  orbitCount: number;
 }
 
 const TIERS: Record<DeviceTier, JourneyTier> = {
   desktop: {
     particleCount: 60_000,
-    starCount: 2_600,
+    starCount: 3_200,
     maxDpr: 2,
     scatter: 1,
     bloom: { hero: 0.85, story: 0.55 },
     heroOffset: [1.6, 0.05],
     heroScale: 0.78,
     storyScale: 0.8,
-    robotCount: 26_000,
+    orbitCount: 16_000,
   },
   tablet: {
     particleCount: 34_000,
-    starCount: 1_700,
+    starCount: 2_000,
     maxDpr: 1.75,
     scatter: 0.85,
     bloom: { hero: 0.7, story: 0.45 },
     heroOffset: [1.2, 0.1],
     heroScale: 0.66,
     storyScale: 0.72,
-    robotCount: 18_000,
+    orbitCount: 11_000,
   },
   mobile: {
     particleCount: 18_000,
@@ -149,7 +149,7 @@ const TIERS: Record<DeviceTier, JourneyTier> = {
     heroOffset: [0, 1.1],
     heroScale: 0.44,
     storyScale: 1.1,
-    robotCount: 11_000,
+    orbitCount: 7_000,
   },
 };
 

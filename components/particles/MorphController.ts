@@ -30,7 +30,7 @@ export function resolveFormPosition(position: number, formCount: number): MorphS
 export function createMorphGeometry(
   forms: Float32Array[],
   colors: Float32Array,
-  /** Optional per-particle `[stage, isNode]` for the stepped process form. */
+  /** Optional per-particle `[stage, isNode, cx, cy, cz]` for the stepped process form. */
   stages?: Float32Array,
   seed = 21,
 ): THREE.BufferGeometry {
@@ -71,7 +71,16 @@ export function createMorphGeometry(
   geometry.setAttribute("aScatterDistance", new THREE.BufferAttribute(scatterDistances, 1));
   geometry.setAttribute("aNoiseOffset", new THREE.BufferAttribute(noiseOffsets, 3));
   geometry.setAttribute("aScale", new THREE.BufferAttribute(scales, 1));
-  geometry.setAttribute("aStage", new THREE.BufferAttribute(stages ?? new Float32Array(count * 2), 2));
+  const stageData = stages ?? new Float32Array(count * 5);
+  const stage = new Float32Array(count * 2);
+  const stageCenter = new Float32Array(count * 3);
+  for (let i = 0; i < count; i++) {
+    stage[i * 2] = stageData[i * 5];
+    stage[i * 2 + 1] = stageData[i * 5 + 1];
+    stageCenter.set(stageData.subarray(i * 5 + 2, i * 5 + 5), i * 3);
+  }
+  geometry.setAttribute("aStage", new THREE.BufferAttribute(stage, 2));
+  geometry.setAttribute("aStageCenter", new THREE.BufferAttribute(stageCenter, 3));
   return geometry;
 }
 

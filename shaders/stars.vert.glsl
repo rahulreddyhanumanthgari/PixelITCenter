@@ -12,6 +12,7 @@ attribute vec3 aColor;
 attribute float aRandom;
 attribute float aScale;
 attribute float aDepth;    // 0 near … 1 far
+attribute float aTraveler; // 0 = ambient; 1, 2 = the rare travellers
 
 varying vec3 vColor;
 varying float vAlpha;
@@ -31,9 +32,22 @@ void main() {
   // Parallax: near points shift a little more than far ones.
   pos.xy -= uPointer * (0.08 + nearness * 0.35) * uMotion;
 
+  // Traveller: one slightly larger point occasionally drifts in from deep in
+  // the field, passes by and recedes. The two travellers alternate, so at
+  // most one is ever moving; otherwise they are invisible.
+  float travel = 0.0;
+  if (aTraveler > 0.5) {
+    float period = 26.0;
+    float cycle = fract(uTime / period + (aTraveler - 1.0) * 0.5);
+    float t = clamp(cycle / 0.45, 0.0, 1.0);
+    travel = sin(3.14159265 * t) * step(cycle, 0.45);
+    float side = aTraveler > 1.5 ? -1.0 : 1.0;
+    pos = vec3(side * mix(1.5, 5.5, t), mix(-1.2, 1.6, t) * side, mix(-24.0, 1.5, sin(1.5707963 * t)));
+  }
+
   vec4 mvPosition = modelViewMatrix * vec4(pos, 1.0);
   gl_Position = projectionMatrix * mvPosition;
-  gl_PointSize = max(uSize * aScale * uPixelRatio / -mvPosition.z, 1.0);
+  gl_PointSize = max(uSize * aScale * (1.0 + travel * 1.2) * uPixelRatio / -mvPosition.z, 1.0);
 
   // Far = dimmer. The field lifts a little while the main object is
   // scattered, so the space reads through the transition.
@@ -41,4 +55,8 @@ void main() {
   float twinkle = 0.7 + 0.3 * sin(uTime * (0.3 + aRandom * 0.8) + phase * 7.0) * uMotion;
   vColor = aColor * depthDim * twinkle * (1.0 + uField * 0.7);
   vAlpha = 1.0;
+  if (aTraveler > 0.5) {
+    vColor = vec3(0.95, 0.96, 1.0) * travel * 0.9 * uMotion;
+    vAlpha = travel;
+  }
 }

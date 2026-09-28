@@ -150,58 +150,61 @@ or the morph.
 
   Everything is scrubbed and reverses. Reduced motion gets a fade-in only.
 
-### About Us: particle robot
+### About Us: particle orbit
 
-The robot is a separate particle object in the same journey canvas. It is not
-part of the morph.
+About has no character figure; it uses abstract geometry instead. A large 3D
+orbital ring of particles (`lib/particles/orbit.ts`, `shaders/orbit.vert.glsl`,
+`components/orbit/ParticleOrbit.tsx`) sits in the same journey canvas, over the
+empty `[data-orbit-anchor]` slot.
 
-- **Shape** (`lib/particles/robot.ts`). Procedural primitives are used only
-  as sampling sources; nothing solid is rendered:
-  - rounded boxes for the head, torso, hips and feet;
-  - capsules for the arms and legs;
-  - spheres for the shoulders, elbows and knees;
-  - cylinders for the ear pods and neck.
+- **Shape.** A slightly organic ring: uneven density around it, gentle
+  warps out of its plane, and a soft halo.
+- **Motion.**
+  - Particles travel slowly around the ring; about 6% move faster.
+  - A rare few (0.4%) leave the ring toward the viewer, grow and brighten,
+    then return.
+  - The whole ring drifts slightly.
+- **Pointer.** Slight tilt, parallax and a ripple. It never follows the
+  cursor.
+- **Entrance.** Scroll-scrubbed: particles gather from deep in space into the
+  ring.
+- **Colour.** Mostly white/off-white, with about 7% tinted in the rocket
+  accents.
+- **Counts.** 16k desktop / 11k tablet / 7k mobile. All tunables are in
+  `ORBIT_CONFIG`.
 
-  Surface samples carry normals and a body-part id (head, eyes, torso, left
-  arm, right arm, legs). Fixed shares go to features that make it read as a
-  robot: 3.5% eyes, 6% a rounded-rectangle screen frame, and chest lights.
-  The face screen is kept dark by rejecting head samples there.
-- **Shader** (`shaders/robot.vert.glsl`). There is one `mat4` per part
-  (`uPart[5]`), so the head, torso, arms and legs articulate on the GPU.
-  - *Eyes:* shifted within the face plane (`uEyeOffset`).
-  - *Rim lighting:* edge-on surfaces are drawn brighter and larger, which
-    keeps the silhouette crisp.
-  - *Hover:* particles near the cursor lift slightly off the surface.
-  - *Entrance:* each particle gathers from its own scatter offset, staggered.
-- **Behaviour** (`components/robot/ParticleRobot.tsx`, all tunables in
-  `ROBOT_CONFIG`).
-  - *Cursor influence:* fades from full near the robot to nothing far away
-    (`proximity`).
-  - *Movement:* the head yaws ±10° and pitches ±6°, the torso moves about a
-    quarter of that, the arms swing slightly and the legs stay still. The
-    eyes glance, and everything is damped with the head leading.
-  - *Idle:* float, breathing and a slow glance.
-  - *Entrance:* scroll-scrubbed as About arrives.
-  - *Reduced motion:* no tracking and minimal motion.
-  - *Touch:* idle only.
-- **Placement.** It is drawn over the empty `[data-robot-anchor]` slot in
-  About:
-  - *Desktop:* the right column.
-  - *Phones:* between the heading and the details.
+About is transparent, so the orbit and star field show through. The journey
+layer stays on until About has scrolled past.
 
-  About is transparent, and the journey layer now stays on until About has
-  scrolled past.
-- **Story release.** The story form now follows the anchor out once the
-  story ends. It uses the story's bottom edge, because the desktop anchor's
-  negative margin keeps it stuck for an extra screen. Previously the opaque
-  About section hid this.
-- **Counts:**
+### How We Work (current version)
 
-  | Tier | Robot particles |
-  |---|---|
-  | Desktop | 26k |
-  | Tablet | 18k |
-  | Mobile | 11k |
+- **Shape.** The process form is a straight particle path (`forms/process.ts`):
+  a dotted spine, a soft stream, two faint parallel rails, and exactly four
+  checkpoints (a small dense core plus a thin ring).
+- **Scroll.** A single ScrollTrigger over the pinned `[data-process-track]`
+  scrubs progress 0→4 (`ProcessProgress`). It drives:
+  - the 01–04 index states (`data-state`);
+  - one step panel at a time on the right, crossing over at each checkpoint:
+    the old panel drifts left and fades, the new one comes in from the right,
+    staggered number → title → text;
+  - the particles (`lib/processProgress`).
+- **Shader.**
+  - Active checkpoints grow about 15% around their own centre (the
+    `aStageCenter` attribute).
+  - A small brightness and size wave passes through a checkpoint as it is
+    reached.
+  - The stream front carries energy only between checkpoints and settles at
+    the end.
+  - Accents use the rocket orange (`uAccent`).
+
+### Space
+
+- **Background.** The page background is the dark environment throughout.
+  Section panels and colour glows were removed (the contact card no longer
+  has glow blobs).
+- **Stars.** The star field is denser in the distance, and has two
+  "travellers". They alternate, so at most one is visible at a time: every
+  ~26s it drifts in from depth, passes by and recedes.
 
 ### Engine
 

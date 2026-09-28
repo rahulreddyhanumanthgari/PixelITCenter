@@ -25,19 +25,23 @@ export function createStarGeometry(count: number, seed = 13): THREE.BufferGeomet
   const randoms = new Float32Array(count);
   const scales = new Float32Array(count);
   const depths = new Float32Array(count);
+  // A couple of points are "travellers": now and then one drifts in from
+  // depth, passes by and recedes (see stars.vert.glsl).
+  const travelers = new Float32Array(count);
   const colors = new Float32Array(count * 3);
   const { white, offWhite, orange } = PALETTE_LINEAR;
   const c = new THREE.Color();
 
   for (let i = 0; i < count; i++) {
     // Bias toward the far range: most points are distant dust.
-    const d = 1 - Math.pow(rand(), 1.8);
+    const d = 1 - Math.pow(rand(), 2.1);
     const z = SPACE.near + (SPACE.far - SPACE.near) * d;
     const dist = SPACE.cameraZ - z;
     positions[i * 3] = (rand() - 0.5) * 2 * dist * SPACE.spreadX;
     positions[i * 3 + 1] = (rand() - 0.5) * 2 * dist * SPACE.spreadY;
     positions[i * 3 + 2] = z;
     depths[i] = d;
+    travelers[i] = i < 2 ? 1 + i : 0;
     randoms[i] = rand();
     // Near points a touch larger in their own right, on top of perspective.
     scales[i] = (0.45 + rand() * rand() * 1.2) * (1.25 - d * 0.45);
@@ -55,6 +59,7 @@ export function createStarGeometry(count: number, seed = 13): THREE.BufferGeomet
   geometry.setAttribute("aRandom", new THREE.BufferAttribute(randoms, 1));
   geometry.setAttribute("aScale", new THREE.BufferAttribute(scales, 1));
   geometry.setAttribute("aDepth", new THREE.BufferAttribute(depths, 1));
+  geometry.setAttribute("aTraveler", new THREE.BufferAttribute(travelers, 1));
   geometry.setAttribute("aColor", new THREE.BufferAttribute(colors, 3));
   return geometry;
 }
