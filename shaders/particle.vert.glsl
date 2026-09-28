@@ -25,6 +25,8 @@ uniform float uMouseInfluence;
 uniform float uMouseRadius;
 uniform float uFocusDepth;
 uniform vec3 uMouse;            // pointer, in the particles' local space
+uniform float uStage;           // process progress: 0 = Discover active … 4 = all done
+uniform float uStageMix;        // 0 = no stage effects, 1 = fully on (process form)
 
 attribute vec3 aTarget;
 attribute vec3 aColor;
@@ -34,6 +36,7 @@ attribute vec3 aScatterDir;
 attribute float aScatterDistance;
 attribute vec3 aNoiseOffset;
 attribute float aScale;
+attribute vec2 aStage;          // (stage position, isNode) on the process form
 
 varying vec3 vColor;
 varying float vAlpha;
@@ -165,6 +168,29 @@ void main() {
   float breathe = sin(uTime * 0.55 + pos.y * 1.4) * 0.012 * uMotion * (1.0 - field);
   pos *= 1.0 + breathe;
 
+  // --- process stages -----------------------------------------------------
+  // Only on the final process form (uStageMix). A node is active while the
+  // progress is within its step, completed after it; path particles light up
+  // once the progress front has passed them, and a bright stream (the front)
+  // travels along the path from one stage to the next.
+  float q = aStage.x;
+  float isNode = aStage.y;
+  float passed = smoothstep(q - 0.04, q + 0.04, uStage);
+  float nodeOn = isNode * smoothstep(q - 0.06, q + 0.02, uStage);
+  float nodeDone = isNode * smoothstep(q + 0.86, q + 0.97, uStage);
+  float nodeActive = nodeOn * (1.0 - nodeDone);
+  float front = (1.0 - isNode) * exp(-pow((q - uStage) / 0.09, 2.0));
+  // Gentle movement around the active node only.
+  pos += 0.018 * nodeActive * uStageMix * uMotion * vec3(
+    sin(uTime * 1.4 + aNoiseOffset.x),
+    cos(uTime * 1.2 + aNoiseOffset.y),
+    sin(uTime * 1.6 + aNoiseOffset.z)
+  );
+  float pathLevel = mix(0.32, 0.8, passed) + front * 1.1;
+  float nodeLevel = mix(0.4, 1.0, nodeDone) + nodeActive * 0.55;
+  float stageLevel = mix(1.0, mix(pathLevel, nodeLevel, isNode), uStageMix);
+  float stageSize = mix(1.0, 1.0 + nodeActive * 0.2 + front * 0.3, uStageMix);
+
   // --- pointer push -------------------------------------------------------
   vec3 away = pos - uMouse;
   float dist = length(away);
@@ -176,7 +202,7 @@ void main() {
   gl_Position = projectionMatrix * mvPosition;
 
   float depth = max(-mvPosition.z, 0.5);
-  float size = uSize * aScale;
+  float size = uSize * aScale * stageSize;
   gl_PointSize = clamp(size * uPixelRatio / depth, 1.0, 28.0 * uPixelRatio);
 
   // Near particles brighter, far ones dimmer; a soft twinkle on top. Spread
@@ -184,6 +210,6 @@ void main() {
   // brightness lift to stay clearly visible.
   float depthFade = clamp(1.0 - (depth - uFocusDepth) * 0.2, 0.35, 1.4);
   float twinkle = 0.8 + 0.2 * sin(uTime * (0.8 + aRandom * 2.2) + aRandom * 40.0) * uMotion;
-  vColor = aColor * depthFade * twinkle * (1.0 + push * 0.6 + flight * 0.25 + field * 0.6);
+  vColor = aColor * depthFade * twinkle * (1.0 + push * 0.6 + flight * 0.25 + field * 0.6) * stageLevel;
   vAlpha = clamp(depthFade, 0.0, 1.0);
 }

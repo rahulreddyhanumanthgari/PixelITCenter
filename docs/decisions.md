@@ -84,6 +84,32 @@ with a `clip-path` matching the band. Before that, the band is see-through
 and the layer stays behind. The hero form sits at the band's centre, so
 nothing jumps at the handoff.
 
+### How We Work: stepped process
+
+The final form (the process path) lights up step by step as the visitor
+scrolls the four steps (Discover, Plan, Deliver, Support).
+
+- **Text.** `ProcessProgress` gives each step a ScrollTrigger that scrubs
+  0→1 while the step passes 58% of the viewport. The sum (0 = Discover
+  active … 4 = all done) goes into the shared `lib/processProgress.ts`. Steps
+  get `data-state` (`inactive` / `active` / `completed`), which drives the
+  styling: dimmed, full emphasis with the accent number, or ✓. This works
+  with or without WebGL.
+- **Particles.** `annotateProcessStages` gives every particle of the process
+  form an `aStage = (stage, isNode)` attribute:
+  - node particles get the node index;
+  - path particles get their position along the process in stage units.
+
+  The shader reads `uStage`:
+  - *Upcoming nodes:* dim.
+  - *The active node:* brighter, slightly larger, with gentle movement.
+  - *Completed nodes:* steady and a little brighter.
+  - *The path:* lights up behind a bright moving front, the stream of
+    particles travelling between stages.
+
+  `uStageMix` fades these effects in only as the process form lands, so
+  earlier forms are unaffected.
+
 ### Engine
 
 **`lib/particles/`** (independent of site content)

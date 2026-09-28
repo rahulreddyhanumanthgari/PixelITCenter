@@ -9,6 +9,7 @@ import { StarField } from "@/components/particles/StarField";
 import { useDeviceTier, usePointer, useReducedMotion } from "@/components/particles/hooks";
 import type { ProgressState } from "@/components/particles/types";
 import { PALETTE } from "@/lib/particles/palette";
+import { processProgress } from "@/lib/processProgress";
 import {
   HERO_LOOK,
   JOURNEY_BLOOM,
@@ -35,6 +36,8 @@ function worldPerPx(): number {
 export default function JourneyScene() {
   const pointer = usePointer();
   const progress = useRef<ProgressState>({ value: 0 });
+  // How We Work step progress, written by the section's own scroll triggers.
+  const stage = useRef<ProgressState>(processProgress);
   const bloom = useRef<BloomEffect>(null);
   const tierName = useDeviceTier();
   const reducedMotion = useReducedMotion();
@@ -188,6 +191,7 @@ export default function JourneyScene() {
         pixelRatio={dpr}
         reducedMotion={reducedMotion}
         onBlend={onBlend}
+        stage={stage}
       />
     </ParticleCanvas>
   );

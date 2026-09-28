@@ -6,7 +6,7 @@ import { mulberry32, smoothstep, type Rand } from "./random";
 import { generateServicesParticles } from "./forms/services";
 import { generateGlobeParticles } from "./forms/globe";
 import { generateSegmentedRingParticles } from "./forms/segmentedRing";
-import { generateProcessParticles } from "./forms/process";
+import { annotateProcessStages, generateProcessParticles } from "./forms/process";
 
 /**
  * Every form the particles can assemble into. To add one: write a generator
@@ -27,6 +27,11 @@ interface FormDefinition {
   generate: (count: number, rand: Rand) => Float32Array;
   /** Optional colouring used when this form is the first in the sequence. */
   colorize?: (positions: Float32Array) => Float32Array;
+  /**
+   * Optional per-particle `[stage, isNode]` data for a form whose parts light
+   * up in steps (the process path). Computed on the final aligned positions.
+   */
+  annotate?: (positions: Float32Array) => Float32Array;
 }
 
 /** Sample a surface, then push a share of points slightly inside for depth. */
@@ -62,7 +67,7 @@ export const FORMS: Record<FormName, FormDefinition> = {
   services: { generate: generateServicesParticles },
   globe: { generate: generateGlobeParticles },
   segmentedRing: { generate: generateSegmentedRingParticles },
-  process: { generate: generateProcessParticles },
+  process: { generate: generateProcessParticles, annotate: annotateProcessStages },
 };
 
 /**
@@ -153,4 +158,17 @@ export function monochromeColors(count: number, seed = 9): Float32Array {
     pushColor(colors, i, c, s > 0.97 ? 1.6 : s < 0.25 ? 0.45 : 0.7 + rand() * 0.35);
   }
   return colors;
+}
+/**
+ * Stage data for the (single) form in a sequence that has an `annotate`
+ * function, plus its index — or null when no form in the sequence has one.
+ */
+export function stageDataFor(
+  names: readonly FormName[],
+  forms: Float32Array[],
+): { index: number; data: Float32Array } | null {
+  const index = names.findIndex((n) => FORMS[n].annotate);
+  if (index < 0) return null;
+  const annotate = FORMS[names[index]].annotate;
+  return annotate ? { index, data: annotate(forms[index]) } : null;
 }

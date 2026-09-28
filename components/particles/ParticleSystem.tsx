@@ -9,6 +9,7 @@ import {
   colorsForSequence,
   generateForm,
   monochromeColors,
+  stageDataFor,
   type FormName,
 } from "@/lib/particles/generateTarget";
 import { MorphController, createMorphGeometry, resolveFormPosition } from "./MorphController";
@@ -75,6 +76,11 @@ interface ParticleSystemProps {
   reducedMotion: boolean;
   /** Called every frame with the handoff blend (0 = `look`, 1 = `lookTo`). */
   onBlend?: (blend: number) => void;
+  /**
+   * Step progress for a stepped form (the process path): 0 = first step
+   * active … N = all steps done. Written by the section's scroll triggers.
+   */
+  stage?: RefObject<ProgressState>;
 }
 
 export interface MorphUniforms {
@@ -93,6 +99,8 @@ export interface MorphUniforms {
   uMouseRadius: THREE.IUniform<number>;
   uFocusDepth: THREE.IUniform<number>;
   uMouse: THREE.IUniform<THREE.Vector3>;
+  uStage: THREE.IUniform<number>;
+  uStageMix: THREE.IUniform<number>;
 }
 
 /** Anywhere far from the particles, so the pointer push is off. */
@@ -129,6 +137,7 @@ export function ParticleSystem({
   pixelRatio,
   reducedMotion,
   onBlend,
+  stage,
 }: ParticleSystemProps) {
   const rootRef = useRef<THREE.Group>(null);
   const tiltRef = useRef<THREE.Group>(null);
@@ -137,10 +146,15 @@ export function ParticleSystem({
   const motion = reducedMotion ? look.reducedMotionFactor : 1;
 
   // Every form is sampled once per mount with the same particle count.
-  const { geometry, forms } = useMemo(() => {
+  const { geometry, forms, stagedForm } = useMemo(() => {
     const forms = formNames.map((name, i) => generateForm(name, count, 101 + i * 7919));
     const colors = look.colors === "monochrome" ? monochromeColors(count) : colorsForSequence(formNames[0], forms[0]);
-    return { geometry: createMorphGeometry(forms, colors), forms };
+    const staged = stageDataFor(formNames, forms);
+    return {
+      geometry: createMorphGeometry(forms, colors, staged?.data),
+      forms,
+      stagedForm: staged?.index ?? -1,
+    };
   }, [formNames, count, look.colors]);
 
   const material = useMemo(() => {
@@ -159,6 +173,8 @@ export function ParticleSystem({
       uMouseRadius: { value: look.mouseRadius },
       uFocusDepth: { value: look.cameraZ },
       uMouse: { value: MOUSE_PARKED.clone() },
+      uStage: { value: 0 },
+      uStageMix: { value: 0 },
     };
     return new THREE.ShaderMaterial({
       uniforms,
@@ -202,6 +218,7 @@ export function ParticleSystem({
     hit: new THREE.Vector3(),
     center: new THREE.Vector3(),
     smoothProgress: -1,
+    smoothStage: -1,
     spin: 0,
   });
 
@@ -227,6 +244,16 @@ export function ParticleSystem({
     const target = progress.current.value;
     s0.smoothProgress = s0.smoothProgress < 0 ? target : s0.smoothProgress + (target - s0.smoothProgress) * k;
     u.uProgress.value = controller.update(s0.smoothProgress);
+
+    // --- stepped form: stage effects fade in as the form lands -------------
+    if (stagedForm >= 0) {
+      const p0 = s0.smoothProgress;
+      const landing = Math.min(Math.max((p0 - (stagedForm - 0.3)) / 0.3, 0), 1);
+      u.uStageMix.value = smooth(landing);
+      const targetStage = stage?.current.value ?? 0;
+      s0.smoothStage = s0.smoothStage < 0 ? targetStage : s0.smoothStage + (targetStage - s0.smoothStage) * k;
+      u.uStage.value = s0.smoothStage;
+    }
 
     // --- handoff blend: placement + look glide across one transition ------
     const b = smooth(Math.min(Math.max(s0.smoothProgress - handoffAt, 0), 1));

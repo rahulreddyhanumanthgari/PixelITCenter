@@ -27,7 +27,13 @@ export function resolveFormPosition(position: number, formCount: number): MorphS
  * attributes (colour, delays, scatter direction…) that never change, which is
  * why a particle keeps its colour and character from form to form.
  */
-export function createMorphGeometry(forms: Float32Array[], colors: Float32Array, seed = 21): THREE.BufferGeometry {
+export function createMorphGeometry(
+  forms: Float32Array[],
+  colors: Float32Array,
+  /** Optional per-particle `[stage, isNode]` for the stepped process form. */
+  stages?: Float32Array,
+  seed = 21,
+): THREE.BufferGeometry {
   const count = forms[0].length / 3;
   const rand = mulberry32(seed);
 
@@ -65,6 +71,7 @@ export function createMorphGeometry(forms: Float32Array[], colors: Float32Array,
   geometry.setAttribute("aScatterDistance", new THREE.BufferAttribute(scatterDistances, 1));
   geometry.setAttribute("aNoiseOffset", new THREE.BufferAttribute(noiseOffsets, 3));
   geometry.setAttribute("aScale", new THREE.BufferAttribute(scales, 1));
+  geometry.setAttribute("aStage", new THREE.BufferAttribute(stages ?? new Float32Array(count * 2), 2));
   return geometry;
 }
 

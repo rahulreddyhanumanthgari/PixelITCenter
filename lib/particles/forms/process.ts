@@ -4,10 +4,13 @@ import type { Rand } from "../random";
 
 /**
  * How We Work — one continuous process: a flowing 3D path drawn as a dotted
- * line (like the reference arc) with a faint particle stream around it,
- * passing through four stage nodes — Discover, Plan, Deliver, Support. Each
- * node is a particle sphere with a tilted orbit ring, growing slightly along
- * the path to suggest progression.
+ * line with a faint particle stream around it, passing through four stage
+ * nodes — Discover, Plan, Deliver, Support. Each node is a particle sphere
+ * with a tilted orbit ring, growing slightly along the path.
+ *
+ * `annotateProcessStages` tells every particle where it sits on the process
+ * (which stage node, or how far along the path), so the shader can light the
+ * stages up as the visitor scrolls through the steps.
  */
 const PROCESS = {
   nodes: [
@@ -26,12 +29,20 @@ const PROCESS = {
   streamRadius: 0.09,
 } as const;
 
-export function generateProcessParticles(count: number, rand: Rand): Float32Array {
+/** Final placement of the whole form (applied to particles and annotations). */
+const TRANSFORM = { rotation: [0.1, -0.25, 0] as const, scale: 0.78 };
+
+function buildPath() {
   const nodes = PROCESS.nodes.map((n) => new THREE.Vector3(...n));
   // Short lead-in and tail so the path clearly continues through the ends.
   const lead = nodes[0].clone().add(new THREE.Vector3(-0.45, -0.35, 0.1));
   const tail = nodes[3].clone().add(new THREE.Vector3(0.45, 0.3, -0.1));
   const curve = new THREE.CatmullRomCurve3([lead, ...nodes, tail], false, "centripetal");
+  return { nodes, curve };
+}
+
+export function generateProcessParticles(count: number, rand: Rand): Float32Array {
+  const { nodes, curve } = buildPath();
   const length = curve.getLength();
 
   const out = new Float32Array(count * 3);
@@ -90,5 +101,71 @@ export function generateProcessParticles(count: number, rand: Rand): Float32Arra
     put(p.x + Math.cos(a) * rr, p.y + Math.sin(a) * rr, p.z + (rand() - 0.5) * rr * 2);
   }
 
-  return transformPositions(out, [0.1, -0.25, 0], 0.78);
+  return transformPositions(out, TRANSFORM.rotation, TRANSFORM.scale);
+}
+
+/**
+ * For each particle of the (final, aligned) process form, returns
+ * `[stage, isNode]`:
+ * - node particles: `stage` = the node index (0 Discover … 3 Support), isNode 1
+ * - path particles: `stage` = position along the process in stage units —
+ *   between node k and k+1 it runs k → k+1; the lead-in is -0.5 → 0 and the
+ *   tail 3 → 3.5 — isNode 0.
+ */
+export function annotateProcessStages(positions: Float32Array): Float32Array {
+  const { nodes, curve } = buildPath();
+  const count = positions.length / 3;
+  const out = new Float32Array(count * 2);
+
+  // Put the path into the same space as the particles.
+  const place = (v: THREE.Vector3) =>
+    v.applyMatrix4(
+      new THREE.Matrix4()
+        .makeRotationFromEuler(new THREE.Euler(...TRANSFORM.rotation))
+        .multiply(new THREE.Matrix4().makeScale(TRANSFORM.scale, TRANSFORM.scale, TRANSFORM.scale)),
+    );
+  const centers = nodes.map((n) => place(n.clone()));
+  const nodeReach = PROCESS.nodeRadii.map((r) => r * PROCESS.ringScale * 1.15 * TRANSFORM.scale);
+
+  // Dense samples along the path, each with its arc-length parameter u.
+  const SAMPLES = 240;
+  const samples = Array.from({ length: SAMPLES + 1 }, (_, i) => place(curve.getPointAt(i / SAMPLES)));
+  const uOfNearest = (x: number, y: number, z: number) => {
+    let best = 0;
+    let bestD = Infinity;
+    for (let i = 0; i <= SAMPLES; i++) {
+      const s = samples[i];
+      const d = (s.x - x) ** 2 + (s.y - y) ** 2 + (s.z - z) ** 2;
+      if (d < bestD) {
+        bestD = d;
+        best = i;
+      }
+    }
+    return best / SAMPLES;
+  };
+  const nodeU = centers.map((c) => uOfNearest(c.x, c.y, c.z));
+  const stageOfU = (u: number) => {
+    if (u <= nodeU[0]) return -0.5 + 0.5 * (u / Math.max(nodeU[0], 1e-6));
+    for (let k = 0; k < 3; k++) {
+      if (u <= nodeU[k + 1]) return k + (u - nodeU[k]) / Math.max(nodeU[k + 1] - nodeU[k], 1e-6);
+    }
+    return 3 + 0.5 * ((u - nodeU[3]) / Math.max(1 - nodeU[3], 1e-6));
+  };
+
+  for (let i = 0; i < count; i++) {
+    const x = positions[i * 3];
+    const y = positions[i * 3 + 1];
+    const z = positions[i * 3 + 2];
+    let node = -1;
+    for (let k = 0; k < 4; k++) {
+      const c = centers[k];
+      if ((c.x - x) ** 2 + (c.y - y) ** 2 + (c.z - z) ** 2 < nodeReach[k] ** 2) {
+        node = k;
+        break;
+      }
+    }
+    out[i * 2] = node >= 0 ? node : stageOfU(uOfNearest(x, y, z));
+    out[i * 2 + 1] = node >= 0 ? 1 : 0;
+  }
+  return out;
 }
