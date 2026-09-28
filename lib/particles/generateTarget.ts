@@ -4,7 +4,7 @@ import { colorRocketParticles, generateRocketParticles } from "./generateRocketP
 import { PALETTE_LINEAR, pushColor } from "./palette";
 import { mulberry32, smoothstep, type Rand } from "./random";
 import { generateServicesParticles } from "./forms/services";
-import { generateGlobeHandParticles } from "./forms/globeHand";
+import { generateGlobeParticles } from "./forms/globe";
 import { generateSegmentedRingParticles } from "./forms/segmentedRing";
 import { generateProcessParticles } from "./forms/process";
 
@@ -19,7 +19,7 @@ export type FormName =
   | "torus"
   | "sculpture"
   | "services"
-  | "globeHand"
+  | "globe"
   | "segmentedRing"
   | "process";
 
@@ -60,7 +60,7 @@ export const FORMS: Record<FormName, FormDefinition> = {
   },
   // Section story forms (Services → Staffing → Why us → How we work).
   services: { generate: generateServicesParticles },
-  globeHand: { generate: generateGlobeHandParticles },
+  globe: { generate: generateGlobeParticles },
   segmentedRing: { generate: generateSegmentedRingParticles },
   process: { generate: generateProcessParticles },
 };

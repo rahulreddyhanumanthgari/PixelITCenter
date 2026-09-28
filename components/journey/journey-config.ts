@@ -14,7 +14,7 @@ export const JOURNEY_FORMS: readonly FormName[] = [
   "rocket",
   "sphere",
   "services",
-  "globeHand",
+  "globe",
   "segmentedRing",
   "process",
 ];
@@ -61,7 +61,7 @@ export const HERO_LOOK: ParticleLook = {
 
 /**
  * The story look: finer points, and a gentle sway instead of a spin so the
- * hand-and-globe and the process path always face the reader. The system blends from
+ * globe and the process path always face the reader. The system blends from
  * HERO_LOOK to this while the sphere becomes the Services ring.
  */
 export const STORY_LOOK: ParticleLook = {
