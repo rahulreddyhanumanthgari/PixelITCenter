@@ -34,11 +34,30 @@ function useMediaQuery(query: string): boolean {
   return matches;
 }
 
+/** True when the browser can actually create a WebGL context. */
+function hasWebGL(): boolean {
+  try {
+    const canvas = document.createElement("canvas");
+    const gl = canvas.getContext("webgl2") ?? canvas.getContext("webgl");
+    gl?.getExtension("WEBGL_lose_context")?.loseContext();
+    return gl !== null;
+  } catch {
+    return false;
+  }
+}
+
 /**
- * The whole WebGL layer of the hero. Only ever rendered in the browser
- * (loaded through HeroCanvasLoader with ssr: false).
+ * Entry point, loaded through HeroCanvasLoader with ssr: false so it only
+ * ever runs in the browser. Without WebGL the hero is just the HTML content
+ * on the dark background.
  */
-export default function ParticleScene() {
+export default function ParticleSceneGate() {
+  const [supported] = useState(hasWebGL);
+  return supported ? <ParticleScene /> : null;
+}
+
+/** The whole WebGL layer of the hero. */
+function ParticleScene() {
   const containerRef = useRef<HTMLDivElement>(null);
   const pointer = useRef<PointerState>({ x: 0, y: 0, active: false });
   const scroll = useRef<ScrollState>({ progress: 0 });

@@ -1,6 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import { SceneErrorBoundary } from "./SceneErrorBoundary";
 
 // ssr: false has to live in a Client Component in the App Router. This keeps
 // three.js entirely out of the server render while the hero text stays SSR.
@@ -10,5 +11,9 @@ const ParticleScene = dynamic(() => import("./ParticleScene"), {
 });
 
 export function HeroCanvasLoader() {
-  return <ParticleScene />;
+  return (
+    <SceneErrorBoundary>
+      <ParticleScene />
+    </SceneErrorBoundary>
+  );
 }
