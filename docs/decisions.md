@@ -150,6 +150,59 @@ or the morph.
 
   Everything is scrubbed and reverses. Reduced motion gets a fade-in only.
 
+### About Us: particle robot
+
+The robot is a separate particle object in the same journey canvas. It is not
+part of the morph.
+
+- **Shape** (`lib/particles/robot.ts`). Procedural primitives are used only
+  as sampling sources; nothing solid is rendered:
+  - rounded boxes for the head, torso, hips and feet;
+  - capsules for the arms and legs;
+  - spheres for the shoulders, elbows and knees;
+  - cylinders for the ear pods and neck.
+
+  Surface samples carry normals and a body-part id (head, eyes, torso, left
+  arm, right arm, legs). Fixed shares go to features that make it read as a
+  robot: 3.5% eyes, 6% a rounded-rectangle screen frame, and chest lights.
+  The face screen is kept dark by rejecting head samples there.
+- **Shader** (`shaders/robot.vert.glsl`). There is one `mat4` per part
+  (`uPart[5]`), so the head, torso, arms and legs articulate on the GPU.
+  - *Eyes:* shifted within the face plane (`uEyeOffset`).
+  - *Rim lighting:* edge-on surfaces are drawn brighter and larger, which
+    keeps the silhouette crisp.
+  - *Hover:* particles near the cursor lift slightly off the surface.
+  - *Entrance:* each particle gathers from its own scatter offset, staggered.
+- **Behaviour** (`components/robot/ParticleRobot.tsx`, all tunables in
+  `ROBOT_CONFIG`).
+  - *Cursor influence:* fades from full near the robot to nothing far away
+    (`proximity`).
+  - *Movement:* the head yaws ±10° and pitches ±6°, the torso moves about a
+    quarter of that, the arms swing slightly and the legs stay still. The
+    eyes glance, and everything is damped with the head leading.
+  - *Idle:* float, breathing and a slow glance.
+  - *Entrance:* scroll-scrubbed as About arrives.
+  - *Reduced motion:* no tracking and minimal motion.
+  - *Touch:* idle only.
+- **Placement.** It is drawn over the empty `[data-robot-anchor]` slot in
+  About:
+  - *Desktop:* the right column.
+  - *Phones:* between the heading and the details.
+
+  About is transparent, and the journey layer now stays on until About has
+  scrolled past.
+- **Story release.** The story form now follows the anchor out once the
+  story ends. It uses the story's bottom edge, because the desktop anchor's
+  negative margin keeps it stuck for an extra screen. Previously the opaque
+  About section hid this.
+- **Counts:**
+
+  | Tier | Robot particles |
+  |---|---|
+  | Desktop | 26k |
+  | Tablet | 18k |
+  | Mobile | 11k |
+
 ### Engine
 
 **`lib/particles/`** (independent of site content)

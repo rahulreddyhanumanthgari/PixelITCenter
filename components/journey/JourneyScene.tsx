@@ -7,6 +7,7 @@ import { gsap } from "@/lib/gsap";
 import { ParticleCanvas } from "@/components/particles/ParticleCanvas";
 import { ParticleSystem, type LayoutState } from "@/components/particles/ParticleSystem";
 import { StarField, type Atmosphere } from "@/components/particles/StarField";
+import { ParticleRobot } from "@/components/robot/ParticleRobot";
 import { useDeviceTier, usePointer, useReducedMotion } from "@/components/particles/hooks";
 import type { PointerState, ProgressState } from "@/components/particles/types";
 import { PALETTE } from "@/lib/particles/palette";
@@ -148,7 +149,10 @@ export default function JourneyScene() {
     const story = document.querySelector<HTMLElement>("[data-story]");
     const anchor = story?.querySelector<HTMLElement>("[data-story-anchor]");
     const layer = document.querySelector<HTMLElement>("[data-journey-layer]");
-    if (!story || !anchor || !layer) return;
+    // The particle layer stays on through About Us (the robot); after that the
+    // opaque sections cover it.
+    const lastLit = document.querySelector<HTMLElement>("[data-about]") ?? story;
+    if (!story || !anchor || !layer || !lastLit) return;
     let frame = 0;
 
     const measure = () => {
@@ -167,7 +171,12 @@ export default function JourneyScene() {
       const xAt = (fraction: number) => (rect.left + rect.width * fraction - vw / 2) * wpp;
       L.sides = columns ? { left: xAt(STORY_SLOTS.left), right: xAt(STORY_SLOTS.right), byForm: STORY_SIDES } : null;
       L.to.x = columns ? xAt(STORY_SIDES[0] ? STORY_SLOTS.right : STORY_SLOTS.left) : xAt(0.5);
-      L.to.y = -(stickyTop + rect.height / 2 - vh / 2) * wpp;
+      // Pinned position while the anchor is stuck (or still arriving); once
+      // the story ends, the form scrolls away with it. The release point is
+      // measured from the story's end: on desktop the anchor's negative
+      // margin would otherwise keep it stuck for an extra screen.
+      const anchorTop = Math.min(rect.top, stickyTop, story.getBoundingClientRect().bottom - rect.height);
+      L.to.y = -(anchorTop + rect.height / 2 - vh / 2) * wpp;
       L.to.scale = tier.storyScale * (rect.height / vh);
       L.from.x = tier.heroOffset[0];
       // In the band layout the hero form sits exactly where the band will be.
@@ -177,7 +186,7 @@ export default function JourneyScene() {
       // Phones: once the band is stuck, the text scrolls under the band's
       // opaque background — so the canvas moves above the page and is clipped
       // to the band. Before that it stays behind the page, full screen.
-      const banded = !columns && rect.top <= stickyTop + 1;
+      const banded = !columns && rect.top <= stickyTop + 1 && rect.bottom > stickyTop;
       // The band only turns opaque once pinned; while it scrolls into place
       // it stays see-through so the particles behind it never vanish.
       anchor.dataset.stuck = String(banded);
@@ -187,7 +196,7 @@ export default function JourneyScene() {
         : "none";
 
       // Past the story, the rest of the page covers the layer: stop drawing.
-      const on = story.getBoundingClientRect().bottom > 0;
+      const on = lastLit.getBoundingClientRect().bottom > 0;
       layer.style.visibility = on ? "visible" : "hidden";
       setActive(on);
     };
@@ -246,6 +255,15 @@ export default function JourneyScene() {
         reducedMotion={reducedMotion}
         onBlend={onBlend}
         stage={stage}
+      />
+      <ParticleRobot
+        key={`robot-${tierName}`}
+        count={tier.robotCount}
+        pointer={pointer}
+        pixelRatio={dpr}
+        reducedMotion={reducedMotion}
+        cameraZ={JOURNEY_CAMERA.z}
+        cameraFov={JOURNEY_CAMERA.fov}
       />
     </ParticleCanvas>
   );

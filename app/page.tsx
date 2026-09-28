@@ -31,8 +31,10 @@ export default function HomePage() {
           <WhyUs />
           <Process />
         </ParticleStory>
+        {/* About is transparent: the particle robot (and the faint star field)
+            show through it. Everything after it is opaque again. */}
+        <About />
         <div className="relative bg-background">
-          <About />
           <Testimonials />
           <ContactCta />
         </div>
