@@ -1,5 +1,8 @@
-// Every tunable number for the hero sculpture lives here, so the look can be
+// Every tunable number for the hero particles lives here, so the look can be
 // adjusted without touching the scene code.
+
+export { PALETTE } from "@/lib/particles/palette";
+export { MORPH_SEQUENCE, MORPH_TIMELINE, HERO_SCROLL_VH_PER_TRANSITION } from "./morph-sequence";
 
 export type DeviceTier = "desktop" | "mobile";
 
@@ -11,17 +14,24 @@ export interface ParticleConfig {
   /** Point size in pixels for a particle 1 world unit from the camera. */
   particleSize: number;
   starSize: number;
-  /** Radians per second of the slow self-rotation around Y. */
+  /** Radians per second the form spins around its own axis. */
   rotationSpeed: number;
-  /** Amplitude of the secondary wobble around X/Z, in radians. */
+  /** Amplitude of the secondary wobble, in radians. */
   wobbleAmount: number;
-  /** How far (world units) noise can push a particle off its base position. */
-  noiseStrength: number;
+  /** Idle shimmer (world units) while a form holds. */
+  formNoise: number;
+  /** Extra drift (world units) while particles are in flight. */
+  fieldNoise: number;
   noiseScale: number;
+  /** How far the scatter cloud spreads (1 = full). */
+  scatter: number;
+  mobileScatter: number;
+  /** Strength of the curved flight paths, world units. */
+  curve: number;
   /** How far (world units) the pointer pushes particles inside its radius. */
   mouseInfluence: number;
   mouseRadius: number;
-  /** Max sculpture tilt (radians) driven by the pointer. */
+  /** Max tilt (radians) driven by the pointer. */
   mouseTilt: number;
   /** Fraction of the gap closed toward a target per frame at 60fps. */
   damping: number;
@@ -33,25 +43,29 @@ export interface ParticleConfig {
   mobileMaxDpr: number;
   /** Viewport width (px) below which the mobile tier is used. */
   mobileBreakpoint: number;
-  /** Multiplier applied to all motion when prefers-reduced-motion is set. */
+  /** Multiplier applied to motion, scatter and curves under reduced motion. */
   reducedMotionFactor: number;
 }
 
 export const PARTICLE_CONFIG: ParticleConfig = {
-  desktopParticleCount: 48_000,
-  mobileParticleCount: 14_000,
+  desktopParticleCount: 60_000,
+  mobileParticleCount: 18_000,
   desktopStarCount: 1_600,
   mobileStarCount: 600,
-  particleSize: 15,
+  particleSize: 14,
   starSize: 7,
-  rotationSpeed: 0.07,
-  wobbleAmount: 0.1,
-  noiseStrength: 0.07,
-  noiseScale: 1.4,
+  rotationSpeed: 0.12,
+  wobbleAmount: 0.08,
+  formNoise: 0.025,
+  fieldNoise: 0.3,
+  noiseScale: 1.3,
+  scatter: 1,
+  mobileScatter: 0.7,
+  curve: 0.9,
   mouseInfluence: 0.28,
   mouseRadius: 0.95,
-  mouseTilt: 0.32,
-  damping: 0.05,
+  mouseTilt: 0.3,
+  damping: 0.06,
   bloomIntensity: 0.85,
   mobileBloomIntensity: 0.5,
   bloomThreshold: 0.2,
@@ -59,50 +73,20 @@ export const PARTICLE_CONFIG: ParticleConfig = {
   maxDpr: 2,
   mobileMaxDpr: 1.5,
   mobileBreakpoint: 768,
-  reducedMotionFactor: 0.12,
+  reducedMotionFactor: 0.15,
 };
 
-/** Shape of the twisted torus the particles are sampled from. */
-export const SCULPTURE_SHAPE = {
-  majorRadius: 1.6,
-  tubeRadius: 0.58,
-  /** Half-turns the ribbon cross-section makes around the ring. */
-  twists: 3,
-  /** Cross-section is squashed into a ribbon; 1 = round tube. */
-  ribbonAspect: 0.38,
-  /** Fraction of particles scattered inside the tube instead of on its skin. */
-  volumeFraction: 0.2,
-  /** Fraction of particles forming the loose halo around the ring. */
-  haloFraction: 0.04,
-} as const;
-
-/** Where the sculpture sits and how scroll moves it. */
+/** Where the particle system sits in the scene. */
 export const SCENE_LAYOUT = {
   cameraFov: 38,
   cameraZ: 7.5,
-  /** Sculpture offset (world units) so it sits right of the headline. */
-  desktopOffset: [1.5, 0.0, 0] as const,
-  mobileOffset: [0, 1.2, 0] as const,
-  desktopScale: 0.84,
-  mobileScale: 0.52,
-  /** Resting tilt so the ring reads as 3D even before the user moves. */
-  baseTilt: [0.55, 0, -0.35] as const,
-  scroll: {
-    rotateY: 0.8,
-    moveX: 0.3,
-    moveY: 0.5,
-    pushZ: -1.8,
-    scaleTo: 0.85,
-  },
-} as const;
-
-export const PALETTE = {
-  orange: "#ff7a2e",
-  gold: "#ffb45c",
-  white: "#f2f6ff",
-  blue: "#3b7cff",
-  deepBlue: "#1f4fd6",
-  background: "#05060a",
+  /** Offset (world units) so the form sits right of the headline. */
+  desktopOffset: [1.6, 0.05, 0] as const,
+  mobileOffset: [0, 1.1, 0] as const,
+  desktopScale: 0.78,
+  mobileScale: 0.44,
+  /** Resting tilt: leans the rocket so it points up and to the right. */
+  baseTilt: [0.2, 0, -0.72] as const,
 } as const;
 
 export interface TierSettings {
@@ -110,6 +94,7 @@ export interface TierSettings {
   starCount: number;
   bloomIntensity: number;
   maxDpr: number;
+  scatter: number;
   offset: readonly [number, number, number];
   scale: number;
 }
@@ -122,6 +107,7 @@ export function getTierSettings(tier: DeviceTier): TierSettings {
         starCount: c.mobileStarCount,
         bloomIntensity: c.mobileBloomIntensity,
         maxDpr: c.mobileMaxDpr,
+        scatter: c.mobileScatter,
         offset: SCENE_LAYOUT.mobileOffset,
         scale: SCENE_LAYOUT.mobileScale,
       }
@@ -130,6 +116,7 @@ export function getTierSettings(tier: DeviceTier): TierSettings {
         starCount: c.desktopStarCount,
         bloomIntensity: c.bloomIntensity,
         maxDpr: c.maxDpr,
+        scatter: c.scatter,
         offset: SCENE_LAYOUT.desktopOffset,
         scale: SCENE_LAYOUT.desktopScale,
       };

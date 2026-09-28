@@ -25,39 +25,82 @@ server-rendered HTML, so SEO does not depend on the 3D scene.
 in the App Router, hence the small wrapper. three.js never runs on the server,
 so there are no `window is not defined` or hydration errors.
 
-**Rendering.** One `THREE.Points` with a `BufferGeometry` and a custom
-`ShaderMaterial` — no per-particle React components or meshes.
+**No WebGL.** `ParticleScene` checks for WebGL before rendering, and
+`SceneErrorBoundary` catches any other WebGL failure. Either way only the
+canvas is dropped — without this, a WebGL error takes down the whole page.
 
-- `geometry.ts` samples a twisted torus (ribbon cross-section, 3 half-twists)
-  once per mount. It writes `position`, `aColor`, `aRandom`, `aScale` and
-  `aRandomOffset`. Colours blend orange ↔ blue around the ring, with white
-  highlights and a thin gold streak.
-- `shaders/particle.vert.glsl` does all the motion on the GPU: simplex-noise
-  flow, per-particle orbit, a breathing wave, and the pointer push. It also
-  sets size by depth.
-- `shaders/particle.frag.glsl` makes round, soft points using `gl_PointCoord`,
-  with additive blending.
-- `.glsl` files are imported as strings via `raw-loader` (turbopack rule in
-  `next.config.ts`).
+### Particle morph
+
+The same particles morph between forms (rocket → sphere today) as the hero
+is scrolled: breakup → scatter → floating field → attraction → reassembly →
+hold. They never fade — every particle physically travels.
+
+**Engine** (`lib/particles/`, independent of site content)
+
+| File | Role |
+|---|---|
+| `generateRocketParticles.ts` | Rocket from Lathe (ogive nose), Cylinder (body, nozzle), Extrude (4 fins), Sphere/Torus (porthole) + a volume exhaust plume; also its per-part colours |
+| `geometryToParticles.ts` | `geometryToParticlePositions(geometry, count)` — area-weighted surface sampling (MeshSurfaceSampler), seeded, any vertex count |
+| `generateTarget.ts` | `FORMS` registry (rocket, sphere, torus, sculpture) and `alignByHeight` |
+| `stars.ts`, `palette.ts`, `random.ts` | Background stars, colours, seeded PRNG |
+
+**Adding a form:** add a generator to `FORMS`, then list it in
+`MORPH_SEQUENCE` (`components/hero/morph-sequence.ts`). The pinned scroll
+length grows automatically.
+
+**Shared particle order.** Every form is sorted by height (with jitter), so
+particle *i* sits at a similar height in each form. Colours are fixed per
+particle, taken from the first form. So the rocket's orange plume becomes the
+bottom of the sphere and its blue nose the top — the viewer can follow the
+material between forms.
+
+**GPU side** (`shaders/particle.vert.glsl`). Attributes: `position` (current
+form), `aTarget` (next form), `aColor`, `aRandom`, `aDelay`, `aScatterDir`,
+`aScatterDistance`, `aNoiseOffset`, `aScale`. JavaScript drives one number,
+`uProgress` (0..1). The shader turns it into each particle's own progress:
+
+- *Departure:* staggered over `[0, 0.48]`. The delay blends random with a
+  coarse noise field, so clumps peel off together.
+- *Field:* `0.48–0.52` — everything is out in the field.
+- *Arrival:* staggered over `[0.52, 1]`.
+- *Flight paths:* `mix(start, end, easeInOutCubic(p))` plus a sideways offset
+  of `sin(πp)`, so particles curve.
+- *Noise:* high in flight, tiny at rest, so landing particles "lock" into
+  place.
+
+At `uProgress` 0 a particle is exactly at A, and at 1 exactly at B. That makes
+chained forms seamless and scrubbing fully reversible.
+
+**CPU side** (`components/hero/ParticleController.ts`).
+
+- `resolveMorph()` maps scroll progress to *hold F0 · F0→F1 · hold F1 · …*.
+  It is a pure function, so reverse scrolling retraces it exactly.
+- `ParticleController` copies new form data into `position` / `aTarget` only
+  when the form pair changes. That happens at a boundary where both look
+  identical, so the swap is invisible.
+
+**Scroll.** The hero section is `100svh` plus 180vh for each transition, with a
+sticky inner viewport. GSAP ScrollTrigger scrubs 0→1 across it (start
+`top top`, end `bottom bottom`). `useFrame` eases it once more before feeding
+the controller.
 
 **Per-frame work.** `useFrame` only updates a handful of uniforms and
-rotations. There is no React state per frame. The pointer and scroll values
-live in refs.
+rotations. There is no React state per frame, and no per-particle JavaScript.
+The pointer and scroll values live in refs.
 
-**Interaction.**
-- *Pointer:* tracked on `window`, because the HTML layer covers the canvas.
-  It is eased toward its target, never mapped 1:1.
-- *Scroll:* GSAP ScrollTrigger scrubs a 0→1 number across the hero, reverted
-  on unmount.
+**Interaction.** The pointer is tracked on `window`, because the HTML layer
+covers the canvas. It is eased and drives tilt, parallax and a local push.
+It never drives the morph.
 
 **Performance.**
+- *Desktop:* 60k particles.
 - *Mobile tier* (width < 768, or a coarse pointer on a ≤ 4-core device):
-  14k particles instead of 48k, weaker bloom, and DPR capped at 1.5
-  instead of 2.
+  18k particles, scatter at 0.7×, weaker bloom, and DPR capped at 1.5.
 - *Off-screen:* rendering stops (`frameloop="never"`) via IntersectionObserver.
 
-**Reduced motion.** Noise, rotation, wobble and scroll movement drop to about
-12%, and the pointer push is disabled.
+**Reduced motion.** Noise, rotation and wobble drop to 15%. Scatter drops to
+35% and curves to 20%, so the transition is a gentle cloud. The pointer push
+is disabled.
 
 **Cleanup.** Geometry and materials are disposed on unmount. The
 EffectComposer disposes its own passes.

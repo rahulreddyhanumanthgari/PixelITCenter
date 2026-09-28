@@ -5,39 +5,45 @@ import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import vertexShader from "@/shaders/particle.vert.glsl";
 import fragmentShader from "@/shaders/particle.frag.glsl";
-import { createSculptureGeometry } from "./geometry";
-import { PARTICLE_CONFIG, SCENE_LAYOUT } from "./particle-config";
+import { colorsForSequence, generateForm } from "@/lib/particles/generateTarget";
+import { ParticleController, createMorphGeometry } from "./ParticleController";
+import { MORPH_SEQUENCE, MORPH_TIMELINE, PARTICLE_CONFIG, SCENE_LAYOUT } from "./particle-config";
 import type { PointerState, ScrollState } from "./types";
 
-export interface SculptureUniforms {
+export interface MorphUniforms {
   [uniform: string]: THREE.IUniform;
   uTime: THREE.IUniform<number>;
+  uProgress: THREE.IUniform<number>;
   uSize: THREE.IUniform<number>;
   uPixelRatio: THREE.IUniform<number>;
-  uNoiseStrength: THREE.IUniform<number>;
-  uNoiseScale: THREE.IUniform<number>;
   uMotion: THREE.IUniform<number>;
+  uScatter: THREE.IUniform<number>;
+  uCurve: THREE.IUniform<number>;
+  uFormNoise: THREE.IUniform<number>;
+  uFieldNoise: THREE.IUniform<number>;
+  uNoiseScale: THREE.IUniform<number>;
   uMouseInfluence: THREE.IUniform<number>;
   uMouseRadius: THREE.IUniform<number>;
   uFocusDepth: THREE.IUniform<number>;
   uMouse: THREE.IUniform<THREE.Vector3>;
 }
 
-interface ParticleSculptureProps {
+interface ParticleMorphProps {
   count: number;
   offset: readonly [number, number, number];
   scale: number;
+  scatter: number;
   pixelRatio: number;
   reducedMotion: boolean;
   pointer: RefObject<PointerState>;
   scroll: RefObject<ScrollState>;
 }
 
-/** Anywhere far from the sculpture, so the pointer push is off. */
+/** Anywhere far from the particles, so the pointer push is off. */
 const MOUSE_PARKED = new THREE.Vector3(100, 100, 100);
 
-function uniformsOf(points: THREE.Points): SculptureUniforms {
-  return (points.material as THREE.ShaderMaterial).uniforms as SculptureUniforms;
+function uniformsOf(points: THREE.Points): MorphUniforms {
+  return (points.material as THREE.ShaderMaterial).uniforms as MorphUniforms;
 }
 
 /** Frame-rate independent version of "close `damping` of the gap per frame". */
@@ -45,31 +51,46 @@ function dampFactor(damping: number, delta: number): number {
   return 1 - Math.pow(1 - damping, delta * 60);
 }
 
-export function ParticleSculpture({
+/**
+ * One THREE.Points whose particles morph between the forms in MORPH_SEQUENCE
+ * as the hero is scrolled. All particle motion is in the vertex shader; this
+ * component only feeds it progress, time, pointer and rotation.
+ */
+export function ParticleMorph({
   count,
   offset,
   scale,
+  scatter,
   pixelRatio,
   reducedMotion,
   pointer,
   scroll,
-}: ParticleSculptureProps) {
+}: ParticleMorphProps) {
   const rootRef = useRef<THREE.Group>(null);
   const tiltRef = useRef<THREE.Group>(null);
   const pointsRef = useRef<THREE.Points>(null);
 
   const motion = reducedMotion ? PARTICLE_CONFIG.reducedMotionFactor : 1;
 
-  const geometry = useMemo(() => createSculptureGeometry(count), [count]);
+  // Every form is sampled once per mount with the same particle count.
+  const { geometry, forms } = useMemo(() => {
+    const forms = MORPH_SEQUENCE.map((name, i) => generateForm(name, count, 101 + i * 7919));
+    const colors = colorsForSequence(MORPH_SEQUENCE[0], forms[0]);
+    return { geometry: createMorphGeometry(forms, colors), forms };
+  }, [count]);
 
   const material = useMemo(() => {
-    const uniforms: SculptureUniforms = {
+    const uniforms: MorphUniforms = {
       uTime: { value: 0 },
+      uProgress: { value: 0 },
       uSize: { value: PARTICLE_CONFIG.particleSize },
       uPixelRatio: { value: 1 },
-      uNoiseStrength: { value: PARTICLE_CONFIG.noiseStrength },
-      uNoiseScale: { value: PARTICLE_CONFIG.noiseScale },
       uMotion: { value: 1 },
+      uScatter: { value: 1 },
+      uCurve: { value: PARTICLE_CONFIG.curve },
+      uFormNoise: { value: PARTICLE_CONFIG.formNoise },
+      uFieldNoise: { value: PARTICLE_CONFIG.fieldNoise },
+      uNoiseScale: { value: PARTICLE_CONFIG.noiseScale },
       uMouseInfluence: { value: PARTICLE_CONFIG.mouseInfluence },
       uMouseRadius: { value: PARTICLE_CONFIG.mouseRadius },
       uFocusDepth: { value: SCENE_LAYOUT.cameraZ },
@@ -85,17 +106,27 @@ export function ParticleSculpture({
     });
   }, []);
 
-  // Settings that change rarely are pushed into uniforms here, not per frame.
-  // Uniforms are reached through the ref (not the memoised material) so React
-  // never sees a hook value being mutated.
+  // Plain object held in a ref: the controller mutates geometry attributes.
+  const controllerRef = useRef<ParticleController | null>(null);
+  useEffect(() => {
+    controllerRef.current = new ParticleController(geometry, forms, MORPH_TIMELINE);
+    return () => {
+      controllerRef.current = null;
+    };
+  }, [geometry, forms]);
+
+  // Settings that change rarely go into uniforms here, reached through the
+  // ref so React never sees a hook value being mutated.
   useEffect(() => {
     const points = pointsRef.current;
     if (!points) return;
     const u = uniformsOf(points);
     u.uPixelRatio.value = pixelRatio;
     u.uMotion.value = motion;
+    u.uScatter.value = scatter * (reducedMotion ? 0.35 : 1);
+    u.uCurve.value = PARTICLE_CONFIG.curve * (reducedMotion ? 0.2 : 1);
     u.uMouseInfluence.value = reducedMotion ? 0 : PARTICLE_CONFIG.mouseInfluence;
-  }, [pixelRatio, motion, reducedMotion]);
+  }, [pixelRatio, motion, scatter, reducedMotion]);
 
   useEffect(() => () => geometry.dispose(), [geometry]);
   useEffect(() => () => material.dispose(), [material]);
@@ -116,7 +147,8 @@ export function ParticleSculpture({
     const root = rootRef.current;
     const tilt = tiltRef.current;
     const points = pointsRef.current;
-    if (!root || !tilt || !points) return;
+    const controller = controllerRef.current;
+    if (!root || !tilt || !points || !controller) return;
     const s0 = scratch.current;
 
     // Clamp so a long tab-switch pause doesn't cause a jump.
@@ -125,42 +157,35 @@ export function ParticleSculpture({
     u.uTime.value += delta;
 
     const k = dampFactor(PARTICLE_CONFIG.damping, delta);
+
+    // --- morph: scroll progress → (form pair, transition progress) --------
+    // Eased again on top of GSAP's scrub so fast wheel flicks stay smooth.
+    s0.smoothScroll += (scroll.current.progress - s0.smoothScroll) * k;
+    u.uProgress.value = controller.update(s0.smoothScroll);
+
+    // --- pointer: eased tilt/parallax, never mapped 1:1 -------------------
     const p = pointer.current;
-    const s = scroll.current;
-
-    // --- pointer: eased, never mapped 1:1 --------------------------------
-    const targetX = p.active ? p.x : 0;
-    const targetY = p.active ? p.y : 0;
-    s0.smoothNdc.x += (targetX - s0.smoothNdc.x) * k;
-    s0.smoothNdc.y += (targetY - s0.smoothNdc.y) * k;
-
+    s0.smoothNdc.x += ((p.active ? p.x : 0) - s0.smoothNdc.x) * k;
+    s0.smoothNdc.y += ((p.active ? p.y : 0) - s0.smoothNdc.y) * k;
     const tiltAmount = PARTICLE_CONFIG.mouseTilt * (reducedMotion ? 0.25 : 1);
-    tilt.rotation.x = SCENE_LAYOUT.baseTilt[0] - s0.smoothNdc.y * tiltAmount;
-    tilt.rotation.y = SCENE_LAYOUT.baseTilt[1] + s0.smoothNdc.x * tiltAmount;
-    tilt.rotation.z = SCENE_LAYOUT.baseTilt[2];
-
-    // --- scroll: eased again on top of GSAP's scrub for extra softness ----
-    s0.smoothScroll += (s.progress - s0.smoothScroll) * k;
-    const sp = s0.smoothScroll * (reducedMotion ? 0.3 : 1);
-    const sc = SCENE_LAYOUT.scroll;
-    root.position.set(
-      offset[0] + sc.moveX * sp,
-      offset[1] + sc.moveY * sp,
-      offset[2] + sc.pushZ * sp,
+    tilt.rotation.set(
+      SCENE_LAYOUT.baseTilt[0] - s0.smoothNdc.y * tiltAmount,
+      SCENE_LAYOUT.baseTilt[1] + s0.smoothNdc.x * tiltAmount,
+      SCENE_LAYOUT.baseTilt[2],
     );
-    root.scale.setScalar(scale * (1 + (sc.scaleTo - 1) * sp));
+    root.position.set(
+      offset[0] + s0.smoothNdc.x * 0.12 * motion,
+      offset[1] + s0.smoothNdc.y * 0.08 * motion,
+      offset[2],
+    );
 
-    // --- self rotation: very slow spin plus a faint secondary wobble ------
+    // --- slow spin around the form's own axis + faint wobble --------------
     s0.spin += delta * PARTICLE_CONFIG.rotationSpeed * motion;
     const time = u.uTime.value;
     const wobble = PARTICLE_CONFIG.wobbleAmount * motion;
-    points.rotation.set(
-      Math.sin(time * 0.13) * wobble,
-      s0.spin + sc.rotateY * sp,
-      Math.cos(time * 0.11) * wobble * 0.6,
-    );
+    points.rotation.set(Math.sin(time * 0.13) * wobble, s0.spin, Math.cos(time * 0.11) * wobble * 0.6);
 
-    // --- pointer position in the sculpture's own space --------------------
+    // --- pointer position in the particles' own space ---------------------
     if (p.active && !reducedMotion) {
       root.getWorldPosition(s0.center);
       s0.plane.constant = -s0.center.z;

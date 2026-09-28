@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { Canvas } from "@react-three/fiber";
 import { Bloom, EffectComposer } from "@react-three/postprocessing";
 import { gsap } from "@/lib/gsap";
-import { ParticleSculpture } from "./ParticleSculpture";
+import { ParticleMorph } from "./ParticleMorph";
 import { StarField } from "./StarField";
 import {
   PALETTE,
@@ -96,8 +96,10 @@ function ParticleScene() {
     };
   }, []);
 
-  // Scroll: GSAP scrubs a plain number from 0 to 1 across the hero; the
-  // sculpture reads it each frame.
+  // Scroll: the hero is a tall section with a sticky viewport inside. GSAP
+  // scrubs a plain number from 0 to 1 while that viewport is pinned; the
+  // morph reads it each frame. Scrub is two-way, so scrolling back up
+  // replays the morph in reverse.
   useEffect(() => {
     const hero = containerRef.current?.closest<HTMLElement>("[data-hero]");
     if (!hero) return;
@@ -109,7 +111,7 @@ function ParticleScene() {
         scrollTrigger: {
           trigger: hero,
           start: "top top",
-          end: "bottom top",
+          end: "bottom bottom",
           scrub: 0.8,
         },
       });
@@ -148,11 +150,12 @@ function ParticleScene() {
       >
         <color attach="background" args={[PALETTE.background]} />
         <StarField count={settings.starCount} pixelRatio={dpr} reducedMotion={reducedMotion} />
-        <ParticleSculpture
+        <ParticleMorph
           key={tier}
           count={settings.particleCount}
           offset={settings.offset}
           scale={settings.scale}
+          scatter={settings.scatter}
           pixelRatio={dpr}
           reducedMotion={reducedMotion}
           pointer={pointer}
