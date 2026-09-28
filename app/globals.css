@@ -104,6 +104,16 @@
   }
 }
 
+/* Client logo strip: the track holds two identical lists; move by half. */
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(calc(-50% - 0.5rem));
+  }
+}
+
 @layer utilities {
   /* Outlined display text, as in the first headline line. */
   .text-outline {

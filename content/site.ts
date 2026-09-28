@@ -41,10 +41,28 @@ export const hero = {
   secondaryCta: { label: "Explore services", href: "#services" },
 } as const;
 
-// Placeholder slots until approved client logos are collected (plan phase 0A).
+// Client logos carried over from the current pixelitcenter.com "Our Clients"
+// section. Files live in public/clients/ (300×150 PNG).
 export const clientProof = {
   title: "Trusted by teams across industries",
-  logos: ["Client logo", "Client logo", "Client logo", "Client logo", "Client logo", "Client logo"],
+  logos: [
+    { name: "Syntel", src: "/clients/syntel.png" },
+    { name: "Adobe", src: "/clients/adobe.png" },
+    { name: "Intel", src: "/clients/intel.png" },
+    { name: "Mastercard", src: "/clients/mastercard.png" },
+    { name: "Costco Wholesale", src: "/clients/costco.png" },
+    { name: "Fidelity Investments", src: "/clients/fidelity.png" },
+    { name: "MetLife", src: "/clients/metlife.png" },
+    { name: "ScriptPro", src: "/clients/scriptpro.png" },
+    { name: "Charter Communications", src: "/clients/charter.png" },
+    { name: "New York Life", src: "/clients/new-york-life.png" },
+    { name: "bp", src: "/clients/bp.png" },
+    { name: "Vanguard", src: "/clients/vanguard.png" },
+    { name: "BlueCross BlueShield", src: "/clients/bluecross-blueshield.png" },
+    { name: "PRA Health Sciences", src: "/clients/pra-health-sciences.png" },
+    { name: "Arthrex", src: "/clients/arthrex.png" },
+    { name: "Cisco", src: "/clients/cisco.png" },
+  ],
 } as const;
 
 export const services = {
