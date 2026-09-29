@@ -13,10 +13,7 @@ export function Testimonials() {
             <li key={i}>
               <figure className="flex h-full flex-col justify-between rounded-2xl border border-border bg-surface p-7">
                 <blockquote className="text-lg leading-relaxed">&ldquo;{t.quote}&rdquo;</blockquote>
-                <figcaption className="mt-6 text-sm">
-                  <span className="font-medium">{t.name}</span>
-                  <span className="block text-muted-foreground">{t.role}</span>
-                </figcaption>
+                <figcaption className="mt-6 text-sm font-medium">{t.name}</figcaption>
               </figure>
             </li>
           ))}

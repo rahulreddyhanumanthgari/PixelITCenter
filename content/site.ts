@@ -146,10 +146,16 @@ export const about = {
 export const testimonials = {
   eyebrow: "Proof points",
   title: "What clients say",
+  // From the live site (pixelitcenter.com, "Pixel IT Center Corporation
+  // Testimonials"), word for word. It lists first names only.
   items: [
-    { quote: "Approved client testimonial goes here. Keep it specific and short.", name: "Client name", role: "Title, Company" },
-    { quote: "A second testimonial that speaks to delivery quality or responsiveness.", name: "Client name", role: "Title, Company" },
-    { quote: "A third testimonial about staffing fit or long-term partnership.", name: "Client name", role: "Title, Company" },
+    { quote: "Pixel IT is the best general staffing company in USA, it is well known for IT staffing services.", name: "Lincoln" },
+    { quote: "The Pixel IT team are highly professional and understand your project timing which makes them valued partners.", name: "Rakesh" },
+    {
+      quote:
+        "Pixel IT is the best staffing company in USA as a client, we really appreciate the hard work and effort that Pixel IT puts into every assignment they work on.",
+      name: "Samuel",
+    },
   ],
 } as const;
 
