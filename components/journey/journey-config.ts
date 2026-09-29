@@ -111,8 +111,8 @@ export interface JourneyTier {
   heroScale: number;
   /** Story scale relative to the pinned story column/band height. */
   storyScale: number;
-  /** Particles in the About Us orbit. */
-  orbitCount: number;
+  /** Particles in the About Us vortex. */
+  vortexCount: number;
 }
 
 const TIERS: Record<DeviceTier, JourneyTier> = {
@@ -125,7 +125,7 @@ const TIERS: Record<DeviceTier, JourneyTier> = {
     heroOffset: [1.6, 0.05],
     heroScale: 0.78,
     storyScale: 0.8,
-    orbitCount: 16_000,
+    vortexCount: 26_000,
   },
   tablet: {
     particleCount: 34_000,
@@ -136,7 +136,7 @@ const TIERS: Record<DeviceTier, JourneyTier> = {
     heroOffset: [1.2, 0.1],
     heroScale: 0.66,
     storyScale: 0.72,
-    orbitCount: 11_000,
+    vortexCount: 16_000,
   },
   mobile: {
     particleCount: 18_000,
@@ -149,7 +149,7 @@ const TIERS: Record<DeviceTier, JourneyTier> = {
     heroOffset: [0, 1.1],
     heroScale: 0.44,
     storyScale: 1.1,
-    orbitCount: 7_000,
+    vortexCount: 10_000,
   },
 };
 

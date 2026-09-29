@@ -150,31 +150,37 @@ or the morph.
 
   Everything is scrubbed and reverses. Reduced motion gets a fade-in only.
 
-### About Us: particle orbit
+### About Us: gravitational vortex
 
-About has no character figure; it uses abstract geometry instead. A large 3D
-orbital ring of particles (`lib/particles/orbit.ts`, `shaders/orbit.vert.glsl`,
-`components/orbit/ParticleOrbit.tsx`) sits in the same journey canvas, over the
-empty `[data-orbit-anchor]` slot.
+About's content is centred. It sits inside a particle vortex around an
+invisible centre (`lib/particles/vortex.ts`, `shaders/vortex.vert.glsl`,
+`components/vortex/ParticleVortex.tsx`), drawn in the same journey canvas and
+centred on `[data-vortex-anchor]`, which spans the section.
 
-- **Shape.** A slightly organic ring: uneven density around it, gentle
-  warps out of its plane, and a soft halo.
-- **Motion.**
-  - Particles travel slowly around the ring; about 6% move faster.
-  - A rare few (0.4%) leave the ring toward the viewer, grow and brighten,
-    then return.
-  - The whole ring drifts slightly.
-- **Pointer.** Slight tilt, parallax and a ripple. It never follows the
-  cursor.
-- **Entrance.** Scroll-scrubbed: particles gather from deep in space into the
-  ring.
-- **Colour.** Mostly white/off-white, with about 7% tinted in the rocket
-  accents.
-- **Counts.** 16k desktop / 11k tablet / 7k mobile. All tunables are in
-  `ORBIT_CONFIG`.
+- **Orbiters** (45%). Most sit in a broad band around the content; the rest
+  are spread loosely through the disc. Each has its own radius and a
+  Kepler-like speed (inner paths turn faster), and density follows two soft
+  log-spiral bands.
+- **Infallers** (55%). On a 35–90 s life cycle, each particle's radius shrinks
+  as `r0·(1−life)^0.55`, so it falls slowly, then fast. A twist term curves
+  its path ever tighter.
+  - Near the centre it brightens and warms slightly toward the rocket
+    orange.
+  - It then shrinks and vanishes at the event horizon (r ≈ 0.42).
+  - The cycle wraps, so it re-enters at the edge, and the flow never
+    empties.
 
-About is transparent, so the orbit and star field show through. The journey
-layer stays on until About has scrolled past.
+  Everything is a function of `uTime`, so it keeps moving while the visitor
+  reads.
+- **Void.** There is no drawn sphere and no painted background. The centre is
+  dark only because particles vanish there.
+- **Readability.** The content box, `[data-about-content]`, is passed to the
+  shader in NDC. Particles projected behind it drop to 30% brightness on
+  wide screens and 42% on narrow ones.
+- **Entrance.** Scroll-scrubbed: the field moves in from deep space.
+- **Pointer.** Slight tilt, parallax and a ripple.
+- **Counts.** 26k desktop / 16k tablet / 10k mobile. All tunables are in
+  `VORTEX_CONFIG`.
 
 ### How We Work (current version)
 

@@ -7,7 +7,7 @@ import { gsap } from "@/lib/gsap";
 import { ParticleCanvas } from "@/components/particles/ParticleCanvas";
 import { ParticleSystem, type LayoutState } from "@/components/particles/ParticleSystem";
 import { StarField, type Atmosphere } from "@/components/particles/StarField";
-import { ParticleOrbit } from "@/components/orbit/ParticleOrbit";
+import { ParticleVortex } from "@/components/vortex/ParticleVortex";
 import { useDeviceTier, usePointer, useReducedMotion } from "@/components/particles/hooks";
 import type { PointerState, ProgressState } from "@/components/particles/types";
 import { PALETTE } from "@/lib/particles/palette";
@@ -149,7 +149,7 @@ export default function JourneyScene() {
     const story = document.querySelector<HTMLElement>("[data-story]");
     const anchor = story?.querySelector<HTMLElement>("[data-story-anchor]");
     const layer = document.querySelector<HTMLElement>("[data-journey-layer]");
-    // The particle layer stays on through About Us (the orbit); after that the
+    // The particle layer stays on through About Us (the vortex); after that the
     // opaque sections cover it.
     const lastLit = document.querySelector<HTMLElement>("[data-about]") ?? story;
     if (!story || !anchor || !layer || !lastLit) return;
@@ -256,9 +256,9 @@ export default function JourneyScene() {
         onBlend={onBlend}
         stage={stage}
       />
-      <ParticleOrbit
-        key={`orbit-${tierName}`}
-        count={tier.orbitCount}
+      <ParticleVortex
+        key={`vortex-${tierName}`}
+        count={tier.vortexCount}
         pointer={pointer}
         pixelRatio={dpr}
         reducedMotion={reducedMotion}
