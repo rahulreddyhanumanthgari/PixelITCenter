@@ -20,8 +20,8 @@ export default function HomePage() {
       {/* One particle system for the whole journey, fixed behind the page. */}
       <JourneyLayer />
       {/* Content sits above the particle layer (z-10). The hero, client strip
-          and story are transparent so the particles show through; everything
-          after the story is opaque and slides over them like a curtain. */}
+          and story are transparent so the particles show through, and so is
+          the galaxy area after it (About → Contact). */}
       <main className="relative z-10 flex-1">
         <Hero />
         <ClientProof />
@@ -31,15 +31,23 @@ export default function HomePage() {
           <WhyUs />
           <Process />
         </ParticleStory>
-        {/* About is transparent: the particle galaxy (and the star field)
-            show through it. Everything after it is opaque again. */}
-        <About />
-        <div className="relative bg-background">
+        {/* About, Proof Points and Contact share one background: the
+            particle galaxy (and the star field) show through them. The
+            galaxy's anchor is pinned to the screen while this area scrolls,
+            then leaves with it as the footer arrives. */}
+        <div data-galaxy-region className="relative">
+          <div
+            data-galaxy-anchor
+            aria-hidden="true"
+            className="pointer-events-none sticky top-0 -mb-[100svh] h-[100svh]"
+          />
+          <About />
           <Testimonials />
           <ContactCta />
         </div>
       </main>
-      <div className="relative z-10">
+      {/* Opaque, so the galaxy never shows through the footer. */}
+      <div className="relative z-10 bg-background">
         <Footer />
       </div>
     </>

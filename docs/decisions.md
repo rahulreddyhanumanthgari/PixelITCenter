@@ -192,6 +192,18 @@ top of the planets, so the two merged.)
   - orange, then red-orange;
   - blue to deep-blue rim;
   - a few cream sparkles.
+- **Background for About → Contact.** About, Proof Points and Contact sit
+  in one transparent `[data-galaxy-region]` (`app/page.tsx`). Its first
+  child, `[data-galaxy-anchor]` (sticky, `h-[100svh]` with `-mb-[100svh]`),
+  pins the galaxy to the centre of the screen while the region scrolls, then
+  lets it leave with the region as the footer arrives.
+  - The particle layer stays on until the region has scrolled away.
+  - The footer wrapper is opaque, so the galaxy never shows through it.
+  - `GALAXY_VIEW.reach` (0.6 of the width / 0.74 of the height) runs the rim
+    well past the edges.
+  - Particles dim behind whichever `[data-galaxy-content]` block is nearest
+    the middle of the screen (About's content, the Proof Points heading). The
+    cards are opaque already.
 - **Stars bend around it.** `ParticleSystem` reports gravity each frame
   (`onGravity` → `Atmosphere`). Strength = the galaxy transition × how
   centred About is on screen.

@@ -56,14 +56,15 @@ export const STORY_SIDES: readonly number[] = [0, 0.75, 0.5, 0.5, 0.5];
 export const EARTH_VIEW = { index: 1, radius: 1.65, scale: 1.45, hiddenRight: 0.25 } as const;
 
 /**
- * About's galaxy (the last form): centred on About and sized so its rim
- * reaches the larger of these fractions of the screen width/height.
+ * About's galaxy (the last form): pinned behind About, Proof Points and
+ * Contact, sized so its rim reaches the larger of these fractions of the
+ * screen width/height (well past the edges, so it fills the background).
  * `outer` must match GALAXY_OUTER in particle.vert.glsl.
  */
 export const GALAXY_VIEW = {
   outer: 3.9,
-  reach: { width: 0.52, height: 0.64 },
-  /** Brightness left behind the About content (wide / narrow screens). */
+  reach: { width: 0.6, height: 0.74 },
+  /** Brightness left behind the text over it (wide / narrow screens). */
   protectFloor: { wide: 0.3, narrow: 0.42 },
 } as const;
 

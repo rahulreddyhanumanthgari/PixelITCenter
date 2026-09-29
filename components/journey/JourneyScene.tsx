@@ -171,10 +171,10 @@ export default function JourneyScene() {
     const whyContent = document.querySelector<HTMLElement>("[data-why-content]");
     const processContent = document.querySelector<HTMLElement>("[data-process-content]");
     const galaxyAnchor = document.querySelector<HTMLElement>("[data-galaxy-anchor]");
-    const aboutContent = document.querySelector<HTMLElement>("[data-about-content]");
-    // The particle layer stays on through About Us (the galaxy); after that the
-    // opaque sections cover it.
-    const lastLit = document.querySelector<HTMLElement>("[data-about]") ?? story;
+    const galaxyContent = Array.from(document.querySelectorAll<HTMLElement>("[data-galaxy-content]"));
+    // The particle layer stays on through the galaxy area (About → Contact);
+    // after that the opaque footer covers it.
+    const lastLit = document.querySelector<HTMLElement>("[data-galaxy-region]") ?? story;
     if (!story || !anchor || !layer || !lastLit) return;
     let frame = 0;
 
@@ -225,7 +225,7 @@ export default function JourneyScene() {
       L.from.y = 0;
       L.from.scale = voidPx * wpp;
       L.protectFloor = vw < 768 ? HERO_FIELD.protectFloor.narrow : HERO_FIELD.protectFloor.wide;
-      // About's galaxy: centred on the section, rim reaching past the screen.
+      // About's galaxy: centred on its pinned anchor, rim past the screen.
       if (galaxyAnchor) {
         const a = galaxyAnchor.getBoundingClientRect();
         const cy = a.top + a.height / 2;
@@ -238,8 +238,13 @@ export default function JourneyScene() {
           presence: 1 - smoothstep(0.45, 1.1, Math.abs(cy - vh / 2) / vh),
         };
       }
-      if (aboutContent) {
-        const c = aboutContent.getBoundingClientRect();
+      // Dim the galaxy behind whichever text block over it is nearest the
+      // middle of the screen (About's content, the Proof Points heading).
+      const nearest = galaxyContent
+        .map((el) => el.getBoundingClientRect())
+        .sort((p, q) => Math.abs(p.top + p.height / 2 - vh / 2) - Math.abs(q.top + q.height / 2 - vh / 2))[0];
+      if (nearest) {
+        const c = nearest;
         L.protect6 = [
           ((c.left + c.width / 2) / vw) * 2 - 1,
           -(((c.top + c.height / 2) / vh) * 2 - 1),
