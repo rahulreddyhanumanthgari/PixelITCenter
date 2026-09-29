@@ -23,15 +23,15 @@ export const JOURNEY_FORMS: readonly FormName[] = [
 export const STORY_HANDOFF = 0;
 
 /**
- * Landing hero gravity field. Radius on screen is the larger of these
- * fractions of the viewport width/height, so the field runs past the edges.
- * `outer` must match HERO_FIELD_OUTER in particle.vert.glsl.
+ * Landing hero black hole. `voidRadius` sizes the empty centre on screen:
+ * the larger of the width/height fractions, capped by `maxWidth` of the
+ * width so phones still show the disc. The accretion disc runs to twice
+ * that, and streams/outer space far past the viewport edges.
  */
 export const HERO_FIELD = {
-  reach: { width: 0.6, height: 0.8 },
-  outer: 4,
-  /** Brightness left for particles behind the hero text. */
-  protectFloor: 0.35,
+  voidRadius: { width: 0.21, height: 0.3, maxWidth: 0.45 },
+  /** Brightness left for particles behind the hero text (wide / narrow screens). */
+  protectFloor: { wide: 0.5, narrow: 0.28 },
 } as const;
 
 /**
@@ -77,7 +77,7 @@ export const HERO_LOOK: ParticleLook = {
   particleSize: 16,
   rotation: { mode: "sway", speed: 0.08, amount: 0.04 },
   wobbleAmount: 0.02,
-  baseTilt: [0.78, 0, 0.1],
+  baseTilt: [0.82, 0, 0.1],
   formNoise: 0.02,
   fieldNoise: 0.3,
   curve: 0.9,

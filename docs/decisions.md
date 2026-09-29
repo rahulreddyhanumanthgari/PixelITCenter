@@ -33,50 +33,42 @@ They never fade: every particle breaks away, scatters, drifts, curves back and
 reassembles. Each particle keeps the rocket palette colour it has always had
 (orange / blue / white, see below) through every form.
 
-### Landing hero: gravity field
+### Landing hero: black hole
 
-There is no rocket. The whole hero viewport sits inside the journey
-particles' gravity field, with the centred content on top. The hero section
-is transparent and has no panels or overlays.
+There is no rocket. The whole hero viewport sits inside a black hole built
+from the journey particles, with the centred content on top. The hero
+section is transparent and has no panels or overlays.
 
 - **Form 0 (`heroField`) is live motion, not a shape.** While it is the form
   being held or left (`uHeroField`), `particle.vert.glsl` replaces each
-  particle's start point with its live position in the field (`heroField()`),
-  built from the particle's existing random attributes:
-  - About half the particles orbit on their own tilted orbits. Most of those
-    crowd a bright band that frames the headline; the rest spread outward.
-  - The other half arrive from deep behind the field, spiral in faster and
-    faster, then shrink and vanish at the invisible centre, and arrive again.
+  particle's start point with its live position (`heroField()`), in units of
+  the void's radius. Each particle's role follows the colour it already has,
+  so orange concentrates in the disc without recolouring anything:
 
-  When Services arrives, particles break straight out of the flow into the
-  ring, and scrolling back reverses it.
-- **Placement.** The field is centred on the viewport. Its radius is the
-  larger of 60% of the width or 80% of the height (`HERO_FIELD`), so it runs
-  past the edges. `HERO_LOOK` tips the disc back (`baseTilt` x 0.78), so the
-  band reads as an ellipse around the headline.
+  | Colour | Roles |
+  |---|---|
+  | Orange | 68% accretion disc, 22% hot inner rim, the rest streams and outer space |
+  | White | Inner rim, disc, sparse outer space |
+  | Blue | Three curved log-spiral streams flowing inward from outside the disc, plus some disc and outer space |
+
+- **The disc.** It runs from 1× to 2× the void's radius and is densest and
+  brightest at its inner edge. Speeds are Kepler-like, so the inner disc
+  outruns the outer.
+- **Falling in.** About a third of the disc spirals from its orbit to just
+  inside the void's edge, faster and tighter, then shrinks and vanishes. It
+  re-enters on its orbit, never inside the core, so the void stays empty
+  permanently.
+- **Size.** The void's radius is the larger of 21% of the width or 30% of the
+  height, capped at 45% of the width (`HERO_FIELD.voidRadius`). `HERO_LOOK`
+  tips the disc back (`baseTilt` x 0.82), so it reads as an ellipse framing
+  the headline.
 - **Readability.** Particles projected behind `[data-hero-content]` drop to
-  35% brightness (`uProtect`). This is applied only while the field is
-  showing.
+  50% brightness (28% on phones) while the hero is showing.
+- **Transition.** When Services arrives, particles break straight out of
+  their orbits into the ring, and scrolling back reverses it.
 - **Colours.** `heroField.colorize` gives each particle the exact colour the
-  rocket used to give it: same seed, same height order. So the palette is
-  unchanged, and every later form keeps its colour layout (orange low,
-  blue/white high).
-
-**Layer.** `JourneyLayer` is a fixed, full-screen layer (`z-0`) behind the
-page. `main` is `z-10`.
-
-- The hero, the client strip and the story sections are transparent, so the
-  particles show through.
-- Everything after the story is opaque, so it slides over the particles like
-  a curtain. Past the story, the layer hides and rendering stops.
-
-**Loading.** `JourneyLayer` loads `JourneyScene` with `next/dynamic` and
-`ssr: false`. `ssr: false` must live in a Client Component in the App Router.
-three.js never runs on the server; all page text is normal SSR HTML.
-
-**No WebGL.** `ParticleCanvas` checks for WebGL first, and
-`SceneErrorBoundary` catches any other failure. Only the particles are dropped —
-without this, a WebGL error takes down the whole page.
+  rocket used to give it, so the palette and every later form's colour
+  layout are unchanged.
 
 ### Scroll → form position
 

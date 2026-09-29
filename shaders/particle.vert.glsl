@@ -122,49 +122,85 @@ vec3 sideways(vec3 dir, vec3 seed) {
   return len > 1e-4 ? s / len : normalize(cross(dir, vec3(0.0, 1.0, 0.0001)));
 }
 
-// --- landing hero: the particles as a gravity field -------------------------
-// Live position of this particle in the hero's full-screen gravity field,
-// built from its existing random attributes (no extra data). Half the
-// particles orbit an invisible centre on their own tilted orbits; the other
-// half arrive from deep space, spiral in faster and faster, and are consumed
-// at the centre — then arrive again, so the flow never empties.
-const float HERO_FIELD_OUTER = 4.0;  // keep in sync with HERO_FIELD.outer
-const float HERO_HORIZON = 0.45;
-const float HERO_ARRIVAL = 0.14;
+// --- landing hero: a black hole made of the journey particles -------------
+// Live position of this particle in the hero's black hole, built from its
+// existing random attributes. Its role follows the colour it already has,
+// so orange concentrates in the accretion disc without recolouring anything:
+//   orange → dense accretion disc around a large empty void (some spiral in
+//            and are consumed at the void's edge, then re-enter at the rim)
+//   white  → hot highlights along the disc's inner edge, and the disc
+//   blue   → curved gravitational streams further out, and sparse outer space
+// Units: 1 = the void's radius (JourneyScene sizes it in pixels).
+const float HERO_VOID = 1.0;
+const float HERO_DISC_OUT = 2.0;
 
 vec3 rotX(vec3 p, float a) { float c = cos(a), s = sin(a); return vec3(p.x, c * p.y - s * p.z, s * p.y + c * p.z); }
-vec3 rotY(vec3 p, float a) { float c = cos(a), s = sin(a); return vec3(c * p.x + s * p.z, p.y, -s * p.x + c * p.z); }
 
-vec3 heroField(out float horizon, out float inflow) {
+vec3 heroField(out float visible, out float glow, out float grow) {
   float h3 = fract(aNoiseOffset.x * 0.1591549);
   float h4 = fract(aNoiseOffset.y * 0.1591549);
   float h5 = fract(aNoiseOffset.z * 0.1591549);
   float h6 = fract(aScatterDistance * 3.71);
-  bool infaller = h3 < 0.5;
-  // Orbiters: about half crowd a broad bright band well outside the text
-  // (the swirl that frames the headline); the rest spread through the field.
-  float r0 = infaller
-    ? HERO_FIELD_OUTER * (0.78 + h4 * 0.22)
-    : h6 < 0.7
-      ? HERO_FIELD_OUTER * (0.7 + (h4 - 0.5) * 0.12 + (aRandom - 0.5) * 0.05)
-      : HERO_FIELD_OUTER * (0.2 + pow(h4, 0.6) * 0.8);
-  float omega = 0.2 * pow(r0 / 2.0, -1.5) * (0.75 + aDelay * 0.5);
-  float life = infaller ? fract(uTime * uMotion / (35.0 + aRandom * 55.0) + aDelay) : 0.0;
+  float warmth = (aColor.r - aColor.b) / (aColor.r + aColor.g + aColor.b + 1e-3);
+  bool orange = warmth > 0.12;
+  bool blue = warmth < -0.18;
 
-  float arrive = infaller ? smoothstep(0.0, HERO_ARRIVAL, life) : 1.0;
-  float fall = infaller ? clamp((life - HERO_ARRIVAL) / (1.0 - HERO_ARRIVAL), 0.0, 1.0) : 0.0;
-  float rn = pow(1.0 - fall, 0.55);
-  inflow = 1.0 - rn;
-  float r = r0 * rn * (1.0 + 0.02 * sin(uTime * 0.4 * uMotion + aRandom * 30.0));
+  float t = uTime * uMotion;
+  float r;
+  float th;
+  float y;
+  visible = 1.0;
+  glow = 1.0;
+  grow = 1.0;
 
-  float th = h5 * 2.0 * PI + uTime * omega * uMotion + 1.6 * inflow / (rn + 0.2);
-  float h = aScatterDir.y * 0.3 * (r0 / HERO_FIELD_OUTER + 0.3);
-  vec3 p = vec3(cos(th) * r, h * (0.35 + 0.65 * rn), sin(th) * r);
-  p = rotY(rotX(p, aScatterDir.x * 0.22 * rn), aScatterDir.z * PI);
-  // Arriving particles rise from deep behind the field (-y faces away).
-  p.y -= (1.0 - arrive) * (7.0 + aRandom * 6.0);
-  horizon = smoothstep(HERO_HORIZON * 0.25, HERO_HORIZON, r);
-  return p;
+  // Role: 0 disc, 1 hot inner rim, 2 stream, 3 outer space.
+  float role = orange ? (h6 < 0.22 ? 1.0 : h6 < 0.9 ? 0.0 : h6 < 0.96 ? 2.0 : 3.0)
+    : blue ? (h6 < 0.6 ? 2.0 : h6 < 0.8 ? 0.0 : 3.0)
+    : (h6 < 0.22 ? 1.0 : h6 < 0.45 ? 0.0 : 3.0);
+
+  if (role < 1.5) {
+    // Accretion disc: dense near the inner edge, thinning outward. Kepler-ish
+    // speeds, so the inner disc visibly outruns the outer.
+    float r0 = role < 0.5
+      ? HERO_VOID * (1.05 + pow(h4, 2.4) * (HERO_DISC_OUT - 1.05))
+      : HERO_VOID * (1.02 + pow(h4, 2.0) * 0.14);
+    float omega = 0.55 * pow(r0, -1.5) * (0.85 + aDelay * 0.3);
+    r = r0;
+    th = h5 * 6.2831853 + t * omega;
+    // About a third of the disc is falling in: spiral from its orbit to just
+    // inside the void edge, faster and tighter, then vanish; re-enter at the
+    // rim (never inside the core) as the cycle wraps.
+    if (role < 0.5 && h3 < 0.35) {
+      float life = fract(t / (18.0 + aRandom * 26.0) + aDelay);
+      float fall = pow(life, 1.8);
+      r = mix(r0, HERO_VOID * 0.6, fall);
+      th += 2.2 * fall * fall;
+      visible = smoothstep(0.0, 0.06, life) * smoothstep(HERO_VOID * 0.62, HERO_VOID * 1.02, r);
+    }
+    y = (aScatterDir.y * 0.07 + 0.02 * sin(t * 0.5 + aRandom * 30.0)) * r;
+    // Brightest at the inner edge; the rim is the hottest.
+    float inner = 1.0 - smoothstep(HERO_VOID, HERO_DISC_OUT, r);
+    glow = (1.0 + 1.8 * inner) * (role > 0.5 ? 1.7 : 1.0);
+    grow = 1.15 + 0.35 * inner;
+  } else if (role < 2.5) {
+    // Streams: three curved arms (log spirals) flowing inward toward the disc.
+    float arm = floor(h4 * 3.0);
+    float s = fract(h5 - t / (40.0 + aRandom * 30.0));
+    r = HERO_VOID * (HERO_DISC_OUT + s * 3.2);
+    th = arm * 2.0943951 + 1.9 * log(r) + (aScatterDir.x * 0.22 + aScatterDir.z * 0.1) * (0.6 + s) + t * 0.1;
+    y = aScatterDir.y * 0.18 * r;
+    visible = smoothstep(0.0, 0.08, s) * (1.0 - smoothstep(0.85, 1.0, s));
+    glow = 1.0;
+  } else {
+    // Outer space: sparse, dim, slow.
+    r = HERO_VOID * (HERO_DISC_OUT + 0.4 + h4 * 4.0);
+    th = h5 * 6.2831853 + t * 0.03;
+    y = aScatterDir.y * 0.5 * r;
+    glow = 0.3;
+    grow = 0.7;
+  }
+  vec3 p = vec3(cos(th) * r, y, sin(th) * r);
+  return rotX(p, aScatterDir.x * 0.04);
 }
 
 void main() {
@@ -173,9 +209,10 @@ void main() {
 
   // In the hero, the start point is the particle's live place in the field,
   // so leaving the hero, particles break straight out of the flow.
-  float heroHorizon = 1.0;
-  float heroInflow = 0.0;
-  if (uHeroField > 0.5) A = heroField(heroHorizon, heroInflow);
+  float heroVisible = 1.0;
+  float heroGlow = 1.0;
+  float heroGrow = 1.0;
+  if (uHeroField > 0.5) A = heroField(heroVisible, heroGlow, heroGrow);
 
   // --- per-particle timing ------------------------------------------------
   // Delays blend pure randomness with a coarse noise field, so neighbouring
@@ -267,10 +304,10 @@ void main() {
   gl_Position = projectionMatrix * mvPosition;
 
   float depth = max(-mvPosition.z, 0.5);
-  // Hero field: consumed particles shrink and vanish at the centre, a little
-  // larger/brighter on the way in; fades out as they leave for Services.
+  // Hero: consumed particles shrink and vanish at the void's edge; the effect
+  // hands back to normal as particles leave for Services.
   float heroW = uHeroField * (1.0 - eOut);
-  float heroSize = mix(1.0, (0.4 + 0.6 * heroHorizon) * (1.0 + heroInflow * 0.25), heroW);
+  float heroSize = mix(1.0, (0.4 + 0.6 * heroVisible) * heroGrow, heroW);
   float size = uSize * aScale * stageSize * heroSize;
   gl_PointSize = clamp(size * uPixelRatio / depth, 1.0, 28.0 * uPixelRatio);
 
@@ -288,6 +325,6 @@ void main() {
   vec2 dp = abs(ndc - uProtect.xy) / max(uProtect.zw, vec2(1e-3));
   float box = pow(pow(dp.x, 4.0) + pow(dp.y, 4.0), 0.25);
   float protect = mix(uProtectFloor, 1.0, smoothstep(0.85, 1.2, box));
-  vColor *= mix(1.0, (1.0 + heroInflow * 0.4) * heroHorizon * protect, heroW);
-  vAlpha *= mix(1.0, heroHorizon, heroW);
+  vColor *= mix(1.0, heroGlow * heroVisible * protect, heroW);
+  vAlpha *= mix(1.0, heroVisible, heroW);
 }

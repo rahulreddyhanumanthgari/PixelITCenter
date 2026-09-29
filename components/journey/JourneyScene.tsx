@@ -86,7 +86,7 @@ export default function JourneyScene() {
     to: { x: 0, y: 0, scale: tier.storyScale },
     sides: null,
     protect: [0, 0, 0.001, 0.001],
-    protectFloor: HERO_FIELD.protectFloor,
+    protectFloor: HERO_FIELD.protectFloor.wide,
   });
   // How scattered the main particles are; drives the stars and camera.
   const atmosphere = useRef<Atmosphere>({ field: 0, gravity: 0, gravityX: 0, gravityY: 0 });
@@ -176,12 +176,14 @@ export default function JourneyScene() {
       const anchorTop = Math.min(rect.top, stickyTop, story.getBoundingClientRect().bottom - rect.height);
       L.to.y = -(anchorTop + rect.height / 2 - vh / 2) * wpp;
       L.to.scale = tier.storyScale * (rect.height / vh);
-      // Hero: the gravity field is centred on the viewport and runs past its
-      // edges, so the landing screen sits inside it.
-      const radiusPx = Math.max(vw * HERO_FIELD.reach.width, vh * HERO_FIELD.reach.height);
+      // Hero: the black hole is centred on the viewport; 1 local unit = the
+      // void's radius in pixels (see HERO_FIELD).
+      const V = HERO_FIELD.voidRadius;
+      const voidPx = Math.min(Math.max(vw * V.width, vh * V.height), vw * V.maxWidth);
       L.from.x = 0;
       L.from.y = 0;
-      L.from.scale = (radiusPx * wpp) / HERO_FIELD.outer;
+      L.from.scale = voidPx * wpp;
+      L.protectFloor = vw < 768 ? HERO_FIELD.protectFloor.narrow : HERO_FIELD.protectFloor.wide;
       if (heroContent) {
         const c = heroContent.getBoundingClientRect();
         L.protect = [
