@@ -153,18 +153,27 @@
     text-transform: uppercase;
     color: var(--text-primary);
   }
-  /* The hero headline sits on the black hole's orange ring, so it gets
-     pure white, a lighter, brighter orange than the particles, and a soft
-     dark shadow that follows the letters (no box, no glow) to lift it off. */
+  /* Hero headline. Two levels: a smaller positioning line and the primary
+     statement. White does the work; orange is only the "&". No shadow or
+     glow: the particle ring frames the text from outside instead. */
   .hero-title {
-    color: #ffffff;
-    text-shadow:
-      0 0 2px rgb(5 6 10 / 0.9),
-      0 2px 12px rgb(5 6 10 / 0.75),
-      0 6px 40px rgb(5 6 10 / 0.85);
+    font-family: var(--font-display);
+    text-transform: uppercase;
+    color: #f4f6fb;
   }
-  .hero-title .highlight {
-    --highlight: #ffa25c;
+  .hero-kicker {
+    font-size: clamp(1.375rem, 0.95rem + 1.9vw, 2.5rem);
+    font-weight: 600;
+    line-height: 1.1;
+    letter-spacing: 0.02em;
+    color: #e6eaf2;
+  }
+  .hero-statement {
+    font-size: clamp(3rem, 1.2rem + 7.2vw, min(7rem, 12.5svh));
+    font-weight: 700;
+    line-height: 0.92;
+    letter-spacing: -0.03em;
+    color: #ffffff;
   }
   /* Level 2 — section headings. */
   .type-display-lg {

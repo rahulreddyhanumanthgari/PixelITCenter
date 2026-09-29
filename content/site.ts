@@ -34,13 +34,13 @@ export const nav = [
 ] as const;
 
 export const hero = {
-  /** Each entry is one line (two per row from md up). */
-  headline: [{ text: "Technology" }, { text: "& Talent" }, { text: "Built for" }, { text: "What's Next" }],
-  /** Headline words in the orange accent ("&" stays white). */
-  accentWords: ["Technology", "Talent"] as readonly string[],
-  /** **Bold** segments render in the orange accent. */
+  /** Positioning line, around the orange "&": TECHNOLOGY & TALENT. */
+  kicker: ["Technology", "Talent"],
+  /** The primary statement, one entry per line. */
+  statement: ["Built for", "What’s Next"],
+  /** One **bold** phrase renders in the orange accent; the rest stays muted. */
   description:
-    "We help organizations **modernize their technology** and **build high‑performing teams**, backed by expertise in cloud, data and specialized IT talent.",
+    "We help organizations modernize their technology and **build high‑performing teams**, backed by expertise in cloud, data and specialized IT talent.",
   primaryCta: { label: "Talk to our team", href: "#contact" },
   secondaryCta: { label: "Explore services", href: "#services" },
 } as const;

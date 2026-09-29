@@ -522,9 +522,15 @@ and restrained so it frames them rather than competing with them.
 - **Families.** `--font-display` is Space Grotesk (500/600/700),
   replacing the condensed Oswald, and `--font-sans` is Inter. There are no
   others (Sora was tried on the hero and rejected).
-- **Hero headline** (`.hero-title`): larger, pure white, accent words in a
-  lighter orange (#ffa25c) than the particle ring, and a soft dark
-  letter-shaped shadow so it never blends into the black hole.
+- **Hero headline** (`.hero-title`). Two levels:
+  - `.hero-kicker`: TECHNOLOGY & TALENT, 600, only the "&" orange.
+  - `.hero-statement`: BUILT FOR / WHAT'S NEXT, 700, white. It is the
+    primary line, with explicit line breaks.
+
+  There is no shadow or glow. The black hole's calm centre (a larger
+  `HERO_FIELD.voidRadius`) frames the content instead. Hero particles are
+  mostly white and blue, with orange only on the disc's thin hot edge.
+  The intro has one orange phrase. The entrance is line by line.
 - **No long dashes** (—) in visible copy; they read as machine-written.
   Hyphens inside words (long-term, right-fit) are fine.
 - **Classes** (`app/globals.css`, `@layer components`). Use these instead of
