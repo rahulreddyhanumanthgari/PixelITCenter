@@ -271,12 +271,15 @@ While it is being left or arrived at (`uFlowFrom` / `uFlowTo` = 2),
   at x −3.9 (`RING_VIEW_CX`), with points 1.3× larger. This makes it look
   close to the camera, with its inner lanes reaching in behind the start of
   the centred content.
-- *Colour:* the Staffing Earth's palette. A thin cream inner edge, then
-  saturated orange to red-orange, blue to deep blue on the outer lanes. Blue
-  is also mixed through every lane (28% to 73%, rising outward), plus
-  scattered cream highlights, so orange and blue sit side by side. The gain
-  is kept at 2.1 so dense areas keep their hue instead of adding up to
-  white; points are 1.45× larger.
+- *Colour:* the Staffing Earth's palette. Saturated orange to red-orange,
+  and blue to deep blue on the outer lanes. Blue is also mixed through every
+  lane (30% to 75%, rising outward), plus 5% cream highlights.
+  - *Keeping colours pure:* each particle's hue is normalised so its
+    strongest channel is 1, and brightness is capped below 1. Anything
+    brighter clips per channel and ACES tone mapping pulls it toward white,
+    which is what washed the colours out.
+  - *Visibility:* it comes from point size (2.5× on this form) instead of
+    brightness.
 - *Fading:* it fades out toward the right, and dims to 45% behind
   `[data-services-content]` (`uProtect2`).
 

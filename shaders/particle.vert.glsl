@@ -288,14 +288,13 @@ vec3 ringStream(vec3 p, out float lane, out float arcVis) {
 // taken from the reference image.
 vec3 ringColor(float lane) {
   // Same palette as the Staffing Earth: cream, saturated orange, red-orange,
-  // rich blue, deep blue. Cream is only a thin inner edge, so orange and
-  // blue carry the stream.
+  // rich blue, deep blue. Orange and blue carry the stream.
   vec3 cream = vec3(1.0, 0.86, 0.66);
   vec3 orange = vec3(1.0, 0.3, 0.05);
   vec3 red = vec3(0.85, 0.07, 0.02);
   vec3 blue = vec3(0.07, 0.24, 1.0);
   vec3 deep = vec3(0.02, 0.06, 0.32);
-  vec3 c = mix(cream, orange, smoothstep(0.02, 0.12, lane));
+  vec3 c = orange;  // (cream now appears only as scattered highlights)
   c = mix(c, red, smoothstep(0.28, 0.42, lane));
   c = mix(c, blue, smoothstep(0.44, 0.54, lane));
   return mix(c, deep, smoothstep(0.78, 1.0, lane));
@@ -457,7 +456,7 @@ void main() {
                  + step(1.5, uFlowTo) * step(uFlowTo, 2.5) * eIn;
   float earthNear = step(2.5, uFlowFrom) * (1.0 - eOut) + step(2.5, uFlowTo) * eIn;
   float earthFace = step(2.5, uFlowFrom) * (1.0 - eOut) > 0.0 ? faceA : faceB;
-  float size = uSize * aScale * stageSize * heroSize * mix(1.0, 1.45, ringNear)
+  float size = uSize * aScale * stageSize * heroSize * mix(1.0, 2.5, ringNear)
              * mix(1.0, mix(0.7, 1.12, earthFace), earthNear);
   gl_PointSize = clamp(size * uPixelRatio / depth, 1.0, 28.0 * uPixelRatio);
 
@@ -492,20 +491,25 @@ void main() {
   if (ringW > 0.001) {
     float lane = ringFrom > 0.0 ? laneA : laneB;
     float arcVis = ringFrom > 0.0 ? arcA : arcB;
-    vec3 rc = ringColor(min(lane, 1.0)) * (0.85 + 0.35 * aRandom);
-    // Blue runs through every lane (more toward the outside), so orange and
-    // blue sit side by side like the Earth's land and ocean.
-    float blueShare = 0.28 + 0.45 * smoothstep(0.3, 0.9, lane);
-    if (fract(aRandom * 29.0) < blueShare) rc = mix(vec3(0.07, 0.24, 1.0), vec3(0.02, 0.06, 0.32), fract(aRandom * 5.0) * 0.5) * 1.35;
-    // A few cream highlights scattered through every lane, like the Earth.
-    if (fract(aRandom * 13.0) > 0.88) rc = vec3(1.0, 0.86, 0.66) * 0.9;
-    if (lane > 1.05) rc = ringColor(fract(aRandom * 7.0) * 0.8);  // sparks: orange / red / blue
+    // Pick the hue: orange / red-orange from the lane, blue mixed through
+    // every lane (more toward the outside), a few cream highlights.
+    vec3 hue = ringColor(min(lane, 1.0));
+    float blueShare = 0.3 + 0.45 * smoothstep(0.3, 0.9, lane);
+    float pick = fract(aRandom * 29.0);
+    if (pick < blueShare) hue = fract(aRandom * 5.0) < 0.7 ? vec3(0.07, 0.24, 1.0) : vec3(0.04, 0.1, 0.6);
+    if (fract(aRandom * 13.0) > 0.95) hue = vec3(1.0, 0.86, 0.66);
+    if (lane > 1.05) hue = ringColor(fract(aRandom * 7.0) * 0.8);  // sparks
+    // Keep colours pure: normalise so the strongest channel is 1, then cap
+    // the brightness below 1. Anything brighter clips per channel and the
+    // tone mapping pulls it toward white — that washed the colours out.
+    hue /= max(max(hue.r, hue.g), max(hue.b, 1e-3));
+    float bright = (0.8 + 0.2 * aRandom) * clamp(depthFade, 0.7, 1.0) * mix(1.0, twinkle, 0.5);
     vec2 nd = gl_Position.xy / gl_Position.w;
     float rightFade = 1.0 - smoothstep(-0.05, 0.5, nd.x);
     vec2 d2 = abs(nd - uProtect2.xy) / max(uProtect2.zw, vec2(1e-3));
     float box2 = pow(pow(d2.x, 4.0) + pow(d2.y, 4.0), 0.25);
     float protect2 = mix(0.45, 1.0, smoothstep(0.85, 1.15, box2));
-    vec3 ringOut = rc * depthFade * twinkle * rightFade * protect2 * arcVis * 2.1;
+    vec3 ringOut = hue * bright * rightFade * protect2 * arcVis;
     vColor = mix(vColor, ringOut, ringW);
   }
 
