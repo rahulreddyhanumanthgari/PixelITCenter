@@ -523,13 +523,15 @@ and restrained so it frames them rather than competing with them.
   replacing the condensed Oswald, and `--font-sans` is Inter. There are no
   others (Sora was tried on the hero and rejected).
 - **Hero headline** (`.hero-title`). Two levels:
-  - `.hero-kicker`: TECHNOLOGY & TALENT, 600, only the "&" orange.
+  - `.hero-kicker`: TECHNOLOGY & TALENT, the same size as the statement,
+    600, a softer white, and the statement's natural tracking (no stretched
+    spacing); only the "&" is orange.
   - `.hero-statement`: BUILT FOR / WHAT'S NEXT, 700, white. It is the
     primary line, with explicit line breaks.
 
   There is no shadow or glow. The black hole's calm centre (a larger
   `HERO_FIELD.voidRadius`) frames the content instead. Hero particles are
-  the site palette (an orange inner edge warming to yellow-gold, then blue to deep blue), kept a little light (`heroBright` ≤ 1.1); the calm centre is `voidRadius` 0.3 of the width (0.76 max on phones).
+  exactly the other forms' palette (`ringColor`: orange, red-orange, blue, deep blue) at the same brightness ceiling (1.25); the calm centre is `voidRadius` 0.27 of the width (0.7 max on phones).
   The intro has one orange phrase, which never breaks across lines. The
   statement is one line from md up. The entrance is line by line.
 - **No long dashes** (—) in visible copy; they read as machine-written.

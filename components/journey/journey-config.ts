@@ -43,7 +43,7 @@ export const STORY_FLIGHT = { swell: 1.6 } as const;
 export const HERO_FIELD = {
   // A wide calm centre, so the ring frames the hero content rather than
   // running behind it.
-  voidRadius: { width: 0.3, height: 0.42, maxWidth: 0.76 },
+  voidRadius: { width: 0.27, height: 0.38, maxWidth: 0.7 },
   /** Brightness left for particles behind the hero text (wide / narrow screens). */
   protectFloor: { wide: 0.5, narrow: 0.28 },
 } as const;

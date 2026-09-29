@@ -196,7 +196,9 @@ vec3 heroField(out float visible, out float glow, out float grow, out float lane
     // red-orange band, then blue to deep blue outward. Falling particles
     // warm up as they spiral in.
     float rf = clamp((r - HERO_VOID) / (HERO_DISC_OUT - HERO_VOID), 0.0, 1.0);
-    lane = role > 0.5 ? 0.05 + 0.15 * h4 : mix(0.08, 0.95, pow(rf, 0.85));
+    // Bands like the other forms: orange inside, red-orange, then blue from
+    // about the middle of the disc outward.
+    lane = role > 0.5 ? 0.05 + 0.15 * h4 : mix(0.1, 1.0, pow(rf, 0.55));
   } else if (role < 2.5) {
     // Streams: three curved arms (log spirals) flowing inward toward the disc.
     float arm = floor(h4 * 3.0);
@@ -895,17 +897,13 @@ void main() {
   // block): ringColor bands as pure hues, brightness from the glow but
   // capped at 1.25 so tone mapping never washes it white; a few cream
   // highlights.
-  // Hero colours, in the same palette as the other forms: an orange inner
-  // edge warming to yellow-gold, then blue to deep blue outward; a few
-  // white sparkles.
-  vec3 heroHue = mix(vec3(1.0, 0.32, 0.05), vec3(1.0, 0.68, 0.18), smoothstep(0.1, 0.24, heroLane));
-  heroHue = mix(heroHue, vec3(0.07, 0.26, 1.0), smoothstep(0.3, 0.55, heroLane));
-  heroHue = mix(heroHue, vec3(0.04, 0.1, 0.62), smoothstep(0.8, 1.0, heroLane));
-  if (fract(aRandom * 29.0) > 0.95) heroHue = vec3(0.92, 0.95, 1.0);
+  // Hero colours: exactly the other forms' palette (ringColor bands —
+  // orange, red-orange, blue, deep blue) with the same cream highlights.
+  vec3 heroHue = ringColor(heroLane);
   if (fract(aRandom * 13.0) > 0.97) heroHue = vec3(1.0, 0.86, 0.66);
   heroHue /= max(max(heroHue.r, heroHue.g), max(heroHue.b, 1e-3));
-  // A little lighter than the story forms, so it stays soft behind the text.
-  float heroBright = min(0.26 + 0.34 * heroGlow, 1.1);
+  // Same brightness ceiling as the Services ring and the Earth (1.25).
+  float heroBright = min(0.3 + 0.4 * heroGlow, 1.25);
   vColor = mix(vColor, heroHue * heroBright * twinkle * heroVisible * protect, heroW);
   vAlpha *= mix(1.0, heroVisible, heroW);
 }

@@ -22,7 +22,7 @@ export function Hero() {
       aria-labelledby="hero-title"
       className="relative flex min-h-[100svh] items-center justify-center overflow-hidden"
     >
-      <div className="mx-auto w-full max-w-7xl px-6 pb-24 pt-28 lg:px-8">
+      <div className="mx-auto w-full max-w-7xl px-6 pb-16 pt-40 lg:px-8">
         <div data-hero-content className="mx-auto flex max-w-4xl flex-col items-center text-center">
           <h1 id="hero-title" className="hero-title">
             {/* Positioning line: two lines on phones, one from sm up. */}
@@ -33,7 +33,7 @@ export function Hero() {
               <span className="highlight">&amp;</span> {hero.kicker[1]}
             </span>
             {/* Primary statement: one line from md up; two on smaller screens. */}
-            <span data-reveal="1" className="hero-statement mt-5 block sm:mt-6">
+            <span data-reveal="1" className="hero-statement mt-2 block sm:mt-3">
               {hero.statement[0]}
               <br className="md:hidden" />
               <span className="hidden md:inline"> </span>

@@ -161,23 +161,26 @@
     text-transform: uppercase;
     color: #f4f6fb;
   }
+  /* Same size as the statement (the owner's call); 600 and a softer white
+     keep a hint of hierarchy. */
+  .hero-kicker,
+  .hero-statement {
+    font-size: clamp(3rem, 1.2rem + 7.2vw, min(7rem, 12.5svh));
+    line-height: 0.92;
+    letter-spacing: -0.03em;
+  }
   .hero-kicker {
-    font-size: clamp(1.5rem, 0.8rem + 2.4vw, 3.125rem);
     font-weight: 600;
-    line-height: 1.1;
-    letter-spacing: 0.02em;
     color: #e6eaf2;
   }
   .hero-statement {
-    font-size: clamp(3rem, 1.2rem + 7.2vw, min(7rem, 12.5svh));
     white-space: nowrap;
     font-weight: 700;
-    line-height: 0.92;
-    letter-spacing: -0.03em;
     color: #ffffff;
   }
   /* One line from md up, so a little smaller there. */
   @media (min-width: 768px) {
+    .hero-kicker,
     .hero-statement {
       font-size: clamp(2.75rem, 5.4vw, min(5.75rem, 11svh));
     }
