@@ -75,7 +75,7 @@ export const GALAXY_VIEW = {
   outer: 3.9,
   reach: { width: 0.6, height: 0.74 },
   /** Brightness left behind the text over it (wide / narrow screens). */
-  protectFloor: { wide: 0.3, narrow: 0.42 },
+  protectFloor: { wide: 0.04, narrow: 0.06 },
 } as const;
 
 /** Where the particles sit inside the story area, as a fraction of its width. */

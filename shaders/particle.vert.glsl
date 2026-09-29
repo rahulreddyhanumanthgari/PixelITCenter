@@ -35,8 +35,8 @@ uniform vec4 uProtect4;         // Why content box in NDC (dims the torus behind
 uniform float uTorusScale;      // Why torus display scale (smaller in the phone band)
 uniform float uSolarPhone;      // 1 = solar system in its compact phone-band layout
 uniform vec4 uProtect5;         // How We Work step content box in NDC (dims particles behind text)
-uniform vec4 uProtect6;         // About content box in NDC (dims the galaxy behind text)
-uniform float uProtect6Floor;   // brightness left behind the About content
+uniform vec4 uProtectG[4];      // galaxy area: up to 4 text boxes in NDC (unused = zero size)
+uniform float uProtect6Floor;   // brightness left behind that text
 uniform float uCollapse;        // galaxy ending: 0 = galaxy … 1 = a sun on the footer's edge
 uniform float uSunOffset;       // local y from the galaxy centre down to the footer's top edge
 uniform float uHeroField;       // 1 while the current "from" form is the hero gravity field
@@ -870,13 +870,19 @@ void main() {
     vColor = mix(vColor, solarCol * twinkle * protect5, solarW);
   }
 
-  // About galaxy: its own colours (see galaxy), a soft twinkle, dimmed
-  // behind the centred About content.
+  // About galaxy: its own colours (see galaxy), a soft twinkle, and dimmed
+  // well down behind every text block on screen (About → Contact), with a
+  // soft margin, so text never merges with the particles.
   if (galaxyW > 0.001) {
     vec2 nd6 = gl_Position.xy / gl_Position.w;
-    vec2 d6 = abs(nd6 - uProtect6.xy) / max(uProtect6.zw, vec2(1e-3));
-    float box6 = pow(pow(d6.x, 4.0) + pow(d6.y, 4.0), 0.25);
-    float protect6 = mix(uProtect6Floor, 1.0, smoothstep(0.85, 1.2, box6));
+    float protect6 = 1.0;
+    for (int i = 0; i < 4; i++) {
+      vec4 b = uProtectG[i];
+      if (b.z < 0.01) continue;
+      vec2 d6 = abs(nd6 - b.xy) / b.zw;
+      float box6 = pow(pow(d6.x, 4.0) + pow(d6.y, 4.0), 0.25);
+      protect6 = min(protect6, mix(uProtect6Floor, 1.0, smoothstep(0.9, 1.35, box6)));
+    }
     vColor = mix(vColor, galaxyCol * twinkle * protect6, galaxyW);
   }
 

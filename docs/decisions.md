@@ -257,8 +257,12 @@ top of the planets, so the two merged.)
 - **Stars bend around it.** `ParticleSystem` reports gravity each frame
   (`onGravity` → `Atmosphere`). Strength = the galaxy transition × how
   centred About is on screen.
-- **Readability.** Particles behind `[data-about-content]` drop to 30%
-  brightness on wide screens and 42% on narrow ones (`GALAXY_VIEW`).
+- **Readability.** Every `[data-galaxy-content]` text block on screen
+  dims the galaxy behind it. That is up to 4 at once (`uProtectG[4]`): About,
+  Careers, the Proof Points heading and quotes, and Contact.
+  - Brightness drops to 4% (6% on narrow screens), with a soft margin
+    around each block.
+  - Text never merges with the spiral or its bright core.
 
 ### Staffing & Consulting: particle Earth
 
@@ -607,10 +611,10 @@ cards are the reference.
   | Staffing | horizontal cards |
   | Why | a 2×2 of separate cards (no longer a joined grid) |
   | Testimonials | quote cards |
-  | Contact | featured |
 
   Sizes differ by content; the look never does.
 - **Excluded on purpose.**
+  - Contact is a whole section too: centred text, no card.
   - Careers is a whole section (`Careers.tsx`, between About and Proof
     Points), not a card. Sections are never cards, whatever their size.
   - The client logo tiles stay white, because the logos need a white

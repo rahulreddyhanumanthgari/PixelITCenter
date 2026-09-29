@@ -97,7 +97,7 @@ export default function JourneyScene() {
     solarPhone: 0,
     protect5: [0, 0, 0.001, 0.001],
     galaxy: null,
-    protect6: [0, 0, 0.001, 0.001],
+    protect6: [],
     protect6Floor: GALAXY_VIEW.protectFloor.wide,
     galaxyCollapse: 0,
     earthScale: 1,
@@ -244,20 +244,19 @@ export default function JourneyScene() {
           horizon: galaxyRegion ? -(galaxyRegion.getBoundingClientRect().bottom - vh / 2) * wpp : 0,
         };
       }
-      // Dim the galaxy behind whichever text block over it is nearest the
-      // middle of the screen (About's content, the Proof Points heading).
-      const nearest = galaxyContent
+      // Dim the galaxy behind every text block on screen (up to 4, nearest
+      // the middle first), with a little padding around each.
+      L.protect6 = galaxyContent
         .map((el) => el.getBoundingClientRect())
-        .sort((p, q) => Math.abs(p.top + p.height / 2 - vh / 2) - Math.abs(q.top + q.height / 2 - vh / 2))[0];
-      if (nearest) {
-        const c = nearest;
-        L.protect6 = [
+        .filter((c) => c.bottom > 0 && c.top < vh && c.height > 0)
+        .sort((p, q) => Math.abs(p.top + p.height / 2 - vh / 2) - Math.abs(q.top + q.height / 2 - vh / 2))
+        .slice(0, 4)
+        .map((c) => [
           ((c.left + c.width / 2) / vw) * 2 - 1,
           -(((c.top + c.height / 2) / vh) * 2 - 1),
-          (c.width / vw) * 1.04,
-          (c.height / vh) * 1.04,
-        ];
-      }
+          (c.width / vw) * 1.08 + 0.02,
+          (c.height / vh) * 1.08 + 0.03,
+        ]);
       L.protect6Floor = vw < 1024 ? GALAXY_VIEW.protectFloor.narrow : GALAXY_VIEW.protectFloor.wide;
       // Ending: the empty stretch after Contact scrubs the collapse, from its
       // top entering the screen (0) to the galaxy's release (1).

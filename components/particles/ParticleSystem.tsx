@@ -88,8 +88,8 @@ export interface LayoutState {
    * About is on screen (0..1, for the star field's gravity). Null = none.
    */
   galaxy: { x: number; y: number; scale: number; presence: number; horizon: number } | null;
-  /** About content box in NDC, and the brightness left behind it. */
-  protect6: [number, number, number, number];
+  /** Galaxy area: up to 4 on-screen text boxes in NDC, and the brightness left behind them. */
+  protect6: [number, number, number, number][];
   protect6Floor: number;
   /** Galaxy ending after Contact: 0 = galaxy … 1 = collapsed into its core and gone. */
   galaxyCollapse: number;
@@ -157,7 +157,7 @@ export interface MorphUniforms {
   uTorusScale: THREE.IUniform<number>;
   uSolarPhone: THREE.IUniform<number>;
   uProtect5: THREE.IUniform<THREE.Vector4>;
-  uProtect6: THREE.IUniform<THREE.Vector4>;
+  uProtectG: THREE.IUniform<THREE.Vector4[]>;
   uProtect6Floor: THREE.IUniform<number>;
   uCollapse: THREE.IUniform<number>;
   uSunOffset: THREE.IUniform<number>;
@@ -248,7 +248,7 @@ export function ParticleSystem({
       uTorusScale: { value: 1 },
       uSolarPhone: { value: 0 },
       uProtect5: { value: new THREE.Vector4(0, 0, 0.001, 0.001) },
-      uProtect6: { value: new THREE.Vector4(0, 0, 0.001, 0.001) },
+      uProtectG: { value: [0, 1, 2, 3].map(() => new THREE.Vector4(0, 0, 0, 0)) },
       uProtect6Floor: { value: 1 },
       uCollapse: { value: 0 },
       uSunOffset: { value: 0 },
@@ -347,7 +347,7 @@ export function ParticleSystem({
     u.uTorusScale.value = L.torusScale;
     u.uSolarPhone.value = L.solarPhone;
     u.uProtect5.value.set(...L.protect5);
-    u.uProtect6.value.set(...L.protect6);
+    u.uProtectG.value.forEach((v, i) => (L.protect6[i] ? v.set(...L.protect6[i]) : v.set(0, 0, 0, 0)));
     u.uProtect6Floor.value = L.protect6Floor;
     // Eased like the morph, so fast scrolling still plays the collapse smoothly.
     s0.collapse += (L.galaxyCollapse - s0.collapse) * k;

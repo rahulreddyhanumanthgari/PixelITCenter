@@ -9,7 +9,7 @@ export function Testimonials() {
         <div data-galaxy-content>
           <SectionHeader id="testimonials-title" eyebrow={testimonials.eyebrow} title={testimonials.title} />
         </div>
-        <ul className="mt-14 grid gap-[var(--card-gap)] md:grid-cols-3">
+        <ul data-galaxy-content className="mt-14 grid gap-[var(--card-gap)] md:grid-cols-3">
           {testimonials.items.map((t, i) => (
             <li key={i} data-reveal="3">
               <Card as="figure" className="flex h-full flex-col justify-between">
