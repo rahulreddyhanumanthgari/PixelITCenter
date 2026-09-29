@@ -13,6 +13,11 @@ import type { PointerState } from "./types";
 export interface Atmosphere {
   /** 0..1 — how scattered the main particles are right now. */
   field: number;
+  /** 0..1 — strength of the About Us gravity well (written by the vortex). */
+  gravity: number;
+  /** Gravity centre in world units (focal plane). */
+  gravityX: number;
+  gravityY: number;
 }
 
 interface StarFieldProps {
@@ -41,6 +46,9 @@ export function StarField({ count, pixelRatio, reducedMotion, pointer, atmospher
           uMotion: { value: 1 },
           uPointer: { value: new THREE.Vector2() },
           uField: { value: 0 },
+          uGravity: { value: 0 },
+          uGravityCenter: { value: new THREE.Vector2() },
+          uSwirl: { value: 0 },
         },
         vertexShader,
         fragmentShader,
@@ -75,7 +83,13 @@ export function StarField({ count, pixelRatio, reducedMotion, pointer, atmospher
     const target = u.uPointer.value as THREE.Vector2;
     target.x += ((p.active ? p.x : 0) - target.x) * k;
     target.y += ((p.active ? p.y : 0) - target.y) * k;
-    u.uField.value += (atmosphere.current.field - u.uField.value) * k * 2;
+    const A = atmosphere.current;
+    u.uField.value += (A.field - u.uField.value) * k * 2;
+    // Gravity eases in and out; the swirl angle only advances while it acts,
+    // so the stars never jump when it switches on.
+    u.uGravity.value += (A.gravity - u.uGravity.value) * k * 2;
+    (u.uGravityCenter.value as THREE.Vector2).set(A.gravityX, A.gravityY);
+    u.uSwirl.value += delta * u.uGravity.value * (reducedMotion ? 0.15 : 1);
   });
 
   return <points ref={pointsRef} geometry={geometry} material={material} frustumCulled={false} />;

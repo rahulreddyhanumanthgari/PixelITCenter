@@ -150,37 +150,40 @@ or the morph.
 
   Everything is scrubbed and reverses. Reduced motion gets a fade-in only.
 
-### About Us: gravitational vortex
+### About Us: gravity (same particles, different physics)
 
-About's content is centred. It sits inside a particle vortex around an
-invisible centre (`lib/particles/vortex.ts`, `shaders/vortex.vert.glsl`,
-`components/vortex/ParticleVortex.tsx`), drawn in the same journey canvas and
-centred on `[data-vortex-anchor]`, which spans the section.
+About's content is centred. Behind it, the journey's own particle language
+enters a gravity well. The rule is: same appearance, different movement.
 
-- **Orbiters** (45%). Most sit in a broad band around the content; the rest
-  are spread loosely through the disc. Each has its own radius and a
-  Kepler-like speed (inner paths turn faster), and density follows two soft
-  log-spiral bands.
-- **Infallers** (55%). On a 35–90 s life cycle, each particle's radius shrinks
-  as `r0·(1−life)^0.55`, so it falls slowly, then fast. A twist term curves
-  its path ever tighter.
-  - Near the centre it brightens and warms slightly toward the rocket
-    orange.
-  - It then shrinks and vanishes at the event horizon (r ≈ 0.42).
-  - The cycle wraps, so it re-enters at the edge, and the flow never
-    empties.
+- **Same appearance.** The vortex particles
+  (`lib/particles/vortex.ts`, `shaders/vortex.vert.glsl`,
+  `components/vortex/ParticleVortex.tsx`) use:
+  - the journey's rocket colour mix (`colorsForSequence("rocket", …)`);
+  - the same size spread;
+  - the same point size (`STORY_LOOK.particleSize`);
+  - the same depth-fade, twinkle and alpha rules as `particle.vert.glsl`;
+  - the shared `particle.frag.glsl`, canvas, camera and bloom.
 
-  Everything is a function of `uTime`, so it keeps moving while the visitor
-  reads.
-- **Void.** There is no drawn sphere and no painted background. The centre is
-  dark only because particles vanish there.
-- **Readability.** The content box, `[data-about-content]`, is passed to the
-  shader in NDC. Particles projected behind it drop to 30% brightness on
-  wide screens and 42% on narrow ones.
-- **Entrance.** Scroll-scrubbed: the field moves in from deep space.
-- **Pointer.** Slight tilt, parallax and a ripple.
-- **Counts.** 26k desktop / 16k tablet / 10k mobile. All tunables are in
-  `VORTEX_CONFIG`.
+  `VORTEX_CONFIG` holds only layout and motion tunables.
+- **Movement.** Every particle has its own radius, speed (Kepler-like),
+  phase and a slightly tilted orbit, so together they form one overlapping 3D
+  field with no designed bands.
+  - *Infallers (50%):* arrive from deep space behind the field and join the
+    flow. They then spiral in, falling slowly and then fast, with a curve
+    that tightens. They get slightly larger and brighter, then shrink and
+    vanish at the centre.
+  - *Continuous:* the cycle wraps, so the flow never empties.
+- **The space itself bends.** The vortex reports its gravity strength and
+  centre each frame (`onGravity` → `Atmosphere`). The shared star field then
+  swirls around that centre, faster nearer it, and is drawn slightly inward.
+  - *Strength:* scroll entrance × how centred About is on screen, so it
+    eases in and relaxes as About leaves.
+  - *No jumps:* the swirl angle only accumulates while gravity acts.
+- **Void.** Nothing is drawn at the centre. It is dark because particles are
+  consumed there.
+- **Readability.** Particles projected behind `[data-about-content]` drop to
+  30% brightness on wide screens and 42% on narrow ones.
+- **Counts.** 26k desktop / 16k tablet / 10k mobile.
 
 ### How We Work (current version)
 

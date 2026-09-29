@@ -7,6 +7,9 @@ uniform float uPixelRatio;
 uniform float uMotion;     // 1 = full motion, small under reduced motion
 uniform vec2 uPointer;     // eased pointer, -1..1 (0 when inactive)
 uniform float uField;      // 0..1, how scattered the main particles are right now
+uniform float uGravity;    // 0..1, About Us gravity well strength
+uniform vec2 uGravityCenter;
+uniform float uSwirl;      // accumulated swirl time (advances only under gravity)
 
 attribute vec3 aColor;
 attribute float aRandom;
@@ -31,6 +34,19 @@ void main() {
 
   // Parallax: near points shift a little more than far ones.
   pos.xy -= uPointer * (0.08 + nearness * 0.35) * uMotion;
+
+  // Gravity (About Us): the same stars bend around the invisible centre —
+  // they swirl, faster nearer the centre, and are drawn slightly inward.
+  if (uGravity > 0.001 && aTraveler < 0.5) {
+    vec2 rel = pos.xy - uGravityCenter;
+    float d = length(rel);
+    float ang = uSwirl * 0.06 / (0.5 + d * 0.12) + uGravity * 0.35 / (1.0 + d * 0.25);
+    float c = cos(ang);
+    float s = sin(ang);
+    rel = mat2(c, s, -s, c) * rel;
+    rel *= 1.0 - uGravity * 0.12 / (1.0 + d * 0.15);
+    pos.xy = uGravityCenter + rel;
+  }
 
   // Traveller: one slightly larger point occasionally drifts in from deep in
   // the field, passes by and recedes. The two travellers alternate, so at

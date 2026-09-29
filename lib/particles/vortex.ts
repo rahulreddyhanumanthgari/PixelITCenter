@@ -1,22 +1,21 @@
 import * as THREE from "three";
-import { PALETTE_LINEAR, pushColor } from "./palette";
+import { colorsForSequence, generateForm } from "./generateTarget";
 import { mulberry32 } from "./random";
 
 /**
- * About Us — a gravitational particle vortex around an invisible centre.
- * Only static per-particle data lives here; every position is computed in
- * shaders/vortex.vert.glsl from time, so the flow never stops:
- * - "orbiters" circle on broad paths at their own radius and speed
- * - "infallers" spiral inward over a lifetime, accelerate, and vanish at the
- *   centre, then re-enter from the outer field (the life cycle wraps)
+ * About Us — the same particle language, under gravity. These particles are
+ * built exactly like the journey particles (same rocket colour mix, same
+ * size spread); only their motion differs. Positions are computed in
+ * shaders/vortex.vert.glsl from time:
+ * - orbiters circle an invisible centre on their own tilted orbits
+ * - infallers arrive from deep space, join the flow, spiral inward and are
+ *   consumed at the centre, then arrive again (the life cycle wraps)
  */
 export const VORTEX = {
   /** Outer radius of the field (local units). */
-  outer: 3.5,
-  /** Share of particles that spiral into the centre. */
-  infallShare: 0.55,
-  /** Share tinted with the rocket accents. */
-  accentShare: 0.06,
+  outer: 3.9,
+  /** Share of particles that fall into the centre. */
+  infallShare: 0.5,
 } as const;
 
 export function createVortexGeometry(count: number, seed = 57): THREE.BufferGeometry {
@@ -27,44 +26,37 @@ export function createVortexGeometry(count: number, seed = 57): THREE.BufferGeom
   const rate = new Float32Array(count);
   const phase = new Float32Array(count);
   const height = new Float32Array(count);
+  const incline = new Float32Array(count);
+  const node = new Float32Array(count);
   const randoms = new Float32Array(count);
   const scales = new Float32Array(count);
-  const warm = new Float32Array(count);
-  const colors = new Float32Array(count * 3);
-  const { white, offWhite, orange, gold, blue } = PALETTE_LINEAR;
-  const c = new THREE.Color();
   const gauss = () => (rand() + rand() + rand() - 1.5) / 1.5;
 
   for (let i = 0; i < count; i++) {
     const infall = rand() < VORTEX.infallShare;
-    // Infallers start in the outer field. Most orbiters crowd a broad band
-    // that runs around the content; the rest fill the disc more loosely.
-    const band = rand() < 0.72;
-    const r = infall ? 2.7 + rand() * 0.9 : band ? 2.95 + gauss() * 0.22 : 0.9 + Math.pow(rand(), 0.7) * 2.6;
+    // A continuous spread of orbits (no designed bands), thinning toward the
+    // centre; infallers start at the rim.
+    const r = infall ? 3.1 + rand() * 0.8 : 1.0 + Math.pow(rand(), 0.6) * 2.9;
     r0[i] = r;
-    // Two soft spiral bands (log spiral), plus a uniform share, so density
-    // hints at curved flow without drawing any line.
-    angle[i] = rand() < 0.3 ? rand() * Math.PI * 2 : (rand() < 0.5 ? 0 : Math.PI) + gauss() * 0.5 + 1.3 * Math.log(r);
-    // Kepler-ish: inner paths turn faster. Each particle its own speed.
-    omega[i] = 0.2 * Math.pow(r / 2, -1.5) * (0.8 + rand() * 0.4);
+    angle[i] = rand() * Math.PI * 2;
+    // Kepler-ish: inner orbits turn faster; each particle its own speed.
+    omega[i] = 0.2 * Math.pow(r / 2, -1.5) * (0.75 + rand() * 0.5);
     rate[i] = infall ? 1 / (35 + rand() * 55) : 0;
     phase[i] = rand();
-    // A thin, slightly thick disc, with a few particles far above/below for depth.
-    height[i] = gauss() * (rand() < 0.08 ? 0.9 : 0.22) * (r / VORTEX.outer + 0.3);
+    height[i] = gauss() * (rand() < 0.1 ? 0.8 : 0.2) * (r / VORTEX.outer + 0.3);
+    // Every orbit slightly tilted its own way → one overlapping 3D field.
+    incline[i] = gauss() * 0.22;
+    node[i] = rand() * Math.PI * 2;
     randoms[i] = rand();
+    // Same size spread as the journey particles (MorphController).
     const s = rand();
-    scales[i] = s > 0.985 ? 1.8 : 0.45 + s * 0.7;
-    warm[i] = rand() < 0.35 ? 1 : 0;
-
-    c.copy(white).lerp(offWhite, rand() * 0.8);
-    if (rand() < VORTEX.accentShare) {
-      const pick = rand();
-      c.copy(pick < 0.45 ? orange : pick < 0.7 ? gold : blue).lerp(white, 0.25);
-    }
-    // Outer field dimmer, inner brighter; rare sparkles.
-    const b = (0.55 + rand() * 0.4) * (1 - ((r - 0.9) / 2.6) * 0.4) * (s > 0.97 ? 1.7 : 1);
-    pushColor(colors, i, c, b);
+    scales[i] = s > 0.985 ? 1.8 + rand() * 0.8 : 0.45 + s * 0.75;
   }
+
+  // Same colours as the journey particles: the rocket colour mix, sampled
+  // the same way. Order doesn't matter — every attribute above is random
+  // per particle.
+  const colors = colorsForSequence("rocket", generateForm("rocket", count, seed));
 
   const g = new THREE.BufferGeometry();
   // `position` is unused by the shader but lets three compute bounds.
@@ -75,9 +67,10 @@ export function createVortexGeometry(count: number, seed = 57): THREE.BufferGeom
   g.setAttribute("aRate", new THREE.BufferAttribute(rate, 1));
   g.setAttribute("aPhase", new THREE.BufferAttribute(phase, 1));
   g.setAttribute("aHeight", new THREE.BufferAttribute(height, 1));
+  g.setAttribute("aIncline", new THREE.BufferAttribute(incline, 1));
+  g.setAttribute("aNode", new THREE.BufferAttribute(node, 1));
   g.setAttribute("aRandom", new THREE.BufferAttribute(randoms, 1));
   g.setAttribute("aScale", new THREE.BufferAttribute(scales, 1));
-  g.setAttribute("aWarm", new THREE.BufferAttribute(warm, 1));
   g.setAttribute("aColor", new THREE.BufferAttribute(colors, 3));
   return g;
 }

@@ -86,7 +86,7 @@ export default function JourneyScene() {
     sides: null,
   });
   // How scattered the main particles are; drives the stars and camera.
-  const atmosphere = useRef<Atmosphere>({ field: 0 });
+  const atmosphere = useRef<Atmosphere>({ field: 0, gravity: 0, gravityX: 0, gravityY: 0 });
 
   // Each frame: bloom eases from the hero's strength to the story's with the
   // handoff, and the scatter amount is shared with the stars and camera.
@@ -98,6 +98,12 @@ export default function JourneyScene() {
     },
     [tier],
   );
+  const onGravity = useCallback((strength: number, x: number, y: number) => {
+    const A = atmosphere.current;
+    A.gravity = strength;
+    A.gravityX = x;
+    A.gravityY = y;
+  }, []);
 
   // --- scroll → form position ---------------------------------------------
   // One scrubbed 0→1 value per transition; their sum is the form position
@@ -264,6 +270,7 @@ export default function JourneyScene() {
         reducedMotion={reducedMotion}
         cameraZ={JOURNEY_CAMERA.z}
         cameraFov={JOURNEY_CAMERA.fov}
+        onGravity={onGravity}
       />
     </ParticleCanvas>
   );

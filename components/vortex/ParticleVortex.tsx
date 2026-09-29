@@ -6,15 +6,18 @@ import * as THREE from "three";
 import vertexShader from "@/shaders/vortex.vert.glsl";
 import fragmentShader from "@/shaders/particle.frag.glsl";
 import { gsap } from "@/lib/gsap";
-import { PALETTE_LINEAR } from "@/lib/particles/palette";
 import { VORTEX, createVortexGeometry } from "@/lib/particles/vortex";
 import type { PointerState } from "@/components/particles/types";
+import { STORY_LOOK } from "@/components/journey/journey-config";
 
-/** Every tunable number for the About Us vortex. */
+/**
+ * Every tunable number for the About Us vortex. Deliberately no particle
+ * size/colour/brightness here: those come from the journey particles, so
+ * About looks like the same particles under gravity.
+ */
 export const VORTEX_CONFIG = {
-  particleSize: 16,
   /** Outer radius on screen: the larger of these fractions of width/height. */
-  reach: { width: 0.5, height: 0.62 },
+  reach: { width: 0.52, height: 0.64 },
   /** Disc orientation: tipped toward the viewer so the flow reads in 3D. */
   tilt: [1.12, 0, 0.16] as const,
   /** Pointer: max extra tilt (radians) and parallax (fraction of radius). */
@@ -32,6 +35,11 @@ interface ParticleVortexProps {
   reducedMotion: boolean;
   cameraZ: number;
   cameraFov: number;
+  /**
+   * Called every frame with the gravity strength (0..1) and its centre in
+   * world units, so the shared star field can bend around About too.
+   */
+  onGravity: (strength: number, x: number, y: number) => void;
 }
 
 interface Layout {
@@ -39,6 +47,8 @@ interface Layout {
   x: number;
   y: number;
   visible: boolean;
+  /** 1 while About fills the view, easing to 0 as it scrolls away. */
+  presence: number;
   /** Content box in NDC: centre, half-size. */
   protect: [number, number, number, number];
 }
@@ -50,10 +60,18 @@ const damp = (d: number, delta: number) => 1 - Math.pow(1 - d, delta * 60);
  * canvas, centred on the section behind the centred content. Scroll brings
  * it in; it then flows on its own. The pointer adds only a slight tilt.
  */
-export function ParticleVortex({ count, pointer, pixelRatio, reducedMotion, cameraZ, cameraFov }: ParticleVortexProps) {
+export function ParticleVortex({
+  count,
+  pointer,
+  pixelRatio,
+  reducedMotion,
+  cameraZ,
+  cameraFov,
+  onGravity,
+}: ParticleVortexProps) {
   const rootRef = useRef<THREE.Group>(null);
   const pointsRef = useRef<THREE.Points>(null);
-  const layout = useRef<Layout>({ x: 0, y: 0, visible: false, protect: [0, 0, 0.001, 0.001] });
+  const layout = useRef<Layout>({ x: 0, y: 0, visible: false, presence: 0, protect: [0, 0, 0.001, 0.001] });
   const enter = useRef({ v: 0 });
 
   const geometry = useMemo(() => createVortexGeometry(count), [count]);
@@ -63,14 +81,13 @@ export function ParticleVortex({ count, pointer, pixelRatio, reducedMotion, came
         uniforms: {
           uTime: { value: 0 },
           uEnter: { value: 0 },
-          uSize: { value: VORTEX_CONFIG.particleSize },
+          uSize: { value: STORY_LOOK.particleSize },
           uPixelRatio: { value: 1 },
           uMotion: { value: 1 },
           uFocusDepth: { value: cameraZ },
           uPointer: { value: new THREE.Vector2() },
           uProtect: { value: new THREE.Vector4(0, 0, 0.001, 0.001) },
           uProtectFloor: { value: VORTEX_CONFIG.protectFloor.wide },
-          uAccent: { value: PALETTE_LINEAR.orange.clone() },
         },
         vertexShader,
         fragmentShader,
@@ -107,6 +124,8 @@ export function ParticleVortex({ count, pointer, pixelRatio, reducedMotion, came
         x: a.left + a.width / 2,
         y: a.top + a.height / 2,
         visible: a.bottom > -200 && a.top < vh + 200,
+        // Gravity is strongest while About's centre is near the screen's.
+        presence: 1 - THREE.MathUtils.smoothstep(Math.abs(a.top + a.height / 2 - vh / 2) / vh, 0.45, 1.1),
         protect: [
           ((c.left + c.width / 2) / vw) * 2 - 1,
           -(((c.top + c.height / 2) / vh) * 2 - 1),
@@ -156,6 +175,14 @@ export function ParticleVortex({ count, pointer, pixelRatio, reducedMotion, came
 
     S.enter += (enter.current.v - S.enter) * damp(0.08, delta);
     u.uEnter.value = S.enter;
+
+    // Tell the shared star field where gravity is and how strong, so the
+    // same space visibly bends around About (and relaxes as it leaves).
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    const wpp = (2 * cameraZ * Math.tan(((cameraFov / 2) * Math.PI) / 180)) / vh;
+    onGravity(L.visible ? S.enter * L.presence : 0, (L.x - vw / 2) * wpp, -(L.y - vh / 2) * wpp);
+
     root.visible = L.visible && S.enter > 0.002;
     if (!root.visible) return;
 
@@ -166,10 +193,7 @@ export function ParticleVortex({ count, pointer, pixelRatio, reducedMotion, came
     (u.uPointer.value as THREE.Vector2).copy(S.pointer);
     (u.uProtect.value as THREE.Vector4).set(...L.protect);
 
-    const vw = window.innerWidth;
-    const vh = window.innerHeight;
     u.uProtectFloor.value = vw < 1024 ? VORTEX_CONFIG.protectFloor.narrow : VORTEX_CONFIG.protectFloor.wide;
-    const wpp = (2 * cameraZ * Math.tan(((cameraFov / 2) * Math.PI) / 180)) / vh;
     const radiusPx = Math.max(vw * VORTEX_CONFIG.reach.width, vh * VORTEX_CONFIG.reach.height);
     const scale = (radiusPx * wpp) / VORTEX.outer;
     const par = VORTEX_CONFIG.pointer.parallax * radiusPx * wpp;
