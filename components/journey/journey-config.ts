@@ -1,18 +1,18 @@
 // Every tunable number for the particle journey lives here: the one particle
-// system that runs from the hero rocket down to the How We Work section.
+// system that runs from the landing hero's gravity field down to How We Work.
 
 import type { DeviceTier } from "@/components/particles/hooks";
 import type { ParticleLook } from "@/components/particles/ParticleSystem";
 import type { FormName } from "@/lib/particles/generateTarget";
 
 /**
- * The whole journey, in scroll order. The first two play while the hero is
- * pinned; the other four belong to the story sections (one per section).
+ * The whole journey, in scroll order. The first is the landing hero's
+ * full-screen gravity field (moving particles, not a shape); the other four
+ * belong to the story sections, one per section.
  * Shapes live in lib/particles/ — see FORMS in generateTarget.ts.
  */
 export const JOURNEY_FORMS: readonly FormName[] = [
-  "rocket",
-  "sphere",
+  "heroField",
   "services",
   "globe",
   "segmentedRing",
@@ -20,7 +20,19 @@ export const JOURNEY_FORMS: readonly FormName[] = [
 ];
 
 /** Form position at which the particles leave the hero for the story column. */
-export const STORY_HANDOFF = 1;
+export const STORY_HANDOFF = 0;
+
+/**
+ * Landing hero gravity field. Radius on screen is the larger of these
+ * fractions of the viewport width/height, so the field runs past the edges.
+ * `outer` must match HERO_FIELD_OUTER in particle.vert.glsl.
+ */
+export const HERO_FIELD = {
+  reach: { width: 0.6, height: 0.8 },
+  outer: 4,
+  /** Brightness left for particles behind the hero text. */
+  protectFloor: 0.35,
+} as const;
 
 /**
  * Desktop composition for each story form (0 = particles left, text right;
@@ -37,12 +49,10 @@ export const STORY_SLOTS = { left: 0.24, right: 0.76 } as const;
 export const CAMERA_MOTION = { pointerX: 0.14, pointerY: 0.09, fieldPullBack: 0.35, damping: 0.03 } as const;
 
 /**
- * Scroll windows for each transition (ScrollTrigger syntax). The hero one is
- * a fraction of the hero's pinned scroll; the story ones run while the
- * section that owns the *next* form scrolls into view.
+ * Scroll windows for each transition (ScrollTrigger syntax): each runs while
+ * the section that owns the *next* form scrolls into view.
  */
 export const TRANSITIONS = {
-  hero: { from: 0.18, to: 0.82 },
   intoStory: { desktop: { start: "top 96%", end: "top 18%" }, mobile: { start: "top 100%", end: "top 50%" } },
   story: { start: "top 96%", end: "top 14%" },
   scrub: 0.8,
@@ -57,26 +67,30 @@ const SHARED = {
   cameraZ: 7.5,
 };
 
-/** The hero look: bigger points, continuous spin, rocket leaning right. */
+/**
+ * The hero look: the gravity field's disc seen at an angle (its bright band
+ * reads as an ellipse framing the headline), barely
+ * swaying (the field turns on its own), with a light pointer response.
+ */
 export const HERO_LOOK: ParticleLook = {
   ...SHARED,
-  particleSize: 14,
-  rotation: { mode: "spin", speed: 0.12, amount: 0 },
-  wobbleAmount: 0.08,
-  baseTilt: [0.2, 0, -0.72],
-  formNoise: 0.025,
+  particleSize: 16,
+  rotation: { mode: "sway", speed: 0.08, amount: 0.04 },
+  wobbleAmount: 0.02,
+  baseTilt: [0.78, 0, 0.1],
+  formNoise: 0.02,
   fieldNoise: 0.3,
   curve: 0.9,
-  mouseInfluence: 0.28,
-  mouseRadius: 0.95,
-  mouseTilt: 0.3,
-  mouseParallax: 0.12,
+  mouseInfluence: 0.15,
+  mouseRadius: 0.9,
+  mouseTilt: 0.06,
+  mouseParallax: 0.08,
 };
 
 /**
  * The story look: finer points, and a gentle sway instead of a spin so the
  * globe and the process path always face the reader. The system blends from
- * HERO_LOOK to this while the sphere becomes the Services ring.
+ * HERO_LOOK to this while the hero field becomes the Services ring.
  */
 export const STORY_LOOK: ParticleLook = {
   ...SHARED,
@@ -106,9 +120,6 @@ export interface JourneyTier {
   scatter: number;
   /** Bloom while in the hero, then in the story sections. */
   bloom: { hero: number; story: number };
-  /** Hero placement in world units (camera at z 7.5). */
-  heroOffset: readonly [number, number];
-  heroScale: number;
   /** Story scale relative to the pinned story column/band height. */
   storyScale: number;
   /** Particles in the About Us vortex. */
@@ -122,8 +133,6 @@ const TIERS: Record<DeviceTier, JourneyTier> = {
     maxDpr: 2,
     scatter: 1,
     bloom: { hero: 0.85, story: 0.55 },
-    heroOffset: [1.6, 0.05],
-    heroScale: 0.78,
     storyScale: 0.8,
     vortexCount: 26_000,
   },
@@ -133,8 +142,6 @@ const TIERS: Record<DeviceTier, JourneyTier> = {
     maxDpr: 1.75,
     scatter: 0.85,
     bloom: { hero: 0.7, story: 0.45 },
-    heroOffset: [1.2, 0.1],
-    heroScale: 0.66,
     storyScale: 0.72,
     vortexCount: 16_000,
   },
@@ -144,10 +151,6 @@ const TIERS: Record<DeviceTier, JourneyTier> = {
     maxDpr: 1.5,
     scatter: 0.7,
     bloom: { hero: 0.5, story: 0.35 },
-    // Mobile hero y is replaced at runtime by the story band's centre, so the
-    // form sits in the same spot before and after the handoff.
-    heroOffset: [0, 1.1],
-    heroScale: 0.44,
     storyScale: 1.1,
     vortexCount: 10_000,
   },

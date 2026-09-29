@@ -22,15 +22,45 @@ server-rendered HTML, so SEO does not depend on the 3D scene.
 ## Particle journey (3D)
 
 One particle system runs from the top of the page to the How We Work
-section. The same ~60k particles physically morph through six forms and stop
-on the last one:
+section. The same ~60k particles start as the landing hero's full-screen
+gravity field, then physically morph through four forms and stop on the last
+one:
 
-rocket → sphere → Services (radial dotted ring) → Staffing (a network
+hero gravity field → Services (radial dotted ring) → Staffing (a network
 globe) → Why us (segmented block ring) → How we work (four-stage path).
 
 They never fade: every particle breaks away, scatters, drifts, curves back and
-reassembles. Each particle keeps the rocket's colour (orange / blue / white)
-through every form.
+reassembles. Each particle keeps the rocket palette colour it has always had
+(orange / blue / white, see below) through every form.
+
+### Landing hero: gravity field
+
+There is no rocket. The whole hero viewport sits inside the journey
+particles' gravity field, with the centred content on top. The hero section
+is transparent and has no panels or overlays.
+
+- **Form 0 (`heroField`) is live motion, not a shape.** While it is the form
+  being held or left (`uHeroField`), `particle.vert.glsl` replaces each
+  particle's start point with its live position in the field (`heroField()`),
+  built from the particle's existing random attributes:
+  - About half the particles orbit on their own tilted orbits. Most of those
+    crowd a bright band that frames the headline; the rest spread outward.
+  - The other half arrive from deep behind the field, spiral in faster and
+    faster, then shrink and vanish at the invisible centre, and arrive again.
+
+  When Services arrives, particles break straight out of the flow into the
+  ring, and scrolling back reverses it.
+- **Placement.** The field is centred on the viewport. Its radius is the
+  larger of 60% of the width or 80% of the height (`HERO_FIELD`), so it runs
+  past the edges. `HERO_LOOK` tips the disc back (`baseTilt` x 0.78), so the
+  band reads as an ellipse around the headline.
+- **Readability.** Particles projected behind `[data-hero-content]` drop to
+  35% brightness (`uProtect`). This is applied only while the field is
+  showing.
+- **Colours.** `heroField.colorize` gives each particle the exact colour the
+  rocket used to give it: same seed, same height order. So the palette is
+  unchanged, and every later form keeps its colour layout (orange low,
+  blue/white high).
 
 **Layer.** `JourneyLayer` is a fixed, full-screen layer (`z-0`) behind the
 page. `main` is `z-10`.
@@ -50,14 +80,13 @@ without this, a WebGL error takes down the whole page.
 
 ### Scroll → form position
 
-There is one scrubbed ScrollTrigger per transition (five). Their 0→1 values
-add up to a form position, from 0 (rocket) to 5 (process). It is reversible,
-and it holds wherever the visitor stops.
+There is one scrubbed ScrollTrigger per transition (four). Their 0→1 values
+add up to a form position, from 0 (hero field) to 4 (process). It is
+reversible, and it holds wherever the visitor stops. The hero is not pinned.
 
 | Transition | Runs while |
 |---|---|
-| Rocket → sphere | The hero is pinned (18–82% of its extra 180vh) |
-| Sphere → Services | The Services section arrives (top 96% → 18%; phones 100% → 50%) |
+| Hero field → Services | The Services section arrives (top 96% → 18%; phones 100% → 50%) |
 | Each later form | Its section's top moves from 96% to 14% of the viewport |
 
 Each story section is at least one screen tall on desktop, so every form
@@ -65,7 +94,7 @@ holds before the next one starts.
 
 ### Handoff: hero → story
 
-During sphere → Services, the system glides from its hero placement to the
+During hero field → Services, the system glides from its hero placement to the
 story slot. `ParticleStory` renders an empty, sticky
 `[data-story-anchor]` for it:
 
@@ -74,15 +103,13 @@ story slot. `ParticleStory` renders an empty, sticky
 
 `JourneyScene` measures the anchor and converts pixels to world units. Look
 values blend across the same transition, from `HERO_LOOK` to `STORY_LOOK`:
-point size, noise, curve, pointer strength, tilt and bloom. The hero's spin
-slows and settles on a full turn, and a gentle sway takes over, so the
-globe and the path face the reader.
+point size, noise, curve, pointer strength, tilt and bloom. The disc tips
+from the hero's angle to face-on, so the globe and the path face the reader.
 
 **Phones.** Once the band is pinned (`data-stuck`), it turns opaque so text
 scrolling beneath it is hidden. The layer then moves above the page (`z-20`)
 with a `clip-path` matching the band. Before that, the band is see-through
-and the layer stays behind. The hero form sits at the band's centre, so
-nothing jumps at the handoff.
+and the layer stays behind.
 
 ### How We Work: stepped process
 
@@ -221,7 +248,7 @@ enters a gravity well. The rule is: same appearance, different movement.
 
 | File | Role |
 |---|---|
-| `generateRocketParticles.ts` | Rocket from Lathe (ogive nose), Cylinder (body, nozzle), Extrude (4 fins), Sphere/Torus (porthole) + a volume exhaust plume; also its per-part colours |
+| `generateRocketParticles.ts` | No longer shown. Its per-part colouring is still the source of the site's particle palette (`heroField.colorize` and the About vortex) |
 | `forms/*.ts` | `services`, `globe` (dotted continents from a noise land-mask on a lat/long dot grid, inside a geodesic network cage), `segmentedRing`, `process` |
 | `geometryToParticles.ts` | `geometryToParticlePositions` (area-weighted surface sampling, seeded), `geometryEdgesToParticlePositions` (points along triangle edges → wireframe look), merge/transform helpers |
 | `generateTarget.ts` | `FORMS` registry, `alignByHeight`, colours (`colorsForSequence`, `monochromeColors`) |
@@ -239,14 +266,13 @@ enters a gravity well. The rule is: same appearance, different movement.
 
 - `journey-config.ts` — forms, looks, transitions, tiers. All tuning is here.
 - `JourneyScene`, `JourneyLayer`.
-- `layout.ts` — the hero pinned height, kept free of three.js for server use.
 
 **Adding a form:** add a generator to `FORMS`, list it in `JOURNEY_FORMS`, and
 add a section with `data-story-section` inside `ParticleStory` to own it.
 
 **Shared particle order.** Every form is sorted by height (with jitter), so
 particle *i* sits at a similar height in each form. Colours are fixed per
-particle, so the rocket's orange plume ends up low in every later form and
+particle (the rocket palette's height order), so orange ends up low in every form and
 its blue nose high. The viewer can follow the material.
 
 **GPU side** (`shaders/particle.vert.glsl`). Attributes: `position` (current

@@ -3,15 +3,12 @@ import { hero } from "@/content/site";
 import { buttonVariants } from "@/components/ui/button";
 import { RichText } from "@/components/ui/rich-text";
 import { cn } from "@/lib/utils";
-import { HERO_PINNED_VH } from "@/components/journey/layout";
-
-// The section is taller than the screen; its inner viewport is sticky, so the
-// hero stays pinned while the visitor scrolls the rocket into the sphere.
 
 /**
- * Server-rendered hero content (the real h1, copy and CTAs). The particles
- * behind it come from the page-wide JourneyLayer, so this section is
- * transparent.
+ * Landing hero: one full-screen statement, centred. The whole viewport is
+ * the particle gravity field (drawn by the page-wide JourneyLayer behind
+ * this transparent section); this is just the real h1, copy and CTAs on top.
+ * Particles projected behind [data-hero-content] are dimmed in the shader.
  */
 export function Hero() {
   return (
@@ -19,75 +16,65 @@ export function Hero() {
       id="top"
       data-hero
       aria-labelledby="hero-title"
-      className="relative"
-      style={{ height: `calc(100svh + ${HERO_PINNED_VH}vh)` }}
+      className="relative flex min-h-[100svh] items-center justify-center overflow-hidden"
     >
-      <div className="sticky top-0 isolate flex h-[100svh] overflow-hidden">
-        {/* Readability scrims: bottom-up on mobile, left-to-right on desktop. */}
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-0 -z-10 bg-gradient-to-t from-background via-background/75 to-transparent to-70% md:bg-gradient-to-r md:from-background/85 md:via-background/35 md:to-transparent md:to-60%"
-        />
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-x-0 bottom-0 -z-10 h-32 bg-gradient-to-t from-background to-transparent"
-        />
+      <div className="mx-auto w-full max-w-7xl px-4 pb-24 pt-28 sm:px-6 lg:px-8">
+        <div data-hero-content className="mx-auto flex max-w-5xl flex-col items-center text-center">
+          <p className="mb-6 flex items-center gap-2.5 text-xs font-medium uppercase tracking-[0.28em] text-brand-orange">
+            <span aria-hidden="true" className="size-1.5 rounded-full bg-brand-orange shadow-[0_0_12px_2px] shadow-brand-orange/60" />
+            {hero.eyebrow}
+          </p>
 
-        {/* Content */}
-        <div className="mx-auto flex w-full max-w-7xl items-end px-4 pb-20 pt-28 sm:px-6 md:items-center md:pb-16 lg:px-8">
-          <div className="max-w-xl md:w-[44%] md:max-w-none">
-            <p className="mb-5 flex items-center gap-2.5 text-xs font-medium uppercase tracking-[0.22em] text-muted-foreground">
-              <span
-                aria-hidden="true"
-                className="size-1.5 rounded-full bg-brand-orange shadow-[0_0_12px_2px] shadow-brand-orange/60"
-              />
-              {hero.eyebrow}
-            </p>
+          {/* Four lines on phones; two balanced lines from md up. */}
+          <h1
+            id="hero-title"
+            className="font-display text-[clamp(3rem,13vw,5rem)] font-bold uppercase leading-[0.92] tracking-tight md:text-[clamp(3.5rem,min(7vw,11svh),7.25rem)]"
+          >
+            {[hero.headline.slice(0, 2), hero.headline.slice(2)].map((pair, row) => (
+              <span key={row} className="block md:whitespace-nowrap">
+                {pair.map((line, i) => (
+                  <span key={line.text} className={cn("block md:inline", line.outline && "text-outline")}>
+                    {line.text.startsWith("& ") ? (
+                      <>
+                        <span className="text-brand-orange">&amp;</span>
+                        {line.text.slice(1)}
+                      </>
+                    ) : (
+                      line.text
+                    )}
+                    {i === 0 && <span className="hidden md:inline"> </span>}
+                  </span>
+                ))}
+              </span>
+            ))}
+          </h1>
 
-            <h1
-              id="hero-title"
-              className="font-display text-[clamp(3.1rem,11vw,5.25rem)] font-bold uppercase leading-[0.92] tracking-tight md:text-[clamp(3rem,min(7.4vw,10.5svh),5.25rem)] lg:text-[clamp(3.5rem,min(7.4vw,10.5svh),7.25rem)]"
+          <p className="mt-7 max-w-xl text-base leading-relaxed text-muted-foreground sm:text-lg">
+            <RichText text={hero.description} strongClassName="font-semibold text-foreground" />
+          </p>
+
+          <div className="mt-9 flex flex-wrap items-center justify-center gap-3">
+            <a href={hero.primaryCta.href} className={cn(buttonVariants(), "h-12 rounded-full px-6 text-sm font-semibold")}>
+              {hero.primaryCta.label}
+              <ArrowRight data-icon="inline-end" />
+            </a>
+            <a
+              href={hero.secondaryCta.href}
+              className={cn(buttonVariants({ variant: "ghost" }), "h-12 rounded-full px-5 text-sm text-foreground hover:bg-white/5")}
             >
-              {hero.headline.map((line) => (
-                <span key={line.text} className={cn("block", line.outline && "text-outline")}>
-                  {line.text}
-                </span>
-              ))}
-            </h1>
-
-            <p className="mt-6 max-w-md text-base leading-relaxed text-muted-foreground sm:text-lg">
-              <RichText text={hero.description} strongClassName="font-semibold text-foreground" />
-            </p>
-
-            <div className="mt-8 flex flex-wrap items-center gap-3">
-              <a
-                href={hero.primaryCta.href}
-                className={cn(buttonVariants(), "h-12 rounded-full px-6 text-sm font-semibold")}
-              >
-                {hero.primaryCta.label}
-                <ArrowRight data-icon="inline-end" />
-              </a>
-              <a
-                href={hero.secondaryCta.href}
-                className={cn(
-                  buttonVariants({ variant: "ghost" }),
-                  "h-12 rounded-full px-5 text-sm text-foreground hover:bg-white/5",
-                )}
-              >
-                {hero.secondaryCta.label}
-              </a>
-            </div>
+              {hero.secondaryCta.label}
+            </a>
           </div>
         </div>
-
-        <a
-          href="#services"
-          className="absolute bottom-6 left-1/2 hidden -translate-x-1/2 items-center gap-2 text-xs uppercase tracking-[0.2em] text-muted-foreground transition-colors hover:text-foreground md:flex"
-        >
-          <ArrowDown className="size-3.5" aria-hidden="true" />
-          Scroll
-        </a>
       </div>
+
+      <a
+        href="#services"
+        className="absolute bottom-6 left-1/2 flex -translate-x-1/2 items-center gap-2 text-xs uppercase tracking-[0.2em] text-muted-foreground transition-colors hover:text-foreground"
+      >
+        <ArrowDown className="size-3.5" aria-hidden="true" />
+        Scroll
+      </a>
     </section>
   );
 }

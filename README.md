@@ -4,7 +4,7 @@ The new public website for Pixel IT Center, built from the
 [modernization plan](./Pixel_IT_Center_Website_Modernization_Plan.pdf) (Phase 0).
 
 - **Stack:** Next.js (App Router) · TypeScript · Tailwind CSS · shadcn/ui
-- **Particle journey:** one real-time 3D particle system that morphs from the hero rocket through the story sections — three.js, React Three Fiber, custom GLSL, GSAP ScrollTrigger
+- **Particle journey:** one real-time 3D particle system: a full-screen gravity field behind the landing hero that breaks out and morphs through the story sections — three.js, React Three Fiber, custom GLSL, GSAP ScrollTrigger
 
 > Current state: **demo of Milestone 1** — homepage with header, 3D hero, services,
 > staffing, why us, process, about/careers, testimonials, contact CTA and footer.

@@ -16,6 +16,7 @@ import { annotateProcessStages, generateProcessParticles } from "./forms/process
 export type FormName =
   | "rocket"
   | "sphere"
+  | "heroField"
   | "torus"
   | "sculpture"
   | "services"
@@ -53,6 +54,26 @@ export const FORMS: Record<FormName, FormDefinition> = {
   rocket: {
     generate: (count, rand) => generateRocketParticles(count, Math.floor(rand() * 1e9)),
     colorize: (positions) => colorRocketParticles(positions),
+  },
+  // Landing hero: the journey particles as a full-screen gravity field. The
+  // shader computes their live positions (heroField in particle.vert.glsl);
+  // this flat disc only sets the shared particle order, and the colours are
+  // the rocket's, so the palette is unchanged.
+  heroField: {
+    generate: (count, rand) => {
+      const out = new Float32Array(count * 3);
+      for (let i = 0; i < count; i++) {
+        const r = 4 * Math.sqrt(rand());
+        const a = rand() * Math.PI * 2;
+        out[i * 3] = Math.cos(a) * r;
+        out[i * 3 + 1] = Math.sin(a) * r;
+        out[i * 3 + 2] = (rand() - 0.5) * 0.4;
+      }
+      return out;
+    },
+    // Exactly the colours the rocket used to give each particle (same seed,
+    // same height order), so every later form keeps its colour layout.
+    colorize: (positions) => colorRocketParticles(generateForm("rocket", positions.length / 3, 101)),
   },
   sphere: {
     generate: (count, rand) => sampleWithDepth(new THREE.SphereGeometry(1.75, 96, 64), count, rand, 0.35),

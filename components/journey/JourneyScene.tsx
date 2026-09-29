@@ -18,6 +18,7 @@ import {
   JOURNEY_CAMERA,
   JOURNEY_FORMS,
   CAMERA_MOTION,
+  HERO_FIELD,
   STORY_HANDOFF,
   STORY_LOOK,
   STORY_SIDES,
@@ -63,8 +64,8 @@ function CameraRig({
 }
 
 /**
- * The one particle system for the whole journey — hero rocket → sphere →
- * Services → Staffing → Why us → How we work. It lives in a fixed,
+ * The one particle system for the whole journey — the landing hero's gravity
+ * field → Services → Staffing → Why us → How we work. It lives in a fixed,
  * full-screen layer behind the page (JourneyLayer) and is loaded with
  * ssr: false, so it only runs in the browser.
  */
@@ -81,9 +82,11 @@ export default function JourneyScene() {
   const [active, setActive] = useState(true);
 
   const layout = useRef<LayoutState>({
-    from: { x: tier.heroOffset[0], y: tier.heroOffset[1], scale: tier.heroScale },
+    from: { x: 0, y: 0, scale: 1 },
     to: { x: 0, y: 0, scale: tier.storyScale },
     sides: null,
+    protect: [0, 0, 0.001, 0.001],
+    protectFloor: HERO_FIELD.protectFloor,
   });
   // How scattered the main particles are; drives the stars and camera.
   const atmosphere = useRef<Atmosphere>({ field: 0, gravity: 0, gravityX: 0, gravityY: 0 });
@@ -107,35 +110,23 @@ export default function JourneyScene() {
 
   // --- scroll → form position ---------------------------------------------
   // One scrubbed 0→1 value per transition; their sum is the form position
-  // (0 = rocket … 5 = process). Two-way scrub makes every step reversible.
+  // (0 = hero field … 4 = process). Two-way scrub makes every step reversible.
   useEffect(() => {
-    const hero = document.querySelector<HTMLElement>("[data-hero]");
     const story = document.querySelector<HTMLElement>("[data-story]");
-    if (!hero || !story) return;
+    if (!story) return;
     const sections = Array.from(story.querySelectorAll<HTMLElement>("[data-story-section]"));
     const steps = JOURNEY_FORMS.slice(1).map(() => ({ v: 0 }));
     const state = progress.current;
     const sum = () => {
       state.value = steps.reduce((s, t) => s + t.v, 0);
     };
-    const pinned = () => hero.offsetHeight - window.innerHeight;
     const intoStory = tierName === "mobile" ? TRANSITIONS.intoStory.mobile : TRANSITIONS.intoStory.desktop;
 
     const ctx = gsap.context(() => {
       steps.forEach((step, i) => {
-        const trigger =
-          i === 0
-            ? {
-                // Rocket → sphere while the hero is pinned.
-                trigger: hero,
-                start: () => `top+=${pinned() * TRANSITIONS.hero.from} top`,
-                end: () => `top+=${pinned() * TRANSITIONS.hero.to} top`,
-              }
-            : {
-                // Each later form assembles as the section that owns it arrives.
-                trigger: sections[i - 1],
-                ...(i === 1 ? intoStory : TRANSITIONS.story),
-              };
+        // Each form assembles as the section that owns it arrives; the first
+        // step is the hero field breaking out into the Services ring.
+        const trigger = { trigger: sections[i], ...(i === 0 ? intoStory : TRANSITIONS.story) };
         gsap.to(step, {
           v: 1,
           ease: "none",
@@ -155,6 +146,7 @@ export default function JourneyScene() {
     const story = document.querySelector<HTMLElement>("[data-story]");
     const anchor = story?.querySelector<HTMLElement>("[data-story-anchor]");
     const layer = document.querySelector<HTMLElement>("[data-journey-layer]");
+    const heroContent = document.querySelector<HTMLElement>("[data-hero-content]");
     // The particle layer stays on through About Us (the vortex); after that the
     // opaque sections cover it.
     const lastLit = document.querySelector<HTMLElement>("[data-about]") ?? story;
@@ -184,10 +176,21 @@ export default function JourneyScene() {
       const anchorTop = Math.min(rect.top, stickyTop, story.getBoundingClientRect().bottom - rect.height);
       L.to.y = -(anchorTop + rect.height / 2 - vh / 2) * wpp;
       L.to.scale = tier.storyScale * (rect.height / vh);
-      L.from.x = tier.heroOffset[0];
-      // In the band layout the hero form sits exactly where the band will be.
-      L.from.y = columns ? tier.heroOffset[1] : L.to.y;
-      L.from.scale = tier.heroScale;
+      // Hero: the gravity field is centred on the viewport and runs past its
+      // edges, so the landing screen sits inside it.
+      const radiusPx = Math.max(vw * HERO_FIELD.reach.width, vh * HERO_FIELD.reach.height);
+      L.from.x = 0;
+      L.from.y = 0;
+      L.from.scale = (radiusPx * wpp) / HERO_FIELD.outer;
+      if (heroContent) {
+        const c = heroContent.getBoundingClientRect();
+        L.protect = [
+          ((c.left + c.width / 2) / vw) * 2 - 1,
+          -(((c.top + c.height / 2) / vh) * 2 - 1),
+          (c.width / vw) * 1.04,
+          (c.height / vh) * 1.04,
+        ];
+      }
 
       // Phones: once the band is stuck, the text scrolls under the band's
       // opaque background — so the canvas moves above the page and is clipped

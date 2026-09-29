@@ -28,6 +28,9 @@ uniform vec3 uMouse;            // pointer, in the particles' local space
 uniform float uStage;           // process progress: 0 = Discover active … 4 = all done
 uniform float uStageMix;        // 0 = no stage effects, 1 = fully on (process form)
 uniform vec3 uAccent;           // rocket accent, for active checkpoints
+uniform float uHeroField;       // 1 while the current "from" form is the hero gravity field
+uniform vec4 uProtect;          // hero text box in NDC: centre xy, half-size zw
+uniform float uProtectFloor;    // brightness left for particles behind the hero text
 
 attribute vec3 aTarget;
 attribute vec3 aColor;
@@ -119,14 +122,66 @@ vec3 sideways(vec3 dir, vec3 seed) {
   return len > 1e-4 ? s / len : normalize(cross(dir, vec3(0.0, 1.0, 0.0001)));
 }
 
+// --- landing hero: the particles as a gravity field -------------------------
+// Live position of this particle in the hero's full-screen gravity field,
+// built from its existing random attributes (no extra data). Half the
+// particles orbit an invisible centre on their own tilted orbits; the other
+// half arrive from deep space, spiral in faster and faster, and are consumed
+// at the centre — then arrive again, so the flow never empties.
+const float HERO_FIELD_OUTER = 4.0;  // keep in sync with HERO_FIELD.outer
+const float HERO_HORIZON = 0.45;
+const float HERO_ARRIVAL = 0.14;
+
+vec3 rotX(vec3 p, float a) { float c = cos(a), s = sin(a); return vec3(p.x, c * p.y - s * p.z, s * p.y + c * p.z); }
+vec3 rotY(vec3 p, float a) { float c = cos(a), s = sin(a); return vec3(c * p.x + s * p.z, p.y, -s * p.x + c * p.z); }
+
+vec3 heroField(out float horizon, out float inflow) {
+  float h3 = fract(aNoiseOffset.x * 0.1591549);
+  float h4 = fract(aNoiseOffset.y * 0.1591549);
+  float h5 = fract(aNoiseOffset.z * 0.1591549);
+  float h6 = fract(aScatterDistance * 3.71);
+  bool infaller = h3 < 0.5;
+  // Orbiters: about half crowd a broad bright band well outside the text
+  // (the swirl that frames the headline); the rest spread through the field.
+  float r0 = infaller
+    ? HERO_FIELD_OUTER * (0.78 + h4 * 0.22)
+    : h6 < 0.7
+      ? HERO_FIELD_OUTER * (0.7 + (h4 - 0.5) * 0.12 + (aRandom - 0.5) * 0.05)
+      : HERO_FIELD_OUTER * (0.2 + pow(h4, 0.6) * 0.8);
+  float omega = 0.2 * pow(r0 / 2.0, -1.5) * (0.75 + aDelay * 0.5);
+  float life = infaller ? fract(uTime * uMotion / (35.0 + aRandom * 55.0) + aDelay) : 0.0;
+
+  float arrive = infaller ? smoothstep(0.0, HERO_ARRIVAL, life) : 1.0;
+  float fall = infaller ? clamp((life - HERO_ARRIVAL) / (1.0 - HERO_ARRIVAL), 0.0, 1.0) : 0.0;
+  float rn = pow(1.0 - fall, 0.55);
+  inflow = 1.0 - rn;
+  float r = r0 * rn * (1.0 + 0.02 * sin(uTime * 0.4 * uMotion + aRandom * 30.0));
+
+  float th = h5 * 2.0 * PI + uTime * omega * uMotion + 1.6 * inflow / (rn + 0.2);
+  float h = aScatterDir.y * 0.3 * (r0 / HERO_FIELD_OUTER + 0.3);
+  vec3 p = vec3(cos(th) * r, h * (0.35 + 0.65 * rn), sin(th) * r);
+  p = rotY(rotX(p, aScatterDir.x * 0.22 * rn), aScatterDir.z * PI);
+  // Arriving particles rise from deep behind the field (-y faces away).
+  p.y -= (1.0 - arrive) * (7.0 + aRandom * 6.0);
+  horizon = smoothstep(HERO_HORIZON * 0.25, HERO_HORIZON, r);
+  return p;
+}
+
 void main() {
   vec3 A = position;
   vec3 B = aTarget;
 
+  // In the hero, the start point is the particle's live place in the field,
+  // so leaving the hero, particles break straight out of the flow.
+  float heroHorizon = 1.0;
+  float heroInflow = 0.0;
+  if (uHeroField > 0.5) A = heroField(heroHorizon, heroInflow);
+
   // --- per-particle timing ------------------------------------------------
   // Delays blend pure randomness with a coarse noise field, so neighbouring
   // particles tend to peel away (and land) together — organic, not uniform.
-  float clumpOut = snoise(A * 0.75 + 3.1) * 0.5 + 0.5;
+  // (Uses the static form position so delays stay fixed in the moving field.)
+  float clumpOut = snoise(position * 0.75 + 3.1) * 0.5 + 0.5;
   float clumpIn = snoise(B * 0.75 - 5.3) * 0.5 + 0.5;
   float delayOut = mix(aDelay, clumpOut, 0.55) * OUT_SPREAD;
   float delayIn = IN_START + mix(aRandom, clumpIn, 0.55) * IN_SPREAD;
@@ -212,7 +267,11 @@ void main() {
   gl_Position = projectionMatrix * mvPosition;
 
   float depth = max(-mvPosition.z, 0.5);
-  float size = uSize * aScale * stageSize;
+  // Hero field: consumed particles shrink and vanish at the centre, a little
+  // larger/brighter on the way in; fades out as they leave for Services.
+  float heroW = uHeroField * (1.0 - eOut);
+  float heroSize = mix(1.0, (0.4 + 0.6 * heroHorizon) * (1.0 + heroInflow * 0.25), heroW);
+  float size = uSize * aScale * stageSize * heroSize;
   gl_PointSize = clamp(size * uPixelRatio / depth, 1.0, 28.0 * uPixelRatio);
 
   // Near particles brighter, far ones dimmer; a soft twinkle on top. Spread
@@ -223,4 +282,12 @@ void main() {
   vColor = aColor * depthFade * twinkle * (1.0 + push * 0.6 + flight * 0.25 + field * 0.6) * stageLevel;
   vColor = mix(vColor, uAccent * length(vColor) * 0.75, clamp(stageAccent, 0.0, 0.6));
   vAlpha = clamp(depthFade, 0.0, 1.0);
+
+  // Hero: keep the centred text calm — particles projected behind it dim.
+  vec2 ndc = gl_Position.xy / gl_Position.w;
+  vec2 dp = abs(ndc - uProtect.xy) / max(uProtect.zw, vec2(1e-3));
+  float box = pow(pow(dp.x, 4.0) + pow(dp.y, 4.0), 0.25);
+  float protect = mix(uProtectFloor, 1.0, smoothstep(0.85, 1.2, box));
+  vColor *= mix(1.0, (1.0 + heroInflow * 0.4) * heroHorizon * protect, heroW);
+  vAlpha *= mix(1.0, heroHorizon, heroW);
 }

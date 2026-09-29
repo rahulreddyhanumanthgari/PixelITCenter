@@ -93,6 +93,11 @@ export class MorphController {
   private from = 0;
   private to = 1;
 
+  /** Index of the form the particles are currently leaving (or holding). */
+  get fromIndex(): number {
+    return this.from;
+  }
+
   constructor(
     private readonly geometry: THREE.BufferGeometry,
     private readonly forms: Float32Array[],

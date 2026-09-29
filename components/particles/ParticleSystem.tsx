@@ -64,6 +64,12 @@ export interface LayoutState {
    * Null = always `to.x`.
    */
   sides: { left: number; right: number; byForm: readonly number[] } | null;
+  /**
+   * Hero text box in NDC (centre x/y, half-size x/y); particles behind it are
+   * dimmed to `protectFloor` while the hero field is showing.
+   */
+  protect: [number, number, number, number];
+  protectFloor: number;
 }
 
 interface ParticleSystemProps {
@@ -110,6 +116,9 @@ export interface MorphUniforms {
   uStage: THREE.IUniform<number>;
   uStageMix: THREE.IUniform<number>;
   uAccent: THREE.IUniform<THREE.Color>;
+  uHeroField: THREE.IUniform<number>;
+  uProtect: THREE.IUniform<THREE.Vector4>;
+  uProtectFloor: THREE.IUniform<number>;
 }
 
 /** Anywhere far from the particles, so the pointer push is off. */
@@ -185,6 +194,9 @@ export function ParticleSystem({
       uStage: { value: 0 },
       uStageMix: { value: 0 },
       uAccent: { value: PALETTE_LINEAR.orange.clone() },
+      uHeroField: { value: 0 },
+      uProtect: { value: new THREE.Vector4(0, 0, 0.001, 0.001) },
+      uProtectFloor: { value: 1 },
     };
     return new THREE.ShaderMaterial({
       uniforms,
@@ -254,6 +266,10 @@ export function ParticleSystem({
     const target = progress.current.value;
     s0.smoothProgress = s0.smoothProgress < 0 ? target : s0.smoothProgress + (target - s0.smoothProgress) * k;
     u.uProgress.value = controller.update(s0.smoothProgress);
+    // The hero gravity field is live while it is the form being left/held.
+    u.uHeroField.value = formNames[0] === "heroField" && controller.fromIndex === 0 ? 1 : 0;
+    u.uProtect.value.set(...L.protect);
+    u.uProtectFloor.value = L.protectFloor;
 
     // --- stepped form: stage effects fade in as the form lands -------------
     if (stagedForm >= 0) {
