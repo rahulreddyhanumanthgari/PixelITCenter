@@ -41,9 +41,6 @@ export function StoryChoreography() {
           const order = Number(el.dataset.reveal) || 0;
           const exit = columns || el.closest("[data-about]") ? normalExit : bandExit;
           const sideways = el.dataset.revealAxis === "x";
-          // Content pinned inside a tall section (Why, on desktop) only
-          // releases focus as that section leaves, not at its own spot.
-          const pinnedIn = columns ? el.closest<HTMLElement>("[data-pinned-content]")?.closest<HTMLElement>("[data-story-section]") : null;
           const header = order <= 2;
           const start = `top ${ENTER.from - order * ENTER.stepPct}%`;
           const end = `top ${ENTER.to - order * ENTER.stepPct}%`;
@@ -78,9 +75,7 @@ export function StoryChoreography() {
             filter: header ? `blur(${BLUR / 2}px)` : "none",
             ease: "power1.in",
             immediateRender: false,
-            scrollTrigger: pinnedIn
-              ? { trigger: pinnedIn, start: "bottom 75%", end: "bottom 45%", scrub: 0.6 }
-              : { trigger: el, start: exit.start, end: exit.end, scrub: 0.6 },
+            scrollTrigger: { trigger: el, start: exit.start, end: exit.end, scrub: 0.6 },
           });
         });
       },

@@ -284,44 +284,6 @@ Services content is centred (`storySectionClass("center")`) and its
 particles sit in the left slot (`STORY_SIDES[0] = 0`). Keep `RING_*` in the
 shader in sync with `RING_STREAM`.
 
-### Why Pixel IT Center: torus → Pixel IT node symbol
-
-Why owns two transitions (`STEP_SECTIONS = [0, 1, 2, 2, 3]`). The flowing
-torus arrives with the section; then the same particles re-form into the
-Pixel IT node symbol as the section is scrolled. It is the graphic mark only,
-with no wordmark and no letters.
-
-- **Geometry** (`forms/logoNode.ts`). The node positions and radii were
-  measured from `public/brand/pixel-it-center-logo.webp`: the symbol is at
-  x 0–86 px, a hub plus five outer nodes joined by spokes.
-
-  | Share | Part |
-  |---|---|
-  | 55% | Nodes: filled particle spheres, weighted by area |
-  | 33% | Spokes: particle trails hub → node |
-  | 5% | Halo around the nodes |
-  | The rest | A sparse field |
-
-- **Alive** (`logoLive()`, live kind 4). A small sway (±0.2 rad), slight
-  breathing and tiny per-particle drift. It never loosens enough to lose its
-  shape.
-- **Colour** (`logoColor()`). By position on the symbol:
-  - *Nodes:* the hub and bottom node are cream / cream-orange; the top-right
-    and bottom-left are orange; the top-left and right are blue.
-  - *Spokes:* blend toward cream.
-  - *Field:* dim blue.
-
-  Particles behind `[data-why-content]` dim to 42% (`uProtect4`).
-- **Layout.** The content is centred. The symbol is centred behind it
-  (`STORY_SIDES` 0.5); the torus before it sits right.
-  - *Desktop:* Why is 175vh tall with its content pinned
-    (`data-pinned-content`, `lg:sticky`). The symbol forms over "top 2%" →
-    "top −58%" (`STEP_WINDOWS.columns`). Pinned content fades only as the
-    section leaves (`StoryChoreography`).
-  - *Phones and tablets:* the section keeps its normal height. The symbol
-    forms from "center 55%" to "bottom 102%" (`STEP_WINDOWS.band`), ending
-    before How We Work starts arriving.
-
 ### Why Pixel IT Center: flowing torus
 
 The Why form (`torusFlow`) is a thick torus of particles: an even dot lattice
