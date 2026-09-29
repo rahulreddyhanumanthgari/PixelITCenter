@@ -278,7 +278,7 @@ While it is being left or arrived at (`uFlowFrom` / `uFlowTo` = 2),
   - *Keeping colours pure:* each hue is normalised (strongest channel = 1)
     and brightness is capped below 1, because anything brighter clips and
     ACES tone mapping whitens it.
-  - *Visibility:* it comes from point size (2.5×) and density.
+  - *Visibility:* full, even brightness (1.25; no depth or twinkle dimming), point size 2.8×, and density.
 - *Density:* the ring spans lanes 2.0–4.3 (it was 6.2), so the same
   particles are about twice as dense. Sparks are down to 2.5%.
 - *Fading:* it fades out toward the right, and dims to 45% behind

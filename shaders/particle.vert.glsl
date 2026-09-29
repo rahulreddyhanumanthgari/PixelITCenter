@@ -456,7 +456,7 @@ void main() {
                  + step(1.5, uFlowTo) * step(uFlowTo, 2.5) * eIn;
   float earthNear = step(2.5, uFlowFrom) * (1.0 - eOut) + step(2.5, uFlowTo) * eIn;
   float earthFace = step(2.5, uFlowFrom) * (1.0 - eOut) > 0.0 ? faceA : faceB;
-  float size = uSize * aScale * stageSize * heroSize * mix(1.0, 2.5, ringNear)
+  float size = uSize * aScale * stageSize * heroSize * mix(1.0, 2.8, ringNear)
              * mix(1.0, mix(0.7, 1.12, earthFace), earthNear);
   gl_PointSize = clamp(size * uPixelRatio / depth, 1.0, 28.0 * uPixelRatio);
 
@@ -499,7 +499,9 @@ void main() {
     // the brightness below 1. Anything brighter clips per channel and the
     // tone mapping pulls it toward white — that washed the colours out.
     hue /= max(max(hue.r, hue.g), max(hue.b, 1e-3));
-    float bright = (0.8 + 0.2 * aRandom) * clamp(depthFade, 0.7, 1.0) * mix(1.0, twinkle, 0.5);
+    // Full brightness, evenly across the stream (no depth/twinkle dimming).
+    // Kept close to 1: much higher and tone mapping starts whitening.
+    float bright = 1.25;
     vec2 nd = gl_Position.xy / gl_Position.w;
     float rightFade = 1.0 - smoothstep(-0.05, 0.5, nd.x);
     vec2 d2 = abs(nd - uProtect2.xy) / max(uProtect2.zw, vec2(1e-3));
