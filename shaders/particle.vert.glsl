@@ -28,8 +28,9 @@ uniform vec3 uMouse;            // pointer, in the particles' local space
 uniform float uStage;           // process progress: 0 = Discover active … 4 = all done
 uniform float uStageMix;        // 0 = no stage effects, 1 = fully on (process form)
 uniform vec3 uAccent;           // rocket accent, for active checkpoints
-uniform float uFlowFrom;        // 1 while the form being left is the flowing torus
-uniform float uFlowTo;          // 1 while the form being arrived at is the flowing torus
+uniform float uFlowFrom;        // live form being left: 0 none, 1 torus (Why), 2 ring stream (Services)
+uniform float uFlowTo;          // live form being arrived at (same codes)
+uniform vec4 uProtect2;         // Services content box in NDC (dims the ring stream behind text)
 uniform float uHeroField;       // 1 while the current "from" form is the hero gravity field
 uniform vec4 uProtect;          // hero text box in NDC: centre xy, half-size zw
 uniform float uProtectFloor;    // brightness left for particles behind the hero text
@@ -239,6 +240,46 @@ vec3 torusFlow(vec3 p) {
   return rotY(f, -0.35 + 0.08 * sin(t * 0.04));
 }
 
+// --- Services: a huge ring of particle streams ------------------------------
+// The ring's centre is off-screen left; only its arc crosses the view. Each
+// particle keeps its lane and flows along it (inner lanes faster), sweeping
+// up from the lower left, round, and back to the upper left. Keep RING_* in
+// sync with RING_STREAM (ringStream.ts).
+const float RING_CX = -3.4;
+const float RING_IN = 2.0;
+const float RING_OUT = 6.2;
+
+vec3 ringStream(vec3 p, out float lane) {
+  float t = uTime * uMotion;
+  vec2 rel = vec2(p.x - RING_CX, p.z);
+  float r = length(rel);
+  float a = atan(rel.y, rel.x);
+  lane = p.y > 0.3 ? 1.1 : clamp((r - RING_IN) / (RING_OUT - RING_IN), 0.0, 1.0);
+  // Flow: near side (bottom) round the right to the far side (top).
+  a -= t * 0.16 * pow(r / RING_IN, -1.2) * (0.9 + 0.2 * aRandom);
+  float y = p.y + 0.02 * sin(t * 0.8 + aRandom * 30.0);
+  vec3 f = vec3(cos(a) * r, y, sin(a) * r);
+  // Tilt the ring toward the viewer so near lanes arc below, far lanes above.
+  f = rotX(f, 0.52);
+  f.x += RING_CX;
+  return f;
+}
+
+// Lane colours, from the reference: inner cream, orange, red; outer blue to
+// deep navy. Orange / blue / white are the site palette (linear); the red is
+// taken from the reference image.
+vec3 ringColor(float lane) {
+  vec3 cream = vec3(0.98, 0.86, 0.66);
+  vec3 orange = vec3(1.0, 0.195, 0.028);
+  vec3 red = vec3(0.8, 0.04, 0.012);
+  vec3 blue = vec3(0.043, 0.2, 1.0);
+  vec3 navy = vec3(0.012, 0.035, 0.16);
+  vec3 c = mix(cream, orange, smoothstep(0.08, 0.26, lane));
+  c = mix(c, red, smoothstep(0.26, 0.4, lane));
+  c = mix(c, blue, smoothstep(0.42, 0.56, lane));
+  return mix(c, navy, smoothstep(0.72, 1.0, lane));
+}
+
 void main() {
   vec3 A = position;
   vec3 B = aTarget;
@@ -262,8 +303,12 @@ void main() {
   // Flowing torus: its live positions replace the static form, so particles
   // land on (and leave from) the moving structure. Delays above use the
   // static positions, so they stay fixed.
-  if (uFlowFrom > 0.5) A = torusFlow(A);
-  if (uFlowTo > 0.5) B = torusFlow(B);
+  float laneA = 0.0;
+  float laneB = 0.0;
+  if (uFlowFrom > 1.5) A = ringStream(A, laneA);
+  else if (uFlowFrom > 0.5) A = torusFlow(A);
+  if (uFlowTo > 1.5) B = ringStream(B, laneB);
+  else if (uFlowTo > 0.5) B = torusFlow(B);
 
   float outLocal = clamp((uProgress - delayOut) / OUT_LENGTH, 0.0, 1.0);
   float inLocal = clamp((uProgress - delayIn) / IN_LENGTH, 0.0, 1.0);
@@ -364,9 +409,28 @@ void main() {
 
   // Flowing torus reads mostly white; each particle keeps a trace of its
   // own orange/blue, so accents travel with the flow.
-  float torusW = uFlowFrom * (1.0 - eOut) + uFlowTo * eIn;
+  float torusW = step(0.5, uFlowFrom) * step(uFlowFrom, 1.5) * (1.0 - eOut)
+               + step(0.5, uFlowTo) * step(uFlowTo, 1.5) * eIn;
   float lum = dot(vColor, vec3(0.3, 0.5, 0.2));
   vColor = mix(vColor, vec3(0.95, 0.96, 1.0) * lum * 1.15, 0.58 * torusW);
+
+  // Services ring stream: lane colours (fixed per particle, so they travel
+  // with the flow), fading into the dark toward the right and dimmed behind
+  // the centred content.
+  float ringFrom = step(1.5, uFlowFrom) * (1.0 - eOut);
+  float ringW = ringFrom + step(1.5, uFlowTo) * eIn;
+  if (ringW > 0.001) {
+    float lane = ringFrom > 0.0 ? laneA : laneB;
+    vec3 rc = ringColor(min(lane, 1.0)) * (0.75 + 0.6 * aRandom);
+    if (lane > 1.05) rc = mix(vec3(0.95, 0.96, 1.0), ringColor(aRandom * 0.6), step(0.5, fract(aRandom * 7.0)));
+    vec2 nd = gl_Position.xy / gl_Position.w;
+    float rightFade = 1.0 - smoothstep(0.1, 0.75, nd.x);
+    vec2 d2 = abs(nd - uProtect2.xy) / max(uProtect2.zw, vec2(1e-3));
+    float box2 = pow(pow(d2.x, 4.0) + pow(d2.y, 4.0), 0.25);
+    float protect2 = mix(0.45, 1.0, smoothstep(0.85, 1.15, box2));
+    vec3 ringOut = rc * depthFade * twinkle * rightFade * protect2 * 2.3;
+    vColor = mix(vColor, ringOut, ringW);
+  }
 
   // Hero: keep the centred text calm — particles projected behind it dim.
   vec2 ndc = gl_Position.xy / gl_Position.w;

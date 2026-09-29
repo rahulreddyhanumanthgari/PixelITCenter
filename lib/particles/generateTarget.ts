@@ -3,7 +3,7 @@ import { geometryToParticlePositions } from "./geometryToParticles";
 import { colorRocketParticles, generateRocketParticles } from "./generateRocketParticles";
 import { PALETTE_LINEAR, pushColor } from "./palette";
 import { mulberry32, smoothstep, type Rand } from "./random";
-import { generateServicesParticles } from "./forms/services";
+import { generateRingStreamParticles } from "./forms/ringStream";
 import { generateGlobeParticles } from "./forms/globe";
 import { generateTorusFlowParticles } from "./forms/torusFlow";
 import { annotateProcessStages, generateProcessParticles } from "./forms/process";
@@ -19,7 +19,7 @@ export type FormName =
   | "heroField"
   | "torus"
   | "sculpture"
-  | "services"
+  | "ringStream"
   | "globe"
   | "torusFlow"
   | "process";
@@ -86,7 +86,8 @@ export const FORMS: Record<FormName, FormDefinition> = {
     generate: (count, rand) => sampleWithDepth(new THREE.TorusKnotGeometry(1.25, 0.34, 320, 32, 2, 3), count, rand, 0.1),
   },
   // Section story forms (Services → Staffing → Why us → How we work).
-  services: { generate: generateServicesParticles },
+  // Live flowing form: the shader moves these particles (ringStream).
+  ringStream: { generate: generateRingStreamParticles },
   globe: { generate: generateGlobeParticles },
   // Live flowing form: the shader moves these particles (torusFlow).
   torusFlow: { generate: generateTorusFlowParticles },

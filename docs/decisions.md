@@ -26,7 +26,7 @@ section. The same ~60k particles start as the landing hero's full-screen
 gravity field, then physically morph through four forms and stop on the last
 one:
 
-hero gravity field → Services (radial dotted ring) → Staffing (a network
+hero gravity field → Services (ring of particle streams) → Staffing (a network
 globe) → Why us (flowing particle torus) → How we work (four-stage path).
 
 They never fade: every particle breaks away, scatters, drifts, curves back and
@@ -204,6 +204,30 @@ enters a gravity well. The rule is: same appearance, different movement.
   30% brightness on wide screens and 42% on narrow ones.
 - **Counts.** 26k desktop / 16k tablet / 10k mobile.
 
+### Services: ring of particle streams
+
+The Services form (`ringStream`) is a huge ring of about 90 particle lanes
+plus sparks. Its centre sits off-screen to the left of the particle slot, so
+only its arc sweeps through the view. It is generated flat and untilted.
+While it is being left or arrived at (`uFlowFrom` / `uFlowTo` = 2),
+`particle.vert.glsl` (`ringStream()`) moves it:
+
+- *Flow:* each particle travels along its own lane, inner lanes faster, from
+  the lower left round and up to the upper left. The ring is tilted 0.52 rad
+  toward the viewer.
+- *Colour:* by lane, from the reference image. Cream, then orange, then red
+  on the inner lanes; blue to deep navy on the outer; mixed sparks above.
+  Orange, blue and white are the site palette; the red comes from the
+  reference.
+- *Fading:* it fades out toward the right, and dims to 45% behind
+  `[data-services-content]` (`uProtect2`).
+
+While Services is on screen, the system's sway and wobble are suppressed, so
+the structure stays anchored and only the particles move. On desktop the
+Services content is centred (`storySectionClass("center")`) and its
+particles sit in the left slot (`STORY_SIDES[0] = 0`). Keep `RING_*` in the
+shader in sync with `RING_STREAM`.
+
 ### Why Pixel IT Center: flowing torus
 
 The Why form (`torusFlow`) is a thick torus of particles: an even dot lattice
@@ -261,7 +285,7 @@ Keep `TORUS_R` in the shader in sync with `TORUS_FLOW.R`.
 | File | Role |
 |---|---|
 | `generateRocketParticles.ts` | No longer shown. Its per-part colouring is still the source of the site's particle palette (`heroField.colorize` and the About vortex) |
-| `forms/*.ts` | `torusFlow` (Why: thick dotted torus lattice; the shader flows it), `services`, `globe` (dotted continents from a noise land-mask on a lat/long dot grid, inside a geodesic network cage), `process` |
+| `forms/*.ts` | `ringStream` (Services: huge off-screen-left ring of lanes; the shader flows and colours it), `torusFlow` (Why: thick dotted torus lattice; the shader flows it), `globe` (dotted continents from a noise land-mask on a lat/long dot grid, inside a geodesic network cage), `process` |
 | `geometryToParticles.ts` | `geometryToParticlePositions` (area-weighted surface sampling, seeded), `geometryEdgesToParticlePositions` (points along triangle edges → wireframe look), merge/transform helpers |
 | `generateTarget.ts` | `FORMS` registry, `alignByHeight`, colours (`colorsForSequence`, `monochromeColors`) |
 | `stars.ts`, `palette.ts`, `random.ts` | Background stars, colours, seeded PRNG |

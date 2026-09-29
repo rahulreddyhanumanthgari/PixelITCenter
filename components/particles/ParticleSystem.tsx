@@ -70,6 +70,8 @@ export interface LayoutState {
    */
   protect: [number, number, number, number];
   protectFloor: number;
+  /** Services content box in NDC; particles behind it dim on the ring stream. */
+  protect2: [number, number, number, number];
 }
 
 interface ParticleSystemProps {
@@ -119,6 +121,7 @@ export interface MorphUniforms {
   uHeroField: THREE.IUniform<number>;
   uFlowFrom: THREE.IUniform<number>;
   uFlowTo: THREE.IUniform<number>;
+  uProtect2: THREE.IUniform<THREE.Vector4>;
   uProtect: THREE.IUniform<THREE.Vector4>;
   uProtectFloor: THREE.IUniform<number>;
 }
@@ -199,6 +202,7 @@ export function ParticleSystem({
       uHeroField: { value: 0 },
       uFlowFrom: { value: 0 },
       uFlowTo: { value: 0 },
+      uProtect2: { value: new THREE.Vector4(0, 0, 0.001, 0.001) },
       uProtect: { value: new THREE.Vector4(0, 0, 0.001, 0.001) },
       uProtectFloor: { value: 1 },
     };
@@ -246,6 +250,7 @@ export function ParticleSystem({
     smoothProgress: -1,
     smoothStage: -1,
     spin: 0,
+    anchor: 0,
   });
 
   useFrame((state, rawDelta) => {
@@ -273,8 +278,17 @@ export function ParticleSystem({
     // The hero gravity field is live while it is the form being left/held.
     u.uHeroField.value = formNames[0] === "heroField" && controller.fromIndex === 0 ? 1 : 0;
     // Flowing torus (Why): live whether it is being left or arrived at.
-    u.uFlowFrom.value = formNames[controller.fromIndex] === "torusFlow" ? 1 : 0;
-    u.uFlowTo.value = formNames[controller.toIndex] === "torusFlow" ? 1 : 0;
+    // Live flowing forms: 1 = torus (Why), 2 = ring stream (Services).
+    const liveKind = (name: FormName | undefined) => (name === "torusFlow" ? 1 : name === "ringStream" ? 2 : 0);
+    const fromKind = liveKind(formNames[controller.fromIndex]);
+    const toKind = liveKind(formNames[controller.toIndex]);
+    u.uFlowFrom.value = fromKind;
+    u.uFlowTo.value = toKind;
+    // The ring stream's particles do the moving; keep the whole structure
+    // anchored (no sway/wobble) while it is on screen.
+    const tt = u.uProgress.value;
+    s0.anchor = (fromKind === 2 ? 1 - tt : 0) + (toKind === 2 ? tt : 0);
+    u.uProtect2.value.set(...L.protect2);
     u.uProtect.value.set(...L.protect);
     u.uProtectFloor.value = L.protectFloor;
 
@@ -342,8 +356,9 @@ export function ParticleSystem({
     if (settle > 0) s0.spin += (Math.round(s0.spin / TAU) * TAU - s0.spin) * k * settle;
     const swayOf = (lk: ParticleLook) =>
       lk.rotation.mode === "sway" ? Math.sin(time * lk.rotation.speed) * lk.rotation.amount : 0;
-    const yaw = s0.spin + mix(swayOf(look), swayOf(lookTo), b) * motion;
-    const wobble = mix(look.wobbleAmount, lookTo.wobbleAmount, b) * motion;
+    const calm = 1 - s0.anchor;
+    const yaw = s0.spin + mix(swayOf(look), swayOf(lookTo), b) * motion * calm;
+    const wobble = mix(look.wobbleAmount, lookTo.wobbleAmount, b) * motion * calm;
     points.rotation.set(Math.sin(time * 0.13) * wobble, yaw, Math.cos(time * 0.11) * wobble * 0.6);
 
     // --- pointer position in the particles' own space ---------------------

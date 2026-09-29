@@ -87,6 +87,7 @@ export default function JourneyScene() {
     sides: null,
     protect: [0, 0, 0.001, 0.001],
     protectFloor: HERO_FIELD.protectFloor.wide,
+    protect2: [0, 0, 0.001, 0.001],
   });
   // How scattered the main particles are; drives the stars and camera.
   const atmosphere = useRef<Atmosphere>({ field: 0, gravity: 0, gravityX: 0, gravityY: 0 });
@@ -147,6 +148,7 @@ export default function JourneyScene() {
     const anchor = story?.querySelector<HTMLElement>("[data-story-anchor]");
     const layer = document.querySelector<HTMLElement>("[data-journey-layer]");
     const heroContent = document.querySelector<HTMLElement>("[data-hero-content]");
+    const servicesContent = document.querySelector<HTMLElement>("[data-services-content]");
     // The particle layer stays on through About Us (the vortex); after that the
     // opaque sections cover it.
     const lastLit = document.querySelector<HTMLElement>("[data-about]") ?? story;
@@ -184,6 +186,15 @@ export default function JourneyScene() {
       L.from.y = 0;
       L.from.scale = voidPx * wpp;
       L.protectFloor = vw < 768 ? HERO_FIELD.protectFloor.narrow : HERO_FIELD.protectFloor.wide;
+      if (servicesContent) {
+        const c = servicesContent.getBoundingClientRect();
+        L.protect2 = [
+          ((c.left + c.width / 2) / vw) * 2 - 1,
+          -(((c.top + c.height / 2) / vh) * 2 - 1),
+          (c.width / vw) * 1.02,
+          (c.height / vh) * 1.02,
+        ];
+      }
       if (heroContent) {
         const c = heroContent.getBoundingClientRect();
         L.protect = [

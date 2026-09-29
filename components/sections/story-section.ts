@@ -8,10 +8,11 @@ import { cn } from "@/lib/utils";
  * components/journey/journey-config.ts). On phones the anchor offset clears
  * the pinned particle band under the header.
  */
-export function storySectionClass(side: "left" | "right"): string {
+export function storySectionClass(side: "left" | "right" | "center"): string {
   return cn(
     "scroll-mt-[calc(34svh+5rem)] border-t border-border py-20 first:border-t-0 sm:py-24",
-    "lg:flex lg:min-h-screen lg:w-[52%] lg:scroll-mt-20 lg:flex-col lg:justify-center lg:py-28",
+    "lg:flex lg:min-h-screen lg:scroll-mt-20 lg:flex-col lg:justify-center lg:py-28",
+    side === "center" ? "lg:mx-auto lg:w-[62%]" : "lg:w-[52%]",
     side === "left" && "lg:ml-auto",
   );
 }
