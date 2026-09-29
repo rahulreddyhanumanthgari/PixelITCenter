@@ -1,4 +1,5 @@
 import { whyUs } from "@/content/site";
+import { Card } from "@/components/ui/card";
 import { SectionHeader } from "./SectionHeader";
 import { storySectionClass } from "./story-section";
 
@@ -12,15 +13,12 @@ export function WhyUs() {
     <section data-story-section aria-labelledby="why-title" className={storySectionClass("center")}>
       <div data-why-content className="mx-auto w-full max-w-[720px]">
         <SectionHeader id="why-title" eyebrow={whyUs.eyebrow} title={whyUs.title} className="mx-auto text-center" />
-        <ul
-          data-reveal="3"
-          className="mt-12 grid gap-px overflow-hidden rounded-2xl border border-border bg-border sm:grid-cols-2"
-        >
+        <ul data-reveal="3" className="mt-12 grid gap-[var(--card-gap)] sm:grid-cols-2">
           {whyUs.reasons.map((reason) => (
-            <li key={reason.title} className="bg-background p-7">
-              <h3 className="type-heading">{reason.title}</h3>
+            <Card as="li" key={reason.title}>
+              <h3 className="type-heading card-title">{reason.title}</h3>
               <p className="type-body-sm mt-3">{reason.body}</p>
-            </li>
+            </Card>
           ))}
         </ul>
       </div>

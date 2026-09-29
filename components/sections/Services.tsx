@@ -1,4 +1,5 @@
 import { services } from "@/content/site";
+import { Card } from "@/components/ui/card";
 import { SectionHeader } from "./SectionHeader";
 import { storySectionClass } from "./story-section";
 
@@ -39,20 +40,16 @@ export function Services() {
               <p data-reveal="4" className="type-body mt-4">
                 {group.summary}
               </p>
-              <ul className="mt-6 grid gap-3 sm:grid-cols-2">
+              <ul className="mt-6 grid gap-[var(--card-gap)] sm:grid-cols-2">
                 {group.items.map((item) => (
-                  <li
-                    key={item.title}
-                    data-reveal="5"
-                    className="group rounded-xl border border-border bg-surface p-5 transition-colors hover:border-white/20 hover:bg-surface-2"
-                  >
-                    <h4 className="type-subheading">
+                  <Card as="li" key={item.title} data-reveal="5">
+                    <h4 className="type-subheading card-title">
                       {item.title}
                     </h4>
                     <p className="type-body-sm mt-2">
                       {item.body}
                     </p>
-                  </li>
+                  </Card>
                 ))}
               </ul>
             </div>

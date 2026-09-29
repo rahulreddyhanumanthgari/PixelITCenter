@@ -96,6 +96,23 @@
   --text-body: clamp(1rem, 0.96rem + 0.2vw, 1.125rem);
   --text-small: 0.9375rem;
   --text-eyebrow: 0.75rem;
+
+  /* Cards — one system for the whole site (see .card below). Change a
+     token here and every card follows. */
+  --card-bg: rgb(8 11 17 / 0.88);
+  --card-bg-hover: rgb(12 16 25 / 0.92);
+  --card-border: rgb(255 255 255 / 0.07);
+  --card-border-hover: rgb(255 255 255 / 0.13);
+  --card-border-active: rgb(255 255 255 / 0.17);
+  --card-radius: 16px;
+  --card-padding-x: clamp(1.25rem, 0.95rem + 1.1vw, 2rem);
+  --card-padding-y: clamp(1.25rem, 1rem + 0.8vw, 1.75rem);
+  --card-gap: 1rem;
+  --card-shadow: inset 0 1px 0 rgb(255 255 255 / 0.03), 0 18px 40px -28px rgb(0 0 0 / 0.9);
+  --card-glow: 0 0 48px -24px rgb(255 122 46 / 0.28);
+  --card-accent: var(--brand-orange);
+  --card-light: rgb(255 255 255 / 0.04);
+  --card-transition: 350ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 @layer base {
@@ -206,6 +223,120 @@
     font-weight: 500;
     line-height: 1.3;
     letter-spacing: 0.01em;
+  }
+
+  /* ---- Card system -------------------------------------------------------
+     One dark, near-black surface embedded in the space background: subtle
+     1px border, one radius, a small orange accent mark at the top-left edge,
+     quiet depth. Sizes differ by content; the language never does.
+     Variants: .card--active (or [data-active="true"]) and .card--featured.
+     A faint cursor light (--mx/--my, set by CardLight) appears on hover. */
+  .card {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    padding: var(--card-padding-y) var(--card-padding-x);
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: var(--card-radius);
+    box-shadow: var(--card-shadow);
+    transition:
+      background-color var(--card-transition),
+      border-color var(--card-transition),
+      box-shadow var(--card-transition);
+  }
+  /* The accent: a short orange mark on the left edge, level with the title. */
+  .card::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: calc(var(--card-padding-y) + 0.2rem);
+    width: 2px;
+    height: 1.1rem;
+    border-radius: 0 2px 2px 0;
+    background: var(--card-accent);
+    opacity: 0.55;
+    transition:
+      opacity var(--card-transition),
+      height var(--card-transition);
+  }
+  /* The cursor light: barely there, only while hovered. */
+  .card::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background: radial-gradient(circle at var(--mx, 50%) var(--my, 0%), var(--card-light), transparent 40%);
+    opacity: 0;
+    transition: opacity var(--card-transition);
+  }
+  .card-title {
+    transition: color var(--card-transition);
+  }
+  /* Index numbers (01, 02 …): orange, display face, no badges. */
+  .card-index {
+    font-family: var(--font-display);
+    font-size: 1.5rem;
+    font-weight: 600;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums;
+    color: var(--accent-orange);
+  }
+
+  @media (hover: hover) {
+    .card:hover {
+      background-color: var(--card-bg-hover);
+      border-color: var(--card-border-hover);
+    }
+    .card:hover::before {
+      opacity: 1;
+      height: 1.5rem;
+    }
+    .card:hover::after {
+      opacity: 1;
+    }
+    .card:hover .card-title {
+      color: #fff;
+    }
+  }
+
+  /* Active: the one card that represents the current state. */
+  .card--active,
+  .card[data-active="true"] {
+    background-color: var(--card-bg-hover);
+    border-color: var(--card-border-active);
+    box-shadow: var(--card-shadow), var(--card-glow);
+  }
+  .card--active::before,
+  .card[data-active="true"]::before {
+    opacity: 1;
+    height: 1.5rem;
+  }
+  .card--active .card-title,
+  .card[data-active="true"] .card-title {
+    color: #fff;
+  }
+
+  /* Featured: same family, a little more presence and room. */
+  .card--featured {
+    --card-padding-x: clamp(1.5rem, 0.9rem + 2.8vw, 3rem);
+    --card-padding-y: clamp(2.5rem, 1.9rem + 2.6vw, 4.5rem);
+    border-color: var(--card-border-hover);
+  }
+  .card--featured::before {
+    opacity: 0.85;
+    height: 1.75rem;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .card,
+    .card::before,
+    .card::after,
+    .card-title {
+      transition: none;
+    }
   }
 
   /* Emphasis for strategically important words inside headings. Colour

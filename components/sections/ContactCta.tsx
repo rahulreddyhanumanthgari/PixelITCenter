@@ -3,13 +3,14 @@ import { contactCta, site } from "@/content/site";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { HeadingText } from "@/components/ui/heading-text";
+import { Card } from "@/components/ui/card";
 import { Container } from "./SectionHeader";
 
 export function ContactCta() {
   return (
     <section id="contact" aria-labelledby="contact-title" className="scroll-mt-20 pt-24 pb-12 sm:pt-32 sm:pb-16">
       <Container>
-        <div className="relative overflow-hidden rounded-3xl border border-border bg-surface px-6 py-14 sm:px-12 sm:py-20">
+        <Card variant="featured">
           <div className="relative max-w-2xl">
             <p data-reveal="0" className="type-eyebrow mb-4">
               {contactCta.eyebrow}
@@ -40,7 +41,7 @@ export function ContactCta() {
             </div>
             <p className="type-body-sm mt-6">{site.contact.email}</p>
           </div>
-        </div>
+        </Card>
       </Container>
     </section>
   );

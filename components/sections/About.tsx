@@ -1,6 +1,7 @@
 import { about, careers } from "@/content/site";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { Card } from "@/components/ui/card";
 import { Container, SectionHeader } from "./SectionHeader";
 
 /**
@@ -38,12 +39,8 @@ export function About() {
             ))}
           </dl>
 
-          <div
-            data-reveal="4"
-            id="careers"
-            className="mx-auto mt-12 max-w-xl scroll-mt-24 rounded-2xl border border-border bg-background/60 p-7"
-          >
-            <h3 className="type-heading">{careers.title}</h3>
+          <Card data-reveal="4" id="careers" className="mx-auto mt-12 max-w-xl scroll-mt-24">
+            <h3 className="type-heading card-title">{careers.title}</h3>
             <p className="type-body mx-auto mt-2">{careers.body}</p>
             <a
               href={careers.cta.href}
@@ -51,7 +48,7 @@ export function About() {
             >
               {careers.cta.label}
             </a>
-          </div>
+          </Card>
         </div>
       </Container>
     </section>

@@ -1,5 +1,6 @@
 import { Check } from "lucide-react";
 import { process } from "@/content/site";
+import { Card } from "@/components/ui/card";
 import { SectionHeader } from "./SectionHeader";
 import { ProcessProgress } from "./ProcessProgress";
 import { storySectionClass } from "./story-section";
@@ -50,14 +51,15 @@ export function Process() {
             ))}
           </ol>
 
-          {/* Active step: one panel at a time, stacked in one grid cell. */}
-          <div className="mt-6 grid lg:mt-10">
+          {/* Active step: one panel at a time, stacked in one grid cell, in
+              the global card's active state. */}
+          <Card active className="mx-auto mt-6 grid max-w-[560px] lg:mt-10">
             {process.steps.map((step, i) => (
               <div key={step.title} data-process-panel aria-hidden={i !== 0} className="[grid-area:1/1]">
-                <p data-panel-part className="font-display text-6xl font-semibold tabular-nums tracking-[-0.04em] text-brand-orange sm:text-7xl">
+                <p data-panel-part className="card-index text-5xl sm:text-6xl">
                   {String(i + 1).padStart(2, "0")}
                 </p>
-                <h3 data-panel-part className="type-display-lg mt-3 text-[clamp(1.75rem,1.35rem+1.5vw,2.5rem)]">
+                <h3 data-panel-part className="type-display-lg card-title mt-3 text-[clamp(1.75rem,1.35rem+1.5vw,2.5rem)]">
                   {step.title}
                 </h3>
                 <p data-panel-part className="type-body mx-auto mt-4 max-w-md">
@@ -65,7 +67,7 @@ export function Process() {
                 </p>
               </div>
             ))}
-          </div>
+          </Card>
         </div>
       </div>
     </section>

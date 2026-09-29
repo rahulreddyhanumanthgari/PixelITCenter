@@ -562,6 +562,59 @@ and restrained so it frames them rather than competing with them.
   colour change. The section in view gets `aria-current` and a small orange
   dot.
 
+## Cards
+
+One card system for the whole site. The Staffing & Consulting horizontal
+cards are the reference.
+
+- **Tokens** (`:root` in `app/globals.css`). Change one and every card
+  follows:
+
+  | Token | Value |
+  |---|---|
+  | `--card-bg` | `rgb(8 11 17 / 0.88)` |
+  | `--card-bg-hover` | slightly lighter |
+  | `--card-border` | `rgb(255 255 255 / 0.07)` |
+  | `--card-border-hover` / `--card-border-active` | brighter |
+  | `--card-radius` | 16px |
+  | `--card-padding-x` / `--card-padding-y` | fluid |
+  | `--card-gap` | 1rem |
+  | `--card-shadow` | a very low inset highlight plus a soft drop |
+  | `--card-glow` | the active state's faint orange ambience |
+  | `--card-accent` | orange |
+  | `--card-light` | the cursor light |
+  | `--card-transition` | 350ms ease-out |
+
+- **Classes.**
+  - `.card`: the dark surface, 1px border, radius, depth, and the accent: a
+    short 2px orange mark on the left edge, level with the title.
+  - `.card-title`: brightens on hover.
+  - `.card-index`: orange display-face numbers, no badges.
+  - `.card--active` (or `data-active="true"`): lighter surface, stronger
+    border, full accent, white title, faint glow.
+  - `.card--featured`: more room, a stronger border and a longer accent.
+- **Hover** (pointer devices only). Border and surface brighten, the accent
+  grows, the title brightens, and a very faint radial light follows the
+  cursor. `CardLight` (`components/ui/card-light.tsx`) sets `--mx` / `--my`
+  with one delegated pointer listener. There is no scale, lift, rotation or
+  strong glow.
+- **Component.** Every section uses `<Card>` (`components/ui/card.tsx`,
+  `as`, `variant`, `active`):
+
+  | Section | Card |
+  |---|---|
+  | Services | grid cards |
+  | Staffing | horizontal cards |
+  | Why | a 2×2 of separate cards (no longer a joined grid) |
+  | How We Work | the active step, in the active state |
+  | Testimonials | quote cards |
+  | About | the careers card |
+  | Contact | featured |
+
+  Sizes differ by content; the look never does.
+- **Excluded on purpose.** The client logo tiles stay white, because the
+  logos need a white background.
+
 ## Content
 
 All copy is in `content/site.ts` and is placeholder text. Client logos,

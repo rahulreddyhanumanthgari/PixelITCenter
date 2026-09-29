@@ -11,12 +11,14 @@ import { Process } from "@/components/sections/Process";
 import { About } from "@/components/sections/About";
 import { Testimonials } from "@/components/sections/Testimonials";
 import { ContactCta } from "@/components/sections/ContactCta";
+import { CardLight } from "@/components/ui/card-light";
 
 // Homepage flow from the modernization plan (section 04).
 export default function HomePage() {
   return (
     <>
       <Header />
+      <CardLight />
       {/* One particle system for the whole journey, fixed behind the page. */}
       <JourneyLayer />
       {/* Content sits above the particle layer (z-10). The hero, client strip
