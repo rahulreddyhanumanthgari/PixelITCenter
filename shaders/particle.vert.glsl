@@ -35,7 +35,7 @@ uniform vec4 uProtect4;         // Why content box in NDC (dims the torus behind
 uniform float uTorusScale;      // Why torus display scale (smaller in the phone band)
 uniform float uSolarPhone;      // 1 = solar system in its compact phone-band layout
 uniform vec4 uProtect5;         // How We Work step content box in NDC (dims particles behind text)
-uniform float uLight;           // 1 = light theme (bigger, fuller points)
+uniform float uSkyTheme;        // 1 = light (blue-sky) theme: gold / coral / ice palette
 uniform float uCollapse;        // galaxy ending: 0 = galaxy … 1 = a sun on the footer's edge
 uniform float uSunOffset;       // local y from the galaxy centre down to the footer's top edge
 uniform float uHeroField;       // 1 while the current "from" form is the hero gravity field
@@ -618,8 +618,6 @@ vec3 galaxy(out vec3 col, out float sizeK) {
   // its full glow: the dimming lifts only as it reaches the footer's edge.
   // Dimmer toward the centre, where the text sits.
   float sitBack = kind >= 0.7 && kind < 0.82 ? GALAXY_CORE_DIM : mix(GALAXY_CORE_DIM, GALAXY_DIM, smoothstep(0.05, 0.4, rn));
-  // (On white there is no glow to compete with the text: barely dimmed.)
-  sitBack = mix(sitBack, 0.9, uLight);
   col = c * level * vis * mix(sitBack, 1.0, smoothstep(0.75, 1.0, uCollapse));
 
   // Ending (uCollapse, after Contact): the arms wind tighter and everything
@@ -647,6 +645,27 @@ vec3 galaxy(out vec3 col, out float sizeK) {
   // The sun sinks onto the footer's edge as it forms.
   p.y += uSunOffset * smoothstep(0.35, 1.0, uCollapse);
   return p;
+}
+
+// Light (blue-sky) theme palette: the three colours that stand out best on
+// the teal-blue sky. Every particle keeps its brightness and role; only its
+// hue is mapped: orange → gold, red-orange → coral, blue → ice white,
+// cream/white → white.
+vec3 skyRemap(vec3 c) {
+  float m = max(max(c.r, c.g), c.b);
+  if (m < 1e-4) return c;
+  vec3 h = c / m;
+  vec3 gold = vec3(1.0, 0.68, 0.08);
+  vec3 coral = vec3(1.0, 0.3, 0.18);
+  vec3 ice = vec3(0.86, 0.96, 1.0);
+  float sat = 1.0 - min(min(h.r, h.g), h.b);
+  float blueness = smoothstep(0.0, 0.35, h.b - h.r);
+  vec3 warm = mix(coral, gold, smoothstep(0.12, 0.3, h.g));
+  vec3 target = mix(warm, ice, blueness);
+  target = mix(vec3(1.0), target, smoothstep(0.15, 0.5, sat));
+  // Capped below the point where additive overlap and bloom turn the
+  // colours white on the bright sky.
+  return target * min(m, 0.8);
 }
 
 void main() {
@@ -776,9 +795,6 @@ void main() {
              * mix(1.0, 1.5, torusNear)
              * mix(1.0, solarSize, solarW)
              * mix(1.0, galaxySize, galaxyW);
-  // Light theme: the sprite also holds each dot's glow, so it is larger
-  // (the solid centre stays about the dark theme's dot size).
-  size *= mix(1.0, 2.3, uLight);
   gl_PointSize = clamp(size * uPixelRatio / depth, 1.0, 28.0 * uPixelRatio);
 
   // Near particles brighter, far ones dimmer; a soft twinkle on top. Spread
@@ -912,4 +928,7 @@ void main() {
   float heroBright = min(0.3 + 0.4 * heroGlow, 1.25);
   vColor = mix(vColor, heroHue * heroBright * twinkle * heroVisible * protect, heroW);
   vAlpha *= mix(1.0, heroVisible, heroW);
+
+  // Light theme: remap to the blue-sky palette (see skyRemap).
+  if (uSkyTheme > 0.5) vColor = skyRemap(vColor);
 }

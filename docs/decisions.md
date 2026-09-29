@@ -671,40 +671,27 @@ cards are the reference.
 - **Background.** Opaque, so the galaxy's sun rests on the footer's top
   edge, with faint blue and orange glows at the bottom.
 
-## Light theme
+## Light theme (blue sky)
 
 - **Toggle.** A sun/moon button in the header (`ThemeToggle`, `lib/theme.ts`)
-  sets `data-theme="light"` on `<html>`, and removes `.dark`.
+  sets `data-theme="light"` on `<html>`.
   - The choice is remembered in localStorage.
-  - `THEME_SCRIPT` in `<head>` applies it before first paint, so there is no
-    dark flash.
-- **Colours.** `:root[data-theme="light"]` redefines every token in
-  `globals.css`: page `#f6f7fb`, white cards, ink text, and slightly deeper
-  orange and blue.
-  - Former hard-coded whites are now variables: hero text, hover titles,
-    icon nodes, the footer label, wordmark and dust, and the galaxy-area
-    text.
-  - White/10-style borders became `foreground/…`.
-- **Particles.** Light cannot be added to a white page, so in light mode:
-  - `particle.frag.glsl` (`uLight`) draws each point as ink with normal
-    blending;
-  - its hue is kept; whites and greys become dark slate;
-  - its brightness becomes its opacity;
-  - bloom is off and the canvas clears to the light background;
-  - hues are pushed to full saturation (yellow only slightly deepened), and
-    each dot is a solid centre inside a soft glow of its own colour (the
-    light-mode stand-in for bloom). Sprites are 2.3× so they have room for
-    the glow, and the galaxy is barely dimmed.
-- **Light sky** (`LightSky`). The counterpart of the dark star field, drawn
-  behind the particles in light mode only as a full-screen shader quad:
-  - a cool-to-warm gradient that darkens toward the edges;
-  - faint pale-blue and peach nebula clouds;
-  - three layers of procedural ink stars (slate, blue and a few warm; a few
-    larger with a halo) that twinkle and drift slowly with parallax.
+  - `THEME_SCRIPT` (`lib/theme-script.ts`) applies it before first paint.
+- **Look.** A daytime-blue sky with white stars, after the owner's reference.
+  - `:root[data-theme="light"]` sets a blue page (`#2b6e8d`) and white text.
+  - Cards are deep, translucent blue, and the orange is lighter (`#ffa05a`)
+    so it reads on blue.
+  - Hard-coded colours are variables, so the theme reaches everything.
+- **Sky** (`LightSky`). Drawn in the particle canvas behind everything:
+  - a blue gradient, deeper at the rim, with soft lighter patches;
+  - three layers of twinkling white stars, plus a few bigger warm-cream
+    glowing ones, drifting slowly.
 
-  Like black on dark, the tint gives the particle colours contrast.
-
-  The same colour bands therefore read as orange and blue dots on white.
+  The particles, star field and bloom draw on top as in the dark theme,
+  but in a three-colour palette that stands out on the blue (`skyRemap`,
+  `uSkyTheme`): orange becomes gold, red-orange becomes coral, and blue
+  becomes ice white. Each particle keeps its brightness. An earlier white theme drew the particles as ink dots; it was
+  replaced and that code removed.
 - **Black hole speed.** The disc rotates about 30% slower (`omega` 0.38,
   was 0.55), with slower infall and streams.
 

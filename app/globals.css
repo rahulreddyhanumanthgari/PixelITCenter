@@ -129,48 +129,51 @@
   --galaxy-text-muted: #b8c0d0;
 }
 
-/* Light theme: same site, white. Brand orange/blue stay; text turns ink. */
+/* Light theme: a daytime-blue sky with white stars (the canvas draws the
+   sky; see LightSky). Text is white on the blue; cards are deep, translucent
+   blue; the orange is a touch lighter so it reads on blue. */
 :root[data-theme="light"] {
-  --brand-orange: #f06a1c;
-  --background: #f6f7fb;
-  --surface: #ffffff;
-  --surface-2: #eef1f7;
-  --foreground: #0c1220;
-  --muted: #e9edf4;
-  --muted-foreground: #4d5870;
-  --border: rgb(12 18 32 / 0.1);
-  --input: rgb(12 18 32 / 0.16);
-  --ring: #2f62d9;
-  --primary: #0c1220;
-  --primary-foreground: #ffffff;
-  --accent-foreground: #ffffff;
+  --brand-orange: #ffa05a;
+  --brand-blue: #9fd2ff;
+  --background: #2b6e8d;
+  --surface: #1f5874;
+  --surface-2: #24617f;
+  --foreground: #ffffff;
+  --muted: #235f7c;
+  --muted-foreground: #c9dfea;
+  --border: rgb(255 255 255 / 0.16);
+  --input: rgb(255 255 255 / 0.22);
+  --ring: #bfe6ff;
+  --primary: #ffffff;
+  --primary-foreground: #123c52;
+  --accent-foreground: #123c52;
 
-  --text-primary: #0c1220;
-  --text-secondary: #3a4458;
-  --text-muted: #5d6880;
-  --text-strong: #000000;
-  --accent-blue: #2f62d9;
+  --text-primary: #ffffff;
+  --text-secondary: #e0edf4;
+  --text-muted: #bcd6e3;
+  --text-strong: #ffffff;
+  --accent-blue: #bfe6ff;
 
-  --card-bg: rgb(255 255 255 / 0.86);
-  --card-bg-hover: #ffffff;
-  --card-border: rgb(12 18 32 / 0.08);
-  --card-border-hover: rgb(12 18 32 / 0.14);
-  --card-border-active: rgb(12 18 32 / 0.18);
-  --card-shadow: 0 1px 0 rgb(255 255 255 / 0.8) inset, 0 14px 32px -22px rgb(12 18 32 / 0.28);
-  --card-glow: 0 0 40px -22px rgb(240 106 28 / 0.35);
-  --card-light: rgb(240 106 28 / 0.05);
+  --card-bg: rgb(12 50 72 / 0.55);
+  --card-bg-hover: rgb(12 50 72 / 0.7);
+  --card-border: rgb(255 255 255 / 0.14);
+  --card-border-hover: rgb(255 255 255 / 0.24);
+  --card-border-active: rgb(255 255 255 / 0.3);
+  --card-shadow: inset 0 1px 0 rgb(255 255 255 / 0.06), 0 18px 40px -28px rgb(4 20 32 / 0.8);
+  --card-glow: 0 0 48px -24px rgb(255 160 90 / 0.4);
+  --card-light: rgb(255 255 255 / 0.06);
 
-  --hero-kicker: #1c2436;
-  --hero-statement: #0a0f1c;
-  --icon-node: #0c1220;
-  --footer-label: #4d6590;
-  --footer-wordmark: rgb(12 18 32 / 0.05);
-  --footer-wordmark-stroke: rgb(12 18 32 / 0.08);
-  --footer-dust: #8e9ab2;
-  --galaxy-text-primary: #05080f;
-  --galaxy-text-secondary: #222b3d;
-  --galaxy-text-muted: #3f4a60;
-  color-scheme: light;
+  --hero-kicker: #eaf4f9;
+  --hero-statement: #ffffff;
+  --icon-node: #ffffff;
+  --footer-label: #d3e7f1;
+  --footer-wordmark: rgb(255 255 255 / 0.07);
+  --footer-wordmark-stroke: rgb(255 255 255 / 0.1);
+  --footer-dust: #ffffff;
+  --galaxy-text-primary: #ffffff;
+  --galaxy-text-secondary: #eef6fa;
+  --galaxy-text-muted: #d2e5ee;
+  color-scheme: dark;
 }
 
 @layer base {
