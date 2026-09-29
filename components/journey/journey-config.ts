@@ -44,6 +44,14 @@ export const HERO_FIELD = {
 // 0.75 (≈63% across), reaching just past the centre of the screen.
 export const STORY_SIDES: readonly number[] = [0, 0.75, 1, 0];
 
+/**
+ * Staffing's Earth on desktop: drawn `scale`× larger, and placed from the
+ * screen's right edge so `hiddenRight` of its diameter runs off-screen.
+ * `radius` must match EARTH.radius (forms/earth.ts); `index` is its position
+ * in STORY_SIDES.
+ */
+export const EARTH_VIEW = { index: 1, radius: 1.65, scale: 1.45, hiddenRight: 0.25 } as const;
+
 /** Where the particles sit inside the story area, as a fraction of its width. */
 export const STORY_SLOTS = { left: 0.24, right: 0.76 } as const;
 

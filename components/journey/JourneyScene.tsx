@@ -18,6 +18,7 @@ import {
   JOURNEY_CAMERA,
   JOURNEY_FORMS,
   CAMERA_MOTION,
+  EARTH_VIEW,
   HERO_FIELD,
   STORY_HANDOFF,
   STORY_LOOK,
@@ -89,6 +90,7 @@ export default function JourneyScene() {
     protectFloor: HERO_FIELD.protectFloor.wide,
     protect2: [0, 0, 0.001, 0.001],
     protect3: [0, 0, 0.001, 0.001],
+    earthScale: 1,
   });
   // How scattered the main particles are; drives the stars and camera.
   const atmosphere = useRef<Atmosphere>({ field: 0, gravity: 0, gravityX: 0, gravityY: 0 });
@@ -172,6 +174,7 @@ export default function JourneyScene() {
       const columns = isColumnLayout();
       const xAt = (fraction: number) => (rect.left + rect.width * fraction - vw / 2) * wpp;
       L.sides = columns ? { left: xAt(STORY_SLOTS.left), right: xAt(STORY_SLOTS.right), byForm: STORY_SIDES } : null;
+      L.earthScale = columns ? EARTH_VIEW.scale : 1;
       L.to.x = columns ? xAt(STORY_SIDES[0] ? STORY_SLOTS.right : STORY_SLOTS.left) : xAt(0.5);
       // Pinned position while the anchor is stuck (or still arriving); once
       // the story ends, the form scrolls away with it. The release point is
@@ -180,6 +183,15 @@ export default function JourneyScene() {
       const anchorTop = Math.min(rect.top, stickyTop, story.getBoundingClientRect().bottom - rect.height);
       L.to.y = -(anchorTop + rect.height / 2 - vh / 2) * wpp;
       L.to.scale = tier.storyScale * (rect.height / vh);
+      // Desktop Earth: anchor it to the right edge so a fixed share of its
+      // diameter is off-screen, whatever the window width.
+      if (L.sides) {
+        const earthPx = (2 * EARTH_VIEW.radius * EARTH_VIEW.scale * L.to.scale) / wpp;
+        const xWorld = (vw - (0.5 - EARTH_VIEW.hiddenRight) * earthPx - vw / 2) * wpp;
+        const byForm = [...STORY_SIDES];
+        byForm[EARTH_VIEW.index] = (xWorld - L.sides.left) / (L.sides.right - L.sides.left);
+        L.sides = { ...L.sides, byForm };
+      }
       // Hero: the black hole is centred on the viewport; 1 local unit = the
       // void's radius in pixels (see HERO_FIELD).
       const V = HERO_FIELD.voidRadius;

@@ -243,11 +243,14 @@ The Staffing form (`earth`) is a dense particle Earth with real continents.
     smaller and dimmer.
 - **Readability.** Particles behind `[data-staffing-content]` dim to 40%
   (`uProtect3`).
-- **Layout.** The content is centred (`storySectionClass("center")`). The
-  Earth sits at `STORY_SIDES[1] = 0.75`, a fraction between the left and
-  right slots (about 63% across). That puts it in the right half, reaching
-  just past the centre, with dark space on the far right. The two are
-  independent.
+- **Layout.** The content is centred (`storySectionClass("center")`).
+  - *Desktop:* the Earth is drawn 1.45× larger (`EARTH_VIEW.scale`, via
+    `uEarthScale`). `JourneyScene` places it from the screen's right edge, so
+    25% of its diameter runs off-screen (`EARTH_VIEW.hiddenRight`) at any
+    width. It overrides `STORY_SIDES[1]` each measure.
+  - *Phones and tablets:* the Earth keeps its normal size in the band.
+
+  The content and the Earth are independent.
 
 ### Services: ring of particle streams
 

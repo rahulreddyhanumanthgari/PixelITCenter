@@ -32,6 +32,7 @@ uniform float uFlowFrom;        // live form being left: 0 none, 1 torus (Why), 
 uniform float uFlowTo;          // live form being arrived at (same codes)
 uniform vec4 uProtect2;         // Services content box in NDC (dims the ring stream behind text)
 uniform vec4 uProtect3;         // Staffing content box in NDC (dims the Earth behind text)
+uniform float uEarthScale;      // extra display scale for the Staffing Earth
 uniform float uHeroField;       // 1 while the current "from" form is the hero gravity field
 uniform vec4 uProtect;          // hero text box in NDC: centre xy, half-size zw
 uniform float uProtectFloor;    // brightness left for particles behind the hero text
@@ -317,7 +318,7 @@ vec3 earthSpin(vec3 p, out float shell, out float facing) {
   f = rotX(f, 0.22);
   // 1 on the hemisphere facing the camera (+z), 0 on the far side.
   facing = smoothstep(-0.25, 0.35, f.z / max(length(f), 1e-3));
-  return f;
+  return f * uEarthScale;
 }
 
 void main() {

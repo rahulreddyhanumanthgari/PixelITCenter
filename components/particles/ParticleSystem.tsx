@@ -74,6 +74,8 @@ export interface LayoutState {
   protect2: [number, number, number, number];
   /** Staffing content box in NDC; Earth particles behind it dim. */
   protect3: [number, number, number, number];
+  /** Extra display scale for the Staffing Earth (larger on desktop). */
+  earthScale: number;
 }
 
 interface ParticleSystemProps {
@@ -125,6 +127,7 @@ export interface MorphUniforms {
   uFlowTo: THREE.IUniform<number>;
   uProtect2: THREE.IUniform<THREE.Vector4>;
   uProtect3: THREE.IUniform<THREE.Vector4>;
+  uEarthScale: THREE.IUniform<number>;
   uProtect: THREE.IUniform<THREE.Vector4>;
   uProtectFloor: THREE.IUniform<number>;
 }
@@ -207,6 +210,7 @@ export function ParticleSystem({
       uFlowTo: { value: 0 },
       uProtect2: { value: new THREE.Vector4(0, 0, 0.001, 0.001) },
       uProtect3: { value: new THREE.Vector4(0, 0, 0.001, 0.001) },
+      uEarthScale: { value: 1 },
       uProtect: { value: new THREE.Vector4(0, 0, 0.001, 0.001) },
       uProtectFloor: { value: 1 },
     };
@@ -296,6 +300,7 @@ export function ParticleSystem({
     s0.anchor = (fromKind >= 2 ? 1 - tt : 0) + (toKind >= 2 ? tt : 0);
     u.uProtect2.value.set(...L.protect2);
     u.uProtect3.value.set(...L.protect3);
+    u.uEarthScale.value = L.earthScale;
     u.uProtect.value.set(...L.protect);
     u.uProtectFloor.value = L.protectFloor;
 
