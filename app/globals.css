@@ -162,7 +162,7 @@
     color: #f4f6fb;
   }
   .hero-kicker {
-    font-size: clamp(1.375rem, 0.95rem + 1.9vw, 2.5rem);
+    font-size: clamp(1.5rem, 0.8rem + 2.4vw, 3.125rem);
     font-weight: 600;
     line-height: 1.1;
     letter-spacing: 0.02em;
@@ -475,14 +475,16 @@
   .footer-email:hover {
     color: var(--accent-orange);
   }
-  /* The oversized wordmark: an object, not a heading. Barely there, cropped
-     by the screen edges and trimmed at the bottom. */
+  /* The oversized wordmark: an object, not a heading. Barely there,
+     spanning the full width of the screen. */
   .footer-wordmark {
-    margin: 1.25rem 0 -0.16em;
-    padding-left: max(1rem, calc((100vw - 80rem) / 2 + 1rem));
+    margin: 1.25rem 0 0;
+    padding-bottom: 0.06em;
+    text-align: center;
     white-space: nowrap;
     font-family: var(--font-display);
-    font-size: clamp(6rem, 17vw, 22rem);
+    /* Sized so the whole name fits the screen width. */
+    font-size: min(13.6vw, 22rem);
     font-weight: 700;
     line-height: 0.8;
     letter-spacing: -0.05em;

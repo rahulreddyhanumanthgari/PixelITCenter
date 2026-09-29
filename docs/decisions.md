@@ -529,7 +529,7 @@ and restrained so it frames them rather than competing with them.
 
   There is no shadow or glow. The black hole's calm centre (a larger
   `HERO_FIELD.voidRadius`) frames the content instead. Hero particles are
-  an orange hot edge warming through gold to cream, then blue outward, a little brighter than the story forms (`heroBright` ≤ 1.3); the calm centre is `voidRadius` 0.3 of the width (0.76 max on phones).
+  the site palette (an orange inner edge warming to yellow-gold, then blue to deep blue), kept a little light (`heroBright` ≤ 1.1); the calm centre is `voidRadius` 0.3 of the width (0.76 max on phones).
   The intro has one orange phrase, which never breaks across lines. The
   statement is one line from md up. The entrance is line by line.
 - **No long dashes** (—) in visible copy; they read as machine-written.
@@ -659,10 +659,10 @@ cards are the reference.
     them; the text itself never moves.
   - The email is set in the display face and is the most prominent contact
     item.
-- **Wordmark.** A giant PIXEL IT CENTER (`.footer-wordmark`, 17vw):
+- **Wordmark.** A giant PIXEL IT CENTER (`.footer-wordmark`):
   - white at 4% with a faint outline, so it is discovered rather than shouted;
-  - left-aligned to the content edge, cropped by the right edge and trimmed
-    at the bottom;
+  - centred and sized (`min(13.6vw, 22rem)`) so the whole name fits the
+    screen width;
   - it fades and rises in once (data-reveal).
 - **Particles.** Sparse dust around the wordmark: 110 tiny white / blue /
   orange dots, denser toward the bottom, drifting very slowly with CSS.
