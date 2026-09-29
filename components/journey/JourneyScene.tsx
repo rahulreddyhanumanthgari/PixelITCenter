@@ -21,6 +21,7 @@ import {
   EARTH_VIEW,
   GALAXY_VIEW,
   HERO_FIELD,
+  STORY_FLIGHT,
   STORY_HANDOFF,
   STORY_LOOK,
   STORY_SIDES,
@@ -374,6 +375,7 @@ export default function JourneyScene() {
         look={HERO_LOOK}
         lookTo={STORY_LOOK}
         handoffAt={STORY_HANDOFF}
+        flight={STORY_FLIGHT.swell}
         layout={layout}
         progress={progress}
         pointer={pointer}

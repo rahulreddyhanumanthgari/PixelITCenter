@@ -25,6 +25,16 @@ export const JOURNEY_FORMS: readonly FormName[] = [
 export const STORY_HANDOFF = 0;
 
 /**
+ * The sweep every transition shares. Hero → Services and How We Work →
+ * About change the system's size while the particles are scattered (the
+ * black hole shrinks to the ring; the planets grow into the galaxy), so the
+ * field rushes across the screen. The story-to-story transitions keep one
+ * size, so they get the same feel from a swell: the scattered field grows
+ * to `swell`× at mid-transition and gathers back in as the new form lands.
+ */
+export const STORY_FLIGHT = { swell: 1.6 } as const;
+
+/**
  * Landing hero black hole. `voidRadius` sizes the empty centre on screen:
  * the larger of the width/height fractions, capped by `maxWidth` of the
  * width so phones still show the disc. The accretion disc runs to twice

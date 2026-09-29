@@ -104,6 +104,11 @@ interface ParticleSystemProps {
   lookTo?: ParticleLook;
   /** Form position where the handoff transition starts (it lasts one form). */
   handoffAt: number;
+  /**
+   * Peak scale of the swell on transitions that don't otherwise change the
+   * system's size (1 = none). See STORY_FLIGHT.
+   */
+  flight?: number;
   layout: RefObject<LayoutState>;
   /** Form position (0 = first form, 1 = second…), written by GSAP. */
   progress: RefObject<ProgressState>;
@@ -187,6 +192,7 @@ export function ParticleSystem({
   look,
   lookTo = look,
   handoffAt,
+  flight = 1,
   layout,
   progress,
   pointer,
@@ -402,7 +408,13 @@ export function ParticleSystem({
       mix(mix(L.from.y, L.to.y, b), G?.y ?? 0, gw) + s0.smoothNdc.y * parallax * 0.7,
       0,
     );
-    root.scale.setScalar(mix(mix(L.from.scale, L.to.scale, b), G?.scale ?? 1, gw));
+    // Story-to-story transitions (not the handoff, not the galaxy): the
+    // scattered field swells out and gathers back in, like the two that
+    // change size. sin() is 0 at both ends, so formed shapes keep their size.
+    const at = Math.floor(s0.smoothProgress);
+    const between = at > handoffAt && at + 1 !== galaxyAt && at + 1 < formNames.length;
+    const swell = between ? 1 + (flight - 1) * Math.sin(Math.PI * (s0.smoothProgress - at)) : 1;
+    root.scale.setScalar(mix(mix(L.from.scale, L.to.scale, b), G?.scale ?? 1, gw) * swell);
     onGravity?.(G ? gw * G.presence : 0, G?.x ?? 0, G?.y ?? 0);
     // The ending's sun rests on the footer's top edge: its offset from the
     // galaxy centre, in the particles' own units.

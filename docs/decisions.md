@@ -84,6 +84,26 @@ reversible, and it holds wherever the visitor stops. The hero is not pinned.
 Each story section is at least one screen tall on desktop, so every form
 holds before the next one starts.
 
+### One transition feel for the whole journey
+
+Every step uses the same morph: break out → drifting field → re-form. What
+made hero → Services and How We Work → About feel better was that the whole
+system changes size while its particles are scattered:
+
+- hero → Services shrinks about 2× → 1×;
+- How We Work → About grows about 1× → 1.6×;
+- the field therefore rushes across the screen.
+
+The three story-to-story steps (Services → Staffing → Why → How We Work)
+kept one size. They now get the same sweep from `STORY_FLIGHT.swell` (1.6).
+The root scale is multiplied by `1 + 0.6 · sin(π · progress within the
+transition)`:
+
+- the scattered field swells out and gathers back in;
+- it is exactly 1 at both ends, so each settled shape keeps its size;
+- the handoff and the galaxy transitions are excluded, since they already
+  change size.
+
 ### Handoff: hero → story
 
 During hero field → Services, the system glides from its hero placement to the
