@@ -32,7 +32,7 @@ export function StoryChoreography() {
   useEffect(() => {
     const els = Array.from(
       document.querySelectorAll<HTMLElement>(
-        "[data-hero] [data-reveal], [data-story] [data-reveal], [data-galaxy-region] [data-reveal]",
+        "[data-hero] [data-reveal], [data-story] [data-reveal], [data-galaxy-region] [data-reveal], [data-footer] [data-reveal]",
       ),
     );
     if (els.length === 0) return;

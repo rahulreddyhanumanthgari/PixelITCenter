@@ -647,6 +647,27 @@ cards are the reference.
   - The How We Work step is open text over the planets. A card there was
     tried and rejected: it boxed in the solar system.
 
+## Footer: the closing scene
+
+`components/layout/Footer.tsx` and the `.footer-*` styles in `globals.css`:
+
+- **Top.** Logo and description on the left; Services, Company and Contact on
+  the right, with generous space.
+  - Labels are blue-grey with a short orange dash.
+  - Links are muted and turn white on hover, with a small orange tick beside
+    them; the text itself never moves.
+  - The email is set in the display face and is the most prominent contact
+    item.
+- **Wordmark.** A giant PIXEL IT CENTER (`.footer-wordmark`, 17vw):
+  - white at 4% with a faint outline, so it is discovered rather than shouted;
+  - left-aligned to the content edge, cropped by the right edge and trimmed
+    at the bottom;
+  - it fades and rises in once (data-reveal).
+- **Particles.** Sparse dust around the wordmark: 110 tiny white / blue /
+  orange dots, denser toward the bottom, drifting very slowly with CSS.
+- **Background.** Opaque, so the galaxy's sun rests on the footer's top
+  edge, with faint blue and orange glows at the bottom.
+
 ## Content
 
 **Source: the live pixelitcenter.com.** The live site's facts and wording

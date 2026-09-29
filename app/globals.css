@@ -406,6 +406,105 @@
     }
   }
 
+  /* ---- Footer: the closing scene ---------------------------------------- */
+  .footer-scene {
+    background:
+      radial-gradient(60% 45% at 12% 100%, rgb(59 124 255 / 0.07), transparent 70%),
+      radial-gradient(45% 35% at 88% 100%, rgb(255 122 46 / 0.05), transparent 70%),
+      var(--background);
+    border-top: 1px solid rgb(255 255 255 / 0.06);
+  }
+  .footer-label {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    font-size: var(--text-label);
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: #8fa3c7;
+  }
+  .footer-label::before {
+    content: "";
+    width: 0.75rem;
+    height: 1px;
+    background: var(--accent-orange);
+  }
+  .footer-link {
+    font-size: 0.9375rem;
+    line-height: 1.4;
+    color: var(--text-secondary);
+    transition: color 300ms ease;
+  }
+  /* A small orange tick appears beside the link on hover; the text never moves. */
+  .footer-link-tick {
+    position: absolute;
+    left: -0.95rem;
+    top: 50%;
+    width: 0.5rem;
+    height: 1px;
+    background: var(--accent-orange);
+    opacity: 0;
+    transform: scaleX(0);
+    transform-origin: right;
+    transition:
+      opacity 300ms ease,
+      transform 300ms ease;
+  }
+  .footer-link:hover {
+    color: #ffffff;
+  }
+  .footer-link:hover .footer-link-tick {
+    opacity: 1;
+    transform: scaleX(1);
+  }
+  .footer-email {
+    font-family: var(--font-display);
+    font-size: 1.0625rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    transition: color 300ms ease;
+  }
+  .footer-email:hover {
+    color: var(--accent-orange);
+  }
+  /* The oversized wordmark: an object, not a heading. Barely there, cropped
+     by the screen edges and trimmed at the bottom. */
+  .footer-wordmark {
+    margin: 1.25rem 0 -0.16em;
+    padding-left: max(1rem, calc((100vw - 80rem) / 2 + 1rem));
+    white-space: nowrap;
+    font-family: var(--font-display);
+    font-size: clamp(6rem, 17vw, 22rem);
+    font-weight: 700;
+    line-height: 0.8;
+    letter-spacing: -0.05em;
+    text-transform: uppercase;
+    color: rgb(255 255 255 / 0.04);
+    -webkit-text-stroke: 1px rgb(143 163 199 / 0.08);
+    user-select: none;
+  }
+  .footer-dust {
+    position: absolute;
+    border-radius: 9999px;
+    background: #e8edf7;
+    opacity: 0.35;
+    animation: footer-drift 38s ease-in-out infinite alternate;
+  }
+  .footer-dust[data-tone="blue"] {
+    background: var(--accent-blue);
+    opacity: 0.45;
+  }
+  .footer-dust[data-tone="orange"] {
+    background: var(--accent-orange);
+    opacity: 0.5;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .footer-dust {
+      animation: none;
+    }
+  }
+
   /* Emphasis for strategically important words inside headings. Colour
      only — no glow, gradient, shadow or background. Orange by default;
      data-tone="blue" | "white" for the others. */
@@ -423,6 +522,15 @@
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
+  }
+}
+
+@keyframes footer-drift {
+  from {
+    transform: translate(0, 0);
+  }
+  to {
+    transform: translate(6px, -14px);
   }
 }
 
