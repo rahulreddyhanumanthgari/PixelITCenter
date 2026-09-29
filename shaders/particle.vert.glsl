@@ -25,16 +25,16 @@ uniform float uMouseInfluence;
 uniform float uMouseRadius;
 uniform float uFocusDepth;
 uniform vec3 uMouse;            // pointer, in the particles' local space
-uniform float uStage;           // process progress: 0 = Discover active … 4 = all done
-uniform float uStageMix;        // 0 = no stage effects, 1 = fully on (process form)
-uniform vec3 uAccent;           // rocket accent, for active checkpoints
-uniform float uFlowFrom;        // live form being left: 0 none, 1 torus (Why), 2 ring stream (Services)
+uniform float uStage;           // How We Work progress: 0 = Discover active … 4 = all done
+uniform float uFlowFrom;        // live form being left: 0 none, 1 torus (Why), 2 ring stream (Services), 3 Earth, 4 solar system
 uniform float uFlowTo;          // live form being arrived at (same codes)
 uniform vec4 uProtect2;         // Services content box in NDC (dims the ring stream behind text)
 uniform vec4 uProtect3;         // Staffing content box in NDC (dims the Earth behind text)
 uniform float uEarthScale;      // extra display scale for the Staffing Earth
 uniform vec4 uProtect4;         // Why content box in NDC (dims the torus behind text)
 uniform float uTorusScale;      // Why torus display scale (smaller in the phone band)
+uniform float uSolarPhone;      // 1 = solar system in its compact phone-band layout
+uniform vec4 uProtect5;         // How We Work step content box in NDC (dims particles behind text)
 uniform float uHeroField;       // 1 while the current "from" form is the hero gravity field
 uniform vec4 uProtect;          // hero text box in NDC: centre xy, half-size zw
 uniform float uProtectFloor;    // brightness left for particles behind the hero text
@@ -47,8 +47,8 @@ attribute vec3 aScatterDir;
 attribute float aScatterDistance;
 attribute vec3 aNoiseOffset;
 attribute float aScale;
-attribute vec2 aStage;          // (stage position, isNode) on the process form
-attribute vec3 aStageCenter;    // checkpoint centre (checkpoint particles only)
+attribute vec2 aStage;          // solar system: (stage, role) — see solarSystem()
+attribute vec3 aStageCenter;    // solar system: the role's coordinates
 
 varying vec3 vColor;
 varying float vAlpha;
@@ -337,6 +337,189 @@ vec3 earthSpin(vec3 p, out float shell, out float facing) {
   return f * uEarthScale;
 }
 
+// --- How We Work: the particle solar system ---------------------------------
+// Four planets (01 Discover … 04 Support) joined by curved particle trails in
+// sparse dust. Every particle is placed here, each frame, from its
+// parameters (forms/solarSystem.ts): aStage = (stage, role), aStageCenter =
+// the role's coordinates. Planets spin, rings turn, trails flow; uStage
+// (0 … 4) lights the planets cumulatively and sends an energy stream along
+// the trail to the planet being reached.
+//
+// Planet centre xyz + radius. Desktop: around the centred step content.
+// Phone band: a compact wave. (SOLAR.planets in the form mirrors the desktop
+// values for approximate placement only.)
+const vec4 SOLAR_DESK[4] = vec4[4](
+  vec4(-3.75, 1.45, 0.2, 0.58),
+  vec4(-2.7, -1.85, -0.4, 0.44),
+  vec4(2.75, -1.6, 0.15, 0.74),
+  vec4(3.95, 1.55, -0.3, 0.5)
+);
+const vec4 SOLAR_PHONE[4] = vec4[4](
+  vec4(-2.2, 0.85, 0.1, 0.46),
+  vec4(-0.75, -0.95, -0.2, 0.36),
+  vec4(0.8, 0.8, 0.1, 0.54),
+  vec4(2.2, -0.9, -0.2, 0.4)
+);
+// Trail direction through each planet (Hermite tangents).
+const vec3 SOLAR_TAN_DESK[4] = vec3[4](
+  vec3(0.6, -3.0, 0.0), vec3(3.2, -1.0, 0.2), vec3(2.4, 2.4, -0.2), vec3(0.8, 2.8, 0.0)
+);
+const vec3 SOLAR_TAN_PHONE[4] = vec3[4](
+  vec3(1.7, 0.0, 0.0), vec3(1.7, 0.0, 0.0), vec3(1.7, 0.0, 0.0), vec3(1.7, 0.0, 0.0)
+);
+// Per planet: axis tilt toward the viewer (x) and sideways (z), spin speed.
+// The rings lie on each planet's equator, so the tilts vary their angles.
+const vec3 SOLAR_SPIN[4] = vec3[4](
+  vec3(0.42, 0.35, 0.09), vec3(0.14, -0.45, 0.13), vec3(0.5, -0.22, 0.06), vec3(0.3, 0.75, 0.1)
+);
+// Palette: warm white, Pixel IT orange / red-orange, blue, deep blue.
+const vec3 S_CREAM = vec3(1.0, 0.86, 0.66);
+const vec3 S_ORANGE = vec3(1.0, 0.32, 0.05);
+const vec3 S_RED = vec3(1.0, 0.09, 0.02);
+const vec3 S_BLUE = vec3(0.07, 0.26, 1.0);
+const vec3 S_DEEP = vec3(0.04, 0.1, 0.62);
+// Body bands (two colours), ring and atmosphere for each planet.
+const vec3 SOLAR_BODY_A[4] = vec3[4](S_CREAM, S_BLUE, S_ORANGE, S_BLUE);
+const vec3 SOLAR_BODY_B[4] = vec3[4](S_ORANGE, S_CREAM, S_RED, S_DEEP);
+const vec3 SOLAR_RING[4] = vec3[4](S_BLUE, S_CREAM, S_ORANGE, S_ORANGE);
+const vec3 SOLAR_ATMO[4] = vec3[4](S_CREAM, S_BLUE, S_ORANGE, S_BLUE);
+
+// A knot of the trail: 0 = lead-in start, 1–4 = planets, 5 = lead-out end.
+// xyz = place, w = planet radius (0 for the ends); m = tangent.
+vec4 solarKnot(int i, out vec3 m) {
+  if (i == 0) {
+    m = mix(vec3(2.6, -1.6, 0.0), vec3(1.7, 0.0, 0.0), uSolarPhone);
+    return vec4(mix(vec3(-6.8, 3.9, -0.5), vec3(-3.9, -0.9, -0.3), uSolarPhone), 0.0);
+  }
+  if (i == 5) {
+    m = mix(vec3(2.6, 1.6, 0.0), vec3(1.7, 0.0, 0.0), uSolarPhone);
+    return vec4(mix(vec3(6.8, 3.9, -0.5), vec3(3.9, 0.85, -0.3), uSolarPhone), 0.0);
+  }
+  m = mix(SOLAR_TAN_DESK[i - 1], SOLAR_TAN_PHONE[i - 1], uSolarPhone);
+  return mix(SOLAR_DESK[i - 1], SOLAR_PHONE[i - 1], uSolarPhone);
+}
+
+vec3 solarSystem(out vec3 col, out float sizeK) {
+  float t = uTime * uMotion;
+  float s = uStage;
+  float stage = aStage.x;
+  float role = aStage.y;
+  vec3 q = aStageCenter;
+
+  // --- trails ---------------------------------------------------------------
+  if (role < 0.5) {
+    // Particles drift along their segment (and wrap), so the paths flow.
+    float seg = floor(stage + 1.0);
+    float u = fract(stage + 1.0 + t * 0.012 * (0.5 + q.z));
+    int i = int(seg + 0.5);
+    vec3 m0;
+    vec3 m1;
+    vec4 k0 = solarKnot(i, m0);
+    vec4 k1 = solarKnot(i + 1, m1);
+    float u2 = u * u;
+    float u3 = u2 * u;
+    vec3 p = (2.0 * u3 - 3.0 * u2 + 1.0) * k0.xyz + (u3 - 2.0 * u2 + u) * m0
+           + (-2.0 * u3 + 3.0 * u2) * k1.xyz + (u3 - u2) * m1;
+    vec3 d = (6.0 * u2 - 6.0 * u) * k0.xyz + (3.0 * u2 - 4.0 * u + 1.0) * m0
+           + (-6.0 * u2 + 6.0 * u) * k1.xyz + (3.0 * u2 - 2.0 * u) * m1;
+    vec3 side = normalize(vec3(-d.y, d.x, 0.0) + 1e-5);
+    // Braided strands, wider between planets and pinched at them, with a
+    // slow organic weave.
+    float width = mix(0.04, 0.26, pow(max(sin(PI * u), 0.0), 0.7)) * mix(1.0, 0.65, uSolarPhone);
+    float tw = u * 5.0 + t * 0.12 + q.z * 0.6;
+    vec2 off = vec2(cos(tw) * q.x - sin(tw) * q.y * 0.45, sin(tw) * q.x + cos(tw) * q.y * 0.45);
+    off.x += 0.35 * sin(u * 9.0 + t * 0.35 + q.z * 6.2831);
+    p += (side * off.x + vec3(0.0, 0.0, off.y)) * width;
+    // Fade out where the trail runs into a planet.
+    float nearP = 1e3;
+    if (k0.w > 0.0) nearP = min(nearP, length(p - k0.xyz) / k0.w);
+    if (k1.w > 0.0) nearP = min(nearP, length(p - k1.xyz) / k1.w);
+    float fade = smoothstep(1.05, 1.7, nearP);
+    // Lit (orange) behind the progress front, cool blue ahead of it; while
+    // moving between planets a bright stream with a tail carries the energy.
+    float qs = seg - 1.0 + u;
+    float lit = smoothstep(qs - 0.03, qs + 0.03, s);
+    float energy = sin(PI * fract(s)) * step(s, 3.0);
+    float dq = s - qs;
+    float dh = dq / 0.035;
+    float comet = dq >= 0.0 ? exp(-dq / 0.2) : exp(-dh * dh);
+    float front = clamp(comet * energy, 0.0, 1.0);
+    col = mix(S_BLUE * 0.28, mix(S_ORANGE, S_CREAM, 0.2 + 0.35 * q.z) * 0.7, lit);
+    col = mix(col, mix(S_ORANGE, S_CREAM, smoothstep(0.5, 1.0, comet)) * 1.25, front);
+    col *= fade;
+    sizeK = 1.1 + front * 1.0;
+    return p;
+  }
+
+  // --- dust -----------------------------------------------------------------
+  if (role > 3.5) {
+    vec3 p = q * mix(vec3(1.0), vec3(0.55, 0.62, 1.0), uSolarPhone);
+    p += 0.06 * vec3(sin(t * 0.07 + q.y * 3.0), cos(t * 0.06 + q.x * 2.0), 0.0);
+    col = mix(S_CREAM, S_BLUE, step(0.5, fract(aRandom * 5.0))) * (0.12 + 0.2 * fract(aRandom * 17.0));
+    sizeK = 0.55;
+    return p;
+  }
+
+  // --- planets: body (1), ring (2), atmosphere (3) ----------------------------
+  int k = int(stage + 0.5);
+  float fk = float(k);
+  vec4 c = mix(SOLAR_DESK[k], SOLAR_PHONE[k], uSolarPhone);
+  vec3 spin = SOLAR_SPIN[k];
+  // Cumulative: dim until reached, current while its step is shown, then
+  // stays lit; at the end all four glow. A small wave as each is reached.
+  float on = smoothstep(fk - 0.12, fk - 0.02, s);
+  float done = smoothstep(fk + 0.9, fk + 0.98, s);
+  float current = max(on * (1.0 - done), smoothstep(3.85, 3.98, s));
+  // (Squares written out: pow() of a negative base is undefined in GLSL.)
+  float dh = (s - fk) / 0.08;
+  float hit = step(0.5, fk) * exp(-dh * dh);
+  float level = min(mix(0.3, 1.0, on) + current * 0.25 + hit * 0.3, 1.3);
+
+  // Rings orbit faster near the planet (so their clumps slowly shear); the
+  // atmosphere turns slower than the body.
+  float ringR = max(length(q.xz), 1.0);
+  float speed = role > 2.5 ? 0.5 : role > 1.5 ? 1.8 / pow(ringR, 1.5) : 1.0;
+  vec3 lp = q * c.w * (1.0 + 0.06 * current + 0.05 * hit);
+  if (role > 2.5) lp *= 1.0 + 0.04 * current * sin(t * 1.3 + fk);
+  vec3 f = rotY(lp, t * spin.z * speed + fk * 1.9);
+  f = rotX(f, spin.x);
+  f = rotZ(f, spin.y);
+
+  vec3 hue;
+  if (role < 1.5) {
+    // Banded surface with drifting storms; lit from the content side (the
+    // "sun" sits behind the centred text), far side dark.
+    vec3 n = normalize(f + 1e-5);
+    float band = 0.5 + 0.5 * sin(q.y * 7.0 + snoise(q * 1.7 + fk * 3.1) * 2.2);
+    hue = mix(SOLAR_BODY_A[k], SOLAR_BODY_B[k], smoothstep(0.25, 0.75, band));
+    if (fract(aRandom * 13.0) > 0.97) hue = S_CREAM;
+    vec3 L = normalize(vec3(-c.x, -c.y, 2.4));
+    float shade = mix(0.16, 1.0, smoothstep(-0.3, 0.8, dot(n, L)));
+    hue *= shade * mix(0.1, 1.0, smoothstep(-0.2, 0.25, n.z));
+    sizeK = 1.7;
+  } else if (role < 2.5) {
+    hue = SOLAR_RING[k];
+    if (k == 2 && ringR > 1.8) hue = S_BLUE;   // Deliver's outer ring
+    hue *= 0.85;
+    sizeK = 1.25;
+  } else {
+    float h = clamp((length(q) - 1.0) / 0.55, 0.0, 1.0);
+    hue = SOLAR_ATMO[k] * mix(0.55, 0.12, h) * (1.0 + 0.4 * current);
+    sizeK = 1.0;
+  }
+  // The body hides ring and atmosphere passing behind it.
+  if (role > 1.5) {
+    float behind = step(f.z, 0.0) * (1.0 - smoothstep(c.w * 0.9, c.w * 1.02, length(f.xy)));
+    hue *= 1.0 - 0.94 * behind;
+  }
+  // Not yet reached: a quiet silhouette, cooled toward blue-grey.
+  vec3 cool = vec3(0.35, 0.42, 0.6) * max(max(hue.r, hue.g), hue.b);
+  hue = mix(cool, hue, mix(0.25, 1.0, on));
+  col = hue * level;
+  sizeK *= mix(0.85, 1.0, on) * (1.0 + 0.1 * current);
+  return c.xyz + f;
+}
+
 void main() {
   vec3 A = position;
   vec3 B = aTarget;
@@ -370,10 +553,17 @@ void main() {
   float shellB = 0.0;
   float faceA = 1.0;
   float faceB = 1.0;
-  if (uFlowFrom > 2.5) A = earthSpin(A, shellA, faceA);
+  // How We Work solar system: placed live, so it spins and flows.
+  vec3 solarCol = vec3(0.0);
+  float solarSize = 1.0;
+  vec3 sp = vec3(0.0);
+  if (uFlowFrom > 3.5 || uFlowTo > 3.5) sp = solarSystem(solarCol, solarSize);
+  if (uFlowFrom > 3.5) A = sp;
+  else if (uFlowFrom > 2.5) A = earthSpin(A, shellA, faceA);
   else if (uFlowFrom > 1.5) A = ringStream(A, laneA, arcA);
   else if (uFlowFrom > 0.5) A = torusFlow(A, bandA);
-  if (uFlowTo > 2.5) B = earthSpin(B, shellB, faceB);
+  if (uFlowTo > 3.5) B = sp;
+  else if (uFlowTo > 2.5) B = earthSpin(B, shellB, faceB);
   else if (uFlowTo > 1.5) B = ringStream(B, laneB, arcB);
   else if (uFlowTo > 0.5) B = torusFlow(B, bandB);
 
@@ -416,37 +606,6 @@ void main() {
   float breathe = sin(uTime * 0.55 + pos.y * 1.4) * 0.012 * uMotion * (1.0 - field);
   pos *= 1.0 + breathe;
 
-  // --- process stages -----------------------------------------------------
-  // Only on the final process form (uStageMix). A node is active while the
-  // progress is within its step, completed after it; path particles light up
-  // once the progress front has passed them, and a bright stream (the front)
-  // travels along the path from one stage to the next.
-  float q = aStage.x;
-  float isNode = aStage.y;
-  float passed = smoothstep(q - 0.04, q + 0.04, uStage);
-  float nodeOn = isNode * smoothstep(q - 0.06, q + 0.02, uStage);
-  float nodeDone = isNode * smoothstep(q + 0.86, q + 0.97, uStage);
-  float nodeActive = nodeOn * (1.0 - nodeDone);
-  // The stream only carries energy while moving between checkpoints: it
-  // fades out as a checkpoint is reached and settles at the end.
-  float energy = sin(3.14159265 * fract(uStage)) * step(uStage, 3.999);
-  float front = (1.0 - isNode) * exp(-pow((q - uStage) / 0.09, 2.0)) * energy;
-  // A small wave passes through a checkpoint the moment it is reached.
-  float hit = isNode * exp(-pow((uStage - q) / 0.07, 2.0));
-  // Active checkpoints grow a little (~115%) about their own centre.
-  vec3 fromCenter = pos - aStageCenter;
-  pos += fromCenter * (0.15 * nodeActive + 0.1 * hit) * uStageMix * isNode;
-  pos += 0.012 * nodeActive * uStageMix * uMotion * vec3(
-    sin(uTime * 1.4 + aNoiseOffset.x),
-    cos(uTime * 1.2 + aNoiseOffset.y),
-    sin(uTime * 1.6 + aNoiseOffset.z)
-  );
-  float pathLevel = mix(0.3, 0.75, passed) + front * 0.9;
-  float nodeLevel = mix(0.4, 0.95, nodeDone) + nodeActive * 0.4 + hit * 0.5;
-  float stageLevel = mix(1.0, mix(pathLevel, nodeLevel, isNode), uStageMix);
-  float stageSize = mix(1.0, 1.0 + nodeActive * 0.12 + front * 0.2, uStageMix);
-  float stageAccent = uStageMix * (isNode * (nodeActive * 0.4 + hit * 0.3) + front * 0.25);
-
   // --- pointer push -------------------------------------------------------
   vec3 away = pos - uMouse;
   float dist = length(away);
@@ -465,14 +624,18 @@ void main() {
   // Services ring stream: closer to the camera, so slightly larger points.
   float ringNear = step(1.5, uFlowFrom) * step(uFlowFrom, 2.5) * (1.0 - eOut)
                  + step(1.5, uFlowTo) * step(uFlowTo, 2.5) * eIn;
-  float earthNear = step(2.5, uFlowFrom) * (1.0 - eOut) + step(2.5, uFlowTo) * eIn;
-  float earthFace = step(2.5, uFlowFrom) * (1.0 - eOut) > 0.0 ? faceA : faceB;
+  float earthNear = step(2.5, uFlowFrom) * step(uFlowFrom, 3.5) * (1.0 - eOut)
+                  + step(2.5, uFlowTo) * step(uFlowTo, 3.5) * eIn;
+  float earthFace = step(2.5, uFlowFrom) * step(uFlowFrom, 3.5) * (1.0 - eOut) > 0.0 ? faceA : faceB;
   // Why halo (torus): particles 50% larger.
   float torusNear = step(0.5, uFlowFrom) * step(uFlowFrom, 1.5) * (1.0 - eOut)
                   + step(0.5, uFlowTo) * step(uFlowTo, 1.5) * eIn;
-  float size = uSize * aScale * stageSize * heroSize * mix(1.0, 2.8, ringNear)
+  // How We Work solar system: size per role (planets, rings, trail, dust).
+  float solarW = step(3.5, uFlowFrom) * (1.0 - eOut) + step(3.5, uFlowTo) * eIn;
+  float size = uSize * aScale * heroSize * mix(1.0, 2.8, ringNear)
              * mix(1.0, mix(0.7, 1.12, earthFace) * 1.6, earthNear)
-             * mix(1.0, 1.5, torusNear);
+             * mix(1.0, 1.5, torusNear)
+             * mix(1.0, solarSize, solarW);
   gl_PointSize = clamp(size * uPixelRatio / depth, 1.0, 28.0 * uPixelRatio);
 
   // Near particles brighter, far ones dimmer; a soft twinkle on top. Spread
@@ -480,8 +643,7 @@ void main() {
   // brightness lift to stay clearly visible.
   float depthFade = clamp(1.0 - (depth - uFocusDepth) * 0.2, 0.35, 1.4);
   float twinkle = 0.8 + 0.2 * sin(uTime * (0.8 + aRandom * 2.2) + aRandom * 40.0) * uMotion;
-  vColor = aColor * depthFade * twinkle * (1.0 + push * 0.6 + flight * 0.25 + field * 0.6) * stageLevel;
-  vColor = mix(vColor, uAccent * length(vColor) * 0.75, clamp(stageAccent, 0.0, 0.6));
+  vColor = aColor * depthFade * twinkle * (1.0 + push * 0.6 + flight * 0.25 + field * 0.6);
   vAlpha = clamp(depthFade, 0.0, 1.0);
 
   // Flowing torus reads mostly white; each particle keeps a trace of its
@@ -534,8 +696,8 @@ void main() {
 
   // Staffing Earth: mostly white (each particle keeps a trace of its accent),
   // the shell a little dimmer than the planet, dimmed behind the content.
-  float earthFrom = step(2.5, uFlowFrom) * (1.0 - eOut);
-  float earthW = earthFrom + step(2.5, uFlowTo) * eIn;
+  float earthFrom = step(2.5, uFlowFrom) * step(uFlowFrom, 3.5) * (1.0 - eOut);
+  float earthW = earthFrom + step(2.5, uFlowTo) * step(uFlowTo, 3.5) * eIn;
   if (earthW > 0.001) {
     float shell = earthFrom > 0.0 ? shellA : shellB;
     float facing = earthFrom > 0.0 ? faceA : faceB;
@@ -570,6 +732,16 @@ void main() {
     float box3 = pow(pow(d3.x, 4.0) + pow(d3.y, 4.0), 0.25);
     float protect3 = mix(0.4, 1.0, smoothstep(0.85, 1.15, box3));
     vColor = mix(vColor, ec * mix(1.0, 0.75, shell) * protect3, earthW);
+  }
+
+  // How We Work solar system: its own colours (see solarSystem), a soft
+  // twinkle, dimmed behind the centred step content.
+  if (solarW > 0.001) {
+    vec2 nd5 = gl_Position.xy / gl_Position.w;
+    vec2 d5 = abs(nd5 - uProtect5.xy) / max(uProtect5.zw, vec2(1e-3));
+    float box5 = pow(pow(d5.x, 4.0) + pow(d5.y, 4.0), 0.25);
+    float protect5 = mix(0.3, 1.0, smoothstep(0.85, 1.15, box5));
+    vColor = mix(vColor, solarCol * twinkle * protect5, solarW);
   }
 
   // Hero: keep the centred text calm — particles projected behind it dim.

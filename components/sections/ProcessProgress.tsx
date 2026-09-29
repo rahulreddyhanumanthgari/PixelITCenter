@@ -15,7 +15,7 @@ const HANDOVER = { outLead: 0.2, inLead: 0.1, duration: 0.2, stagger: 0.05 } as 
  * scrubs the process progress 0 → 4 (0 = Discover active … 4 = all done).
  * - index items get `data-state` (inactive / active / completed)
  * - the step panels cross over at each checkpoint (number → title → text)
- * - the particle path reads the same progress (lib/processProgress)
+ * - the solar system's planets read the same progress (lib/processProgress)
  * Scrubbed, so everything reverses when scrolling back. Renders nothing.
  */
 export function ProcessProgress() {
@@ -25,7 +25,8 @@ export function ProcessProgress() {
     const steps = Array.from(track.querySelectorAll<HTMLElement>("[data-process-step]"));
     const panels = Array.from(track.querySelectorAll<HTMLElement>("[data-process-panel]"));
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const shift = reduce ? 0 : 18;
+    // Steps fade with a slight vertical move, in step with the planets.
+    const shift = reduce ? 0 : 14;
 
     const apply = (stage: number) => {
       processProgress.value = stage;
@@ -50,17 +51,17 @@ export function ProcessProgress() {
         },
       });
       const parts = panels.map((p) => Array.from(p.querySelectorAll<HTMLElement>("[data-panel-part]")));
-      parts.slice(1).forEach((list) => gsap.set(list, { opacity: 0, x: shift }));
+      parts.slice(1).forEach((list) => gsap.set(list, { opacity: 0, y: shift }));
 
       for (let k = 0; k < STEPS - 1; k++) {
         const at = k + 1;
-        // Current step releases focus: drifts left and fades…
-        tl.to(parts[k], { opacity: 0, x: -shift, ease: "power1.in", stagger: HANDOVER.stagger }, at - HANDOVER.outLead);
-        // …while the next one settles in from the right, slightly overlapping.
+        // Current step releases focus: drifts up and fades…
+        tl.to(parts[k], { opacity: 0, y: -shift, ease: "power1.in", stagger: HANDOVER.stagger }, at - HANDOVER.outLead);
+        // …while the next one rises into place, slightly overlapping.
         tl.fromTo(
           parts[k + 1],
-          { opacity: 0, x: shift },
-          { opacity: 1, x: 0, stagger: HANDOVER.stagger, immediateRender: false },
+          { opacity: 0, y: shift },
+          { opacity: 1, y: 0, stagger: HANDOVER.stagger, immediateRender: false },
           at - HANDOVER.inLead,
         );
       }

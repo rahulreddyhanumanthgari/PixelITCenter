@@ -13,7 +13,6 @@ import {
   type FormName,
 } from "@/lib/particles/generateTarget";
 import { MorphController, createMorphGeometry, resolveFormPosition } from "./MorphController";
-import { PALETTE_LINEAR } from "@/lib/particles/palette";
 import type { PointerState, ProgressState } from "./types";
 
 /** How a particle system looks and moves. Every number is tunable. */
@@ -80,6 +79,10 @@ export interface LayoutState {
   protect4: [number, number, number, number];
   /** Why torus display scale: 1 on desktop, smaller to fit the phone band. */
   torusScale: number;
+  /** 1 = the How We Work solar system uses its compact phone-band layout. */
+  solarPhone: number;
+  /** How We Work step content box in NDC; solar particles behind it dim. */
+  protect5: [number, number, number, number];
 }
 
 interface ParticleSystemProps {
@@ -101,7 +104,7 @@ interface ParticleSystemProps {
   /** Called every frame with the handoff blend (0 = `look`, 1 = `lookTo`). */
   onBlend?: (blend: number, field: number) => void;
   /**
-   * Step progress for a stepped form (the process path): 0 = first step
+   * Step progress for a stepped form (the How We Work solar system): 0 = first step
    * active … N = all steps done. Written by the section's scroll triggers.
    */
   stage?: RefObject<ProgressState>;
@@ -124,8 +127,6 @@ export interface MorphUniforms {
   uFocusDepth: THREE.IUniform<number>;
   uMouse: THREE.IUniform<THREE.Vector3>;
   uStage: THREE.IUniform<number>;
-  uStageMix: THREE.IUniform<number>;
-  uAccent: THREE.IUniform<THREE.Color>;
   uHeroField: THREE.IUniform<number>;
   uFlowFrom: THREE.IUniform<number>;
   uFlowTo: THREE.IUniform<number>;
@@ -134,6 +135,8 @@ export interface MorphUniforms {
   uEarthScale: THREE.IUniform<number>;
   uProtect4: THREE.IUniform<THREE.Vector4>;
   uTorusScale: THREE.IUniform<number>;
+  uSolarPhone: THREE.IUniform<number>;
+  uProtect5: THREE.IUniform<THREE.Vector4>;
   uProtect: THREE.IUniform<THREE.Vector4>;
   uProtectFloor: THREE.IUniform<number>;
 }
@@ -209,8 +212,6 @@ export function ParticleSystem({
       uFocusDepth: { value: look.cameraZ },
       uMouse: { value: MOUSE_PARKED.clone() },
       uStage: { value: 0 },
-      uStageMix: { value: 0 },
-      uAccent: { value: PALETTE_LINEAR.orange.clone() },
       uHeroField: { value: 0 },
       uFlowFrom: { value: 0 },
       uFlowTo: { value: 0 },
@@ -219,6 +220,8 @@ export function ParticleSystem({
       uEarthScale: { value: 1 },
       uProtect4: { value: new THREE.Vector4(0, 0, 0.001, 0.001) },
       uTorusScale: { value: 1 },
+      uSolarPhone: { value: 0 },
+      uProtect5: { value: new THREE.Vector4(0, 0, 0.001, 0.001) },
       uProtect: { value: new THREE.Vector4(0, 0, 0.001, 0.001) },
       uProtectFloor: { value: 1 },
     };
@@ -295,9 +298,9 @@ export function ParticleSystem({
     u.uHeroField.value = formNames[0] === "heroField" && controller.fromIndex === 0 ? 1 : 0;
     // Flowing torus (Why): live whether it is being left or arrived at.
     // Live flowing forms: 1 = torus (Why), 2 = ring stream (Services).
-    // 3 = Earth (Staffing).
+    // 3 = Earth (Staffing), 4 = solar system (How We Work).
     const liveKind = (name: FormName | undefined) =>
-      name === "torusFlow" ? 1 : name === "ringStream" ? 2 : name === "earth" ? 3 : 0;
+      name === "torusFlow" ? 1 : name === "ringStream" ? 2 : name === "earth" ? 3 : name === "solarSystem" ? 4 : 0;
     const fromKind = liveKind(formNames[controller.fromIndex]);
     const toKind = liveKind(formNames[controller.toIndex]);
     u.uFlowFrom.value = fromKind;
@@ -311,14 +314,13 @@ export function ParticleSystem({
     u.uEarthScale.value = L.earthScale;
     u.uProtect4.value.set(...L.protect4);
     u.uTorusScale.value = L.torusScale;
+    u.uSolarPhone.value = L.solarPhone;
+    u.uProtect5.value.set(...L.protect5);
     u.uProtect.value.set(...L.protect);
     u.uProtectFloor.value = L.protectFloor;
 
-    // --- stepped form: stage effects fade in as the form lands -------------
+    // --- stepped form: step progress, eased like the morph ----------------
     if (stagedForm >= 0) {
-      const p0 = s0.smoothProgress;
-      const landing = Math.min(Math.max((p0 - (stagedForm - 0.3)) / 0.3, 0), 1);
-      u.uStageMix.value = smooth(landing);
       const targetStage = stage?.current.value ?? 0;
       s0.smoothStage = s0.smoothStage < 0 ? targetStage : s0.smoothStage + (targetStage - s0.smoothStage) * k;
       u.uStage.value = s0.smoothStage;

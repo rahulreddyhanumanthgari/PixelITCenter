@@ -92,6 +92,8 @@ export default function JourneyScene() {
     protect3: [0, 0, 0.001, 0.001],
     protect4: [0, 0, 0.001, 0.001],
     torusScale: 1,
+    solarPhone: 0,
+    protect5: [0, 0, 0.001, 0.001],
     earthScale: 1,
   });
   // How scattered the main particles are; drives the stars and camera.
@@ -116,7 +118,7 @@ export default function JourneyScene() {
 
   // --- scroll → form position ---------------------------------------------
   // One scrubbed 0→1 value per transition; their sum is the form position
-  // (0 = hero field … 4 = process). Two-way scrub makes every step reversible.
+  // (0 = hero field … 4 = solar system). Two-way scrub makes every step reversible.
   useEffect(() => {
     const story = document.querySelector<HTMLElement>("[data-story]");
     if (!story) return;
@@ -156,6 +158,7 @@ export default function JourneyScene() {
     const servicesContent = document.querySelector<HTMLElement>("[data-services-content]");
     const staffingContent = document.querySelector<HTMLElement>("[data-staffing-content]");
     const whyContent = document.querySelector<HTMLElement>("[data-why-content]");
+    const processContent = document.querySelector<HTMLElement>("[data-process-content]");
     // The particle layer stays on through About Us (the vortex); after that the
     // opaque sections cover it.
     const lastLit = document.querySelector<HTMLElement>("[data-about]") ?? story;
@@ -181,6 +184,9 @@ export default function JourneyScene() {
       // The Why halo is sized to frame desktop content; in the phone band the
       // whole ring must fit instead.
       L.torusScale = columns ? 1 : 0.4;
+      // How We Work: planets around the centred content on desktop; a compact
+      // wave in the phone band.
+      L.solarPhone = columns ? 0 : 1;
       L.to.x = columns ? xAt(STORY_SIDES[0] ? STORY_SLOTS.right : STORY_SLOTS.left) : xAt(0.5);
       // Pinned position while the anchor is stuck (or still arriving); once
       // the story ends, the form scrolls away with it. The release point is
@@ -206,6 +212,15 @@ export default function JourneyScene() {
       L.from.y = 0;
       L.from.scale = voidPx * wpp;
       L.protectFloor = vw < 768 ? HERO_FIELD.protectFloor.narrow : HERO_FIELD.protectFloor.wide;
+      if (processContent) {
+        const c = processContent.getBoundingClientRect();
+        L.protect5 = [
+          ((c.left + c.width / 2) / vw) * 2 - 1,
+          -(((c.top + c.height / 2) / vh) * 2 - 1),
+          (c.width / vw) * 1.02,
+          (c.height / vh) * 1.02,
+        ];
+      }
       if (whyContent) {
         const c = whyContent.getBoundingClientRect();
         L.protect4 = [

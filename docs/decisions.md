@@ -73,7 +73,7 @@ section is transparent and has no panels or overlays.
 ### Scroll → form position
 
 There is one scrubbed ScrollTrigger per transition (four). Their 0→1 values
-add up to a form position, from 0 (hero field) to 4 (process). It is
+add up to a form position, from 0 (hero field) to 4 (solar system). It is
 reversible, and it holds wherever the visitor stops. The hero is not pinned.
 
 | Transition | Runs while |
@@ -114,20 +114,8 @@ scrolls the four steps (Discover, Plan, Deliver, Support).
   get `data-state` (`inactive` / `active` / `completed`), which drives the
   styling: dimmed, full emphasis with the accent number, or ✓. This works
   with or without WebGL.
-- **Particles.** `annotateProcessStages` gives every particle of the process
-  form an `aStage = (stage, isNode)` attribute:
-  - node particles get the node index;
-  - path particles get their position along the process in stage units.
-
-  The shader reads `uStage`:
-  - *Upcoming nodes:* dim.
-  - *The active node:* brighter, slightly larger, with gentle movement.
-  - *Completed nodes:* steady and a little brighter.
-  - *The path:* lights up behind a bright moving front, the stream of
-    particles travelling between stages.
-
-  `uStageMix` fades these effects in only as the process form lands, so
-  earlier forms are unaffected.
+- **Particles.** The final form is the solar system (see "How We Work
+  (current version)" below). Its planets read `uStage` directly.
 
 ### Presentation layer
 
@@ -317,26 +305,51 @@ centred Why content, which sits inside its opening.
     while particles roll through them.
 - Keep `TORUS_R` in the shader in sync with `TORUS_FLOW.R`.
 
-### How We Work (current version)
+### How We Work (current version): particle solar system
 
-- **Shape.** The process form is a straight particle path (`forms/process.ts`):
-  a dotted spine, a soft stream, two faint parallel rails, and exactly four
-  checkpoints (a small dense core plus a thin ring).
-- **Scroll.** A single ScrollTrigger over the pinned `[data-process-track]`
-  scrubs progress 0→4 (`ProcessProgress`). It drives:
-  - the 01–04 index states (`data-state`);
-  - one step panel at a time on the right, crossing over at each checkpoint:
-    the old panel drifts left and fades, the new one comes in from the right,
-    staggered number → title → text;
-  - the particles (`lib/processProgress`).
-- **Shader.**
-  - Active checkpoints grow about 15% around their own centre (the
-    `aStageCenter` attribute).
-  - A small brightness and size wave passes through a checkpoint as it is
-    reached.
-  - The stream front carries energy only between checkpoints and settles at
-    the end.
-  - Accents use the rocket orange (`uAccent`).
+- **Layout.** The content is centred (`storySectionClass("center")`, with
+  `STORY_SIDES[3] = 0.5`). The pinned `[data-process-content]` block holds:
+  - the 01–04 index (the orange progress line is removed);
+  - one step panel at a time.
+
+  The particles sit large around and behind that block.
+- **Shape.** `forms/solarSystem.ts` is a live form (kind 4) and contains:
+  - four planets: 01 Discover upper-left, 02 Plan lower-left, 03 Deliver
+    lower-right, 04 Support upper-right;
+  - each with its own size, band colours, ring and atmosphere;
+  - curved trails joining them, with a lead-in and lead-out off-screen;
+  - sparse dust.
+
+  The generator stores per-particle parameters `[stage, role, a, b, c]` in
+  `aStage` / `aStageCenter`. Alignment reorders particles, so
+  `annotateSolarSystem` matches each one back by position.
+- **Shader (`solarSystem()`).** It places every particle each frame:
+  - planets spin about tilted axes;
+  - rings orbit faster near the planet, so their clumps slowly shear;
+  - trails are Hermite curves through the planets, made of braided strands
+    that flow along them;
+  - bodies are banded and lit from the content side, with the far side dark;
+  - the body hides ring and atmosphere particles behind it.
+
+  Desktop and phone-band layouts are two constant tables, mixed by
+  `uSolarPhone`. `uProtect5` dims particles behind the step content.
+- **Progress (`uStage` 0…4).** Planets light up cumulatively:
+  - dim, cool silhouette until reached;
+  - active (brightest, slightly larger, breathing atmosphere);
+  - completed (stays lit);
+  - at the end all four glow.
+
+  The trail is orange behind the front and blue ahead of it. Between planets,
+  a bright comet with a tail carries the energy to the next planet and
+  arrives as that step's text fades in.
+- **Text.** Panels cross over with a fade and a slight vertical move
+  (`ProcessProgress`).
+- **GLSL gotchas.**
+  - `pow(x, 2.0)` with a negative `x` is undefined (NaN on SwiftShader), so
+    squares are written out.
+  - `active` is a reserved word.
+  - The live-form `if / else if` chain must test kind 4 first; otherwise it
+    falls into the ring-stream branch.
 
 ### Space
 
@@ -354,7 +367,7 @@ centred Why content, which sits inside its opening.
 | File | Role |
 |---|---|
 | `generateRocketParticles.ts` | No longer shown. Its per-part colouring is still the source of the site's particle palette (`heroField.colorize` and the About vortex) |
-| `forms/*.ts` | `ringStream` (Services: huge off-screen-left ring of lanes; the shader flows and colours it), `torusFlow` (Why: thick dotted torus lattice; the shader flows it), `earth` (Staffing: real continents from `landMask.ts`, coastlines, haze, dotted shell), `process` |
+| `forms/*.ts` | `ringStream` (Services: huge off-screen-left ring of lanes; the shader flows and colours it), `torusFlow` (Why: thick dotted torus lattice; the shader flows it), `earth` (Staffing: real continents from `landMask.ts`, coastlines, haze, dotted shell), `solarSystem` (How We Work: planets, rings, trails, dust; the shader places them) |
 | `geometryToParticles.ts` | `geometryToParticlePositions` (area-weighted surface sampling, seeded), `geometryEdgesToParticlePositions` (points along triangle edges → wireframe look), merge/transform helpers |
 | `generateTarget.ts` | `FORMS` registry, `alignByHeight`, colours (`colorsForSequence`, `monochromeColors`) |
 | `stars.ts`, `palette.ts`, `random.ts` | Background stars, colours, seeded PRNG |

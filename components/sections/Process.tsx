@@ -5,34 +5,33 @@ import { ProcessProgress } from "./ProcessProgress";
 import { storySectionClass } from "./story-section";
 
 /**
- * How We Work — the particle path with four checkpoints sits on the left
- * (drawn by the journey layer); this text column sits on the right. A tall
- * scroll track pins a panel: a compact 01–04 index (the whole process stays
- * visible) above the active step, which transitions in as each checkpoint
- * is reached. ProcessProgress drives it all from scroll.
+ * How We Work — centred content inside a particle solar system (drawn by the
+ * journey layer): four planets, one per step, joined by curved trails. A
+ * tall scroll track pins a compact 01–04 index above the active step; as
+ * each step is reached its planet lights up (and stays lit) while the step
+ * text fades in. ProcessProgress drives both from scroll.
  */
 export function Process() {
   return (
-    <section data-story-section aria-labelledby="process-title" className={storySectionClass("left")}>
-      <SectionHeader id="process-title" eyebrow={process.eyebrow} title={process.title} />
+    <section data-story-section aria-labelledby="process-title" className={storySectionClass("center")}>
+      <SectionHeader id="process-title" eyebrow={process.eyebrow} title={process.title} className="mx-auto text-center" />
       <ProcessProgress />
 
       <div data-process-track className="relative mt-10 h-[240svh] lg:h-[220vh]">
-        <div className="sticky top-[calc(34svh+6rem)] lg:top-[30vh]">
+        <div
+          data-process-content
+          className="sticky top-[calc(34svh+6rem)] mx-auto max-w-[560px] text-center lg:top-[calc(50vh-10rem)]"
+        >
           {/* Index: all four steps, always visible. */}
-          <ol className="grid grid-cols-4 gap-2 border-t border-white/10">
+          <ol className="grid grid-cols-4 gap-2">
             {process.steps.map((step, i) => (
               <li
                 key={step.title}
                 data-process-step
                 data-state={i === 0 ? "active" : "inactive"}
-                className="group relative pt-3 transition-opacity duration-500 data-[state=inactive]:opacity-40"
+                className="group transition-opacity duration-500 data-[state=inactive]:opacity-40"
               >
-                <span
-                  aria-hidden="true"
-                  className="absolute -top-px left-0 h-px w-0 bg-brand-orange transition-[width] duration-500 group-data-[state=active]:w-full group-data-[state=completed]:w-full group-data-[state=completed]:bg-white/40"
-                />
-                <span className="flex items-center gap-1.5 font-display text-sm tracking-wide text-muted-foreground group-data-[state=active]:text-brand-orange">
+                <span className="flex items-center justify-center gap-1.5 font-display text-sm tracking-wide text-muted-foreground group-data-[state=active]:text-brand-orange">
                   {String(i + 1).padStart(2, "0")}
                   <Check
                     aria-hidden="true"
@@ -56,7 +55,7 @@ export function Process() {
                 <h3 data-panel-part className="mt-3 font-display text-3xl font-semibold uppercase sm:text-4xl">
                   {step.title}
                 </h3>
-                <p data-panel-part className="mt-4 max-w-md text-base leading-relaxed text-muted-foreground sm:text-lg">
+                <p data-panel-part className="mx-auto mt-4 max-w-md text-base leading-relaxed text-muted-foreground sm:text-lg">
                   {step.body}
                 </p>
               </div>

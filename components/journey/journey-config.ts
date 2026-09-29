@@ -16,7 +16,7 @@ export const JOURNEY_FORMS: readonly FormName[] = [
   "ringStream",
   "earth",
   "torusFlow",
-  "process",
+  "solarSystem",
 ];
 
 /** Form position at which the particles leave the hero for the story column. */
@@ -43,7 +43,7 @@ export const HERO_FIELD = {
 // Fractions mix between the left and right slots: Staffing's Earth sits at
 // 0.75 (≈63% across), reaching just past the centre of the screen.
 // Why's torus is centred (0.5): its opening frames the centred content.
-export const STORY_SIDES: readonly number[] = [0, 0.75, 0.5, 0];
+export const STORY_SIDES: readonly number[] = [0, 0.75, 0.5, 0.5];
 
 /**
  * Staffing's Earth on desktop: drawn `scale`× larger, and placed from the
@@ -100,7 +100,7 @@ export const HERO_LOOK: ParticleLook = {
 
 /**
  * The story look: finer points, and a gentle sway instead of a spin so the
- * Earth and the process path always face the reader. The system blends from
+ * Earth and the solar system always face the reader. The system blends from
  * HERO_LOOK to this while the hero field becomes the Services ring.
  */
 export const STORY_LOOK: ParticleLook = {

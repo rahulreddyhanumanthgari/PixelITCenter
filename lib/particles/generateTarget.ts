@@ -6,7 +6,7 @@ import { mulberry32, smoothstep, type Rand } from "./random";
 import { generateRingStreamParticles } from "./forms/ringStream";
 import { generateEarthParticles } from "./forms/earth";
 import { generateTorusFlowParticles } from "./forms/torusFlow";
-import { annotateProcessStages, generateProcessParticles } from "./forms/process";
+import { annotateSolarSystem, generateSolarSystemParticles } from "./forms/solarSystem";
 
 /**
  * Every form the particles can assemble into. To add one: write a generator
@@ -22,16 +22,16 @@ export type FormName =
   | "ringStream"
   | "earth"
   | "torusFlow"
-  | "process";
+  | "solarSystem";
 
 interface FormDefinition {
   generate: (count: number, rand: Rand) => Float32Array;
   /** Optional colouring used when this form is the first in the sequence. */
   colorize?: (positions: Float32Array) => Float32Array;
   /**
-   * Optional per-particle `[stage, isNode, cx, cy, cz]` data for a form whose
-   * parts light up in steps (the process path). Computed on the final
-   * aligned positions.
+   * Optional per-particle `[stage, role, a, b, c]` data for a form whose
+   * parts light up in steps (the How We Work solar system). Computed on the
+   * final aligned positions.
    */
   annotate?: (positions: Float32Array) => Float32Array;
 }
@@ -92,7 +92,8 @@ export const FORMS: Record<FormName, FormDefinition> = {
   earth: { generate: generateEarthParticles },
   // Live flowing form: the shader moves these particles (torusFlow).
   torusFlow: { generate: generateTorusFlowParticles },
-  process: { generate: generateProcessParticles, annotate: annotateProcessStages },
+  // Live form: the shader places planets, rings and trails (solarSystem).
+  solarSystem: { generate: generateSolarSystemParticles, annotate: annotateSolarSystem },
 };
 
 /**
