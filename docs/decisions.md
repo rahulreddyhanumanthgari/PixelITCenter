@@ -697,7 +697,9 @@ cards are the reference.
 - **Light sky** (`LightSky`). The counterpart of the dark star field, drawn
   behind the particles in light mode only as a full-screen shader quad:
   - a cool-to-warm gradient that darkens toward the edges;
-  - a fine dot grid (26px) of faint ink dots, stronger toward the rim.
+  - faint pale-blue and peach nebula clouds;
+  - three layers of procedural ink stars (slate, blue and a few warm; a few
+    larger with a halo) that twinkle and drift slowly with parallax.
 
   Like black on dark, the tint gives the particle colours contrast.
 

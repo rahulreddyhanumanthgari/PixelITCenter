@@ -346,7 +346,7 @@ export default function JourneyScene() {
         bloom: { intensity: tier.bloom.hero, ...JOURNEY_BLOOM },
       }}
     >
-      {light && <LightSky pixelRatio={dpr} />}
+      {light && <LightSky pixelRatio={dpr} reducedMotion={reducedMotion} />}
       <StarField
         count={tier.starCount}
         pixelRatio={dpr}
