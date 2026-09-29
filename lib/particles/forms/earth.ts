@@ -17,7 +17,7 @@ export const EARTH = {
   shell: 2.35,
   /** Radius separating Earth (+ haze) from the shell. */
   split: 2.1,
-  shares: { land: 0.58, coast: 0.17, ocean: 0.03, haze: 0.05 }, // remainder: shell
+  shares: { land: 0.54, coast: 0.17, ocean: 0.08, haze: 0.05 }, // remainder: shell
 } as const;
 
 const TAU = Math.PI * 2;

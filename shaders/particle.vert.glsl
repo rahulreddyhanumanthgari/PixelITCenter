@@ -512,21 +512,26 @@ void main() {
     float warm = smoothstep(0.1, 0.9, sin(sp.x * 2.3 + sp.y * 1.7) * 0.5 + sin(sp.z * 3.1 - sp.y * 2.4) * 0.5);
     vec3 ec;
     float lvl;
+    // Strong, saturated colour: orange land on a rich blue planet. Levels
+    // stay moderate so dense (additive) regions keep their hue instead of
+    // washing out to white.
     if (shell > 0.5) {
-      ec = mix(blueE, deepE, aRandom);
-      if (aRandom > 0.94) ec = aRandom > 0.975 ? orangeE : whiteW;
-      lvl = 0.9;
+      ec = mix(blueE, deepE, aRandom * 0.6);
+      if (aRandom > 0.96) ec = aRandom > 0.98 ? orangeE : cream;
+      lvl = 1.0;
     } else if (rn < 0.994) {
-      ec = deepE; lvl = 0.9;                                   // ocean
+      ec = mix(blueE, deepE, aRandom * 0.4); lvl = 1.5;         // ocean
     } else if (rn < 1.005) {
-      ec = mix(mix(whiteW, cream, aRandom), orangeE, warm * 0.75); lvl = 1.0;   // land
+      ec = mix(orangeE, redE, (1.0 - warm) * 0.55);             // land
+      if (aRandom > 0.82) ec = cream;
+      lvl = 1.15;
     } else if (rn < 1.015) {
-      ec = mix(orangeE, redE, aRandom * 0.7); lvl = 1.5;       // coastline
+      ec = mix(redE, orangeE, aRandom * 0.4); lvl = 1.35;       // coastline
     } else {
-      ec = mix(blueE, whiteW, aRandom * 0.3); lvl = 0.55;       // haze
+      ec = mix(blueE, deepE, aRandom * 0.5); lvl = 0.7;         // haze
     }
-    if (aRandom > 0.985) { ec = whiteW; lvl *= 1.6; }          // highlights
-    ec *= lvl * 1.25 * side * depthFade;
+    if (aRandom > 0.993) { ec = whiteW; lvl *= 1.5; }          // highlights
+    ec *= lvl * 1.35 * side * depthFade;
     vec2 nd3 = gl_Position.xy / gl_Position.w;
     vec2 d3 = abs(nd3 - uProtect3.xy) / max(uProtect3.zw, vec2(1e-3));
     float box3 = pow(pow(d3.x, 4.0) + pow(d3.y, 4.0), 0.25);

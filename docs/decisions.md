@@ -217,9 +217,9 @@ The Staffing form (`earth`) is a dense particle Earth with real continents.
 
   | Layer | Share | Radius |
   |---|---|---|
-  | Land (area-weighted) | 58% | 0.998–1.002 |
+  | Land (area-weighted) | 54% | 0.998–1.002 |
   | Coastline | 17% | 1.008 |
-  | Ocean | 3% | 0.99 |
+  | Ocean | 8% | 0.99 |
   | Haze | 5% | 1.02–1.18 |
   | Dotted shell of latitude rows | Remainder | 2.35 |
 
@@ -227,13 +227,14 @@ The Staffing form (`earth`) is a dense particle Earth with real continents.
 
   | Layer | Colour |
   |---|---|
-  | Land | Warm white / cream, blending to orange in smooth regions |
-  | Coast | Orange to red-orange, brighter |
-  | Ocean | Deep blue |
-  | Haze | Blue |
+  | Land | Saturated orange, deepening to red-orange in regions; about 18% cream |
+  | Coast | Red-orange, brighter |
+  | Ocean | Rich blue |
+  | Haze | Blue to deep blue |
   | Shell | Blue to deep blue, with a few white/orange sparks |
 
-  Plus rare white highlights.
+  Plus rare white highlights. Levels stay moderate so dense regions keep
+  their hue instead of adding up to white.
 - **Motion** (`earthSpin()`, live kind 3).
   - *Earth:* turns about its own axis at 0.06 rad/s (about 105 s a turn),
     starting on the Atlantic.
