@@ -456,7 +456,7 @@ void main() {
                  + step(1.5, uFlowTo) * step(uFlowTo, 2.5) * eIn;
   float earthNear = step(2.5, uFlowFrom) * (1.0 - eOut) + step(2.5, uFlowTo) * eIn;
   float earthFace = step(2.5, uFlowFrom) * (1.0 - eOut) > 0.0 ? faceA : faceB;
-  float size = uSize * aScale * stageSize * heroSize * mix(1.0, 2.8, ringNear)
+  float size = uSize * aScale * stageSize * heroSize * mix(1.0, 4.2, ringNear)
              * mix(1.0, mix(0.7, 1.12, earthFace), earthNear);
   gl_PointSize = clamp(size * uPixelRatio / depth, 1.0, 28.0 * uPixelRatio);
 
