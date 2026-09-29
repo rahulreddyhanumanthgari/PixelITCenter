@@ -6,7 +6,7 @@ export function Testimonials() {
   return (
     <section aria-labelledby="testimonials-title" className="border-t border-border py-24 sm:py-32">
       <Container>
-        <SectionHeader id="testimonials-title" eyebrow={testimonials.eyebrow} title={testimonials.title} />
+        <SectionHeader id="testimonials-title" title={testimonials.title} />
         <ul className="mt-14 grid gap-[var(--card-gap)] md:grid-cols-3">
           {testimonials.items.map((t, i) => (
             <li key={i} data-reveal="3">

@@ -146,7 +146,6 @@ export const about = {
 
 // Placeholder — replace with approved client testimonials (plan phase 0A).
 export const testimonials = {
-  eyebrow: "Proof points",
   title: "What *clients* say",
   // From the live site (pixelitcenter.com, "Pixel IT Center Corporation
   // Testimonials"), word for word. It lists first names only.

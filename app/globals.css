@@ -95,7 +95,8 @@
   --text-subheading: 1.0625rem;
   --text-body: clamp(1rem, 0.96rem + 0.2vw, 1.125rem);
   --text-small: 0.9375rem;
-  --text-eyebrow: 0.75rem;
+  --text-eyebrow: clamp(0.875rem, 0.8rem + 0.3vw, 1.0625rem);
+  --text-label: 0.75rem;
 
   /* Cards — one system for the whole site (see .card below). Change a
      token here and every card follows. */
@@ -205,13 +206,13 @@
     font-size: var(--text-eyebrow);
     font-weight: 600;
     line-height: 1.3;
-    letter-spacing: 0.16em;
+    letter-spacing: 0.14em;
     text-transform: uppercase;
     color: var(--accent-orange);
   }
   /* Quiet uppercase labels (footer columns, stat labels, the client strip). */
   .type-label {
-    font-size: var(--text-eyebrow);
+    font-size: var(--text-label);
     font-weight: 500;
     line-height: 1.3;
     letter-spacing: 0.14em;

@@ -532,8 +532,9 @@ and restrained so it frames them rather than competing with them.
   - `type-body`: line-height 1.65, secondary grey, max 62ch, pretty
     wrapping.
   - `type-body-sm`: card descriptions, muted.
-  - `type-eyebrow`: 12px, 600, tracking 0.16em, orange.
-  - `type-label`: quiet uppercase labels.
+  - `type-eyebrow`: 14→17px (fluid), 600, tracking 0.14em, orange. The
+    Proof Points section has none.
+  - `type-label`: quiet 12px uppercase labels.
   - `type-nav`: 15px, 500.
 
   Sizes are fluid `clamp()` tokens (`--text-display-xl` …), so tablets and

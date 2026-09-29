@@ -2,7 +2,8 @@ import { cn } from "@/lib/utils";
 import { HeadingText } from "@/components/ui/heading-text";
 
 interface SectionHeaderProps {
-  eyebrow: string;
+  /** Section label above the heading; omit for none. */
+  eyebrow?: string;
   /** Supports `*important word*` and ` | ` preferred line breaks (HeadingText). */
   title: string;
   body?: string;
@@ -20,9 +21,11 @@ export function SectionHeader({ eyebrow, title, body, id, className, revealExit 
   const pinned = revealExit ? undefined : "";
   return (
     <div className={cn("max-w-3xl", className)}>
-      <p data-reveal="0" data-reveal-static={pinned} className="type-eyebrow mb-4">
-        {eyebrow}
-      </p>
+      {eyebrow && (
+        <p data-reveal="0" data-reveal-static={pinned} className="type-eyebrow mb-4">
+          {eyebrow}
+        </p>
+      )}
       <h2 data-reveal="1" data-reveal-static={pinned} id={id} className="type-display-lg">
         <HeadingText text={title} />
       </h2>
