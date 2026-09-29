@@ -19,13 +19,13 @@ export function Hero() {
       className="relative flex min-h-[100svh] items-center justify-center overflow-hidden"
     >
       <div className="mx-auto w-full max-w-7xl px-4 pb-24 pt-28 sm:px-6 lg:px-8">
-        <div data-hero-content className="mx-auto flex max-w-5xl flex-col items-center text-center">
+        <div data-hero-content className="mx-auto flex max-w-6xl flex-col items-center text-center">
           {/* Four lines on phones; two balanced lines from md up. Each word is
               a [data-word] span for the word-by-word entrance. */}
           <h1
             id="hero-title"
             data-reveal="1"
-            className="type-display-xl text-[clamp(2.5rem,11.5vw,4rem)] md:text-[clamp(3rem,min(6.2vw,10.5svh),5.25rem)]"
+            className="type-display-xl hero-title text-[clamp(2.75rem,13vw,4.5rem)] md:text-[clamp(3.5rem,min(7.4vw,12svh),6.5rem)]"
           >
             {[hero.headline.slice(0, 2), hero.headline.slice(2)].map((pair, row) => (
               <span key={row} className="block md:whitespace-nowrap">
@@ -51,7 +51,7 @@ export function Hero() {
 
           <p
             data-reveal="2"
-            className="type-body mx-auto mt-8 max-w-2xl text-center text-[clamp(1.125rem,1rem+0.6vw,1.375rem)] text-balance"
+            className="type-body mx-auto mt-8 max-w-xl text-center text-balance"
           >
             <RichText text={hero.description} strongClassName="font-semibold text-brand-orange" />
           </p>

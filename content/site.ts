@@ -40,7 +40,7 @@ export const hero = {
   accentWords: ["Technology", "Talent"] as readonly string[],
   /** **Bold** segments render in the orange accent. */
   description:
-    "We help companies **modernize their technology** and **build stronger teams**, from cloud and data to the specialists who deliver it.",
+    "We help organizations **modernize their technology** and **build high‑performing teams**, backed by expertise in cloud, data and specialized IT talent.",
   primaryCta: { label: "Talk to our team", href: "#contact" },
   secondaryCta: { label: "Explore services", href: "#services" },
 } as const;
