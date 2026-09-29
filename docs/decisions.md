@@ -309,6 +309,9 @@ centred Why content, which sits inside its opening.
 
 - **Layout.** The content is centred (`storySectionClass("center")`, with
   `STORY_SIDES[3] = 0.5`). The pinned `[data-process-content]` block holds:
+  - the heading (`reveal={false}`: the scroll choreography measures where an
+    element leaves the screen, which a pinned heading never does, so it
+    would fade while still in view);
   - the 01–04 index (the orange progress line is removed);
   - one step panel at a time.
 

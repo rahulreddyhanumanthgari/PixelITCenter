@@ -7,23 +7,26 @@ import { storySectionClass } from "./story-section";
 /**
  * How We Work — centred content inside a particle solar system (drawn by the
  * journey layer): four planets, one per step, joined by curved trails. A
- * tall scroll track pins a compact 01–04 index above the active step; as
- * each step is reached its planet lights up (and stays lit) while the step
- * text fades in. ProcessProgress drives both from scroll.
+ * tall scroll track pins the heading and a compact 01–04 index above the
+ * active step; as each step is reached its planet lights up (and stays lit)
+ * while the step text fades in. ProcessProgress drives both from scroll.
  */
 export function Process() {
   return (
     <section data-story-section aria-labelledby="process-title" className={storySectionClass("center")}>
-      <SectionHeader id="process-title" eyebrow={process.eyebrow} title={process.title} className="mx-auto text-center" />
       <ProcessProgress />
 
-      <div data-process-track className="relative mt-10 h-[240svh] lg:h-[220vh]">
+      <div data-process-track className="relative h-[240svh] lg:h-[220vh]">
+        {/* Pinned: the heading, the step index and the active step stay in
+            place together while the steps are scrolled. */}
         <div
           data-process-content
-          className="sticky top-[calc(34svh+6rem)] mx-auto max-w-[560px] text-center lg:top-[calc(50vh-10rem)]"
+          className="sticky top-[calc(34svh+5rem)] mx-auto max-w-[720px] text-center lg:top-[calc(50vh-15rem)]"
         >
+          <SectionHeader id="process-title" eyebrow={process.eyebrow} title={process.title} className="mx-auto text-center" reveal={false} />
+
           {/* Index: all four steps, always visible. */}
-          <ol className="grid grid-cols-4 gap-2">
+          <ol className="mx-auto mt-6 grid max-w-[560px] grid-cols-4 gap-2 lg:mt-10">
             {process.steps.map((step, i) => (
               <li
                 key={step.title}
@@ -46,7 +49,7 @@ export function Process() {
           </ol>
 
           {/* Active step: one panel at a time, stacked in one grid cell. */}
-          <div className="mt-10 grid">
+          <div className="mt-6 grid lg:mt-10">
             {process.steps.map((step, i) => (
               <div key={step.title} data-process-panel aria-hidden={i !== 0} className="[grid-area:1/1]">
                 <p data-panel-part className="font-display text-6xl font-semibold text-brand-orange sm:text-7xl">
