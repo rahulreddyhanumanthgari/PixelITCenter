@@ -895,15 +895,16 @@ void main() {
   // block): ringColor bands as pure hues, brightness from the glow but
   // capped at 1.25 so tone mapping never washes it white; a few cream
   // highlights.
-  // Hero balance: mostly white and blue, orange only as the thin hot edge
-  // of the disc and a few sparks; plenty of cream-white through the disc.
-  vec3 heroHue = mix(vec3(1.0, 0.32, 0.05), vec3(1.0, 0.9, 0.8), smoothstep(0.06, 0.2, heroLane));
-  heroHue = mix(heroHue, vec3(0.07, 0.26, 1.0), smoothstep(0.24, 0.5, heroLane));
+  // Hero colours: a hot orange inner edge warming through gold to cream,
+  // then blue to deep blue outward; some white sparkle through the disc.
+  vec3 heroHue = mix(vec3(1.0, 0.32, 0.05), vec3(1.0, 0.62, 0.16), smoothstep(0.08, 0.2, heroLane));
+  heroHue = mix(heroHue, vec3(1.0, 0.88, 0.7), smoothstep(0.22, 0.34, heroLane));
+  heroHue = mix(heroHue, vec3(0.07, 0.26, 1.0), smoothstep(0.36, 0.6, heroLane));
   heroHue = mix(heroHue, vec3(0.04, 0.1, 0.62), smoothstep(0.82, 1.0, heroLane));
-  if (fract(aRandom * 29.0) > 0.86) heroHue = vec3(0.92, 0.95, 1.0);
+  if (fract(aRandom * 29.0) > 0.9) heroHue = vec3(0.92, 0.95, 1.0);
   if (fract(aRandom * 13.0) > 0.97) heroHue = vec3(1.0, 0.86, 0.66);
   heroHue /= max(max(heroHue.r, heroHue.g), max(heroHue.b, 1e-3));
-  float heroBright = min(0.25 + 0.35 * heroGlow, 1.25);
+  float heroBright = min(0.32 + 0.42 * heroGlow, 1.3);
   vColor = mix(vColor, heroHue * heroBright * twinkle * heroVisible * protect, heroW);
   vAlpha *= mix(1.0, heroVisible, heroW);
 }

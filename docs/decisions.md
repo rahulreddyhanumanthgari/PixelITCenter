@@ -529,8 +529,9 @@ and restrained so it frames them rather than competing with them.
 
   There is no shadow or glow. The black hole's calm centre (a larger
   `HERO_FIELD.voidRadius`) frames the content instead. Hero particles are
-  mostly white and blue, with orange only on the disc's thin hot edge.
-  The intro has one orange phrase. The entrance is line by line.
+  an orange hot edge warming through gold to cream, then blue outward, a little brighter than the story forms (`heroBright` ≤ 1.3); the calm centre is `voidRadius` 0.3 of the width (0.76 max on phones).
+  The intro has one orange phrase, which never breaks across lines. The
+  statement is one line from md up. The entrance is line by line.
 - **No long dashes** (—) in visible copy; they read as machine-written.
   Hyphens inside words (long-term, right-fit) are fine.
 - **Classes** (`app/globals.css`, `@layer components`). Use these instead of

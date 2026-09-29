@@ -32,18 +32,17 @@ export function Hero() {
               <span className="hidden sm:inline"> </span>
               <span className="highlight">&amp;</span> {hero.kicker[1]}
             </span>
-            {/* Primary statement: always its own two lines. */}
+            {/* Primary statement: one line from md up; two on smaller screens. */}
             <span data-reveal="1" className="hero-statement mt-5 block sm:mt-6">
-              {hero.statement.map((line) => (
-                <span key={line} className="block">
-                  {line}
-                </span>
-              ))}
+              {hero.statement[0]}
+              <br className="md:hidden" />
+              <span className="hidden md:inline"> </span>
+              {hero.statement[1]}
             </span>
           </h1>
 
-          <p data-reveal="2" className="type-body mx-auto mt-8 max-w-[36rem] text-center text-balance">
-            <RichText text={hero.description} strongClassName="font-medium text-brand-orange" />
+          <p data-reveal="2" className="type-body mx-auto mt-8 max-w-[36rem] text-center text-balance md:max-w-[46rem]">
+            <RichText text={hero.description} strongClassName="font-medium whitespace-nowrap text-brand-orange" />
           </p>
 
           <div data-reveal="3" className="mt-12 flex flex-wrap items-center justify-center gap-3">

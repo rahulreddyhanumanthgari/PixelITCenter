@@ -170,10 +170,17 @@
   }
   .hero-statement {
     font-size: clamp(3rem, 1.2rem + 7.2vw, min(7rem, 12.5svh));
+    white-space: nowrap;
     font-weight: 700;
     line-height: 0.92;
     letter-spacing: -0.03em;
     color: #ffffff;
+  }
+  /* One line from md up, so a little smaller there. */
+  @media (min-width: 768px) {
+    .hero-statement {
+      font-size: clamp(2.75rem, 5.4vw, min(5.75rem, 11svh));
+    }
   }
   /* Level 2 — section headings. */
   .type-display-lg {
