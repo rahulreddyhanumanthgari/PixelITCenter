@@ -20,7 +20,7 @@ interface SectionHeaderProps {
 export function SectionHeader({ eyebrow, title, body, id, className, revealExit = true }: SectionHeaderProps) {
   const pinned = revealExit ? undefined : "";
   return (
-    <div className={cn("max-w-3xl", className)}>
+    <div className={cn("mx-auto max-w-3xl text-center", className)}>
       {eyebrow && (
         <p data-reveal="0" data-reveal-static={pinned} className="type-eyebrow mb-4">
           {eyebrow}
@@ -30,7 +30,7 @@ export function SectionHeader({ eyebrow, title, body, id, className, revealExit 
         <HeadingText text={title} />
       </h2>
       {body && (
-        <p data-reveal="2" data-reveal-static={pinned} className="type-body mt-6 [.text-center_&]:mx-auto">
+        <p data-reveal="2" data-reveal-static={pinned} className="type-body mx-auto mt-6">
           {body}
         </p>
       )}

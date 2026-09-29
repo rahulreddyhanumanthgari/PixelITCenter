@@ -558,12 +558,14 @@ and restrained so it frames them rather than competing with them.
     word enters white; its accent colour resolves about 150 ms after it
     lands.
   - *Description, then cards:* delayed fade + rise.
-  - *Reverse:* scrolling back above a section reverses it, so it replays.
+  - *Once:* each entrance plays once, then the content stays. Scrolling
+    back up never hides or replays it (an earlier reverse-and-replay read as
+    content vanishing).
   - *Never:* letter-by-letter, typewriter, bounce, glitch or continuous
     motion.
-  - *Exit:* the old subtle scrubbed exit (drift up and dim) is kept.
+  - *Exit:* none. The old scrubbed exit (drift up and dim) was removed.
   - *Pinned headers* (`revealExit={false}`, the How We Work heading) take
-    their entrance from their section and skip the exit.
+    their entrance from their section.
   - *Reduced motion:* a plain fade.
 - **How We Work steps.** Waiting steps are muted. The active step has an
   orange number and a white title. Completed steps settle to secondary grey

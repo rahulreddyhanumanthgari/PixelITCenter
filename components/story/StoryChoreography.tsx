@@ -15,11 +15,10 @@ import { gsap } from "@/lib/gsap";
  *   stagger, rising 20px and sharpening from a 4px blur; a highlighted word
  *   enters with the rest, then its accent colour resolves ~150ms later
  * - description, then cards: delayed fade + rise
- * Scrolling back above the section reverses it, so it plays again next time.
- *
- * As content scrolls away it drifts up a little and dims (scrubbed). Items
- * marked `data-reveal-static` (a pinned header) skip that exit and take
- * their entrance from their section instead of their own position.
+ * Each entrance plays once; after that the content stays put — scrolling
+ * back up (or down again) never hides or replays it. Items marked
+ * `data-reveal-static` (a pinned header) take their entrance from their
+ * section instead of their own position.
  * Reduced motion: a plain fade, no movement, blur or accent delay.
  * Renders nothing itself.
  */
@@ -27,7 +26,7 @@ const ENTER = { start: "top 88%", pinnedStart: "top 70%" } as const;
 /** Entrance delay by order (s), so eyebrow → heading → body → cards read in sequence. */
 const DELAY = [0, 0.08, 0.3, 0.4, 0.46, 0.52] as const;
 const WORD = { rise: 20, blur: 4, duration: 0.8, stagger: 0.045, accentLag: 0.15 } as const;
-const MOVE = { eyebrow: 10, block: 16, exit: 16 } as const;
+const MOVE = { eyebrow: 10, block: 16 } as const;
 
 export function StoryChoreography() {
   useEffect(() => {
@@ -40,17 +39,9 @@ export function StoryChoreography() {
     const mm = gsap.matchMedia();
 
     mm.add(
-      {
-        columns: "(min-width: 1024px)",
-        reduce: "(prefers-reduced-motion: reduce)",
-      },
+      { reduce: "(prefers-reduced-motion: reduce)" },
       (context) => {
-        const { columns, reduce } = context.conditions as { columns: boolean; reduce: boolean };
-        // Phones/tablets: story content disappears under the pinned band
-        // (~41% of the screen), so it exits before reaching it. Outside the
-        // story there is no band, so everything else uses the normal exit.
-        const normalExit = { start: "bottom 22%", end: "bottom 2%" };
-        const bandExit = { start: "bottom 62%", end: "bottom 44%" };
+        const { reduce } = context.conditions as { reduce: boolean };
 
         els.forEach((el) => {
           const order = Number(el.dataset.reveal) || 0;
@@ -63,7 +54,7 @@ export function StoryChoreography() {
             scrollTrigger: {
               trigger,
               start: pinned ? ENTER.pinnedStart : ENTER.start,
-              toggleActions: "play none none reverse",
+              once: true,
             },
           });
 
@@ -99,15 +90,6 @@ export function StoryChoreography() {
             tl.fromTo(el, { opacity: 0, y: rise }, { opacity: 1, y: 0, duration: 0.7, ease: "power3.out" }, delay);
           }
 
-          if (pinned) return;
-          const exit = columns || !el.closest("[data-story]") ? normalExit : bandExit;
-          gsap.to(el, {
-            opacity: 0.12,
-            y: -MOVE.exit,
-            ease: "power1.in",
-            immediateRender: false,
-            scrollTrigger: { trigger: el, start: exit.start, end: exit.end, scrub: 0.6 },
-          });
         });
       },
     );

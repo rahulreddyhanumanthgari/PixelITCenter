@@ -23,11 +23,8 @@ export function Services() {
             <div key={group.name}>
               <div
                 data-reveal="3"
-                className="flex items-baseline justify-between gap-4 border-b border-border pb-4"
+                className="flex items-center justify-center gap-3 border-b border-border pb-4"
               >
-                <h3 className="type-heading">
-                  {group.name}
-                </h3>
                 <span
                   aria-hidden="true"
                   className={
@@ -36,8 +33,11 @@ export function Services() {
                       : "size-2 rounded-full bg-brand-orange"
                   }
                 />
+                <h3 className="type-heading">
+                  {group.name}
+                </h3>
               </div>
-              <p data-reveal="4" className="type-body mt-4">
+              <p data-reveal="4" className="type-body mx-auto mt-4 text-center">
                 {group.summary}
               </p>
               <ul className="mt-6 grid gap-[var(--card-gap)] sm:grid-cols-2">
