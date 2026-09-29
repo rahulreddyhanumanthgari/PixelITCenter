@@ -4,8 +4,8 @@ import { cn } from "@/lib/utils";
 import { Container, SectionHeader } from "./SectionHeader";
 
 /**
- * About Us — centred content inside a gravitational particle vortex. The
- * vortex is drawn by the page-wide particle layer, centred on the empty
+ * About Us — centred content framed by a particle spiral galaxy. The
+ * galaxy is drawn by the page-wide particle layer, centred on the empty
  * [data-vortex-anchor]; particles behind [data-about-content] are dimmed so
  * the text stays calm. This section is transparent. Content enters with the
  * same scroll choreography as the story sections ([data-reveal]).

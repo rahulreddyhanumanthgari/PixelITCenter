@@ -133,7 +133,7 @@ export interface JourneyTier {
   bloom: { hero: number; story: number };
   /** Story scale relative to the pinned story column/band height. */
   storyScale: number;
-  /** Particles in the About Us vortex. */
+  /** Particles in the About Us galaxy (dense enough for the spiral arms to read). */
   vortexCount: number;
 }
 
@@ -145,7 +145,7 @@ const TIERS: Record<DeviceTier, JourneyTier> = {
     scatter: 1,
     bloom: { hero: 0.85, story: 0.55 },
     storyScale: 0.8,
-    vortexCount: 26_000,
+    vortexCount: 40_000,
   },
   tablet: {
     particleCount: 34_000,
@@ -154,7 +154,7 @@ const TIERS: Record<DeviceTier, JourneyTier> = {
     scatter: 0.85,
     bloom: { hero: 0.7, story: 0.45 },
     storyScale: 0.72,
-    vortexCount: 16_000,
+    vortexCount: 24_000,
   },
   mobile: {
     particleCount: 18_000,
@@ -163,7 +163,7 @@ const TIERS: Record<DeviceTier, JourneyTier> = {
     scatter: 0.7,
     bloom: { hero: 0.5, story: 0.35 },
     storyScale: 1.1,
-    vortexCount: 10_000,
+    vortexCount: 14_000,
   },
 };
 

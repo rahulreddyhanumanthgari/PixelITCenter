@@ -157,40 +157,40 @@ or the morph.
 
   Everything is scrubbed and reverses. Reduced motion gets a fade-in only.
 
-### About Us: gravity (same particles, different physics)
+### About Us: particle spiral galaxy
 
-About's content is centred. Behind it, the journey's own particle language
-enters a gravity well. The rule is: same appearance, different movement.
+About's content is centred and framed by a spiral galaxy seen almost face-on
+(`VORTEX_CONFIG.tilt` ≈ [1.38, 0, 0.16]), after the swirling-galaxy
+reference. Code: `lib/particles/vortex.ts`, `shaders/vortex.vert.glsl`,
+`components/vortex/ParticleVortex.tsx`.
 
-- **Same appearance.** The vortex particles
-  (`lib/particles/vortex.ts`, `shaders/vortex.vert.glsl`,
-  `components/vortex/ParticleVortex.tsx`) use:
-  - the journey's rocket colour mix (`colorsForSequence("rocket", …)`);
-  - the same size spread;
-  - the same point size (`STORY_LOOK.particleSize`);
-  - the same depth-fade, twinkle and alpha rules as `particle.vert.glsl`;
-  - the shared `particle.frag.glsl`, canvas, camera and bloom.
+- **Shape.** Everything is computed in the shader from time:
+  - *Arms (70%):* two main arms, plus two fainter ones between them. Each is a
+    trailing log spiral (`WIND` 2.7 radians per e-fold of radius), about
+    1¼ turns.
+  - *Movement along the arms:* each particle falls from the rim to the core
+    along its arm over 40–100 s, so the arms keep their shape while the
+    material swirls inward. It is consumed at the core, then starts again.
+  - *Streaks:* most arm particles sit on seven fine strands across the arm;
+    the rest are a soft diffuse glow. The arms widen outward.
+  - *Core (12%):* a dense, fast, slightly wound disc.
+  - *Field (18%):* sparse points drifting between the arms.
+  - *Rotation:* the whole pattern turns slowly (`SPIN`).
+- **Colours.** The site palette as pure hues, in radial bands:
+  - cream core;
+  - orange, then red-orange arms;
+  - blue to deep blue rim;
+  - a few cream sparkles.
 
-  `VORTEX_CONFIG` holds only layout and motion tunables.
-- **Movement.** Every particle has its own radius, speed (Kepler-like),
-  phase and a slightly tilted orbit, so together they form one overlapping 3D
-  field with no designed bands.
-  - *Infallers (50%):* arrive from deep space behind the field and join the
-    flow. They then spiral in, falling slowly and then fast, with a curve
-    that tightens. They get slightly larger and brighter, then shrink and
-    vanish at the centre.
-  - *Continuous:* the cycle wraps, so the flow never empties.
-- **The space itself bends.** The vortex reports its gravity strength and
-  centre each frame (`onGravity` → `Atmosphere`). The shared star field then
-  swirls around that centre, faster nearer it, and is drawn slightly inward.
-  - *Strength:* scroll entrance × how centred About is on screen, so it
-    eases in and relaxes as About leaves.
-  - *No jumps:* the swirl angle only accumulates while gravity acts.
-- **Void.** Nothing is drawn at the centre. It is dark because particles are
-  consumed there.
+  There are no per-particle rocket colours any more.
+- **Kept from before:**
+  - the scroll entrance (particles settle in from depth);
+  - the pointer tilt and ripple;
+  - star-field gravity (`onGravity` → `Atmosphere`);
+  - the same point size, depth fade and twinkle, and `particle.frag.glsl`.
 - **Readability.** Particles projected behind `[data-about-content]` drop to
   30% brightness on wide screens and 42% on narrow ones.
-- **Counts.** 26k desktop / 16k tablet / 10k mobile.
+- **Counts.** 40k desktop / 24k tablet / 14k mobile, so the arms read dense.
 
 ### Staffing & Consulting: particle Earth
 
@@ -369,7 +369,7 @@ centred Why content, which sits inside its opening.
 
 | File | Role |
 |---|---|
-| `generateRocketParticles.ts` | No longer shown. Its per-part colouring is still the source of the site's particle palette (`heroField.colorize` and the About vortex) |
+| `generateRocketParticles.ts` | No longer shown. Its per-part colouring is still the source of the site's particle palette (`heroField.colorize`) |
 | `forms/*.ts` | `ringStream` (Services: huge off-screen-left ring of lanes; the shader flows and colours it), `torusFlow` (Why: thick dotted torus lattice; the shader flows it), `earth` (Staffing: real continents from `landMask.ts`, coastlines, haze, dotted shell), `solarSystem` (How We Work: planets, rings, trails, dust; the shader places them) |
 | `geometryToParticles.ts` | `geometryToParticlePositions` (area-weighted surface sampling, seeded), `geometryEdgesToParticlePositions` (points along triangle edges → wireframe look), merge/transform helpers |
 | `generateTarget.ts` | `FORMS` registry, `alignByHeight`, colours (`colorsForSequence`, `monochromeColors`) |

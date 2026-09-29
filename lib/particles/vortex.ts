@@ -1,76 +1,77 @@
 import * as THREE from "three";
-import { colorsForSequence, generateForm } from "./generateTarget";
 import { mulberry32 } from "./random";
 
 /**
- * About Us — the same particle language, under gravity. These particles are
- * built exactly like the journey particles (same rocket colour mix, same
- * size spread); only their motion differs. Positions are computed in
- * shaders/vortex.vert.glsl from time:
- * - orbiters circle an invisible centre on their own tilted orbits
- * - infallers arrive from deep space, join the flow, spiral inward and are
- *   consumed at the centre, then arrive again (the life cycle wraps)
+ * About Us — a spiral galaxy seen almost face-on, framing the centred
+ * content: a bright core, two main arms (and two fainter ones) winding out
+ * from it, and a sparse field between them. Positions and colours are
+ * computed in shaders/vortex.vert.glsl from time:
+ * - arm particles stream inward along their arm and are consumed at the core,
+ *   then start again at the rim (the life cycle wraps); fine strands across
+ *   each arm give the streaky look
+ * - core particles orbit fast in a dense, bright disc
+ * - field particles drift slowly between the arms.
+ *
+ * Keep VORTEX.outer in sync with OUTER in vortex.vert.glsl.
  */
 export const VORTEX = {
   /** Outer radius of the field (local units). */
   outer: 3.9,
-  /** Share of particles that fall into the centre. */
-  infallShare: 0.5,
+  /** Particle shares; the remainder is the sparse field. */
+  shares: { arms: 0.7, core: 0.12 },
+  /** Share of arm particles on the two fainter secondary arms. */
+  secondary: 0.28,
 } as const;
+
+const KIND = { arm: 0, core: 1, field: 2 } as const;
 
 export function createVortexGeometry(count: number, seed = 57): THREE.BufferGeometry {
   const rand = mulberry32(seed);
-  const r0 = new Float32Array(count);
-  const angle = new Float32Array(count);
-  const omega = new Float32Array(count);
+  const kind = new Float32Array(count);
+  const arm = new Float32Array(count);
+  const lane = new Float32Array(count);
   const rate = new Float32Array(count);
   const phase = new Float32Array(count);
   const height = new Float32Array(count);
-  const incline = new Float32Array(count);
-  const node = new Float32Array(count);
   const randoms = new Float32Array(count);
   const scales = new Float32Array(count);
   const gauss = () => (rand() + rand() + rand() - 1.5) / 1.5;
+  const arms = Math.floor(count * VORTEX.shares.arms);
+  const core = Math.floor(count * VORTEX.shares.core);
 
   for (let i = 0; i < count; i++) {
-    const infall = rand() < VORTEX.infallShare;
-    // A continuous spread of orbits (no designed bands), thinning toward the
-    // centre; infallers start at the rim.
-    const r = infall ? 3.1 + rand() * 0.8 : 1.0 + Math.pow(rand(), 0.6) * 2.9;
-    r0[i] = r;
-    angle[i] = rand() * Math.PI * 2;
-    // Kepler-ish: inner orbits turn faster; each particle its own speed.
-    omega[i] = 0.2 * Math.pow(r / 2, -1.5) * (0.75 + rand() * 0.5);
-    rate[i] = infall ? 1 / (35 + rand() * 55) : 0;
+    const k = i < arms ? KIND.arm : i < arms + core ? KIND.core : KIND.field;
+    kind[i] = k;
+    if (k === KIND.arm) {
+      // Two main arms half a turn apart; the fainter pair sits between them.
+      const secondary = rand() < VORTEX.secondary;
+      arm[i] = (rand() < 0.5 ? 0 : Math.PI) + (secondary ? Math.PI / 2 + 0.35 : 0);
+      // Fine strands (the streaks) plus a softer diffuse share.
+      lane[i] = rand() < 0.72 ? (Math.floor(rand() * 7) - 3) / 3 + gauss() * 0.06 : gauss() * 1.6;
+      if (secondary) lane[i] *= 1.3;
+      // Each particle takes 40–100 s to fall from the rim to the core.
+      rate[i] = 1 / (40 + rand() * 60);
+    } else {
+      arm[i] = rand() * Math.PI * 2;
+    }
     phase[i] = rand();
-    height[i] = gauss() * (rand() < 0.1 ? 0.8 : 0.2) * (r / VORTEX.outer + 0.3);
-    // Every orbit slightly tilted its own way → one overlapping 3D field.
-    incline[i] = gauss() * 0.22;
-    node[i] = rand() * Math.PI * 2;
+    height[i] = gauss() * (k === KIND.core ? 0.04 : 0.08);
     randoms[i] = rand();
     // Same size spread as the journey particles (MorphController).
     const s = rand();
     scales[i] = s > 0.985 ? 1.8 + rand() * 0.8 : 0.45 + s * 0.75;
   }
 
-  // Same colours as the journey particles: the rocket colour mix, sampled
-  // the same way. Order doesn't matter — every attribute above is random
-  // per particle.
-  const colors = colorsForSequence("rocket", generateForm("rocket", count, seed));
-
   const g = new THREE.BufferGeometry();
   // `position` is unused by the shader but lets three compute bounds.
   g.setAttribute("position", new THREE.BufferAttribute(new Float32Array(count * 3), 3));
-  g.setAttribute("aR0", new THREE.BufferAttribute(r0, 1));
-  g.setAttribute("aAngle", new THREE.BufferAttribute(angle, 1));
-  g.setAttribute("aOmega", new THREE.BufferAttribute(omega, 1));
+  g.setAttribute("aKind", new THREE.BufferAttribute(kind, 1));
+  g.setAttribute("aArm", new THREE.BufferAttribute(arm, 1));
+  g.setAttribute("aLane", new THREE.BufferAttribute(lane, 1));
   g.setAttribute("aRate", new THREE.BufferAttribute(rate, 1));
   g.setAttribute("aPhase", new THREE.BufferAttribute(phase, 1));
   g.setAttribute("aHeight", new THREE.BufferAttribute(height, 1));
-  g.setAttribute("aIncline", new THREE.BufferAttribute(incline, 1));
-  g.setAttribute("aNode", new THREE.BufferAttribute(node, 1));
   g.setAttribute("aRandom", new THREE.BufferAttribute(randoms, 1));
   g.setAttribute("aScale", new THREE.BufferAttribute(scales, 1));
-  g.setAttribute("aColor", new THREE.BufferAttribute(colors, 3));
   return g;
 }

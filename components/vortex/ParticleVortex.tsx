@@ -11,15 +11,16 @@ import type { PointerState } from "@/components/particles/types";
 import { STORY_LOOK } from "@/components/journey/journey-config";
 
 /**
- * Every tunable number for the About Us vortex. Deliberately no particle
- * size/colour/brightness here: those come from the journey particles, so
- * About looks like the same particles under gravity.
+ * Every tunable number for the About Us galaxy. Particle size matches the
+ * journey particles; the spiral's shape and colours live in
+ * lib/particles/vortex.ts and shaders/vortex.vert.glsl.
  */
 export const VORTEX_CONFIG = {
   /** Outer radius on screen: the larger of these fractions of width/height. */
   reach: { width: 0.52, height: 0.64 },
-  /** Disc orientation: tipped toward the viewer so the flow reads in 3D. */
-  tilt: [1.12, 0, 0.16] as const,
+  /** Disc orientation: almost face-on (π/2 would be exactly face-on), so the
+   * spiral reads like the reference while keeping a little depth. */
+  tilt: [1.38, 0, 0.16] as const,
   /** Pointer: max extra tilt (radians) and parallax (fraction of radius). */
   pointer: { tilt: 0.06, parallax: 0.02, damping: 0.03 },
   /** Brightness left behind the text (desktop / narrow screens). */
@@ -56,9 +57,10 @@ interface Layout {
 const damp = (d: number, delta: number) => 1 - Math.pow(1 - d, delta * 60);
 
 /**
- * About Us: a gravitational particle vortex drawn in the shared journey
- * canvas, centred on the section behind the centred content. Scroll brings
- * it in; it then flows on its own. The pointer adds only a slight tilt.
+ * About Us: a particle spiral galaxy drawn in the shared journey canvas,
+ * centred on the section behind the centred content. Scroll brings it in;
+ * it then turns and streams inward on its own. The pointer adds only a
+ * slight tilt.
  */
 export function ParticleVortex({
   count,
