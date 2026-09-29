@@ -256,10 +256,13 @@ const float RING_CX = -3.4;
 const float RING_IN = 2.0;
 const float RING_OUT = 4.3;
 // Display: the ring is drawn much larger than it is generated (as if far
-// closer to the camera) and centred further right, so its inner lanes come in
-// behind the start of the centred content.
+// closer to the camera). Its top-left extreme is anchored at RING_ANCHOR, so
+// changing RING_SCALE grows/shrinks it toward the right and bottom while the
+// top-left edge stays put on screen. (Anchor = where the top-left sat at
+// scale 2.4255 with the centre at x -7.6.)
 const float RING_SCALE = 2.4255;
-const float RING_VIEW_CX = -7.6;
+const float RING_TILT = 0.52;
+const vec2 RING_ANCHOR = vec2(-18.0296, 5.1823);
 
 vec3 ringStream(vec3 p, out float lane, out float arcVis) {
   float t = uTime * uMotion;
@@ -278,8 +281,11 @@ vec3 ringStream(vec3 p, out float lane, out float arcVis) {
   float y = p.y + 0.02 * sin(t * 0.8 + aRandom * 30.0);
   vec3 f = vec3(cos(a) * r, y, sin(a) * r) * RING_SCALE;
   // Tilt the ring toward the viewer so near lanes arc below, far lanes above.
-  f = rotX(f, 0.52);
-  f.x += RING_VIEW_CX;
+  f = rotX(f, RING_TILT);
+  // Place the ring so its leftmost / topmost extreme lands on the anchor.
+  float reach = RING_OUT * RING_SCALE;
+  f.x += RING_ANCHOR.x + reach;
+  f.y += RING_ANCHOR.y - sin(RING_TILT) * reach;
   return f;
 }
 
