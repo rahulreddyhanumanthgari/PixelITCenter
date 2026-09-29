@@ -258,7 +258,7 @@ const float RING_OUT = 4.3;
 // Display: the ring is drawn much larger than it is generated (as if far
 // closer to the camera) and centred further right, so its inner lanes come in
 // behind the start of the centred content.
-const float RING_SCALE = 2.205;
+const float RING_SCALE = 2.4255;
 const float RING_VIEW_CX = -7.6;
 
 vec3 ringStream(vec3 p, out float lane, out float arcVis) {

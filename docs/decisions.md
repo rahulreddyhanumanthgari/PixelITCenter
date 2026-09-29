@@ -267,7 +267,7 @@ While it is being left or arrived at (`uFlowFrom` / `uFlowTo` = 2),
 - *Visible arc only:* particles travel just the visible ±1.7 rad arc, then
   wrap back off-screen with a fade at both ends. Every particle is spent
   where it can be seen, so the stream stays dense.
-- *Scale:* the ring is drawn 2.205× its generated size (`RING_SCALE`), centred
+- *Scale:* the ring is drawn 2.4255× its generated size (`RING_SCALE`), centred
   at x −7.6 (`RING_VIEW_CX`), with points 1.3× larger. This makes it look
   close to the camera, with its inner lanes reaching in behind the start of
   the centred content.
