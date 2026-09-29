@@ -46,7 +46,7 @@ export default function HomePage() {
           <ContactCta />
           {/* The ending: space where the galaxy collapses into a small sun
               that settles on the footer's top edge, half hidden by it. */}
-          <div data-galaxy-outro aria-hidden="true" className="h-[40svh]" />
+          <div data-galaxy-outro aria-hidden="true" className="h-[20svh]" />
         </div>
       </main>
       {/* Opaque, so the galaxy never shows through the footer. */}

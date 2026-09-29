@@ -205,7 +205,7 @@ top of the planets, so the two merged.)
     the middle of the screen (About's content, the Proof Points heading). The
     cards are opaque already.
 - **Ending: a sun rising over the footer.** An empty `[data-galaxy-outro]`
-  (40svh) closes the region after Contact, so the ending plays in open space
+  (20svh, after Contact's reduced bottom padding) closes the region after Contact, so the ending plays in open space
   rather than behind the Contact card.
   - *Driver:* scrolling through the outro sets `L.galaxyCollapse` from 0 (its
     top enters the screen) to 1 (the region ends, i.e. the footer's top

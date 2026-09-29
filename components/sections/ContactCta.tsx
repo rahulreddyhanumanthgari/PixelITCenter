@@ -6,7 +6,7 @@ import { Container } from "./SectionHeader";
 
 export function ContactCta() {
   return (
-    <section id="contact" aria-labelledby="contact-title" className="scroll-mt-20 py-24 sm:py-32">
+    <section id="contact" aria-labelledby="contact-title" className="scroll-mt-20 pt-24 pb-12 sm:pt-32 sm:pb-16">
       <Container>
         <div className="relative overflow-hidden rounded-3xl border border-border bg-surface px-6 py-14 sm:px-12 sm:py-20">
           <div className="relative max-w-2xl">
