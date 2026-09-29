@@ -519,8 +519,11 @@ comes from inside React Three Fiber, not from our code.
 The particles are dynamic; the typography is deliberately stable, precise
 and restrained so it frames them rather than competing with them.
 
-- **Two families.** `--font-display` is Space Grotesk (500/600/700),
-  replacing the condensed Oswald. `--font-sans` is Inter. There are no others.
+- **Families.** `--font-display` is Space Grotesk (500/600/700),
+  replacing the condensed Oswald, and `--font-sans` is Inter. There are no
+  others (Sora was tried on the hero and rejected).
+- **No long dashes** (—) in visible copy; they read as machine-written.
+  Hyphens inside words (long-term, right-fit) are fine.
 - **Classes** (`app/globals.css`, `@layer components`). Use these instead of
   one-off heading styles.
   - `type-display-xl`: hero. 700, uppercase, line-height 0.95, tracking

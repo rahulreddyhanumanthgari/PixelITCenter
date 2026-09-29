@@ -1,6 +1,8 @@
 // All homepage copy in one place. In headings, `*word*` marks an important
 // word (accent colour) and ` | ` a preferred line break — see HeadingText.
 //
+// No long dashes (—) in visible copy: they read as machine-written.
+//
 // Facts and much of the wording come from the live pixelitcenter.com (contact
 // details, services, about/mission/vision, recruiting approach, testimonials),
 // lightly edited for length and grammar. Copy marked "(own)" is new. Everything here is DEMO / PLACEHOLDER copy
@@ -12,7 +14,7 @@ export const site = {
   url: "https://pixelitcenter.com",
   portalUrl: "https://portal.pixelitcenter.com",
   description:
-    "Pixel IT Center Corporation delivers IT staffing and technology services — AI, cloud, cybersecurity, big data, DevOps and QA automation — for teams building what's next.",
+    "Pixel IT Center Corporation delivers IT staffing and technology services in AI, cloud, cybersecurity, big data, DevOps and QA automation for teams building what's next.",
   // From pixelitcenter.com.
   contact: {
     email: "info@pixelitcenter.com",
@@ -32,17 +34,13 @@ export const nav = [
 ] as const;
 
 export const hero = {
-  eyebrow: "Technology services · IT staffing",
-  /** Each entry is one line; `outline` renders the line as outlined text. */
-  headline: [
-    { text: "Technology", outline: true },
-    { text: "& Talent", outline: false },
-    { text: "Built for", outline: false },
-    { text: "What's Next", outline: false },
-  ],
-  /** Rendered with **bold** segments highlighted. */
+  /** Each entry is one line (two per row from md up). */
+  headline: [{ text: "Technology" }, { text: "& Talent" }, { text: "Built for" }, { text: "What's Next" }],
+  /** Headline words in the orange accent ("&" stays white). */
+  accentWords: ["Technology", "Talent"] as readonly string[],
+  /** **Bold** segments render in the orange accent. */
   description:
-    "We help companies **modernize their technology** and **build stronger teams** — from cloud and data to the specialists who deliver it.",
+    "We help companies **modernize their technology** and **build stronger teams**, from cloud and data to the specialists who deliver it.",
   primaryCta: { label: "Talk to our team", href: "#contact" },
   secondaryCta: { label: "Explore services", href: "#services" },
 } as const;
@@ -80,7 +78,7 @@ export const services = {
       summary: "Hands-on delivery for the platforms your business runs on.",
       items: [
         { title: "AI", body: "AI consulting and solutions that help you reach your business goals faster and set you up for long-term growth." },
-        { title: "Cloud — AWS / Azure / GCP", body: "AWS expertise, stable Azure hybrid-cloud architectures, and big data and machine learning on GCP." },
+        { title: "Cloud (AWS, Azure, GCP)", body: "AWS expertise, stable Azure hybrid-cloud architectures, and big data and machine learning on GCP." },
         { title: "Cybersecurity", body: "Security services, solutions and risk assessments that stop attacks and meet compliance goals." },
         { title: "Big Data Analytics", body: "Analysis of growing, varied data that gives your business deeper, data-driven insight." },
         { title: "DevOps", body: "Complete DevOps services for any application, from enterprise platforms to consumer products." },
@@ -106,7 +104,7 @@ export const services = {
 export const staffing = {
   eyebrow: "Staffing & consulting",
   title: "One partner for the work and the *people* behind it",
-  body: "Some needs call for a delivery team, others for a single specialist. We do both — so you can scale up, fill a gap or hand over a full project without juggling vendors.",
+  body: "Some needs call for a delivery team, others for a single specialist. We do both, so you can scale up, fill a gap or hand over a full project without juggling vendors.",
   points: [
     { title: "Staff augmentation", body: "Add vetted engineers to your team in weeks, not months." },
     { title: "Managed delivery", body: "Hand us a defined outcome; we own the plan and the result." },
@@ -147,7 +145,7 @@ export const about = {
   ],
   /** From the live site's Vision, shortened. */
   vision:
-    "To be a technology-driven, customer-centric, employee-focused IT partner — exceeding expectations on quality, budget and time.",
+    "To be a technology-driven, customer-centric, employee-focused IT partner that exceeds expectations on quality, budget and time.",
 } as const;
 
 // Placeholder — replace with approved client testimonials (plan phase 0A).

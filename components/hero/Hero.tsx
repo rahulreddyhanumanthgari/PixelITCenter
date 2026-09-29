@@ -20,11 +20,6 @@ export function Hero() {
     >
       <div className="mx-auto w-full max-w-7xl px-4 pb-24 pt-28 sm:px-6 lg:px-8">
         <div data-hero-content className="mx-auto flex max-w-5xl flex-col items-center text-center">
-          <p data-reveal="0" className="type-eyebrow mb-7 flex items-center gap-2.5">
-            <span aria-hidden="true" className="size-1.5 rounded-full bg-brand-orange shadow-[0_0_12px_2px] shadow-brand-orange/60" />
-            {hero.eyebrow}
-          </p>
-
           {/* Four lines on phones; two balanced lines from md up. Each word is
               a [data-word] span for the word-by-word entrance. */}
           <h1
@@ -35,11 +30,14 @@ export function Hero() {
             {[hero.headline.slice(0, 2), hero.headline.slice(2)].map((pair, row) => (
               <span key={row} className="block md:whitespace-nowrap">
                 {pair.map((line, i) => (
-                  <span key={line.text} className={cn("block md:inline", line.outline && "text-outline")}>
+                  <span key={line.text} className="block md:inline">
                     {line.text.split(" ").map((word, wi) => (
                       <span key={wi}>
                         {wi > 0 && " "}
-                        <span data-word className={cn("inline-block", word === "&" && "highlight")}>
+                        <span
+                          data-word
+                          className={cn("inline-block", hero.accentWords.includes(word) && "highlight")}
+                        >
                           {word}
                         </span>
                       </span>
@@ -51,8 +49,11 @@ export function Hero() {
             ))}
           </h1>
 
-          <p data-reveal="2" className="type-body mt-8 max-w-xl">
-            <RichText text={hero.description} strongClassName="font-medium text-[var(--text-primary)]" />
+          <p
+            data-reveal="2"
+            className="type-body mx-auto mt-8 max-w-2xl text-center text-[clamp(1.125rem,1rem+0.6vw,1.375rem)] text-balance"
+          >
+            <RichText text={hero.description} strongClassName="font-semibold text-brand-orange" />
           </p>
 
           <div data-reveal="3" className="mt-10 flex flex-wrap items-center justify-center gap-3">

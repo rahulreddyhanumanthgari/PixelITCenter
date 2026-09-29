@@ -382,16 +382,3 @@
     transform: translateX(calc(-50% - 0.5rem));
   }
 }
-
-@layer utilities {
-  /* Outlined display text, as in the first headline line. */
-  .text-outline {
-    color: transparent;
-    -webkit-text-stroke: 1.5px var(--foreground);
-  }
-  @media (min-width: 1024px) {
-    .text-outline {
-      -webkit-text-stroke-width: 2px;
-    }
-  }
-}
