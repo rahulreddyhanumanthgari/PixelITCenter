@@ -220,7 +220,7 @@ const float TORUS_R = 3.65;
 vec3 rotY(vec3 p, float a) { float c = cos(a), s = sin(a); return vec3(c * p.x + s * p.z, p.y, -s * p.x + c * p.z); }
 vec3 rotZ(vec3 p, float a) { float c = cos(a), s = sin(a); return vec3(c * p.x - s * p.y, s * p.x + c * p.y, p.z); }
 
-vec3 torusFlow(vec3 p) {
+vec3 torusFlow(vec3 p, out float band) {
   float t = uTime * uMotion;
   float d = length(p.xz);
   float u = atan(p.z, p.x);
@@ -239,6 +239,9 @@ vec3 torusFlow(vec3 p) {
   u += t * (0.035 + 0.01 * cos(v)) + 0.004 * sin(t * 0.5 + seed);
   rt *= 1.0 + 0.01 * sin(t * 0.7 + seed * 1.3);
   float dd = TORUS_R + rt * cos(v);
+  // Colour band from the live tube angle: 0 on the inner edge (facing the
+  // content), 1 on the outer edge — same banding as the Services stream.
+  band = 0.5 + 0.5 * cos(v);
   vec3 f = vec3(cos(u) * dd, rt * sin(v), sin(u) * dd);
   // Centred halo seen at a gentle angle, so its opening frames the content;
   // the tilt breathes very slowly.
@@ -359,6 +362,8 @@ void main() {
   // static positions, so they stay fixed.
   float laneA = 0.0;
   float laneB = 0.0;
+  float bandA = 0.0;
+  float bandB = 0.0;
   float arcA = 1.0;
   float arcB = 1.0;
   float shellA = 0.0;
@@ -367,10 +372,10 @@ void main() {
   float faceB = 1.0;
   if (uFlowFrom > 2.5) A = earthSpin(A, shellA, faceA);
   else if (uFlowFrom > 1.5) A = ringStream(A, laneA, arcA);
-  else if (uFlowFrom > 0.5) A = torusFlow(A);
+  else if (uFlowFrom > 0.5) A = torusFlow(A, bandA);
   if (uFlowTo > 2.5) B = earthSpin(B, shellB, faceB);
   else if (uFlowTo > 1.5) B = ringStream(B, laneB, arcB);
-  else if (uFlowTo > 0.5) B = torusFlow(B);
+  else if (uFlowTo > 0.5) B = torusFlow(B, bandB);
 
   float outLocal = clamp((uProgress - delayOut) / OUT_LENGTH, 0.0, 1.0);
   float inLocal = clamp((uProgress - delayIn) / IN_LENGTH, 0.0, 1.0);
@@ -483,14 +488,20 @@ void main() {
   // own orange/blue, so accents travel with the flow.
   float torusW = step(0.5, uFlowFrom) * step(uFlowFrom, 1.5) * (1.0 - eOut)
                + step(0.5, uFlowTo) * step(uFlowTo, 1.5) * eIn;
-  float lum = dot(vColor, vec3(0.3, 0.5, 0.2));
-  vColor = mix(vColor, vec3(0.95, 0.96, 1.0) * lum * 1.15, 0.58 * torusW);
   if (torusW > 0.001) {
+    // Why halo: the Services stream's exact colours and brightness — orange
+    // on the inner edge, red-orange band, blue to deep blue outside; pure
+    // normalised hues at full brightness (see the Services block below).
+    float tFrom = step(0.5, uFlowFrom) * step(uFlowFrom, 1.5) * (1.0 - eOut);
+    vec3 th = ringColor(tFrom > 0.0 ? bandA : bandB);
+    if (fract(aRandom * 13.0) > 0.97) th = vec3(1.0, 0.86, 0.66);
+    th /= max(max(th.r, th.g), max(th.b, 1e-3));
     // Keep the opening calm around the centred content.
     vec2 nd4 = gl_Position.xy / gl_Position.w;
     vec2 d4 = abs(nd4 - uProtect4.xy) / max(uProtect4.zw, vec2(1e-3));
     float box4 = pow(pow(d4.x, 4.0) + pow(d4.y, 4.0), 0.25);
-    vColor *= mix(1.0, mix(0.35, 1.0, smoothstep(0.85, 1.15, box4)), torusW);
+    float protect4 = mix(0.35, 1.0, smoothstep(0.85, 1.15, box4));
+    vColor = mix(vColor, th * 1.25 * protect4, torusW);
   }
 
   // Services ring stream: lane colours (fixed per particle, so they travel

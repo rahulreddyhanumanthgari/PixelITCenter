@@ -308,8 +308,13 @@ centred Why content, which sits inside its opening.
 - **Phones and tablets.** The ring is drawn at 0.4× (`uTorusScale`) so the
   whole halo fits the pinned band.
 - **Size.** Points are 1.5× the story size while the halo is on screen.
-- **Colour.** Per-particle rocket colours blended about 58% toward white:
-  white-dominant, with faint orange/blue accents.
+- **Colour.** The Services stream's exact bands and brightness
+  (`ringColor`, normalised hues at 1.25).
+  - *Bands:* orange on the inner edge facing the content, a red-orange band,
+    blue to deep blue on the outer edge, plus 3% cream highlights.
+  - *How it's driven:* the band comes from the live tube angle
+    (`band = 0.5 + 0.5·cos v`), so the colours stay fixed around the ring
+    while particles roll through them.
 - Keep `TORUS_R` in the shader in sync with `TORUS_FLOW.R`.
 
 ### How We Work (current version)
