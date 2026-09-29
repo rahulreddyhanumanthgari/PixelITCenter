@@ -40,7 +40,9 @@ export const HERO_FIELD = {
  * Services continues from the hero on the right, then the story alternates.
  * Keep in sync with the `side` of each section in components/sections.
  */
-export const STORY_SIDES: readonly number[] = [0, 1, 1, 0];
+// Fractions mix between the left and right slots: Staffing's Earth sits at
+// 0.75 (≈63% across), reaching just past the centre of the screen.
+export const STORY_SIDES: readonly number[] = [0, 0.75, 1, 0];
 
 /** Where the particles sit inside the story area, as a fraction of its width. */
 export const STORY_SLOTS = { left: 0.24, right: 0.76 } as const;

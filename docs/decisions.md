@@ -206,31 +206,48 @@ enters a gravity well. The rule is: same appearance, different movement.
 
 ### Staffing & Consulting: particle Earth
 
-The Staffing form (`earth`) is a particle Earth with real continents.
+The Staffing form (`earth`) is a dense particle Earth with real continents.
 
 - **Continents.** `lib/particles/landMask.ts` is a 720×360 run-length land
   mask (12 KB). It was generated once from Natural Earth 1:50m land (the
   public-domain world-atlas package), with a scanline fill that unwraps
-  rings across the date line. Particles are placed as follows:
+  rings across the date line.
+- **Layers.** Each layer sits in its own radius band (relative to the Earth's
+  radius, 1.65), so the shader can colour it:
 
-  | Share | Where |
+  | Layer | Share | Radius |
+  |---|---|---|
+  | Land (area-weighted) | 58% | 0.998–1.002 |
+  | Coastline | 17% | 1.008 |
+  | Ocean | 3% | 0.99 |
+  | Haze | 5% | 1.02–1.18 |
+  | Dotted shell of latitude rows | Remainder | 2.35 |
+
+- **Colour.** From the Saturn reference (in the shader):
+
+  | Layer | Colour |
   |---|---|
-  | 50% | Land (area-weighted) |
-  | 15% | Coastline cells |
-  | 3% | Faint ocean |
-  | 5% | Haze just above the surface |
-  | The rest | An outer shell (radius 2.2 vs 1.5) of dotted latitude rows with a few soft gaps |
+  | Land | Warm white / cream, blending to orange in smooth regions |
+  | Coast | Orange to red-orange, brighter |
+  | Ocean | Deep blue |
+  | Haze | Blue |
+  | Shell | Blue to deep blue, with a few white/orange sparks |
 
-- **Motion** (`earthSpin()` in the shader, live kind 3). The Earth turns one
-  way about its axis; the shell turns the other way about a slightly
-  different axis. Both carry the 23° axial tilt. The far hemisphere fades,
-  so the facing continents read clearly.
-- **Colour.** Mostly white, with a trace of each particle's accent. The shell
-  is dimmer. Particles behind `[data-staffing-content]` dim to 40%
+  Plus rare white highlights.
+- **Motion** (`earthSpin()`, live kind 3).
+  - *Earth:* turns about its own axis at 0.06 rad/s (about 105 s a turn),
+    starting on the Atlantic.
+  - *Shell:* turns the opposite way at 0.035 rad/s about a slightly different
+    axis. Both carry the 23° axial tilt.
+  - *Depth:* the facing hemisphere is larger and brighter; the far side is
+    smaller and dimmer.
+- **Readability.** Particles behind `[data-staffing-content]` dim to 40%
   (`uProtect3`).
-- **Layout.** The Staffing content is centred (`storySectionClass("center")`).
-  The Earth sits in the right slot (`STORY_SIDES[1] = 1`) and reaches toward
-  the centre behind the content. The two are independent.
+- **Layout.** The content is centred (`storySectionClass("center")`). The
+  Earth sits at `STORY_SIDES[1] = 0.75`, a fraction between the left and
+  right slots (about 63% across). That puts it in the right half, reaching
+  just past the centre, with dark space on the far right. The two are
+  independent.
 
 ### Services: ring of particle streams
 

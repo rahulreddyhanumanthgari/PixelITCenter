@@ -8,14 +8,16 @@ import type { Rand } from "../random";
  * Generated north-up and unrotated: shaders/particle.vert.glsl (earthSpin)
  * spins the Earth one way and the shell the other, and tilts both.
  *
- * Keep EARTH.split in sync with EARTH_SPLIT in particle.vert.glsl.
+ * Each layer sits at its own radius band (relative to `radius`) so the
+ * shader can colour it: ocean 0.99, land 0.998–1.002, coast 1.008,
+ * haze 1.02–1.18, shell = `shell`. Keep EARTH_* in particle.vert.glsl in sync.
  */
 export const EARTH = {
-  radius: 1.5,
-  shell: 2.2,
+  radius: 1.65,
+  shell: 2.35,
   /** Radius separating Earth (+ haze) from the shell. */
-  split: 1.95,
-  shares: { land: 0.5, coast: 0.15, ocean: 0.03, haze: 0.05 }, // remainder: shell
+  split: 2.1,
+  shares: { land: 0.58, coast: 0.17, ocean: 0.03, haze: 0.05 }, // remainder: shell
 } as const;
 
 const TAU = Math.PI * 2;
@@ -94,15 +96,15 @@ export function generateEarthParticles(count: number, rand: Rand): Float32Array 
 
   for (let i = 0, m = n(EARTH.shares.land); i < m; i++) {
     const [lat, lon] = sampleLand();
-    put(lat, lon, R * (1 + (rand() - 0.5) * 0.006));
+    put(lat, lon, R * (1 + (rand() - 0.5) * 0.004));
   }
   for (let i = 0, m = n(EARTH.shares.coast); i < m; i++) {
     const [lat, lon] = sampleCoast();
-    put(lat, lon, R * 1.004);
+    put(lat, lon, R * 1.008);
   }
   for (let i = 0, m = n(EARTH.shares.ocean); i < m; i++) {
     const [lat, lon] = randomLatLon();
-    put(lat, lon, R * 0.992);
+    put(lat, lon, R * 0.99);
   }
   for (let i = 0, m = n(EARTH.shares.haze); i < m; i++) {
     const [lat, lon] = randomLatLon();
