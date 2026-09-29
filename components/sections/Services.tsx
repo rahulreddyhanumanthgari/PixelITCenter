@@ -1,5 +1,6 @@
 import { services } from "@/content/site";
 import { Card } from "@/components/ui/card";
+import { ParticleIcon } from "@/components/ui/particle-icon";
 import { SectionHeader } from "./SectionHeader";
 import { storySectionClass } from "./story-section";
 
@@ -43,6 +44,7 @@ export function Services() {
               <ul className="mt-6 grid gap-[var(--card-gap)] sm:grid-cols-2">
                 {group.items.map((item) => (
                   <Card as="li" key={item.title} data-reveal="5">
+                    <ParticleIcon name={item.icon} className="mb-4 size-12" />
                     <h4 className="type-subheading card-title">
                       {item.title}
                     </h4>

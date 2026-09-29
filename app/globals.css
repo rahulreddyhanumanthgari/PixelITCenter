@@ -366,6 +366,37 @@
     color: var(--text-primary);
   }
 
+  /* Particle icons (components/ui/particle-icon.tsx): dots in the site
+     palette; a few twinkle slowly; the whole icon brightens with its card. */
+  .particle-icon {
+    display: block;
+    overflow: visible;
+    opacity: 0.85;
+    transition: opacity var(--card-transition);
+  }
+  .particle-icon [data-tone="main"] {
+    fill: var(--accent-orange);
+  }
+  .particle-icon [data-tone="dim"] {
+    fill: var(--accent-blue);
+  }
+  .particle-icon [data-tone="node"] {
+    fill: #ffe7cf;
+  }
+  .particle-icon [data-twinkle] {
+    animation: particle-twinkle 4s ease-in-out infinite;
+  }
+  @media (hover: hover) {
+    .card:hover .particle-icon {
+      opacity: 1;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .particle-icon [data-twinkle] {
+      animation: none;
+    }
+  }
+
   /* Emphasis for strategically important words inside headings. Colour
      only — no glow, gradient, shadow or background. Orange by default;
      data-tone="blue" | "white" for the others. */
@@ -383,6 +414,16 @@
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
+  }
+}
+
+@keyframes particle-twinkle {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.25;
   }
 }
 

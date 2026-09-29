@@ -627,6 +627,11 @@ cards are the reference.
   | Testimonials | quote cards |
 
   Sizes differ by content; the look never does.
+- **Particle icons.** Every Services card has a small dot-drawn icon for
+  its field (`components/ui/particle-icon.tsx`). The icon's shapes are
+  sampled into dots: orange for the main shape, blue for secondary lines,
+  cream for nodes. A few dots twinkle slowly, and the icon brightens on
+  card hover.
 - **Excluded on purpose.**
   - Contact is a whole section too: centred text, no card.
   - Careers is a whole section (`Careers.tsx`, between About and Proof
