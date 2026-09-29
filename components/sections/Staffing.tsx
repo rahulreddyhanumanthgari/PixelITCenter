@@ -25,14 +25,14 @@ export function Staffing() {
               className="flex gap-5 rounded-xl border border-border bg-surface p-6"
             >
               <span
-                className="font-display text-2xl font-semibold text-brand-orange"
+                className="font-display text-2xl font-semibold tabular-nums tracking-[-0.02em] text-brand-orange"
                 aria-hidden="true"
               >
                 0{i + 1}
               </span>
               <div>
-                <h3 className="font-medium">{point.title}</h3>
-                <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
+                <h3 className="type-subheading">{point.title}</h3>
+                <p className="type-body-sm mt-1.5">
                   {point.body}
                 </p>
               </div>

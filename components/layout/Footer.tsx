@@ -9,12 +9,12 @@ export function Footer() {
         <div className="grid gap-10 md:grid-cols-[1.4fr_1fr_1fr_1fr]">
           <div>
             <Logo />
-            <p className="mt-4 max-w-xs text-sm leading-relaxed text-muted-foreground">{site.description}</p>
+            <p className="type-body-sm mt-4 max-w-xs">{site.description}</p>
           </div>
 
           {footer.columns.map((col) => (
             <div key={col.title}>
-              <h2 className="text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">{col.title}</h2>
+              <h2 className="type-label">{col.title}</h2>
               <ul className="mt-4 space-y-2.5 text-sm">
                 {col.links.map((link) => (
                   <li key={link.label}>
@@ -28,7 +28,7 @@ export function Footer() {
           ))}
 
           <div>
-            <h2 className="text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">Contact</h2>
+            <h2 className="type-label">Contact</h2>
             <address className="mt-4 space-y-2.5 text-sm not-italic">
               <a href={`mailto:${site.contact.email}`} className="block hover:text-brand-orange">
                 {site.contact.email}

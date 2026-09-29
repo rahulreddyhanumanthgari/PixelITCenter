@@ -1,8 +1,9 @@
-import { nav, site } from "@/content/site";
+import { site } from "@/content/site";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { HeaderShell } from "./HeaderShell";
 import { Logo } from "./Logo";
+import { NavLinks } from "./NavLinks";
 import { MobileMenu } from "./MobileMenu";
 
 export function Header() {
@@ -14,15 +15,7 @@ export function Header() {
         </a>
 
         <nav aria-label="Main" className="hidden lg:block">
-          <ul className="flex items-center gap-8 text-sm text-muted-foreground">
-            {nav.map((item) => (
-              <li key={item.label}>
-                <a href={item.href} className="rounded-sm transition-colors hover:text-foreground">
-                  {item.label}
-                </a>
-              </li>
-            ))}
-          </ul>
+          <NavLinks />
         </nav>
 
         <div className="flex items-center gap-2">

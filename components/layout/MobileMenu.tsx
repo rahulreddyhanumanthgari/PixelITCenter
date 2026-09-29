@@ -40,7 +40,7 @@ export function MobileMenu() {
                   <a
                     href={item.href}
                     onClick={() => setOpen(false)}
-                    className="block py-3 font-display text-3xl font-semibold uppercase tracking-wide"
+                    className="block py-3 font-display text-3xl font-semibold tracking-[-0.02em]"
                   >
                     {item.label}
                   </a>

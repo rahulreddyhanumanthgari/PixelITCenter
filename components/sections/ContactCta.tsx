@@ -2,6 +2,7 @@ import { ArrowRight } from "lucide-react";
 import { contactCta, site } from "@/content/site";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { HeadingText } from "@/components/ui/heading-text";
 import { Container } from "./SectionHeader";
 
 export function ContactCta() {
@@ -10,12 +11,16 @@ export function ContactCta() {
       <Container>
         <div className="relative overflow-hidden rounded-3xl border border-border bg-surface px-6 py-14 sm:px-12 sm:py-20">
           <div className="relative max-w-2xl">
-            <p className="mb-3 text-xs font-medium uppercase tracking-[0.22em] text-brand-orange">{contactCta.eyebrow}</p>
-            <h2 id="contact-title" className="font-display text-4xl font-bold uppercase leading-[1] sm:text-6xl">
-              {contactCta.title}
+            <p data-reveal="0" className="type-eyebrow mb-4">
+              {contactCta.eyebrow}
+            </p>
+            <h2 id="contact-title" data-reveal="1" className="type-display-lg">
+              <HeadingText text={contactCta.title} />
             </h2>
-            <p className="mt-5 text-lg text-muted-foreground">{contactCta.body}</p>
-            <div className="mt-8 flex flex-wrap gap-3">
+            <p data-reveal="2" className="type-body mt-6">
+              {contactCta.body}
+            </p>
+            <div data-reveal="3" className="mt-9 flex flex-wrap gap-3">
               <a
                 href={contactCta.primary.href}
                 className={cn(buttonVariants(), "h-12 rounded-full px-6 text-sm font-semibold")}
@@ -33,7 +38,7 @@ export function ContactCta() {
                 {contactCta.secondary.label}
               </a>
             </div>
-            <p className="mt-6 text-sm text-muted-foreground">{site.contact.email}</p>
+            <p className="type-body-sm mt-6">{site.contact.email}</p>
           </div>
         </div>
       </Container>

@@ -24,7 +24,7 @@ export function Services() {
                 data-reveal="3"
                 className="flex items-baseline justify-between gap-4 border-b border-border pb-4"
               >
-                <h3 className="font-display text-2xl font-semibold uppercase tracking-wide">
+                <h3 className="type-heading">
                   {group.name}
                 </h3>
                 <span
@@ -36,7 +36,7 @@ export function Services() {
                   }
                 />
               </div>
-              <p data-reveal="4" className="mt-4 text-muted-foreground">
+              <p data-reveal="4" className="type-body mt-4">
                 {group.summary}
               </p>
               <ul className="mt-6 grid gap-3 sm:grid-cols-2">
@@ -46,10 +46,10 @@ export function Services() {
                     data-reveal="5"
                     className="group rounded-xl border border-border bg-surface p-5 transition-colors hover:border-white/20 hover:bg-surface-2"
                   >
-                    <h4 className="font-medium text-foreground">
+                    <h4 className="type-subheading">
                       {item.title}
                     </h4>
-                    <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+                    <p className="type-body-sm mt-2">
                       {item.body}
                     </p>
                   </li>

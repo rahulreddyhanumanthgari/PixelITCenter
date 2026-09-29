@@ -471,6 +471,63 @@ EffectComposer disposes its own passes. The layer's inline styles are reset.
 **Known noise.** three r0.186 logs a `THREE.Clock` deprecation warning. It
 comes from inside React Three Fiber, not from our code.
 
+## Typography
+
+The particles are dynamic; the typography is deliberately stable, precise
+and restrained so it frames them rather than competing with them.
+
+- **Two families.** `--font-display` is Space Grotesk (500/600/700),
+  replacing the condensed Oswald. `--font-sans` is Inter. There are no others.
+- **Classes** (`app/globals.css`, `@layer components`). Use these instead of
+  one-off heading styles.
+  - `type-display-xl`: hero. 700, uppercase, line-height 0.95, tracking
+    -0.025em.
+  - `type-display-lg`: section headings. 700, uppercase, line-height 1.02,
+    tracking -0.02em, balanced wrapping.
+  - `type-heading`: card and subsection titles. 600, sentence case.
+  - `type-subheading`: small card titles.
+  - `type-body`: line-height 1.65, secondary grey, max 62ch, pretty
+    wrapping.
+  - `type-body-sm`: card descriptions, muted.
+  - `type-eyebrow`: 12px, 600, tracking 0.16em, orange.
+  - `type-label`: quiet uppercase labels.
+  - `type-nav`: 15px, 500.
+
+  Sizes are fluid `clamp()` tokens (`--text-display-xl` …), so tablets and
+  phones get their own sizes rather than a shrunk desktop.
+- **Colours.** `--text-primary` (near-white), `--text-secondary`,
+  `--text-muted`, `--accent-orange`, `--accent-blue`. White stays the main
+  text colour. Orange is kept for labels, active states, important words and
+  progress.
+- **Important words.** In heading copy (`content/site.ts`), `*word*` marks
+  one strategically important word and ` | ` marks a preferred line break
+  (from `sm` up). `HeadingText` renders these.
+  - The word gets `.highlight`: colour only (orange by default;
+    `data-tone="blue"` or `"white"`). No glow, gradient, shadow or
+    background.
+  - `::selection` is a quiet orange, not the browser's blue blocks.
+- **Entrance motion.** `StoryChoreography` is timed, not scrubbed, and plays
+  when an element reaches 88% of the screen. Order sets the sequence:
+  - *Eyebrow:* fade + a 10px rise.
+  - *Heading:* word by word via its `[data-word]` spans, stagger 0.045 s,
+    rising 20px from `blur(4px)` over 0.8 s (`power3.out`). A highlighted
+    word enters white; its accent colour resolves about 150 ms after it
+    lands.
+  - *Description, then cards:* delayed fade + rise.
+  - *Reverse:* scrolling back above a section reverses it, so it replays.
+  - *Never:* letter-by-letter, typewriter, bounce, glitch or continuous
+    motion.
+  - *Exit:* the old subtle scrubbed exit (drift up and dim) is kept.
+  - *Pinned headers* (`revealExit={false}`, the How We Work heading) take
+    their entrance from their section and skip the exit.
+  - *Reduced motion:* a plain fade.
+- **How We Work steps.** Waiting steps are muted. The active step has an
+  orange number and a white title. Completed steps settle to secondary grey
+  with a check. Colours ease over 500 ms.
+- **Navigation** (`NavLinks`). 15px / 500 in secondary grey, with a hover
+  colour change. The section in view gets `aria-current` and a small orange
+  dot.
+
 ## Content
 
 All copy is in `content/site.ts` and is placeholder text. Client logos,

@@ -10,10 +10,12 @@ export function Testimonials() {
         </div>
         <ul className="mt-14 grid gap-4 md:grid-cols-3">
           {testimonials.items.map((t, i) => (
-            <li key={i}>
+            <li key={i} data-reveal="3">
               <figure className="flex h-full flex-col justify-between rounded-2xl border border-border bg-surface p-7">
-                <blockquote className="text-lg leading-relaxed">&ldquo;{t.quote}&rdquo;</blockquote>
-                <figcaption className="mt-6 text-sm font-medium">{t.name}</figcaption>
+                <blockquote className="text-[1.0625rem] leading-[1.6] text-[var(--text-primary)]/90">
+                  &ldquo;{t.quote}&rdquo;
+                </blockquote>
+                <figcaption className="type-subheading mt-6">{t.name}</figcaption>
               </figure>
             </li>
           ))}

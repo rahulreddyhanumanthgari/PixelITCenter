@@ -8,7 +8,7 @@ export function ClientProof() {
       <Container>
         <h2
           id="clients-title"
-          className="text-center text-xs font-medium uppercase tracking-[0.22em] text-muted-foreground"
+          className="type-label text-center"
         >
           {clientProof.title}
         </h2>

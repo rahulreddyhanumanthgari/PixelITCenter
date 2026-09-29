@@ -12,7 +12,7 @@
 
 @theme inline {
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
-  --font-display: var(--font-oswald), var(--font-inter), ui-sans-serif, sans-serif;
+  --font-display: var(--font-space-grotesk), var(--font-inter), ui-sans-serif, sans-serif;
   --font-heading: var(--font-display);
 
   --color-brand-blue: var(--brand-blue);
@@ -79,6 +79,23 @@
 
   --radius: 0.75rem;
   color-scheme: dark;
+
+  /* Typography — colours. White stays the primary text colour; orange marks
+     section labels, active states, important words and progress. */
+  --text-primary: #eef2fb;
+  --text-secondary: #b3bbcc;
+  --text-muted: #8a93a8;
+  --accent-orange: var(--brand-orange);
+  --accent-blue: #6f9dff;
+
+  /* Typography — scale (fluid, so tablets and phones get their own sizes). */
+  --text-display-xl: clamp(2.5rem, 1.1rem + 6vw, 5.25rem);
+  --text-display-lg: clamp(2rem, 1.3rem + 2.9vw, 3.5rem);
+  --text-heading: clamp(1.1875rem, 1.05rem + 0.45vw, 1.4375rem);
+  --text-subheading: 1.0625rem;
+  --text-body: clamp(1rem, 0.96rem + 0.2vw, 1.125rem);
+  --text-small: 0.9375rem;
+  --text-eyebrow: 0.75rem;
 }
 
 @layer base {
@@ -95,6 +112,113 @@
   :focus-visible {
     outline: 2px solid var(--ring);
     outline-offset: 3px;
+  }
+  /* A quiet brand selection instead of the browser's blue blocks. */
+  ::selection {
+    background: rgb(255 122 46 / 0.28);
+    color: var(--text-primary);
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Typography system. One display family (Space Grotesk) + one body family
+   (Inter). Use these classes instead of one-off heading styles.
+   ------------------------------------------------------------------------ */
+@layer components {
+  /* Level 1 — hero. */
+  .type-display-xl {
+    font-family: var(--font-display);
+    font-size: var(--text-display-xl);
+    font-weight: 700;
+    line-height: 0.95;
+    letter-spacing: -0.025em;
+    text-transform: uppercase;
+    color: var(--text-primary);
+  }
+  /* Level 2 — section headings. */
+  .type-display-lg {
+    font-family: var(--font-display);
+    font-size: var(--text-display-lg);
+    font-weight: 700;
+    line-height: 1.02;
+    letter-spacing: -0.02em;
+    text-transform: uppercase;
+    text-wrap: balance;
+    color: var(--text-primary);
+  }
+  /* Level 3 — card / subsection headings. */
+  .type-heading {
+    font-family: var(--font-display);
+    font-size: var(--text-heading);
+    font-weight: 600;
+    line-height: 1.2;
+    letter-spacing: -0.015em;
+    text-wrap: balance;
+    color: var(--text-primary);
+  }
+  /* Small card titles. */
+  .type-subheading {
+    font-family: var(--font-display);
+    font-size: var(--text-subheading);
+    font-weight: 600;
+    line-height: 1.35;
+    letter-spacing: -0.01em;
+    color: var(--text-primary);
+  }
+  /* Level 4 — body. Readable measure: ~60 characters a line. */
+  .type-body {
+    font-size: var(--text-body);
+    font-weight: 400;
+    line-height: 1.65;
+    letter-spacing: 0.005em;
+    color: var(--text-secondary);
+    max-width: 62ch;
+    text-wrap: pretty;
+  }
+  /* Card descriptions. */
+  .type-body-sm {
+    font-size: var(--text-small);
+    font-weight: 400;
+    line-height: 1.55;
+    color: var(--text-muted);
+    text-wrap: pretty;
+  }
+  /* Level 5 — eyebrow: a section identifier, never competing with the heading. */
+  .type-eyebrow {
+    font-size: var(--text-eyebrow);
+    font-weight: 600;
+    line-height: 1.3;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--accent-orange);
+  }
+  /* Quiet uppercase labels (footer columns, stat labels, the client strip). */
+  .type-label {
+    font-size: var(--text-eyebrow);
+    font-weight: 500;
+    line-height: 1.3;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+  .type-nav {
+    font-size: 0.9375rem;
+    font-weight: 500;
+    line-height: 1.3;
+    letter-spacing: 0.01em;
+  }
+
+  /* Emphasis for strategically important words inside headings. Colour
+     only — no glow, gradient, shadow or background. Orange by default;
+     data-tone="blue" | "white" for the others. */
+  .highlight {
+    color: var(--highlight, var(--accent-orange));
+  }
+  .highlight[data-tone="blue"] {
+    --highlight: var(--accent-blue);
+  }
+  .highlight[data-tone="white"] {
+    --highlight: #ffffff;
   }
 }
 

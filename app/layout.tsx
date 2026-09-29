@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, Oswald } from "next/font/google";
+import { Inter, Space_Grotesk } from "next/font/google";
 import { site } from "@/content/site";
 import "./globals.css";
 
@@ -8,9 +8,9 @@ const inter = Inter({
   subsets: ["latin"],
 });
 
-// Condensed display face for the large uppercase headlines.
-const oswald = Oswald({
-  variable: "--font-oswald",
+// Display face for headings: a modern grotesk with an editorial character.
+const spaceGrotesk = Space_Grotesk({
+  variable: "--font-space-grotesk",
   subsets: ["latin"],
   weight: ["500", "600", "700"],
 });
@@ -44,7 +44,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" className={`dark ${inter.variable} ${oswald.variable} h-full antialiased`}>
+    <html lang="en" className={`dark ${inter.variable} ${spaceGrotesk.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col">{children}</body>
     </html>
   );

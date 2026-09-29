@@ -18,8 +18,8 @@ export function WhyUs() {
         >
           {whyUs.reasons.map((reason) => (
             <li key={reason.title} className="bg-background p-7">
-              <h3 className="font-display text-xl font-semibold uppercase tracking-wide">{reason.title}</h3>
-              <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{reason.body}</p>
+              <h3 className="type-heading">{reason.title}</h3>
+              <p className="type-body-sm mt-3">{reason.body}</p>
             </li>
           ))}
         </ul>

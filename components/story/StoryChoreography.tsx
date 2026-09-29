@@ -4,23 +4,38 @@ import { useEffect } from "react";
 import { gsap } from "@/lib/gsap";
 
 /**
- * Scroll-scrubbed entrances and exits for the story content, so the text moves
- * with the particles instead of sitting still beside them.
+ * Typography entrances and exits, independent of the particles.
  *
- * Any element inside [data-story] marked `data-reveal="<order>"` takes part:
- * 0 = label, 1 = heading, 2 = description, 3+ = content. Higher orders start
- * a little later, giving a label → heading → body stagger. Each element rises
- * a few pixels and sharpens as it enters, and drifts up, dims and softens as
- * it scrolls away — scrubbed, so it reverses exactly when scrolling back.
+ * Any element marked `data-reveal="<order>"` (in the hero, the story, or the
+ * galaxy area) takes part: 0 = eyebrow, 1 = heading, 2 = description,
+ * 3+ = content (cards). When it reaches the viewport it plays a short, timed
+ * entrance — the typography stays calm while the particles move:
+ * - eyebrow: fade + slight rise
+ * - heading: word by word (its `[data-word]` spans) with a very small
+ *   stagger, rising 20px and sharpening from a 4px blur; a highlighted word
+ *   enters with the rest, then its accent colour resolves ~150ms later
+ * - description, then cards: delayed fade + rise
+ * Scrolling back above the section reverses it, so it plays again next time.
+ *
+ * As content scrolls away it drifts up a little and dims (scrubbed). Items
+ * marked `data-reveal-static` (a pinned header) skip that exit and take
+ * their entrance from their section instead of their own position.
+ * Reduced motion: a plain fade, no movement, blur or accent delay.
  * Renders nothing itself.
  */
-const ENTER = { from: 94, to: 68, stepPct: 3 } as const; // viewport %, element top
-const MOVE = { header: 18, content: 26, exit: 16 } as const; // px
-const BLUR = 6; // px, headers only
+const ENTER = { start: "top 88%", pinnedStart: "top 70%" } as const;
+/** Entrance delay by order (s), so eyebrow → heading → body → cards read in sequence. */
+const DELAY = [0, 0.08, 0.3, 0.4, 0.46, 0.52] as const;
+const WORD = { rise: 20, blur: 4, duration: 0.8, stagger: 0.045, accentLag: 0.15 } as const;
+const MOVE = { eyebrow: 10, block: 16, exit: 16 } as const;
 
 export function StoryChoreography() {
   useEffect(() => {
-    const els = Array.from(document.querySelectorAll<HTMLElement>("[data-story] [data-reveal], [data-about] [data-reveal]"));
+    const els = Array.from(
+      document.querySelectorAll<HTMLElement>(
+        "[data-hero] [data-reveal], [data-story] [data-reveal], [data-galaxy-region] [data-reveal]",
+      ),
+    );
     if (els.length === 0) return;
     const mm = gsap.matchMedia();
 
@@ -32,47 +47,63 @@ export function StoryChoreography() {
       (context) => {
         const { columns, reduce } = context.conditions as { columns: boolean; reduce: boolean };
         // Phones/tablets: story content disappears under the pinned band
-        // (~41% of the screen), so it exits before reaching it. About has no
-        // band, so it always uses the normal exit.
+        // (~41% of the screen), so it exits before reaching it. Outside the
+        // story there is no band, so everything else uses the normal exit.
         const normalExit = { start: "bottom 22%", end: "bottom 2%" };
         const bandExit = { start: "bottom 62%", end: "bottom 44%" };
 
         els.forEach((el) => {
           const order = Number(el.dataset.reveal) || 0;
-          const exit = columns || el.closest("[data-about]") ? normalExit : bandExit;
-          const sideways = el.dataset.revealAxis === "x";
-          const header = order <= 2;
-          const start = `top ${ENTER.from - order * ENTER.stepPct}%`;
-          const end = `top ${ENTER.to - order * ENTER.stepPct}%`;
+          const pinned = el.hasAttribute("data-reveal-static");
+          const trigger = pinned ? (el.closest("section") ?? el) : el;
+          const delay = DELAY[Math.min(order, DELAY.length - 1)];
+          const words = Array.from(el.querySelectorAll<HTMLElement>("[data-word]"));
+          const accents = words.filter((w) => w.classList.contains("highlight"));
+          const tl = gsap.timeline({
+            scrollTrigger: {
+              trigger,
+              start: pinned ? ENTER.pinnedStart : ENTER.start,
+              toggleActions: "play none none reverse",
+            },
+          });
 
           if (reduce) {
-            // Reduced motion: a gentle fade in only, no movement or blur.
-            gsap.fromTo(el, { opacity: 0 }, { opacity: 1, ease: "none", scrollTrigger: { trigger: el, start, end, scrub: true } });
+            tl.fromTo(el, { opacity: 0 }, { opacity: 1, duration: 0.4, ease: "none" }, delay * 0.5);
             return;
           }
 
-          const rise = header ? MOVE.header : MOVE.content;
-          gsap.fromTo(
-            el,
-            {
-              opacity: 0,
-              x: sideways ? -rise * 1.4 : 0,
-              y: sideways ? 0 : rise,
-              filter: header ? `blur(${BLUR}px)` : "none",
-            },
-            {
-              opacity: 1,
-              x: 0,
-              y: 0,
-              filter: "blur(0px)",
-              ease: "power2.out",
-              scrollTrigger: { trigger: el, start, end, scrub: 0.6 },
-            },
-          );
+          if (words.length > 0) {
+            // Heading: word by word; the accent colour resolves just after
+            // its word lands (entrance only — no pulsing afterwards).
+            tl.fromTo(
+              words,
+              { opacity: 0, y: WORD.rise, filter: `blur(${WORD.blur}px)` },
+              {
+                opacity: 1,
+                y: 0,
+                filter: "blur(0px)",
+                duration: WORD.duration,
+                ease: "power3.out",
+                stagger: WORD.stagger,
+              },
+              delay,
+            );
+            accents.forEach((word) => {
+              const accent = getComputedStyle(word).color;
+              const base = getComputedStyle(el).color;
+              const at = delay + words.indexOf(word) * WORD.stagger + WORD.duration * 0.5 + WORD.accentLag;
+              tl.fromTo(word, { color: base }, { color: accent, duration: 0.6, ease: "power2.out" }, at);
+            });
+          } else {
+            const rise = order === 0 ? MOVE.eyebrow : MOVE.block;
+            tl.fromTo(el, { opacity: 0, y: rise }, { opacity: 1, y: 0, duration: 0.7, ease: "power3.out" }, delay);
+          }
+
+          if (pinned) return;
+          const exit = columns || !el.closest("[data-story]") ? normalExit : bandExit;
           gsap.to(el, {
             opacity: 0.12,
             y: -MOVE.exit,
-            filter: header ? `blur(${BLUR / 2}px)` : "none",
             ease: "power1.in",
             immediateRender: false,
             scrollTrigger: { trigger: el, start: exit.start, end: exit.end, scrub: 0.6 },

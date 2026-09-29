@@ -1,4 +1,6 @@
-// All homepage copy in one place. Everything here is DEMO / PLACEHOLDER copy
+// All homepage copy in one place. In headings, `*word*` marks an important
+// word (accent colour) and ` | ` a preferred line break — see HeadingText.
+// Everything here is DEMO / PLACEHOLDER copy
 // written for the redesign direction in the modernization plan — replace it
 // with business-approved wording (plan phase 0D) before launch.
 
@@ -67,7 +69,7 @@ export const clientProof = {
 
 export const services = {
   eyebrow: "Services",
-  title: "Two ways we help you move faster",
+  title: "Two ways we help you move *faster*",
   groups: [
     {
       name: "Technology Services",
@@ -99,7 +101,7 @@ export const services = {
 
 export const staffing = {
   eyebrow: "Staffing & consulting",
-  title: "One partner for the work and the people behind it",
+  title: "One partner for the work and the *people* behind it",
   body: "Some needs call for a delivery team, others for a single specialist. We do both — so you can scale up, fill a gap or hand over a full project without juggling vendors.",
   points: [
     { title: "Staff augmentation", body: "Add vetted engineers to your team in weeks, not months." },
@@ -110,7 +112,7 @@ export const staffing = {
 
 export const whyUs = {
   eyebrow: "Why Pixel IT Center",
-  title: "Built around clarity and accountability",
+  title: "Built around *clarity* and accountability",
   reasons: [
     { title: "Technical depth", body: "Consultants and recruiters who understand the technology they deliver." },
     { title: "Right-fit matching", body: "Candidates screened for skills, communication and team fit." },
@@ -121,7 +123,7 @@ export const whyUs = {
 
 export const process = {
   eyebrow: "How we work",
-  title: "A simple delivery process",
+  title: "A simple | *delivery* process",
   steps: [
     { title: "Discover", body: "We learn your goals, constraints and what success looks like." },
     { title: "Plan", body: "We agree on scope, team shape and timeline." },
@@ -132,7 +134,7 @@ export const process = {
 
 export const about = {
   eyebrow: "About us",
-  title: "A technology partner focused on people",
+  title: "A technology *partner* focused on people",
   body: "Pixel IT Center brings together technology services and IT talent under one roof. Our mission is to help organizations deliver technology with confidence by pairing them with the right expertise at the right time.",
   // Placeholder — confirm with the business before publishing any figures.
   highlights: [
@@ -145,7 +147,7 @@ export const about = {
 // Placeholder — replace with approved client testimonials (plan phase 0A).
 export const testimonials = {
   eyebrow: "Proof points",
-  title: "What clients say",
+  title: "What *clients* say",
   // From the live site (pixelitcenter.com, "Pixel IT Center Corporation
   // Testimonials"), word for word. It lists first names only.
   items: [
@@ -167,7 +169,7 @@ export const careers = {
 
 export const contactCta = {
   eyebrow: "Contact",
-  title: "Let's talk about your next project",
+  title: "Let's talk about | your next | *project*",
   body: "Tell us what you're building or who you need. We'll get back to you within one business day.",
   primary: { label: "Contact our team", href: `mailto:${site.contact.email}` },
   secondary: { label: "Call us", href: `tel:${site.contact.phone.replace(/[^+\d]/g, "")}` },

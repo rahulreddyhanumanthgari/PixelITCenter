@@ -23,25 +23,27 @@ export function Process() {
           data-process-content
           className="sticky top-[calc(34svh+5rem)] mx-auto max-w-[720px] text-center lg:top-[calc(50vh-15rem)]"
         >
-          <SectionHeader id="process-title" eyebrow={process.eyebrow} title={process.title} className="mx-auto text-center" reveal={false} />
+          <SectionHeader id="process-title" eyebrow={process.eyebrow} title={process.title} className="mx-auto text-center" revealExit={false} />
 
-          {/* Index: all four steps, always visible. */}
+          {/* Index: all four steps, always visible. Waiting steps are muted;
+              the active one has an orange number and a white title; completed
+              ones settle to secondary grey with a check. Colours ease between. */}
           <ol className="mx-auto mt-6 grid max-w-[560px] grid-cols-4 gap-2 lg:mt-10">
             {process.steps.map((step, i) => (
               <li
                 key={step.title}
                 data-process-step
                 data-state={i === 0 ? "active" : "inactive"}
-                className="group transition-opacity duration-500 data-[state=inactive]:opacity-40"
+                className="group"
               >
-                <span className="flex items-center justify-center gap-1.5 font-display text-sm tracking-wide text-muted-foreground group-data-[state=active]:text-brand-orange">
+                <span className="flex items-center justify-center gap-1.5 font-display text-sm font-semibold tabular-nums text-[var(--text-muted)] transition-colors duration-500 group-data-[state=active]:text-brand-orange group-data-[state=completed]:text-[var(--text-secondary)]">
                   {String(i + 1).padStart(2, "0")}
                   <Check
                     aria-hidden="true"
                     className="size-3.5 text-brand-orange opacity-0 transition-opacity duration-500 group-data-[state=completed]:opacity-100"
                   />
                 </span>
-                <span className="mt-1 block text-xs uppercase tracking-[0.16em] text-foreground/80 sm:text-sm">
+                <span className="type-label mt-1.5 block transition-colors duration-500 group-data-[state=active]:text-[var(--text-primary)] group-data-[state=completed]:text-[var(--text-secondary)]">
                   {step.title}
                 </span>
               </li>
@@ -52,13 +54,13 @@ export function Process() {
           <div className="mt-6 grid lg:mt-10">
             {process.steps.map((step, i) => (
               <div key={step.title} data-process-panel aria-hidden={i !== 0} className="[grid-area:1/1]">
-                <p data-panel-part className="font-display text-6xl font-semibold text-brand-orange sm:text-7xl">
+                <p data-panel-part className="font-display text-6xl font-semibold tabular-nums tracking-[-0.04em] text-brand-orange sm:text-7xl">
                   {String(i + 1).padStart(2, "0")}
                 </p>
-                <h3 data-panel-part className="mt-3 font-display text-3xl font-semibold uppercase sm:text-4xl">
+                <h3 data-panel-part className="type-display-lg mt-3 text-[clamp(1.75rem,1.35rem+1.5vw,2.5rem)]">
                   {step.title}
                 </h3>
-                <p data-panel-part className="mx-auto mt-4 max-w-md text-base leading-relaxed text-muted-foreground sm:text-lg">
+                <p data-panel-part className="type-body mx-auto mt-4 max-w-md">
                   {step.body}
                 </p>
               </div>

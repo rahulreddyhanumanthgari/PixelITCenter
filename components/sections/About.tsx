@@ -32,8 +32,8 @@ export function About() {
           <dl className="mt-12 grid border-y border-border sm:grid-cols-3 sm:divide-x sm:divide-border">
             {about.highlights.map((h) => (
               <div key={h.label} data-reveal="3" className="border-b border-border px-4 py-5 last:border-b-0 sm:border-b-0">
-                <dt className="text-xs uppercase tracking-[0.18em] text-muted-foreground">{h.label}</dt>
-                <dd className="mt-2 font-medium">{h.value}</dd>
+                <dt className="type-label">{h.label}</dt>
+                <dd className="type-subheading mt-2">{h.value}</dd>
               </div>
             ))}
           </dl>
@@ -43,8 +43,8 @@ export function About() {
             id="careers"
             className="mx-auto mt-12 max-w-xl scroll-mt-24 rounded-2xl border border-border bg-background/60 p-7"
           >
-            <h3 className="font-display text-2xl font-semibold uppercase">{careers.title}</h3>
-            <p className="mt-2 text-muted-foreground">{careers.body}</p>
+            <h3 className="type-heading">{careers.title}</h3>
+            <p className="type-body mx-auto mt-2">{careers.body}</p>
             <a
               href={careers.cta.href}
               className={cn(buttonVariants({ variant: "outline" }), "mt-5 h-11 rounded-full border-white/20 bg-transparent px-5")}
