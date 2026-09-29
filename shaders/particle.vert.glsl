@@ -147,7 +147,7 @@ const float HERO_DISC_OUT = 2.0;
 
 vec3 rotX(vec3 p, float a) { float c = cos(a), s = sin(a); return vec3(p.x, c * p.y - s * p.z, s * p.y + c * p.z); }
 
-vec3 heroField(out float visible, out float glow, out float grow) {
+vec3 heroField(out float visible, out float glow, out float grow, out float lane) {
   float h3 = fract(aNoiseOffset.x * 0.1591549);
   float h4 = fract(aNoiseOffset.y * 0.1591549);
   float h5 = fract(aNoiseOffset.z * 0.1591549);
@@ -163,6 +163,7 @@ vec3 heroField(out float visible, out float glow, out float grow) {
   visible = 1.0;
   glow = 1.0;
   grow = 1.0;
+  lane = 0.7;
 
   // Role: 0 disc, 1 hot inner rim, 2 stream, 3 outer space.
   float role = orange ? (h6 < 0.22 ? 1.0 : h6 < 0.9 ? 0.0 : h6 < 0.96 ? 2.0 : 3.0)
@@ -193,6 +194,11 @@ vec3 heroField(out float visible, out float glow, out float grow) {
     float inner = 1.0 - smoothstep(HERO_VOID, HERO_DISC_OUT, r);
     glow = (1.0 + 1.8 * inner) * (role > 0.5 ? 1.7 : 1.0);
     grow = 1.15 + 0.35 * inner;
+    // Palette band by live radius: the hot rim and inner disc orange, a
+    // red-orange band, then blue to deep blue outward. Falling particles
+    // warm up as they spiral in.
+    float rf = clamp((r - HERO_VOID) / (HERO_DISC_OUT - HERO_VOID), 0.0, 1.0);
+    lane = role > 0.5 ? 0.05 + 0.15 * h4 : mix(0.08, 0.95, pow(rf, 0.85));
   } else if (role < 2.5) {
     // Streams: three curved arms (log spirals) flowing inward toward the disc.
     float arm = floor(h4 * 3.0);
@@ -202,6 +208,8 @@ vec3 heroField(out float visible, out float glow, out float grow) {
     y = aScatterDir.y * 0.18 * r;
     visible = smoothstep(0.0, 0.08, s) * (1.0 - smoothstep(0.85, 1.0, s));
     glow = 1.0;
+    // Streams: blue, deepening outward, with a few orange sparks.
+    lane = h3 < 0.06 ? 0.15 : 0.6 + 0.35 * s;
   } else {
     // Outer space: sparse, dim, slow.
     r = HERO_VOID * (HERO_DISC_OUT + 0.4 + h4 * 4.0);
@@ -209,6 +217,7 @@ vec3 heroField(out float visible, out float glow, out float grow) {
     y = aScatterDir.y * 0.5 * r;
     glow = 0.3;
     grow = 0.7;
+    lane = 0.7 + 0.3 * h4;
   }
   vec3 p = vec3(cos(th) * r, y, sin(th) * r);
   return rotX(p, aScatterDir.x * 0.04);
@@ -635,7 +644,8 @@ void main() {
   float heroVisible = 1.0;
   float heroGlow = 1.0;
   float heroGrow = 1.0;
-  if (uHeroField > 0.5) A = heroField(heroVisible, heroGlow, heroGrow);
+  float heroLane = 0.7;
+  if (uHeroField > 0.5) A = heroField(heroVisible, heroGlow, heroGrow, heroLane);
 
   // --- per-particle timing ------------------------------------------------
   // Delays blend pure randomness with a coarse noise field, so neighbouring
@@ -875,6 +885,14 @@ void main() {
   vec2 dp = abs(ndc - uProtect.xy) / max(uProtect.zw, vec2(1e-3));
   float box = pow(pow(dp.x, 4.0) + pow(dp.y, 4.0), 0.25);
   float protect = mix(uProtectFloor, 1.0, smoothstep(0.85, 1.2, box));
-  vColor *= mix(1.0, heroGlow * heroVisible * protect, heroW);
+  // Same palette and brightness rules as the other forms (see the Services
+  // block): ringColor bands as pure hues, brightness from the glow but
+  // capped at 1.25 so tone mapping never washes it white; a few cream
+  // highlights.
+  vec3 heroHue = ringColor(heroLane);
+  if (fract(aRandom * 13.0) > 0.97) heroHue = vec3(1.0, 0.86, 0.66);
+  heroHue /= max(max(heroHue.r, heroHue.g), max(heroHue.b, 1e-3));
+  float heroBright = min(0.25 + 0.35 * heroGlow, 1.25);
+  vColor = mix(vColor, heroHue * heroBright * twinkle * heroVisible * protect, heroW);
   vAlpha *= mix(1.0, heroVisible, heroW);
 }

@@ -70,6 +70,20 @@ section is transparent and has no panels or overlays.
   rocket used to give it, so the palette and every later form's colour
   layout are unchanged.
 
+**Hero colours.** The hero uses the same palette as every other form.
+`heroField` returns a live `lane` for each particle, coloured with
+`ringColor`:
+
+- the hot rim and inner disc are orange;
+- a red-orange band follows, then blue to deep blue outward;
+- falling particles warm up as they spiral in;
+- streams are blue with a few orange sparks;
+- outer space is deep blue.
+
+Hues are normalised, with brightness = 0.25 + 0.35 × glow, capped at 1.25,
+plus 3% cream highlights. The per-particle rocket colours with a glow
+multiplier of up to about 5× washed it toward white.
+
 ### Scroll → form position
 
 There is one scrubbed ScrollTrigger per transition (four). Their 0→1 values
