@@ -287,15 +287,18 @@ vec3 ringStream(vec3 p, out float lane, out float arcVis) {
 // deep navy. Orange / blue / white are the site palette (linear); the red is
 // taken from the reference image.
 vec3 ringColor(float lane) {
-  vec3 cream = vec3(0.98, 0.86, 0.66);
-  vec3 orange = vec3(1.0, 0.195, 0.028);
-  vec3 red = vec3(0.8, 0.04, 0.012);
-  vec3 blue = vec3(0.043, 0.2, 1.0);
-  vec3 navy = vec3(0.012, 0.035, 0.16);
-  vec3 c = mix(cream, orange, smoothstep(0.08, 0.26, lane));
-  c = mix(c, red, smoothstep(0.26, 0.4, lane));
-  c = mix(c, blue, smoothstep(0.42, 0.56, lane));
-  return mix(c, navy, smoothstep(0.72, 1.0, lane));
+  // Same palette as the Staffing Earth: cream, saturated orange, red-orange,
+  // rich blue, deep blue. Cream is only a thin inner edge, so orange and
+  // blue carry the stream.
+  vec3 cream = vec3(1.0, 0.86, 0.66);
+  vec3 orange = vec3(1.0, 0.3, 0.05);
+  vec3 red = vec3(0.85, 0.07, 0.02);
+  vec3 blue = vec3(0.07, 0.24, 1.0);
+  vec3 deep = vec3(0.02, 0.06, 0.32);
+  vec3 c = mix(cream, orange, smoothstep(0.02, 0.12, lane));
+  c = mix(c, red, smoothstep(0.28, 0.42, lane));
+  c = mix(c, blue, smoothstep(0.44, 0.54, lane));
+  return mix(c, deep, smoothstep(0.78, 1.0, lane));
 }
 
 // --- Staffing: a particle Earth in a counter-rotating dotted shell ---------
@@ -454,7 +457,7 @@ void main() {
                  + step(1.5, uFlowTo) * step(uFlowTo, 2.5) * eIn;
   float earthNear = step(2.5, uFlowFrom) * (1.0 - eOut) + step(2.5, uFlowTo) * eIn;
   float earthFace = step(2.5, uFlowFrom) * (1.0 - eOut) > 0.0 ? faceA : faceB;
-  float size = uSize * aScale * stageSize * heroSize * mix(1.0, 1.3, ringNear)
+  float size = uSize * aScale * stageSize * heroSize * mix(1.0, 1.45, ringNear)
              * mix(1.0, mix(0.7, 1.12, earthFace), earthNear);
   gl_PointSize = clamp(size * uPixelRatio / depth, 1.0, 28.0 * uPixelRatio);
 
@@ -489,14 +492,20 @@ void main() {
   if (ringW > 0.001) {
     float lane = ringFrom > 0.0 ? laneA : laneB;
     float arcVis = ringFrom > 0.0 ? arcA : arcB;
-    vec3 rc = ringColor(min(lane, 1.0)) * (0.75 + 0.6 * aRandom);
-    if (lane > 1.05) rc = mix(vec3(0.95, 0.96, 1.0), ringColor(aRandom * 0.6), step(0.5, fract(aRandom * 7.0)));
+    vec3 rc = ringColor(min(lane, 1.0)) * (0.85 + 0.35 * aRandom);
+    // Blue runs through every lane (more toward the outside), so orange and
+    // blue sit side by side like the Earth's land and ocean.
+    float blueShare = 0.28 + 0.45 * smoothstep(0.3, 0.9, lane);
+    if (fract(aRandom * 29.0) < blueShare) rc = mix(vec3(0.07, 0.24, 1.0), vec3(0.02, 0.06, 0.32), fract(aRandom * 5.0) * 0.5) * 1.35;
+    // A few cream highlights scattered through every lane, like the Earth.
+    if (fract(aRandom * 13.0) > 0.88) rc = vec3(1.0, 0.86, 0.66) * 0.9;
+    if (lane > 1.05) rc = ringColor(fract(aRandom * 7.0) * 0.8);  // sparks: orange / red / blue
     vec2 nd = gl_Position.xy / gl_Position.w;
     float rightFade = 1.0 - smoothstep(-0.05, 0.5, nd.x);
     vec2 d2 = abs(nd - uProtect2.xy) / max(uProtect2.zw, vec2(1e-3));
     float box2 = pow(pow(d2.x, 4.0) + pow(d2.y, 4.0), 0.25);
     float protect2 = mix(0.45, 1.0, smoothstep(0.85, 1.15, box2));
-    vec3 ringOut = rc * depthFade * twinkle * rightFade * protect2 * arcVis * 2.6;
+    vec3 ringOut = rc * depthFade * twinkle * rightFade * protect2 * arcVis * 2.1;
     vColor = mix(vColor, ringOut, ringW);
   }
 
