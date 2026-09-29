@@ -606,14 +606,16 @@ cards are the reference.
   | Services | grid cards |
   | Staffing | horizontal cards |
   | Why | a 2×2 of separate cards (no longer a joined grid) |
-  | How We Work | the active step, in the active state |
   | Testimonials | quote cards |
   | About | the careers card |
   | Contact | featured |
 
   Sizes differ by content; the look never does.
-- **Excluded on purpose.** The client logo tiles stay white, because the
-  logos need a white background.
+- **Excluded on purpose.**
+  - The client logo tiles stay white, because the logos need a white
+    background.
+  - The How We Work step is open text over the planets. A card there was
+    tried and rejected: it boxed in the solar system.
 
 ## Content
 
