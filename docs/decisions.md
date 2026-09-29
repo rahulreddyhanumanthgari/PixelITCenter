@@ -278,7 +278,7 @@ While it is being left or arrived at (`uFlowFrom` / `uFlowTo` = 2),
   - *Keeping colours pure:* each hue is normalised (strongest channel = 1)
     and brightness is capped below 1, because anything brighter clips and
     ACES tone mapping whitens it.
-  - *Visibility:* full, even brightness (1.25; no depth or twinkle dimming), point size 4.2×, and density.
+  - *Visibility:* full, even brightness (1.25; no depth or twinkle dimming), point size 2.8×, and density.
 - *Density:* the ring spans lanes 2.0–4.3 (it was 6.2), so the same
   particles are about twice as dense. Sparks are down to 2.5%.
 - *Fading:* it fades out toward the right, and dims to 45% behind
@@ -307,6 +307,7 @@ centred Why content, which sits inside its opening.
   35% (`uProtect4`).
 - **Phones and tablets.** The ring is drawn at 0.4× (`uTorusScale`) so the
   whole halo fits the pinned band.
+- **Size.** Points are 1.5× the story size while the halo is on screen.
 - **Colour.** Per-particle rocket colours blended about 58% toward white:
   white-dominant, with faint orange/blue accents.
 - Keep `TORUS_R` in the shader in sync with `TORUS_FLOW.R`.
