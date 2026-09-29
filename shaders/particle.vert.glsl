@@ -248,20 +248,31 @@ vec3 torusFlow(vec3 p) {
 const float RING_CX = -3.4;
 const float RING_IN = 2.0;
 const float RING_OUT = 6.2;
+// Display: the ring is drawn much larger than it is generated (as if far
+// closer to the camera) and centred further right, so its inner lanes come in
+// behind the start of the centred content.
+const float RING_SCALE = 1.8;
+const float RING_VIEW_CX = -3.9;
 
-vec3 ringStream(vec3 p, out float lane) {
+vec3 ringStream(vec3 p, out float lane, out float arcVis) {
   float t = uTime * uMotion;
   vec2 rel = vec2(p.x - RING_CX, p.z);
   float r = length(rel);
   float a = atan(rel.y, rel.x);
   lane = p.y > 0.3 ? 1.1 : clamp((r - RING_IN) / (RING_OUT - RING_IN), 0.0, 1.0);
-  // Flow: near side (bottom) round the right to the far side (top).
-  a -= t * 0.16 * pow(r / RING_IN, -1.2) * (0.9 + 0.2 * aRandom);
+  // Flow along the visible arc only (from the near side at the bottom, round
+  // the right, to the far side at the top), then wrap back off-screen left —
+  // every particle is spent where it can be seen, so the stream stays dense.
+  const float ARC_HALF = 1.7;
+  float speed = 0.16 * pow(r / RING_IN, -1.2) * (0.9 + 0.2 * aRandom);
+  float phase = fract(a / 6.2831853 + t * speed / (2.0 * ARC_HALF));
+  a = ARC_HALF - phase * 2.0 * ARC_HALF;
+  arcVis = smoothstep(0.0, 0.1, phase) * (1.0 - smoothstep(0.9, 1.0, phase));
   float y = p.y + 0.02 * sin(t * 0.8 + aRandom * 30.0);
-  vec3 f = vec3(cos(a) * r, y, sin(a) * r);
+  vec3 f = vec3(cos(a) * r, y, sin(a) * r) * RING_SCALE;
   // Tilt the ring toward the viewer so near lanes arc below, far lanes above.
   f = rotX(f, 0.52);
-  f.x += RING_CX;
+  f.x += RING_VIEW_CX;
   return f;
 }
 
@@ -305,9 +316,11 @@ void main() {
   // static positions, so they stay fixed.
   float laneA = 0.0;
   float laneB = 0.0;
-  if (uFlowFrom > 1.5) A = ringStream(A, laneA);
+  float arcA = 1.0;
+  float arcB = 1.0;
+  if (uFlowFrom > 1.5) A = ringStream(A, laneA, arcA);
   else if (uFlowFrom > 0.5) A = torusFlow(A);
-  if (uFlowTo > 1.5) B = ringStream(B, laneB);
+  if (uFlowTo > 1.5) B = ringStream(B, laneB, arcB);
   else if (uFlowTo > 0.5) B = torusFlow(B);
 
   float outLocal = clamp((uProgress - delayOut) / OUT_LENGTH, 0.0, 1.0);
@@ -395,7 +408,9 @@ void main() {
   // hands back to normal as particles leave for Services.
   float heroW = uHeroField * (1.0 - eOut);
   float heroSize = mix(1.0, (0.4 + 0.6 * heroVisible) * heroGrow, heroW);
-  float size = uSize * aScale * stageSize * heroSize;
+  // Services ring stream: closer to the camera, so slightly larger points.
+  float ringNear = step(1.5, uFlowFrom) * (1.0 - eOut) + step(1.5, uFlowTo) * eIn;
+  float size = uSize * aScale * stageSize * heroSize * mix(1.0, 1.3, ringNear);
   gl_PointSize = clamp(size * uPixelRatio / depth, 1.0, 28.0 * uPixelRatio);
 
   // Near particles brighter, far ones dimmer; a soft twinkle on top. Spread
@@ -421,14 +436,15 @@ void main() {
   float ringW = ringFrom + step(1.5, uFlowTo) * eIn;
   if (ringW > 0.001) {
     float lane = ringFrom > 0.0 ? laneA : laneB;
+    float arcVis = ringFrom > 0.0 ? arcA : arcB;
     vec3 rc = ringColor(min(lane, 1.0)) * (0.75 + 0.6 * aRandom);
     if (lane > 1.05) rc = mix(vec3(0.95, 0.96, 1.0), ringColor(aRandom * 0.6), step(0.5, fract(aRandom * 7.0)));
     vec2 nd = gl_Position.xy / gl_Position.w;
-    float rightFade = 1.0 - smoothstep(0.1, 0.75, nd.x);
+    float rightFade = 1.0 - smoothstep(-0.05, 0.5, nd.x);
     vec2 d2 = abs(nd - uProtect2.xy) / max(uProtect2.zw, vec2(1e-3));
     float box2 = pow(pow(d2.x, 4.0) + pow(d2.y, 4.0), 0.25);
     float protect2 = mix(0.45, 1.0, smoothstep(0.85, 1.15, box2));
-    vec3 ringOut = rc * depthFade * twinkle * rightFade * protect2 * 2.3;
+    vec3 ringOut = rc * depthFade * twinkle * rightFade * protect2 * arcVis * 2.6;
     vColor = mix(vColor, ringOut, ringW);
   }
 

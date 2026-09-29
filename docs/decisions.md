@@ -215,6 +215,13 @@ While it is being left or arrived at (`uFlowFrom` / `uFlowTo` = 2),
 - *Flow:* each particle travels along its own lane, inner lanes faster, from
   the lower left round and up to the upper left. The ring is tilted 0.52 rad
   toward the viewer.
+- *Visible arc only:* particles travel just the visible ±1.7 rad arc, then
+  wrap back off-screen with a fade at both ends. Every particle is spent
+  where it can be seen, so the stream stays dense.
+- *Scale:* the ring is drawn 1.8× its generated size (`RING_SCALE`), centred
+  at x −3.9 (`RING_VIEW_CX`), with points 1.3× larger. This makes it look
+  close to the camera, with its inner lanes reaching in behind the start of
+  the centred content.
 - *Colour:* by lane, from the reference image. Cream, then orange, then red
   on the inner lanes; blue to deep navy on the outer; mixed sparks above.
   Orange, blue and white are the site palette; the red comes from the
