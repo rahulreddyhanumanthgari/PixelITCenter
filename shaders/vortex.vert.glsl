@@ -49,7 +49,7 @@ void main() {
     float life = fract(t * aRate + aPhase);
     float rn = 1.0 - life;
     r = mix(CORE * 0.55, OUTER * 1.1, rn);
-    th = aArm - WIND * log(r / CORE) + aLane * (0.06 + 0.22 * rn) + t * SPIN;
+    th = aArm - WIND * log(r / CORE) + aLane * (0.1 + 0.38 * rn) + t * SPIN;
     // Born softly at the rim, consumed at the core.
     vis = smoothstep(0.0, 0.05, life) * smoothstep(CORE * 0.55, CORE * 1.15, r);
   } else if (aKind < 1.5) {
