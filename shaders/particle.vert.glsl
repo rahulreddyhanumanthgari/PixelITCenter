@@ -26,7 +26,7 @@ uniform float uMouseRadius;
 uniform float uFocusDepth;
 uniform vec3 uMouse;            // pointer, in the particles' local space
 uniform float uStage;           // How We Work progress: 0 = Discover active … 4 = all done
-uniform float uFlowFrom;        // live form being left: 0 none, 1 torus (Why), 2 ring stream (Services), 3 Earth, 4 solar system
+uniform float uFlowFrom;        // live form being left: 0 none, 1 torus (Why), 2 ring stream (Services), 3 Earth, 4 solar system, 5 galaxy (About)
 uniform float uFlowTo;          // live form being arrived at (same codes)
 uniform vec4 uProtect2;         // Services content box in NDC (dims the ring stream behind text)
 uniform vec4 uProtect3;         // Staffing content box in NDC (dims the Earth behind text)
@@ -35,6 +35,8 @@ uniform vec4 uProtect4;         // Why content box in NDC (dims the torus behind
 uniform float uTorusScale;      // Why torus display scale (smaller in the phone band)
 uniform float uSolarPhone;      // 1 = solar system in its compact phone-band layout
 uniform vec4 uProtect5;         // How We Work step content box in NDC (dims particles behind text)
+uniform vec4 uProtect6;         // About content box in NDC (dims the galaxy behind text)
+uniform float uProtect6Floor;   // brightness left behind the About content
 uniform float uHeroField;       // 1 while the current "from" form is the hero gravity field
 uniform vec4 uProtect;          // hero text box in NDC: centre xy, half-size zw
 uniform float uProtectFloor;    // brightness left for particles behind the hero text
@@ -520,6 +522,89 @@ vec3 solarSystem(out vec3 col, out float sizeK) {
   return c.xyz + f;
 }
 
+// --- About Us: particle spiral galaxy (live form, kind 5) -------------------
+// Seen almost face-on, framing the centred About content: a bright core, two
+// main arms (two fainter ones between them) and a sparse field. Arm
+// particles stream inward along their arm and are consumed at the core, then
+// start again at the rim. Each particle's role comes from hashes of its own
+// random attributes, so the form needs no extra data. Colours: the site
+// palette in radial bands (cream core → orange → red-orange → blue rim).
+const float GALAXY_OUTER = 3.9;   // = GALAXY_VIEW.outer (journey-config.ts)
+const float GALAXY_CORE = 0.34;
+const float GALAXY_WIND = 2.7;    // arm winding: radians per e-fold of radius
+const float GALAXY_SPIN = 0.045;  // pattern rotation (rad/s)
+const vec2 GALAXY_TILT = vec2(1.38, 0.16);  // x: π/2 would be exactly face-on
+
+float galaxyHash(float k) {
+  return fract(sin(aRandom * 127.1 + aDelay * 311.7 + aScatterDistance * 17.3 + k * 74.7) * 43758.5453);
+}
+
+vec3 galaxy(out vec3 col, out float sizeK) {
+  float t = uTime * uMotion;
+  float kind = galaxyHash(1.0);          // < 0.7 arm, < 0.82 core, else field
+  float g2 = galaxyHash(2.0);
+  float g3 = galaxyHash(3.0);
+  float g4 = galaxyHash(4.0);
+  float g5 = galaxyHash(5.0);
+  float g6 = galaxyHash(6.0);
+  float g7 = galaxyHash(7.0);
+  float gauss = (g5 + g6 + g7 - 1.5) / 1.5;
+  float r;
+  float th;
+  float vis = 1.0;
+  float lane = 0.0;
+
+  if (kind < 0.7) {
+    // Arms: two main arms half a turn apart, the fainter pair between them.
+    // Fine strands across each arm (the streaks) plus a softer diffuse glow;
+    // the arms widen outward.
+    bool secondary = g2 < 0.28;
+    float arm = (g3 < 0.5 ? 0.0 : PI) + (secondary ? PI * 0.5 + 0.35 : 0.0);
+    lane = g4 < 0.72 ? (floor(g5 * 7.0) - 3.0) / 3.0 + (g6 - 0.5) * 0.12 : gauss * 1.6;
+    if (secondary) lane *= 1.3;
+    // 40–100 s from the rim to the core, along the trailing spiral.
+    float life = fract(t / (40.0 + g7 * 60.0) + g2 * 7.3);
+    float rn = 1.0 - life;
+    r = mix(GALAXY_CORE * 0.55, GALAXY_OUTER * 1.1, rn);
+    th = arm - GALAXY_WIND * log(r / GALAXY_CORE) + lane * (0.14 + 0.55 * rn) + t * GALAXY_SPIN;
+    // Born softly at the rim, consumed at the core.
+    vis = smoothstep(0.0, 0.05, life) * smoothstep(GALAXY_CORE * 0.55, GALAXY_CORE * 1.15, r);
+    sizeK = 1.35;
+  } else if (kind < 0.82) {
+    // Core: a dense disc, faster toward the centre, slightly wound.
+    r = GALAXY_CORE * 1.15 * pow(g4, 0.75);
+    th = g3 * 6.2831853 + t * (0.12 + 0.3 * (1.0 - r / GALAXY_CORE)) - 1.5 * log(r / GALAXY_CORE + 0.05);
+    sizeK = 1.5;
+  } else {
+    // Field: sparse points drifting slowly between the arms.
+    r = GALAXY_OUTER * 1.15 * sqrt(g4);
+    th = g3 * 6.2831853 + t * GALAXY_SPIN * 0.7;
+    sizeK = 1.0;
+  }
+
+  float rn = r / GALAXY_OUTER;
+  vec3 c = mix(S_CREAM, S_ORANGE, smoothstep(0.1, 0.3, rn));
+  c = mix(c, S_RED, smoothstep(0.45, 0.62, rn));
+  c = mix(c, S_BLUE, smoothstep(0.66, 0.82, rn));
+  c = mix(c, S_DEEP, smoothstep(0.88, 1.08, rn));
+  float level;
+  if (kind < 0.7) {
+    level = (abs(lane) > 1.2 ? 0.6 : 1.15) * (1.0 - 0.5 * smoothstep(0.8, 1.1, rn));
+    if (aRandom > 0.97) { c = S_CREAM; level = 1.2; }
+  } else if (kind < 0.82) {
+    c = mix(S_CREAM, S_ORANGE, smoothstep(0.55, 1.0, r / GALAXY_CORE) * 0.5);
+    level = 1.25;
+  } else {
+    c = aRandom > 0.8 ? S_CREAM : mix(S_BLUE, S_DEEP, aRandom);
+    level = 0.35;
+  }
+  col = c * level * vis;
+
+  vec3 p = vec3(cos(th) * r, gauss * (kind < 0.82 && kind >= 0.7 ? 0.04 : 0.08) * (0.4 + rn), sin(th) * r);
+  // Same orientation as a group rotated (x, 0, z) in three.js (XYZ order).
+  return rotX(rotZ(p, GALAXY_TILT.y), GALAXY_TILT.x);
+}
+
 void main() {
   vec3 A = position;
   vec3 B = aTarget;
@@ -557,12 +642,19 @@ void main() {
   vec3 solarCol = vec3(0.0);
   float solarSize = 1.0;
   vec3 sp = vec3(0.0);
-  if (uFlowFrom > 3.5 || uFlowTo > 3.5) sp = solarSystem(solarCol, solarSize);
-  if (uFlowFrom > 3.5) A = sp;
+  if ((uFlowFrom > 3.5 && uFlowFrom < 4.5) || (uFlowTo > 3.5 && uFlowTo < 4.5)) sp = solarSystem(solarCol, solarSize);
+  // About galaxy: placed live, so it turns and streams inward.
+  vec3 galaxyCol = vec3(0.0);
+  float galaxySize = 1.0;
+  vec3 gp = vec3(0.0);
+  if (uFlowFrom > 4.5 || uFlowTo > 4.5) gp = galaxy(galaxyCol, galaxySize);
+  if (uFlowFrom > 4.5) A = gp;
+  else if (uFlowFrom > 3.5) A = sp;
   else if (uFlowFrom > 2.5) A = earthSpin(A, shellA, faceA);
   else if (uFlowFrom > 1.5) A = ringStream(A, laneA, arcA);
   else if (uFlowFrom > 0.5) A = torusFlow(A, bandA);
-  if (uFlowTo > 3.5) B = sp;
+  if (uFlowTo > 4.5) B = gp;
+  else if (uFlowTo > 3.5) B = sp;
   else if (uFlowTo > 2.5) B = earthSpin(B, shellB, faceB);
   else if (uFlowTo > 1.5) B = ringStream(B, laneB, arcB);
   else if (uFlowTo > 0.5) B = torusFlow(B, bandB);
@@ -631,11 +723,14 @@ void main() {
   float torusNear = step(0.5, uFlowFrom) * step(uFlowFrom, 1.5) * (1.0 - eOut)
                   + step(0.5, uFlowTo) * step(uFlowTo, 1.5) * eIn;
   // How We Work solar system: size per role (planets, rings, trail, dust).
-  float solarW = step(3.5, uFlowFrom) * (1.0 - eOut) + step(3.5, uFlowTo) * eIn;
+  float solarW = step(3.5, uFlowFrom) * step(uFlowFrom, 4.5) * (1.0 - eOut)
+               + step(3.5, uFlowTo) * step(uFlowTo, 4.5) * eIn;
+  float galaxyW = step(4.5, uFlowFrom) * (1.0 - eOut) + step(4.5, uFlowTo) * eIn;
   float size = uSize * aScale * heroSize * mix(1.0, 2.8, ringNear)
              * mix(1.0, mix(0.7, 1.12, earthFace) * 1.6, earthNear)
              * mix(1.0, 1.5, torusNear)
-             * mix(1.0, solarSize, solarW);
+             * mix(1.0, solarSize, solarW)
+             * mix(1.0, galaxySize, galaxyW);
   gl_PointSize = clamp(size * uPixelRatio / depth, 1.0, 28.0 * uPixelRatio);
 
   // Near particles brighter, far ones dimmer; a soft twinkle on top. Spread
@@ -742,6 +837,16 @@ void main() {
     float box5 = pow(pow(d5.x, 4.0) + pow(d5.y, 4.0), 0.25);
     float protect5 = mix(0.3, 1.0, smoothstep(0.85, 1.15, box5));
     vColor = mix(vColor, solarCol * twinkle * protect5, solarW);
+  }
+
+  // About galaxy: its own colours (see galaxy), a soft twinkle, dimmed
+  // behind the centred About content.
+  if (galaxyW > 0.001) {
+    vec2 nd6 = gl_Position.xy / gl_Position.w;
+    vec2 d6 = abs(nd6 - uProtect6.xy) / max(uProtect6.zw, vec2(1e-3));
+    float box6 = pow(pow(d6.x, 4.0) + pow(d6.y, 4.0), 0.25);
+    float protect6 = mix(uProtect6Floor, 1.0, smoothstep(0.85, 1.2, box6));
+    vColor = mix(vColor, galaxyCol * twinkle * protect6, galaxyW);
   }
 
   // Hero: keep the centred text calm — particles projected behind it dim.

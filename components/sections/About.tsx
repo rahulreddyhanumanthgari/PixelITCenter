@@ -5,8 +5,9 @@ import { Container, SectionHeader } from "./SectionHeader";
 
 /**
  * About Us — centred content framed by a particle spiral galaxy. The
- * galaxy is drawn by the page-wide particle layer, centred on the empty
- * [data-vortex-anchor]; particles behind [data-about-content] are dimmed so
+ * galaxy is the journey's last form: How We Work's planets break up and
+ * re-form into it as About scrolls in. It is centred on the empty
+ * [data-galaxy-anchor]; particles behind [data-about-content] are dimmed so
  * the text stays calm. This section is transparent. Content enters with the
  * same scroll choreography as the story sections ([data-reveal]).
  */
@@ -18,7 +19,7 @@ export function About() {
       aria-labelledby="about-title"
       className="relative scroll-mt-20 border-t border-border py-28 sm:py-36 lg:flex lg:min-h-[115vh] lg:items-center"
     >
-      <div data-vortex-anchor aria-hidden="true" className="pointer-events-none absolute inset-0" />
+      <div data-galaxy-anchor aria-hidden="true" className="pointer-events-none absolute inset-0" />
 
       <Container className="relative">
         <div data-about-content className="mx-auto max-w-3xl text-center">

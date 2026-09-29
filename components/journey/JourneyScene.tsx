@@ -7,10 +7,10 @@ import { gsap } from "@/lib/gsap";
 import { ParticleCanvas } from "@/components/particles/ParticleCanvas";
 import { ParticleSystem, type LayoutState } from "@/components/particles/ParticleSystem";
 import { StarField, type Atmosphere } from "@/components/particles/StarField";
-import { ParticleVortex } from "@/components/vortex/ParticleVortex";
 import { useDeviceTier, usePointer, useReducedMotion } from "@/components/particles/hooks";
 import type { PointerState, ProgressState } from "@/components/particles/types";
 import { PALETTE } from "@/lib/particles/palette";
+import { smoothstep } from "@/lib/particles/random";
 import { processProgress } from "@/lib/processProgress";
 import {
   HERO_LOOK,
@@ -19,6 +19,7 @@ import {
   JOURNEY_FORMS,
   CAMERA_MOTION,
   EARTH_VIEW,
+  GALAXY_VIEW,
   HERO_FIELD,
   STORY_HANDOFF,
   STORY_LOOK,
@@ -66,7 +67,7 @@ function CameraRig({
 
 /**
  * The one particle system for the whole journey — the landing hero's gravity
- * field → Services → Staffing → Why us → How we work. It lives in a fixed,
+ * field → Services → Staffing → Why us → How we work → About's galaxy. It lives in a fixed,
  * full-screen layer behind the page (JourneyLayer) and is loaded with
  * ssr: false, so it only runs in the browser.
  */
@@ -94,6 +95,9 @@ export default function JourneyScene() {
     torusScale: 1,
     solarPhone: 0,
     protect5: [0, 0, 0.001, 0.001],
+    galaxy: null,
+    protect6: [0, 0, 0.001, 0.001],
+    protect6Floor: GALAXY_VIEW.protectFloor.wide,
     earthScale: 1,
   });
   // How scattered the main particles are; drives the stars and camera.
@@ -122,19 +126,26 @@ export default function JourneyScene() {
   useEffect(() => {
     const story = document.querySelector<HTMLElement>("[data-story]");
     if (!story) return;
-    const sections = Array.from(story.querySelectorAll<HTMLElement>("[data-story-section]"));
+    // The story sections, then About (its galaxy is the last form).
+    const about = document.querySelector<HTMLElement>("[data-about]");
+    const sections = [
+      ...Array.from(story.querySelectorAll<HTMLElement>("[data-story-section]")),
+      ...(about ? [about] : []),
+    ];
     const steps = JOURNEY_FORMS.slice(1).map(() => ({ v: 0 }));
     const state = progress.current;
     const sum = () => {
       state.value = steps.reduce((s, t) => s + t.v, 0);
     };
     const intoStory = tierName === "mobile" ? TRANSITIONS.intoStory.mobile : TRANSITIONS.intoStory.desktop;
+    const intoAbout = isColumnLayout() ? TRANSITIONS.intoAbout.desktop : TRANSITIONS.intoAbout.mobile;
 
     const ctx = gsap.context(() => {
       steps.forEach((step, i) => {
         // Each form assembles as the section that owns it arrives; the first
         // step is the hero field breaking out into the Services ring.
-        const trigger = { trigger: sections[i], ...(i === 0 ? intoStory : TRANSITIONS.story) };
+        const span = i === 0 ? intoStory : sections[i] === about ? intoAbout : TRANSITIONS.story;
+        const trigger = { trigger: sections[i], ...span };
         gsap.to(step, {
           v: 1,
           ease: "none",
@@ -159,7 +170,9 @@ export default function JourneyScene() {
     const staffingContent = document.querySelector<HTMLElement>("[data-staffing-content]");
     const whyContent = document.querySelector<HTMLElement>("[data-why-content]");
     const processContent = document.querySelector<HTMLElement>("[data-process-content]");
-    // The particle layer stays on through About Us (the vortex); after that the
+    const galaxyAnchor = document.querySelector<HTMLElement>("[data-galaxy-anchor]");
+    const aboutContent = document.querySelector<HTMLElement>("[data-about-content]");
+    // The particle layer stays on through About Us (the galaxy); after that the
     // opaque sections cover it.
     const lastLit = document.querySelector<HTMLElement>("[data-about]") ?? story;
     if (!story || !anchor || !layer || !lastLit) return;
@@ -212,6 +225,29 @@ export default function JourneyScene() {
       L.from.y = 0;
       L.from.scale = voidPx * wpp;
       L.protectFloor = vw < 768 ? HERO_FIELD.protectFloor.narrow : HERO_FIELD.protectFloor.wide;
+      // About's galaxy: centred on the section, rim reaching past the screen.
+      if (galaxyAnchor) {
+        const a = galaxyAnchor.getBoundingClientRect();
+        const cy = a.top + a.height / 2;
+        const reachPx = Math.max(vw * GALAXY_VIEW.reach.width, vh * GALAXY_VIEW.reach.height);
+        L.galaxy = {
+          x: (a.left + a.width / 2 - vw / 2) * wpp,
+          y: -(cy - vh / 2) * wpp,
+          scale: (reachPx * wpp) / GALAXY_VIEW.outer,
+          // Gravity is strongest while About's centre is near the screen's.
+          presence: 1 - smoothstep(0.45, 1.1, Math.abs(cy - vh / 2) / vh),
+        };
+      }
+      if (aboutContent) {
+        const c = aboutContent.getBoundingClientRect();
+        L.protect6 = [
+          ((c.left + c.width / 2) / vw) * 2 - 1,
+          -(((c.top + c.height / 2) / vh) * 2 - 1),
+          (c.width / vw) * 1.04,
+          (c.height / vh) * 1.04,
+        ];
+      }
+      L.protect6Floor = vw < 1024 ? GALAXY_VIEW.protectFloor.narrow : GALAXY_VIEW.protectFloor.wide;
       if (processContent) {
         const c = processContent.getBoundingClientRect();
         L.protect5 = [
@@ -329,17 +365,8 @@ export default function JourneyScene() {
         pixelRatio={dpr}
         reducedMotion={reducedMotion}
         onBlend={onBlend}
-        stage={stage}
-      />
-      <ParticleVortex
-        key={`vortex-${tierName}`}
-        count={tier.vortexCount}
-        pointer={pointer}
-        pixelRatio={dpr}
-        reducedMotion={reducedMotion}
-        cameraZ={JOURNEY_CAMERA.z}
-        cameraFov={JOURNEY_CAMERA.fov}
         onGravity={onGravity}
+        stage={stage}
       />
     </ParticleCanvas>
   );

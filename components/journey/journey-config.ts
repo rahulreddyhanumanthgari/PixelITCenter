@@ -1,5 +1,5 @@
 // Every tunable number for the particle journey lives here: the one particle
-// system that runs from the landing hero's gravity field down to How We Work.
+// system that runs from the landing hero's gravity field down to About Us.
 
 import type { DeviceTier } from "@/components/particles/hooks";
 import type { ParticleLook } from "@/components/particles/ParticleSystem";
@@ -7,8 +7,9 @@ import type { FormName } from "@/lib/particles/generateTarget";
 
 /**
  * The whole journey, in scroll order. The first is the landing hero's
- * full-screen gravity field (moving particles, not a shape); the other four
- * belong to the story sections, one per section.
+ * full-screen gravity field (moving particles, not a shape); the next four
+ * belong to the story sections, one per section; the last is About's galaxy,
+ * so How We Work hands over to About with the same morph as every step.
  * Shapes live in lib/particles/ — see FORMS in generateTarget.ts.
  */
 export const JOURNEY_FORMS: readonly FormName[] = [
@@ -17,6 +18,7 @@ export const JOURNEY_FORMS: readonly FormName[] = [
   "earth",
   "torusFlow",
   "solarSystem",
+  "galaxy",
 ];
 
 /** Form position at which the particles leave the hero for the story column. */
@@ -43,7 +45,7 @@ export const HERO_FIELD = {
 // Fractions mix between the left and right slots: Staffing's Earth sits at
 // 0.75 (≈63% across), reaching just past the centre of the screen.
 // Why's torus is centred (0.5): its opening frames the centred content.
-export const STORY_SIDES: readonly number[] = [0, 0.75, 0.5, 0.5];
+export const STORY_SIDES: readonly number[] = [0, 0.75, 0.5, 0.5, 0.5];
 
 /**
  * Staffing's Earth on desktop: drawn `scale`× larger, and placed from the
@@ -52,6 +54,18 @@ export const STORY_SIDES: readonly number[] = [0, 0.75, 0.5, 0.5];
  * in STORY_SIDES.
  */
 export const EARTH_VIEW = { index: 1, radius: 1.65, scale: 1.45, hiddenRight: 0.25 } as const;
+
+/**
+ * About's galaxy (the last form): centred on About and sized so its rim
+ * reaches the larger of these fractions of the screen width/height.
+ * `outer` must match GALAXY_OUTER in particle.vert.glsl.
+ */
+export const GALAXY_VIEW = {
+  outer: 3.9,
+  reach: { width: 0.52, height: 0.64 },
+  /** Brightness left behind the About content (wide / narrow screens). */
+  protectFloor: { wide: 0.3, narrow: 0.42 },
+} as const;
 
 /** Where the particles sit inside the story area, as a fraction of its width. */
 export const STORY_SLOTS = { left: 0.24, right: 0.76 } as const;
@@ -66,6 +80,9 @@ export const CAMERA_MOTION = { pointerX: 0.14, pointerY: 0.09, fieldPullBack: 0.
 export const TRANSITIONS = {
   intoStory: { desktop: { start: "top 96%", end: "top 18%" }, mobile: { start: "top 100%", end: "top 50%" } },
   story: { start: "top 96%", end: "top 14%" },
+  // How We Work → About's galaxy, run by About's own scroll. Phones wait
+  // until the pinned particle band has released.
+  intoAbout: { desktop: { start: "top 96%", end: "top 14%" }, mobile: { start: "top 42%", end: "top -25%" } },
   scrub: 0.8,
 } as const;
 
@@ -133,8 +150,6 @@ export interface JourneyTier {
   bloom: { hero: number; story: number };
   /** Story scale relative to the pinned story column/band height. */
   storyScale: number;
-  /** Particles in the About Us galaxy (dense enough for the spiral arms to read). */
-  vortexCount: number;
 }
 
 const TIERS: Record<DeviceTier, JourneyTier> = {
@@ -145,7 +160,6 @@ const TIERS: Record<DeviceTier, JourneyTier> = {
     scatter: 1,
     bloom: { hero: 0.85, story: 0.55 },
     storyScale: 0.8,
-    vortexCount: 40_000,
   },
   tablet: {
     particleCount: 34_000,
@@ -154,7 +168,6 @@ const TIERS: Record<DeviceTier, JourneyTier> = {
     scatter: 0.85,
     bloom: { hero: 0.7, story: 0.45 },
     storyScale: 0.72,
-    vortexCount: 24_000,
   },
   mobile: {
     particleCount: 18_000,
@@ -163,7 +176,6 @@ const TIERS: Record<DeviceTier, JourneyTier> = {
     scatter: 0.7,
     bloom: { hero: 0.5, story: 0.35 },
     storyScale: 1.1,
-    vortexCount: 14_000,
   },
 };
 

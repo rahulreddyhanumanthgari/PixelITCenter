@@ -73,7 +73,7 @@ section is transparent and has no panels or overlays.
 ### Scroll → form position
 
 There is one scrubbed ScrollTrigger per transition (four). Their 0→1 values
-add up to a form position, from 0 (hero field) to 4 (solar system). It is
+add up to a form position, from 0 (hero field) to 5 (About's galaxy). It is
 reversible, and it holds wherever the visitor stops. The hero is not pinned.
 
 | Transition | Runs while |
@@ -157,40 +157,46 @@ or the morph.
 
   Everything is scrubbed and reverses. Reduced motion gets a fade-in only.
 
-### About Us: particle spiral galaxy
+### About Us: particle spiral galaxy (the journey's last form)
 
-About's content is centred and framed by a spiral galaxy seen almost face-on
-(`VORTEX_CONFIG.tilt` ≈ [1.38, 0, 0.16]), after the swirling-galaxy
-reference. Code: `lib/particles/vortex.ts`, `shaders/vortex.vert.glsl`,
-`components/vortex/ParticleVortex.tsx`.
+About's content is centred and framed by a spiral galaxy seen almost face-on,
+after the swirling-galaxy reference. The galaxy is the journey's final live
+form (`galaxy`, kind 5, `galaxy()` in `particle.vert.glsl`). It is not a
+separate system, so How We Work hands over to About with the same morph as
+every other step: the planets break out into a drifting field, and the field
+re-forms into the galaxy. (It used to be its own `ParticleVortex`, drawn on
+top of the planets, so the two merged.)
 
-- **Shape.** Everything is computed in the shader from time:
-  - *Arms (70%):* two main arms, plus two fainter ones between them. Each is a
-    trailing log spiral (`WIND` 2.7 radians per e-fold of radius), about
-    1¼ turns.
-  - *Movement along the arms:* each particle falls from the rim to the core
-    along its arm over 40–100 s, so the arms keep their shape while the
-    material swirls inward. It is consumed at the core, then starts again.
-  - *Streaks:* most arm particles sit on seven fine strands across the arm;
-    the rest are a soft diffuse glow. The arms widen outward.
+- **Transition.**
+  - About is the trigger for the last step (`TRANSITIONS.intoAbout`). On
+    desktop it runs over "top 96%" → "top 14%".
+  - Phones use "top 42%" → "top -25%", so the morph starts once the pinned
+    particle band has released.
+  - While it runs, `ParticleSystem` glides the whole system from the story
+    placement to About's centre and size (`L.galaxy`, measured from
+    `[data-galaxy-anchor]`). It then follows About as the page scrolls.
+- **Shape.**
+  - *Arms (70%):* two main arms, plus two fainter ones between them. Each is
+    a trailing log spiral (`GALAXY_WIND` 2.7), about 1¼ turns, and wide
+    (strands spread over 0.14 + 0.55 × radius).
+  - *Movement:* each arm particle streams inward along its arm over
+    40–100 s and is consumed at the core, then starts again.
   - *Core (12%):* a dense, fast, slightly wound disc.
   - *Field (18%):* sparse points drifting between the arms.
-  - *Rotation:* the whole pattern turns slowly (`SPIN`).
-- **Colours.** The site palette as pure hues, in radial bands:
+  - *Rotation:* the pattern turns slowly (`GALAXY_SPIN`).
+  - *Tilt:* baked into the shader (`GALAXY_TILT`).
+  - *No extra data:* each particle's role comes from hashes of its own random
+    attributes.
+- **Colours.** The site palette in radial bands, as pure hues:
   - cream core;
-  - orange, then red-orange arms;
-  - blue to deep blue rim;
+  - orange, then red-orange;
+  - blue to deep-blue rim;
   - a few cream sparkles.
-
-  There are no per-particle rocket colours any more.
-- **Kept from before:**
-  - the scroll entrance (particles settle in from depth);
-  - the pointer tilt and ripple;
-  - star-field gravity (`onGravity` → `Atmosphere`);
-  - the same point size, depth fade and twinkle, and `particle.frag.glsl`.
-- **Readability.** Particles projected behind `[data-about-content]` drop to
-  30% brightness on wide screens and 42% on narrow ones.
-- **Counts.** 40k desktop / 24k tablet / 14k mobile, so the arms read dense.
+- **Stars bend around it.** `ParticleSystem` reports gravity each frame
+  (`onGravity` → `Atmosphere`). Strength = the galaxy transition × how
+  centred About is on screen.
+- **Readability.** Particles behind `[data-about-content]` drop to 30%
+  brightness on wide screens and 42% on narrow ones (`GALAXY_VIEW`).
 
 ### Staffing & Consulting: particle Earth
 

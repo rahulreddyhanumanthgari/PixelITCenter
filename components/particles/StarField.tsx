@@ -13,7 +13,7 @@ import type { PointerState } from "./types";
 export interface Atmosphere {
   /** 0..1 — how scattered the main particles are right now. */
   field: number;
-  /** 0..1 — strength of the About Us gravity well (written by the vortex). */
+  /** 0..1 — strength of the About Us gravity well (written by the galaxy). */
   gravity: number;
   /** Gravity centre in world units (focal plane). */
   gravityX: number;

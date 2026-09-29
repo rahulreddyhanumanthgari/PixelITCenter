@@ -83,6 +83,14 @@ export interface LayoutState {
   solarPhone: number;
   /** How We Work step content box in NDC; solar particles behind it dim. */
   protect5: [number, number, number, number];
+  /**
+   * About's galaxy (the last form): world centre and scale, and how centred
+   * About is on screen (0..1, for the star field's gravity). Null = none.
+   */
+  galaxy: { x: number; y: number; scale: number; presence: number } | null;
+  /** About content box in NDC, and the brightness left behind it. */
+  protect6: [number, number, number, number];
+  protect6Floor: number;
 }
 
 interface ParticleSystemProps {
@@ -103,6 +111,11 @@ interface ParticleSystemProps {
   reducedMotion: boolean;
   /** Called every frame with the handoff blend (0 = `look`, 1 = `lookTo`). */
   onBlend?: (blend: number, field: number) => void;
+  /**
+   * Called every frame with the About galaxy's gravity strength (0..1) and
+   * its world centre, so the star field can bend around it.
+   */
+  onGravity?: (strength: number, x: number, y: number) => void;
   /**
    * Step progress for a stepped form (the How We Work solar system): 0 = first step
    * active … N = all steps done. Written by the section's scroll triggers.
@@ -137,6 +150,8 @@ export interface MorphUniforms {
   uTorusScale: THREE.IUniform<number>;
   uSolarPhone: THREE.IUniform<number>;
   uProtect5: THREE.IUniform<THREE.Vector4>;
+  uProtect6: THREE.IUniform<THREE.Vector4>;
+  uProtect6Floor: THREE.IUniform<number>;
   uProtect: THREE.IUniform<THREE.Vector4>;
   uProtectFloor: THREE.IUniform<number>;
 }
@@ -175,6 +190,7 @@ export function ParticleSystem({
   pixelRatio,
   reducedMotion,
   onBlend,
+  onGravity,
   stage,
 }: ParticleSystemProps) {
   const rootRef = useRef<THREE.Group>(null);
@@ -222,6 +238,8 @@ export function ParticleSystem({
       uTorusScale: { value: 1 },
       uSolarPhone: { value: 0 },
       uProtect5: { value: new THREE.Vector4(0, 0, 0.001, 0.001) },
+      uProtect6: { value: new THREE.Vector4(0, 0, 0.001, 0.001) },
+      uProtect6Floor: { value: 1 },
       uProtect: { value: new THREE.Vector4(0, 0, 0.001, 0.001) },
       uProtectFloor: { value: 1 },
     };
@@ -298,9 +316,9 @@ export function ParticleSystem({
     u.uHeroField.value = formNames[0] === "heroField" && controller.fromIndex === 0 ? 1 : 0;
     // Flowing torus (Why): live whether it is being left or arrived at.
     // Live flowing forms: 1 = torus (Why), 2 = ring stream (Services).
-    // 3 = Earth (Staffing), 4 = solar system (How We Work).
+    // 3 = Earth (Staffing), 4 = solar system (How We Work), 5 = galaxy (About).
     const liveKind = (name: FormName | undefined) =>
-      name === "torusFlow" ? 1 : name === "ringStream" ? 2 : name === "earth" ? 3 : name === "solarSystem" ? 4 : 0;
+      name === "torusFlow" ? 1 : name === "ringStream" ? 2 : name === "earth" ? 3 : name === "solarSystem" ? 4 : name === "galaxy" ? 5 : 0;
     const fromKind = liveKind(formNames[controller.fromIndex]);
     const toKind = liveKind(formNames[controller.toIndex]);
     u.uFlowFrom.value = fromKind;
@@ -316,6 +334,8 @@ export function ParticleSystem({
     u.uTorusScale.value = L.torusScale;
     u.uSolarPhone.value = L.solarPhone;
     u.uProtect5.value.set(...L.protect5);
+    u.uProtect6.value.set(...L.protect6);
+    u.uProtect6Floor.value = L.protect6Floor;
     u.uProtect.value.set(...L.protect);
     u.uProtectFloor.value = L.protectFloor;
 
@@ -362,12 +382,18 @@ export function ParticleSystem({
       mix(look.baseTilt[2], lookTo.baseTilt[2], b),
     );
     const parallax = mix(look.mouseParallax, lookTo.mouseParallax, b) * motion;
+    // About's galaxy: during its transition the system glides from the story
+    // placement to About's centre and size, then follows About.
+    const G = L.galaxy;
+    const galaxyAt = formNames.indexOf("galaxy");
+    const gw = G && galaxyAt > 0 ? smooth(Math.min(Math.max(s0.smoothProgress - (galaxyAt - 1), 0), 1)) : 0;
     root.position.set(
-      mix(L.from.x, toX, b) + s0.smoothNdc.x * parallax,
-      mix(L.from.y, L.to.y, b) + s0.smoothNdc.y * parallax * 0.7,
+      mix(mix(L.from.x, toX, b), G?.x ?? 0, gw) + s0.smoothNdc.x * parallax,
+      mix(mix(L.from.y, L.to.y, b), G?.y ?? 0, gw) + s0.smoothNdc.y * parallax * 0.7,
       0,
     );
-    root.scale.setScalar(mix(L.from.scale, L.to.scale, b));
+    root.scale.setScalar(mix(mix(L.from.scale, L.to.scale, b), G?.scale ?? 1, gw));
+    onGravity?.(G ? gw * G.presence : 0, G?.x ?? 0, G?.y ?? 0);
 
     // --- rotation ---------------------------------------------------------
     // A "spin" look turns continuously; as it hands over to a "sway" look the

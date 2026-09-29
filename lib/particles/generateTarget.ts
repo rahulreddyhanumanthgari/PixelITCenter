@@ -22,7 +22,8 @@ export type FormName =
   | "ringStream"
   | "earth"
   | "torusFlow"
-  | "solarSystem";
+  | "solarSystem"
+  | "galaxy";
 
 interface FormDefinition {
   generate: (count: number, rand: Rand) => Float32Array;
@@ -94,6 +95,20 @@ export const FORMS: Record<FormName, FormDefinition> = {
   torusFlow: { generate: generateTorusFlowParticles },
   // Live form: the shader places planets, rings and trails (solarSystem).
   solarSystem: { generate: generateSolarSystemParticles, annotate: annotateSolarSystem },
+  // Live form: About's spiral galaxy, placed by the shader (galaxy). This
+  // flat disc only sets the particle order and arrival timing.
+  galaxy: {
+    generate: (count, rand) => {
+      const out = new Float32Array(count * 3);
+      for (let i = 0; i < count; i++) {
+        const r = 3.9 * Math.sqrt(rand());
+        const a = rand() * Math.PI * 2;
+        out[i * 3] = Math.cos(a) * r;
+        out[i * 3 + 1] = Math.sin(a) * r;
+      }
+      return out;
+    },
+  },
 };
 
 /**
