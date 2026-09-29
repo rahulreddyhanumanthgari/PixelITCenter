@@ -339,6 +339,19 @@
     }
   }
 
+  /* Over the galaxy (About → Contact) the particles are dimmed evenly and
+     the text is brightened, so they separate by contrast — no dark patches. */
+  [data-galaxy-region] {
+    --text-primary: #ffffff;
+    --text-secondary: #dde2ec;
+    --text-muted: #b8c0d0;
+  }
+  [data-galaxy-region] .type-display-lg,
+  [data-galaxy-region] .type-heading,
+  [data-galaxy-region] .type-subheading {
+    color: var(--text-primary);
+  }
+
   /* Emphasis for strategically important words inside headings. Colour
      only — no glow, gradient, shadow or background. Orange by default;
      data-tone="blue" | "white" for the others. */

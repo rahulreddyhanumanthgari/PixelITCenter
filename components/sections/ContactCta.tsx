@@ -10,7 +10,7 @@ export function ContactCta() {
     <section id="contact" aria-labelledby="contact-title" className="scroll-mt-20 pt-24 pb-12 sm:pt-32 sm:pb-16">
       <Container>
         {/* A whole section, not a card: centred text over the galaxy. */}
-        <div data-galaxy-content className="mx-auto max-w-3xl text-center">
+        <div className="mx-auto max-w-3xl text-center">
           <p data-reveal="0" className="type-eyebrow mb-4">
             {contactCta.eyebrow}
           </p>

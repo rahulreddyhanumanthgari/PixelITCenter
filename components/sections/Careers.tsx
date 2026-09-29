@@ -13,7 +13,7 @@ export function Careers() {
   return (
     <section id="careers" aria-labelledby="careers-title" className="scroll-mt-20 border-t border-border py-24 sm:py-32">
       <Container>
-        <div data-galaxy-content className="mx-auto max-w-3xl text-center">
+        <div className="mx-auto max-w-3xl text-center">
           <SectionHeader
             id="careers-title"
             eyebrow={careers.eyebrow}

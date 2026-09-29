@@ -257,12 +257,17 @@ top of the planets, so the two merged.)
 - **Stars bend around it.** `ParticleSystem` reports gravity each frame
   (`onGravity` → `Atmosphere`). Strength = the galaxy transition × how
   centred About is on screen.
-- **Readability.** Every `[data-galaxy-content]` text block on screen
-  dims the galaxy behind it. That is up to 4 at once (`uProtectG[4]`): About,
-  Careers, the Proof Points heading and quotes, and Contact.
-  - Brightness drops to 4% (6% on narrow screens), with a soft margin
-    around each block.
-  - Text never merges with the spiral or its bright core.
+- **Readability: contrast, not patches.** Dark boxes behind text (a
+  per-block dimming, even at 4%) looked like black spots and were removed.
+  Instead:
+  - the whole galaxy sits back evenly: `GALAXY_DIM` 0.55 outside, easing to
+    `GALAXY_CORE_DIM` 0.2 toward the core, where the text sits;
+  - the text over it is brighter: `[data-galaxy-region]` raises
+    `--text-primary` / `-secondary` / `-muted`;
+  - the dimming lifts only as the ending sun reaches the footer's edge, so
+    it never lights up behind the Contact text but still glows at the end.
+  - while the galaxy is being pulled in, it passes behind the Contact text,
+    so it is kept at 25% until it settles.
 
 ### Staffing & Consulting: particle Earth
 

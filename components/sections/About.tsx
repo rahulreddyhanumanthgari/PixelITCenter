@@ -5,8 +5,8 @@ import { Container, SectionHeader } from "./SectionHeader";
  * About Us — centred content framed by a particle spiral galaxy. The
  * galaxy is the journey's last form: How We Work's planets break up and
  * re-form into it as About scrolls in. It stays pinned behind About,
- * Careers, Proof Points and Contact ([data-galaxy-anchor] in app/page.tsx); particles behind [data-about-content] are dimmed so
- * the text stays calm. This section is transparent. Content enters with the
+ * Careers, Proof Points and Contact ([data-galaxy-anchor] in app/page.tsx). The galaxy is dimmed evenly
+ * and the text over it brightened, so the two stay distinct. This section is transparent. Content enters with the
  * same scroll choreography as the story sections ([data-reveal]).
  */
 export function About() {
@@ -18,7 +18,7 @@ export function About() {
       className="relative scroll-mt-20 border-t border-border py-28 sm:py-36 lg:flex lg:min-h-[115vh] lg:items-center"
     >
       <Container className="relative">
-        <div data-about-content data-galaxy-content className="mx-auto max-w-3xl text-center">
+        <div data-about-content className="mx-auto max-w-3xl text-center">
           <SectionHeader
             id="about-title"
             eyebrow={about.eyebrow}

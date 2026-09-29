@@ -35,8 +35,6 @@ uniform vec4 uProtect4;         // Why content box in NDC (dims the torus behind
 uniform float uTorusScale;      // Why torus display scale (smaller in the phone band)
 uniform float uSolarPhone;      // 1 = solar system in its compact phone-band layout
 uniform vec4 uProtect5;         // How We Work step content box in NDC (dims particles behind text)
-uniform vec4 uProtectG[4];      // galaxy area: up to 4 text boxes in NDC (unused = zero size)
-uniform float uProtect6Floor;   // brightness left behind that text
 uniform float uCollapse;        // galaxy ending: 0 = galaxy … 1 = a sun on the footer's edge
 uniform float uSunOffset;       // local y from the galaxy centre down to the footer's top edge
 uniform float uHeroField;       // 1 while the current "from" form is the hero gravity field
@@ -545,6 +543,8 @@ const float GALAXY_CORE = 0.34;
 const float GALAXY_WIND = 2.7;    // arm winding: radians per e-fold of radius
 const float GALAXY_SPIN = 0.045;  // pattern rotation (rad/s)
 const vec2 GALAXY_TILT = vec2(1.38, 0.16);  // x: π/2 would be exactly face-on
+const float GALAXY_DIM = 0.55;       // overall brightness behind the text sections
+const float GALAXY_CORE_DIM = 0.2;   // the dense core and inner arms, dimmed more
 
 float galaxyHash(float k) {
   return fract(sin(aRandom * 127.1 + aDelay * 311.7 + aScatterDistance * 17.3 + k * 74.7) * 43758.5453);
@@ -609,7 +609,13 @@ vec3 galaxy(out vec3 col, out float sizeK) {
     c = aRandom > 0.8 ? S_CREAM : mix(S_BLUE, S_DEEP, aRandom);
     level = 0.35;
   }
-  col = c * level * vis;
+  // The galaxy sits behind four text sections, so it is dimmed evenly
+  // (the dense core most) while the text over it is brightened — they
+  // separate by contrast, not by dark patches. The ending sun below keeps
+  // its full glow: the dimming lifts only as it reaches the footer's edge.
+  // Dimmer toward the centre, where the text sits.
+  float sitBack = kind >= 0.7 && kind < 0.82 ? GALAXY_CORE_DIM : mix(GALAXY_CORE_DIM, GALAXY_DIM, smoothstep(0.05, 0.4, rn));
+  col = c * level * vis * mix(sitBack, 1.0, smoothstep(0.75, 1.0, uCollapse));
 
   // Ending (uCollapse, after Contact): the arms wind tighter and everything
   // is pulled into a small sun (cream centre, orange edge). Brightness and
@@ -625,6 +631,9 @@ vec3 galaxy(out vec3 col, out float sizeK) {
   float glow = smoothstep(0.75, 1.0, uCollapse);
   col = mix(col, mix(S_CREAM, S_ORANGE, g4 * 0.8) * vis, pull * 0.8);
   col *= mix(1.0, 0.1, pull * pull) * (1.0 + 4.0 * pulse + 3.0 * glow);
+  // While it is pulled in it passes behind the Contact text: keep it faint
+  // then, and let it glow only as it settles on the footer's edge.
+  col *= mix(1.0, 0.25, smoothstep(0.3, 0.6, uCollapse) * (1.0 - glow));
   sizeK *= mix(1.0, 0.6, pull) * (1.0 + 1.2 * pulse);
 
   vec3 p = vec3(cos(th) * r, gauss * (kind < 0.82 && kind >= 0.7 ? 0.04 : 0.08) * (0.4 + rn) * (1.0 - pull), sin(th) * r);
@@ -870,20 +879,11 @@ void main() {
     vColor = mix(vColor, solarCol * twinkle * protect5, solarW);
   }
 
-  // About galaxy: its own colours (see galaxy), a soft twinkle, and dimmed
-  // well down behind every text block on screen (About → Contact), with a
-  // soft margin, so text never merges with the particles.
+  // About galaxy: its own colours (see galaxy) and a soft twinkle. No dark
+  // boxes behind text: the whole galaxy is dimmed evenly instead (in
+  // galaxy()), and the text over it is brighter (globals.css).
   if (galaxyW > 0.001) {
-    vec2 nd6 = gl_Position.xy / gl_Position.w;
-    float protect6 = 1.0;
-    for (int i = 0; i < 4; i++) {
-      vec4 b = uProtectG[i];
-      if (b.z < 0.01) continue;
-      vec2 d6 = abs(nd6 - b.xy) / b.zw;
-      float box6 = pow(pow(d6.x, 4.0) + pow(d6.y, 4.0), 0.25);
-      protect6 = min(protect6, mix(uProtect6Floor, 1.0, smoothstep(0.9, 1.35, box6)));
-    }
-    vColor = mix(vColor, galaxyCol * twinkle * protect6, galaxyW);
+    vColor = mix(vColor, galaxyCol * twinkle, galaxyW);
   }
 
   // Hero: keep the centred text calm — particles projected behind it dim.
