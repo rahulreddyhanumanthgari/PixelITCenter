@@ -50,7 +50,7 @@ export function MobileMenu() {
           </nav>
           <a
             href={site.portalUrl}
-            className="mt-8 inline-flex h-12 items-center rounded-full border border-white/20 px-6 text-sm font-medium"
+            className="mt-8 inline-flex h-12 items-center rounded-full border border-foreground/20 px-6 text-sm font-medium"
           >
             Portal Login
           </a>

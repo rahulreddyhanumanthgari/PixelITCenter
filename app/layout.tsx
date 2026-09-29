@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, Space_Grotesk } from "next/font/google";
 import { site } from "@/content/site";
+import { THEME_SCRIPT } from "@/lib/theme-script";
 import "./globals.css";
 
 const inter = Inter({
@@ -38,13 +39,25 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#05060a",
-  colorScheme: "dark",
+  themeColor: [
+    { media: "(prefers-color-scheme: dark)", color: "#05060a" },
+    { media: "(prefers-color-scheme: light)", color: "#f6f7fb" },
+  ],
+  colorScheme: "dark light",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" className={`dark ${inter.variable} ${spaceGrotesk.variable} h-full antialiased`}>
+    <html
+      lang="en"
+      data-theme="dark"
+      suppressHydrationWarning
+      className={`dark ${inter.variable} ${spaceGrotesk.variable} h-full antialiased`}
+    >
+      <head>
+        {/* Applies a saved light theme before first paint (no dark flash). */}
+        <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
+      </head>
       <body className="min-h-full flex flex-col">{children}</body>
     </html>
   );

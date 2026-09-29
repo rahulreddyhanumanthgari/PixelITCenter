@@ -24,7 +24,7 @@ export function Careers() {
           <div data-reveal="3" className="mt-9 flex justify-center">
             <a
               href={careers.cta.href}
-              className={cn(buttonVariants({ variant: "outline" }), "h-12 rounded-full border-white/20 bg-transparent px-6 text-sm")}
+              className={cn(buttonVariants({ variant: "outline" }), "h-12 rounded-full border-foreground/20 bg-transparent px-6 text-sm")}
             >
               {careers.cta.label}
               <ArrowRight data-icon="inline-end" />

@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils";
 import { HeaderShell } from "./HeaderShell";
 import { Logo } from "./Logo";
 import { NavLinks } from "./NavLinks";
+import { ThemeToggle } from "./ThemeToggle";
 import { MobileMenu } from "./MobileMenu";
 
 export function Header() {
@@ -23,11 +24,12 @@ export function Header() {
             href={site.portalUrl}
             className={cn(
               buttonVariants({ variant: "outline" }),
-              "hidden h-9 rounded-full border-white/20 bg-transparent px-4 sm:inline-flex",
+              "hidden h-9 rounded-full border-foreground/20 bg-transparent px-4 sm:inline-flex",
             )}
           >
             Portal Login
           </a>
+          <ThemeToggle />
           <MobileMenu />
         </div>
       </div>

@@ -54,7 +54,7 @@ export function Hero() {
               href={hero.secondaryCta.href}
               className={cn(
                 buttonVariants({ variant: "ghost" }),
-                "h-11 rounded-full px-5 text-sm font-medium text-[var(--text-secondary)] hover:bg-white/5 hover:text-foreground",
+                "h-11 rounded-full px-5 text-sm font-medium text-[var(--text-secondary)] hover:bg-foreground/5 hover:text-foreground",
               )}
             >
               {hero.secondaryCta.label}

@@ -32,7 +32,7 @@ export function ContactCta() {
               href={contactCta.secondary.href}
               className={cn(
                 buttonVariants({ variant: "outline" }),
-                "h-12 rounded-full border-white/20 bg-transparent px-6 text-sm",
+                "h-12 rounded-full border-foreground/20 bg-transparent px-6 text-sm",
               )}
             >
               {contactCta.secondary.label}

@@ -12,6 +12,7 @@ import type { PointerState, ProgressState } from "@/components/particles/types";
 import { PALETTE } from "@/lib/particles/palette";
 import { smoothstep } from "@/lib/particles/random";
 import { processProgress } from "@/lib/processProgress";
+import { useTheme } from "@/lib/theme";
 import {
   HERO_LOOK,
   JOURNEY_BLOOM,
@@ -81,6 +82,12 @@ export default function JourneyScene() {
   const tierName = useDeviceTier();
   const reducedMotion = useReducedMotion();
   const tier = getJourneyTier(tierName);
+  // Light theme: white canvas, no bloom, particles drawn as ink.
+  const light = useTheme() === "light";
+  const lightRef = useRef(light);
+  useEffect(() => {
+    lightRef.current = light;
+  }, [light]);
   const dpr = Math.min(window.devicePixelRatio || 1, tier.maxDpr);
   const [active, setActive] = useState(true);
 
@@ -108,7 +115,7 @@ export default function JourneyScene() {
   const onBlend = useCallback(
     (blend: number, field: number) => {
       const effect = bloom.current;
-      if (effect) effect.intensity = tier.bloom.hero + (tier.bloom.story - tier.bloom.hero) * blend;
+      if (effect) effect.intensity = lightRef.current ? 0 : tier.bloom.hero + (tier.bloom.story - tier.bloom.hero) * blend;
       atmosphere.current.field = field;
     },
     [tier],
@@ -333,7 +340,7 @@ export default function JourneyScene() {
       settings={{
         cameraFov: JOURNEY_CAMERA.fov,
         cameraZ: JOURNEY_CAMERA.z,
-        background: PALETTE.background,
+        background: light ? PALETTE.backgroundLight : PALETTE.background,
         dpr,
         bloom: { intensity: tier.bloom.hero, ...JOURNEY_BLOOM },
       }}
@@ -344,6 +351,7 @@ export default function JourneyScene() {
         reducedMotion={reducedMotion}
         pointer={pointer}
         atmosphere={atmosphere}
+        light={light}
       />
       <CameraRig
         pointer={pointer}
@@ -367,6 +375,7 @@ export default function JourneyScene() {
         onBlend={onBlend}
         onGravity={onGravity}
         stage={stage}
+        light={light}
       />
     </ParticleCanvas>
   );

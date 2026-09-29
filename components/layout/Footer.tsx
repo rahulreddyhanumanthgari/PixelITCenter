@@ -113,7 +113,7 @@ export function Footer() {
       </div>
 
       <Container className="relative z-10">
-        <div className="flex flex-col gap-4 border-t border-white/[0.08] py-7 text-xs text-[var(--text-muted)] sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-4 border-t border-border py-7 text-xs text-[var(--text-muted)] sm:flex-row sm:items-center sm:justify-between">
           <p>
             © {new Date().getFullYear()} {site.name} Corporation. All rights reserved.
           </p>

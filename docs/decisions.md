@@ -671,6 +671,31 @@ cards are the reference.
 - **Background.** Opaque, so the galaxy's sun rests on the footer's top
   edge, with faint blue and orange glows at the bottom.
 
+## Light theme
+
+- **Toggle.** A sun/moon button in the header (`ThemeToggle`, `lib/theme.ts`)
+  sets `data-theme="light"` on `<html>`, and removes `.dark`.
+  - The choice is remembered in localStorage.
+  - `THEME_SCRIPT` in `<head>` applies it before first paint, so there is no
+    dark flash.
+- **Colours.** `:root[data-theme="light"]` redefines every token in
+  `globals.css`: page `#f6f7fb`, white cards, ink text, and slightly deeper
+  orange and blue.
+  - Former hard-coded whites are now variables: hero text, hover titles,
+    icon nodes, the footer label, wordmark and dust, and the galaxy-area
+    text.
+  - White/10-style borders became `foreground/…`.
+- **Particles.** Light cannot be added to a white page, so in light mode:
+  - `particle.frag.glsl` (`uLight`) draws each point as ink with normal
+    blending;
+  - its hue is kept; whites and greys become dark slate;
+  - its brightness becomes its opacity;
+  - bloom is off and the canvas clears to the light background.
+
+  The same colour bands therefore read as orange and blue dots on white.
+- **Black hole speed.** The disc rotates about 30% slower (`omega` 0.38,
+  was 0.55), with slower infall and streams.
+
 ## Content
 
 **Source: the live pixelitcenter.com.** The live site's facts and wording

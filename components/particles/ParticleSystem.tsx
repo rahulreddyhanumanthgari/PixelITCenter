@@ -125,6 +125,8 @@ interface ParticleSystemProps {
    * active … N = all steps done. Written by the section's scroll triggers.
    */
   stage?: RefObject<ProgressState>;
+  /** Light theme: points drawn as ink (normal blending) instead of light. */
+  light?: boolean;
 }
 
 export interface MorphUniforms {
@@ -155,6 +157,7 @@ export interface MorphUniforms {
   uSolarPhone: THREE.IUniform<number>;
   uProtect5: THREE.IUniform<THREE.Vector4>;
   uCollapse: THREE.IUniform<number>;
+  uLight: THREE.IUniform<number>;
   uSunOffset: THREE.IUniform<number>;
   uProtect: THREE.IUniform<THREE.Vector4>;
   uProtectFloor: THREE.IUniform<number>;
@@ -163,6 +166,17 @@ export interface MorphUniforms {
 /** Anywhere far from the particles, so the pointer push is off. */
 const MOUSE_PARKED = new THREE.Vector3(100, 100, 100);
 const TAU = Math.PI * 2;
+
+/** Light theme: normal blending + ink colours; dark: additive light. */
+export function applyTheme(points: THREE.Points, uLight: THREE.IUniform<number>, light: boolean) {
+  uLight.value = light ? 1 : 0;
+  const m = points.material as THREE.Material;
+  const blending = light ? THREE.NormalBlending : THREE.AdditiveBlending;
+  if (m.blending !== blending) {
+    m.blending = blending;
+    m.needsUpdate = true;
+  }
+}
 
 function uniformsOf(points: THREE.Points): MorphUniforms {
   return (points.material as THREE.ShaderMaterial).uniforms as MorphUniforms;
@@ -197,6 +211,7 @@ export function ParticleSystem({
   onBlend,
   onGravity,
   stage,
+  light = false,
 }: ParticleSystemProps) {
   const rootRef = useRef<THREE.Group>(null);
   const tiltRef = useRef<THREE.Group>(null);
@@ -244,6 +259,7 @@ export function ParticleSystem({
       uSolarPhone: { value: 0 },
       uProtect5: { value: new THREE.Vector4(0, 0, 0.001, 0.001) },
       uCollapse: { value: 0 },
+      uLight: { value: 0 },
       uSunOffset: { value: 0 },
       uProtect: { value: new THREE.Vector4(0, 0, 0.001, 0.001) },
       uProtectFloor: { value: 1 },
@@ -309,6 +325,9 @@ export function ParticleSystem({
     const delta = Math.min(rawDelta, 1 / 20);
     const u = uniformsOf(points);
     u.uTime.value += delta;
+    // Theme: light on a dark page adds up (additive); on a white page each
+    // point is ink, blended normally (see particle.frag.glsl).
+    applyTheme(points, u.uLight, light);
     const time = u.uTime.value;
     const k = dampFactor(look.damping, delta);
 

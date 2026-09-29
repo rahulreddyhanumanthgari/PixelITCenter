@@ -174,14 +174,14 @@ vec3 heroField(out float visible, out float glow, out float grow, out float lane
     float r0 = role < 0.5
       ? HERO_VOID * (1.05 + pow(h4, 2.4) * (HERO_DISC_OUT - 1.05))
       : HERO_VOID * (1.02 + pow(h4, 2.0) * 0.14);
-    float omega = 0.55 * pow(r0, -1.5) * (0.85 + aDelay * 0.3);
+    float omega = 0.38 * pow(r0, -1.5) * (0.85 + aDelay * 0.3);
     r = r0;
     th = h5 * 6.2831853 + t * omega;
     // About a third of the disc is falling in: spiral from its orbit to just
     // inside the void edge, faster and tighter, then vanish; re-enter at the
     // rim (never inside the core) as the cycle wraps.
     if (role < 0.5 && h3 < 0.35) {
-      float life = fract(t / (18.0 + aRandom * 26.0) + aDelay);
+      float life = fract(t / (26.0 + aRandom * 36.0) + aDelay);
       float fall = pow(life, 1.8);
       r = mix(r0, HERO_VOID * 0.6, fall);
       th += 2.2 * fall * fall;
@@ -202,7 +202,7 @@ vec3 heroField(out float visible, out float glow, out float grow, out float lane
   } else if (role < 2.5) {
     // Streams: three curved arms (log spirals) flowing inward toward the disc.
     float arm = floor(h4 * 3.0);
-    float s = fract(h5 - t / (40.0 + aRandom * 30.0));
+    float s = fract(h5 - t / (58.0 + aRandom * 42.0));
     r = HERO_VOID * (HERO_DISC_OUT + s * 3.2);
     th = arm * 2.0943951 + 1.9 * log(r) + (aScatterDir.x * 0.22 + aScatterDir.z * 0.1) * (0.6 + s) + t * 0.1;
     y = aScatterDir.y * 0.18 * r;
@@ -213,7 +213,7 @@ vec3 heroField(out float visible, out float glow, out float grow, out float lane
   } else {
     // Outer space: sparse, dim, slow.
     r = HERO_VOID * (HERO_DISC_OUT + 0.4 + h4 * 4.0);
-    th = h5 * 6.2831853 + t * 0.03;
+    th = h5 * 6.2831853 + t * 0.02;
     y = aScatterDir.y * 0.5 * r;
     glow = 0.3;
     grow = 0.7;
