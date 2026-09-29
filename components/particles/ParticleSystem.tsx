@@ -72,6 +72,8 @@ export interface LayoutState {
   protectFloor: number;
   /** Services content box in NDC; particles behind it dim on the ring stream. */
   protect2: [number, number, number, number];
+  /** Staffing content box in NDC; Earth particles behind it dim. */
+  protect3: [number, number, number, number];
 }
 
 interface ParticleSystemProps {
@@ -122,6 +124,7 @@ export interface MorphUniforms {
   uFlowFrom: THREE.IUniform<number>;
   uFlowTo: THREE.IUniform<number>;
   uProtect2: THREE.IUniform<THREE.Vector4>;
+  uProtect3: THREE.IUniform<THREE.Vector4>;
   uProtect: THREE.IUniform<THREE.Vector4>;
   uProtectFloor: THREE.IUniform<number>;
 }
@@ -203,6 +206,7 @@ export function ParticleSystem({
       uFlowFrom: { value: 0 },
       uFlowTo: { value: 0 },
       uProtect2: { value: new THREE.Vector4(0, 0, 0.001, 0.001) },
+      uProtect3: { value: new THREE.Vector4(0, 0, 0.001, 0.001) },
       uProtect: { value: new THREE.Vector4(0, 0, 0.001, 0.001) },
       uProtectFloor: { value: 1 },
     };
@@ -279,7 +283,9 @@ export function ParticleSystem({
     u.uHeroField.value = formNames[0] === "heroField" && controller.fromIndex === 0 ? 1 : 0;
     // Flowing torus (Why): live whether it is being left or arrived at.
     // Live flowing forms: 1 = torus (Why), 2 = ring stream (Services).
-    const liveKind = (name: FormName | undefined) => (name === "torusFlow" ? 1 : name === "ringStream" ? 2 : 0);
+    // 3 = Earth (Staffing).
+    const liveKind = (name: FormName | undefined) =>
+      name === "torusFlow" ? 1 : name === "ringStream" ? 2 : name === "earth" ? 3 : 0;
     const fromKind = liveKind(formNames[controller.fromIndex]);
     const toKind = liveKind(formNames[controller.toIndex]);
     u.uFlowFrom.value = fromKind;
@@ -287,8 +293,9 @@ export function ParticleSystem({
     // The ring stream's particles do the moving; keep the whole structure
     // anchored (no sway/wobble) while it is on screen.
     const tt = u.uProgress.value;
-    s0.anchor = (fromKind === 2 ? 1 - tt : 0) + (toKind === 2 ? tt : 0);
+    s0.anchor = (fromKind >= 2 ? 1 - tt : 0) + (toKind >= 2 ? tt : 0);
     u.uProtect2.value.set(...L.protect2);
+    u.uProtect3.value.set(...L.protect3);
     u.uProtect.value.set(...L.protect);
     u.uProtectFloor.value = L.protectFloor;
 

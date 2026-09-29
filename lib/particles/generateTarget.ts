@@ -4,7 +4,7 @@ import { colorRocketParticles, generateRocketParticles } from "./generateRocketP
 import { PALETTE_LINEAR, pushColor } from "./palette";
 import { mulberry32, smoothstep, type Rand } from "./random";
 import { generateRingStreamParticles } from "./forms/ringStream";
-import { generateGlobeParticles } from "./forms/globe";
+import { generateEarthParticles } from "./forms/earth";
 import { generateTorusFlowParticles } from "./forms/torusFlow";
 import { annotateProcessStages, generateProcessParticles } from "./forms/process";
 
@@ -20,7 +20,7 @@ export type FormName =
   | "torus"
   | "sculpture"
   | "ringStream"
-  | "globe"
+  | "earth"
   | "torusFlow"
   | "process";
 
@@ -88,7 +88,8 @@ export const FORMS: Record<FormName, FormDefinition> = {
   // Section story forms (Services → Staffing → Why us → How we work).
   // Live flowing form: the shader moves these particles (ringStream).
   ringStream: { generate: generateRingStreamParticles },
-  globe: { generate: generateGlobeParticles },
+  // Live form: the shader spins the Earth and its shell (earthSpin).
+  earth: { generate: generateEarthParticles },
   // Live flowing form: the shader moves these particles (torusFlow).
   torusFlow: { generate: generateTorusFlowParticles },
   process: { generate: generateProcessParticles, annotate: annotateProcessStages },

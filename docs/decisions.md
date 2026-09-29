@@ -26,8 +26,8 @@ section. The same ~60k particles start as the landing hero's full-screen
 gravity field, then physically morph through four forms and stop on the last
 one:
 
-hero gravity field → Services (ring of particle streams) → Staffing (a network
-globe) → Why us (flowing particle torus) → How we work (four-stage path).
+hero gravity field → Services (ring of particle streams) → Staffing (a particle
+Earth) → Why us (flowing particle torus) → How we work (four-stage path).
 
 They never fade: every particle breaks away, scatters, drifts, curves back and
 reassembles. Each particle keeps the rocket palette colour it has always had
@@ -204,6 +204,34 @@ enters a gravity well. The rule is: same appearance, different movement.
   30% brightness on wide screens and 42% on narrow ones.
 - **Counts.** 26k desktop / 16k tablet / 10k mobile.
 
+### Staffing & Consulting: particle Earth
+
+The Staffing form (`earth`) is a particle Earth with real continents.
+
+- **Continents.** `lib/particles/landMask.ts` is a 720×360 run-length land
+  mask (12 KB). It was generated once from Natural Earth 1:50m land (the
+  public-domain world-atlas package), with a scanline fill that unwraps
+  rings across the date line. Particles are placed as follows:
+
+  | Share | Where |
+  |---|---|
+  | 50% | Land (area-weighted) |
+  | 15% | Coastline cells |
+  | 3% | Faint ocean |
+  | 5% | Haze just above the surface |
+  | The rest | An outer shell (radius 2.2 vs 1.5) of dotted latitude rows with a few soft gaps |
+
+- **Motion** (`earthSpin()` in the shader, live kind 3). The Earth turns one
+  way about its axis; the shell turns the other way about a slightly
+  different axis. Both carry the 23° axial tilt. The far hemisphere fades,
+  so the facing continents read clearly.
+- **Colour.** Mostly white, with a trace of each particle's accent. The shell
+  is dimmer. Particles behind `[data-staffing-content]` dim to 40%
+  (`uProtect3`).
+- **Layout.** The Staffing content is centred (`storySectionClass("center")`).
+  The Earth sits in the right slot (`STORY_SIDES[1] = 1`) and reaches toward
+  the centre behind the content. The two are independent.
+
 ### Services: ring of particle streams
 
 The Services form (`ringStream`) is a huge ring of about 90 particle lanes
@@ -292,7 +320,7 @@ Keep `TORUS_R` in the shader in sync with `TORUS_FLOW.R`.
 | File | Role |
 |---|---|
 | `generateRocketParticles.ts` | No longer shown. Its per-part colouring is still the source of the site's particle palette (`heroField.colorize` and the About vortex) |
-| `forms/*.ts` | `ringStream` (Services: huge off-screen-left ring of lanes; the shader flows and colours it), `torusFlow` (Why: thick dotted torus lattice; the shader flows it), `globe` (dotted continents from a noise land-mask on a lat/long dot grid, inside a geodesic network cage), `process` |
+| `forms/*.ts` | `ringStream` (Services: huge off-screen-left ring of lanes; the shader flows and colours it), `torusFlow` (Why: thick dotted torus lattice; the shader flows it), `earth` (Staffing: real continents from `landMask.ts`, coastlines, haze, dotted shell), `process` |
 | `geometryToParticles.ts` | `geometryToParticlePositions` (area-weighted surface sampling, seeded), `geometryEdgesToParticlePositions` (points along triangle edges → wireframe look), merge/transform helpers |
 | `generateTarget.ts` | `FORMS` registry, `alignByHeight`, colours (`colorsForSequence`, `monochromeColors`) |
 | `stars.ts`, `palette.ts`, `random.ts` | Background stars, colours, seeded PRNG |

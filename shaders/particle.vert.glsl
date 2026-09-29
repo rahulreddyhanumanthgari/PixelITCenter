@@ -31,6 +31,7 @@ uniform vec3 uAccent;           // rocket accent, for active checkpoints
 uniform float uFlowFrom;        // live form being left: 0 none, 1 torus (Why), 2 ring stream (Services)
 uniform float uFlowTo;          // live form being arrived at (same codes)
 uniform vec4 uProtect2;         // Services content box in NDC (dims the ring stream behind text)
+uniform vec4 uProtect3;         // Staffing content box in NDC (dims the Earth behind text)
 uniform float uHeroField;       // 1 while the current "from" form is the hero gravity field
 uniform vec4 uProtect;          // hero text box in NDC: centre xy, half-size zw
 uniform float uProtectFloor;    // brightness left for particles behind the hero text
@@ -291,6 +292,31 @@ vec3 ringColor(float lane) {
   return mix(c, navy, smoothstep(0.72, 1.0, lane));
 }
 
+// --- Staffing: a particle Earth in a counter-rotating dotted shell ---------
+// The Earth (and its haze) turns one way about its axis; the outer shell
+// turns the other way about a slightly different axis, so the layers seem
+// to circle past each other. Both are tilted like the real Earth. Keep
+// EARTH_SPLIT in sync with EARTH.split (forms/earth.ts).
+const float EARTH_SPLIT = 1.95;
+
+vec3 earthSpin(vec3 p, out float shell, out float facing) {
+  float t = uTime * uMotion;
+  shell = step(EARTH_SPLIT, length(p));
+  vec3 f;
+  if (shell > 0.5) {
+    f = rotY(p, -t * 0.07);
+    f = rotX(f, 0.32);
+  } else {
+    f = rotY(p, t * 0.12);
+  }
+  // Axial tilt, and tipped a little toward the viewer.
+  f = rotZ(f, 0.41);
+  f = rotX(f, 0.22);
+  // 1 on the hemisphere facing the camera (+z), 0 on the far side.
+  facing = smoothstep(-0.25, 0.35, f.z / max(length(f), 1e-3));
+  return f;
+}
+
 void main() {
   vec3 A = position;
   vec3 B = aTarget;
@@ -318,9 +344,15 @@ void main() {
   float laneB = 0.0;
   float arcA = 1.0;
   float arcB = 1.0;
-  if (uFlowFrom > 1.5) A = ringStream(A, laneA, arcA);
+  float shellA = 0.0;
+  float shellB = 0.0;
+  float faceA = 1.0;
+  float faceB = 1.0;
+  if (uFlowFrom > 2.5) A = earthSpin(A, shellA, faceA);
+  else if (uFlowFrom > 1.5) A = ringStream(A, laneA, arcA);
   else if (uFlowFrom > 0.5) A = torusFlow(A);
-  if (uFlowTo > 1.5) B = ringStream(B, laneB, arcB);
+  if (uFlowTo > 2.5) B = earthSpin(B, shellB, faceB);
+  else if (uFlowTo > 1.5) B = ringStream(B, laneB, arcB);
   else if (uFlowTo > 0.5) B = torusFlow(B);
 
   float outLocal = clamp((uProgress - delayOut) / OUT_LENGTH, 0.0, 1.0);
@@ -409,7 +441,8 @@ void main() {
   float heroW = uHeroField * (1.0 - eOut);
   float heroSize = mix(1.0, (0.4 + 0.6 * heroVisible) * heroGrow, heroW);
   // Services ring stream: closer to the camera, so slightly larger points.
-  float ringNear = step(1.5, uFlowFrom) * (1.0 - eOut) + step(1.5, uFlowTo) * eIn;
+  float ringNear = step(1.5, uFlowFrom) * step(uFlowFrom, 2.5) * (1.0 - eOut)
+                 + step(1.5, uFlowTo) * step(uFlowTo, 2.5) * eIn;
   float size = uSize * aScale * stageSize * heroSize * mix(1.0, 1.3, ringNear);
   gl_PointSize = clamp(size * uPixelRatio / depth, 1.0, 28.0 * uPixelRatio);
 
@@ -432,8 +465,8 @@ void main() {
   // Services ring stream: lane colours (fixed per particle, so they travel
   // with the flow), fading into the dark toward the right and dimmed behind
   // the centred content.
-  float ringFrom = step(1.5, uFlowFrom) * (1.0 - eOut);
-  float ringW = ringFrom + step(1.5, uFlowTo) * eIn;
+  float ringFrom = step(1.5, uFlowFrom) * step(uFlowFrom, 2.5) * (1.0 - eOut);
+  float ringW = ringFrom + step(1.5, uFlowTo) * step(uFlowTo, 2.5) * eIn;
   if (ringW > 0.001) {
     float lane = ringFrom > 0.0 ? laneA : laneB;
     float arcVis = ringFrom > 0.0 ? arcA : arcB;
@@ -446,6 +479,25 @@ void main() {
     float protect2 = mix(0.45, 1.0, smoothstep(0.85, 1.15, box2));
     vec3 ringOut = rc * depthFade * twinkle * rightFade * protect2 * arcVis * 2.6;
     vColor = mix(vColor, ringOut, ringW);
+  }
+
+  // Staffing Earth: mostly white (each particle keeps a trace of its accent),
+  // the shell a little dimmer than the planet, dimmed behind the content.
+  float earthFrom = step(2.5, uFlowFrom) * (1.0 - eOut);
+  float earthW = earthFrom + step(2.5, uFlowTo) * eIn;
+  if (earthW > 0.001) {
+    float shell = earthFrom > 0.0 ? shellA : shellB;
+    float facing = earthFrom > 0.0 ? faceA : faceB;
+    // The far side fades (the shell less so), so the continents facing the
+    // viewer read clearly, like the reference.
+    float side = mix(mix(0.12, 1.0, facing), mix(0.45, 1.0, facing), shell);
+    float lumE = dot(vColor, vec3(0.3, 0.5, 0.2));
+    vec3 ec = mix(vColor, vec3(0.95, 0.96, 1.0) * lumE * 1.2, 0.72) * 1.7 * side;
+    vec2 nd3 = gl_Position.xy / gl_Position.w;
+    vec2 d3 = abs(nd3 - uProtect3.xy) / max(uProtect3.zw, vec2(1e-3));
+    float box3 = pow(pow(d3.x, 4.0) + pow(d3.y, 4.0), 0.25);
+    float protect3 = mix(0.4, 1.0, smoothstep(0.85, 1.15, box3));
+    vColor = mix(vColor, ec * mix(1.0, 0.6, shell) * protect3, earthW);
   }
 
   // Hero: keep the centred text calm — particles projected behind it dim.

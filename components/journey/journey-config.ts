@@ -14,7 +14,7 @@ import type { FormName } from "@/lib/particles/generateTarget";
 export const JOURNEY_FORMS: readonly FormName[] = [
   "heroField",
   "ringStream",
-  "globe",
+  "earth",
   "torusFlow",
   "process",
 ];
@@ -40,7 +40,7 @@ export const HERO_FIELD = {
  * Services continues from the hero on the right, then the story alternates.
  * Keep in sync with the `side` of each section in components/sections.
  */
-export const STORY_SIDES: readonly number[] = [0, 0, 1, 0];
+export const STORY_SIDES: readonly number[] = [0, 1, 1, 0];
 
 /** Where the particles sit inside the story area, as a fraction of its width. */
 export const STORY_SLOTS = { left: 0.24, right: 0.76 } as const;
@@ -89,7 +89,7 @@ export const HERO_LOOK: ParticleLook = {
 
 /**
  * The story look: finer points, and a gentle sway instead of a spin so the
- * globe and the process path always face the reader. The system blends from
+ * Earth and the process path always face the reader. The system blends from
  * HERO_LOOK to this while the hero field becomes the Services ring.
  */
 export const STORY_LOOK: ParticleLook = {
