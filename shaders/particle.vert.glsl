@@ -471,7 +471,7 @@ void main() {
   float torusNear = step(0.5, uFlowFrom) * step(uFlowFrom, 1.5) * (1.0 - eOut)
                   + step(0.5, uFlowTo) * step(uFlowTo, 1.5) * eIn;
   float size = uSize * aScale * stageSize * heroSize * mix(1.0, 2.8, ringNear)
-             * mix(1.0, mix(0.7, 1.12, earthFace), earthNear)
+             * mix(1.0, mix(0.7, 1.12, earthFace) * 1.6, earthNear)
              * mix(1.0, 1.5, torusNear);
   gl_PointSize = clamp(size * uPixelRatio / depth, 1.0, 28.0 * uPixelRatio);
 
@@ -542,45 +542,34 @@ void main() {
     // The far side fades (the shell less so), so the continents facing the
     // viewer read clearly, like the reference.
     float side = mix(mix(0.12, 1.0, facing), mix(0.45, 1.0, facing), shell);
-    // Palette from the Saturn reference (linear): warm white / cream, orange,
-    // red-orange, rich blue, deep blue. Each layer's role comes from its
-    // radius band (see forms/earth.ts), so colours stay put on the planet.
+    // Same colours and brightness as the Services stream (ringColor bands,
+    // pure normalised hues at 1.25): orange land, red-orange coastlines,
+    // blue ocean and haze, blue to deep blue shell, a few cream highlights.
+    // Each layer's role comes from its radius band (see forms/earth.ts), so
+    // colours stay put on the planet.
     vec3 sp = earthFrom > 0.0 ? position : aTarget;
     float rn = length(sp) / EARTH_R;
-    vec3 cream = vec3(1.0, 0.86, 0.66);
-    vec3 whiteW = vec3(1.0, 0.95, 0.88);
-    vec3 orangeE = vec3(1.0, 0.3, 0.05);
-    vec3 redE = vec3(0.85, 0.07, 0.02);
-    vec3 blueE = vec3(0.07, 0.24, 1.0);
-    vec3 deepE = vec3(0.02, 0.06, 0.32);
     float warm = smoothstep(0.1, 0.9, sin(sp.x * 2.3 + sp.y * 1.7) * 0.5 + sin(sp.z * 3.1 - sp.y * 2.4) * 0.5);
     vec3 ec;
-    float lvl;
-    // Strong, saturated colour: orange land on a rich blue planet. Levels
-    // stay moderate so dense (additive) regions keep their hue instead of
-    // washing out to white.
     if (shell > 0.5) {
-      ec = mix(blueE, deepE, aRandom * 0.6);
-      if (aRandom > 0.96) ec = aRandom > 0.98 ? orangeE : cream;
-      lvl = 1.0;
+      ec = ringColor(0.62 + 0.38 * aRandom);                  // shell: blue → deep blue
     } else if (rn < 0.994) {
-      ec = mix(blueE, deepE, aRandom * 0.4); lvl = 1.5;         // ocean
+      ec = ringColor(0.6);                                     // ocean: blue
     } else if (rn < 1.005) {
-      ec = mix(orangeE, redE, (1.0 - warm) * 0.55);             // land
-      if (aRandom > 0.82) ec = cream;
-      lvl = 1.15;
+      ec = ringColor(0.1 + 0.3 * (1.0 - warm));                // land: orange → red-orange
     } else if (rn < 1.015) {
-      ec = mix(redE, orangeE, aRandom * 0.4); lvl = 1.35;       // coastline
+      ec = ringColor(0.44);                                    // coastline: red-orange
     } else {
-      ec = mix(blueE, deepE, aRandom * 0.5); lvl = 0.7;         // haze
+      ec = ringColor(0.7);                                     // haze: blue
     }
-    if (aRandom > 0.993) { ec = whiteW; lvl *= 1.5; }          // highlights
-    ec *= lvl * 1.35 * side * depthFade;
+    if (fract(aRandom * 13.0) > 0.97) ec = vec3(1.0, 0.86, 0.66);  // cream highlights
+    ec /= max(max(ec.r, ec.g), max(ec.b, 1e-3));
+    ec *= 1.25 * side;
     vec2 nd3 = gl_Position.xy / gl_Position.w;
     vec2 d3 = abs(nd3 - uProtect3.xy) / max(uProtect3.zw, vec2(1e-3));
     float box3 = pow(pow(d3.x, 4.0) + pow(d3.y, 4.0), 0.25);
     float protect3 = mix(0.4, 1.0, smoothstep(0.85, 1.15, box3));
-    vColor = mix(vColor, ec * mix(1.0, 0.6, shell) * protect3, earthW);
+    vColor = mix(vColor, ec * mix(1.0, 0.75, shell) * protect3, earthW);
   }
 
   // Hero: keep the centred text calm — particles projected behind it dim.

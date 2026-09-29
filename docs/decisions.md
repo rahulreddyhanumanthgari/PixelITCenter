@@ -223,18 +223,18 @@ The Staffing form (`earth`) is a dense particle Earth with real continents.
   | Haze | 5% | 1.02–1.18 |
   | Dotted shell of latitude rows | Remainder | 2.35 |
 
-- **Colour.** From the Saturn reference (in the shader):
+- **Colour.** The Services stream's palette and brightness (`ringColor`,
+  normalised hues at 1.25, times the far-side fade):
 
   | Layer | Colour |
   |---|---|
-  | Land | Saturated orange, deepening to red-orange in regions; about 18% cream |
-  | Coast | Red-orange, brighter |
-  | Ocean | Rich blue |
-  | Haze | Blue to deep blue |
-  | Shell | Blue to deep blue, with a few white/orange sparks |
+  | Land | Orange to red-orange |
+  | Coastline | Red-orange |
+  | Ocean and haze | Blue |
+  | Shell | Blue to deep blue, at 0.75 |
 
-  Plus rare white highlights. Levels stay moderate so dense regions keep
-  their hue instead of adding up to white.
+  Plus 3% cream highlights. Dots are drawn 1.6× larger so the colours carry
+  the same intensity as Services.
 - **Motion** (`earthSpin()`, live kind 3).
   - *Earth:* turns about its own axis at 0.06 rad/s (about 105 s a turn),
     starting on the Atlantic.
