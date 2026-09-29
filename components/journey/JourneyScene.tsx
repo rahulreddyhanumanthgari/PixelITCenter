@@ -174,6 +174,7 @@ export default function JourneyScene() {
     const galaxyAnchor = document.querySelector<HTMLElement>("[data-galaxy-anchor]");
     const galaxyContent = Array.from(document.querySelectorAll<HTMLElement>("[data-galaxy-content]"));
     const galaxyOutro = document.querySelector<HTMLElement>("[data-galaxy-outro]");
+    const galaxyRegion = document.querySelector<HTMLElement>("[data-galaxy-region]");
     // The particle layer stays on through the galaxy area (About → Contact);
     // after that the opaque footer covers it.
     const lastLit = document.querySelector<HTMLElement>("[data-galaxy-region]") ?? story;
@@ -238,6 +239,8 @@ export default function JourneyScene() {
           scale: (reachPx * wpp) / GALAXY_VIEW.outer,
           // Gravity is strongest while About's centre is near the screen's.
           presence: 1 - smoothstep(0.45, 1.1, Math.abs(cy - vh / 2) / vh),
+          // The footer's top edge (the region's end): the ending's horizon.
+          horizon: galaxyRegion ? -(galaxyRegion.getBoundingClientRect().bottom - vh / 2) * wpp : 0,
         };
       }
       // Dim the galaxy behind whichever text block over it is nearest the

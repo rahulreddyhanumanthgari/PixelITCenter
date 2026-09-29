@@ -44,9 +44,9 @@ export default function HomePage() {
           <About />
           <Testimonials />
           <ContactCta />
-          {/* The ending: empty space where the galaxy collapses into its
-              core, pulses and fades before the footer arrives. */}
-          <div data-galaxy-outro aria-hidden="true" className="h-[70svh]" />
+          {/* The ending: space where the galaxy collapses into a small sun
+              that settles on the footer's top edge, half hidden by it. */}
+          <div data-galaxy-outro aria-hidden="true" className="h-[40svh]" />
         </div>
       </main>
       {/* Opaque, so the galaxy never shows through the footer. */}

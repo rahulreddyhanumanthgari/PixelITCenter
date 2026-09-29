@@ -37,7 +37,8 @@ uniform float uSolarPhone;      // 1 = solar system in its compact phone-band la
 uniform vec4 uProtect5;         // How We Work step content box in NDC (dims particles behind text)
 uniform vec4 uProtect6;         // About content box in NDC (dims the galaxy behind text)
 uniform float uProtect6Floor;   // brightness left behind the About content
-uniform float uCollapse;        // galaxy ending: 0 = galaxy … 1 = collapsed and gone
+uniform float uCollapse;        // galaxy ending: 0 = galaxy … 1 = a sun on the footer's edge
+uniform float uSunOffset;       // local y from the galaxy centre down to the footer's top edge
 uniform float uHeroField;       // 1 while the current "from" form is the hero gravity field
 uniform vec4 uProtect;          // hero text box in NDC: centre xy, half-size zw
 uniform float uProtectFloor;    // brightness left for particles behind the hero text
@@ -602,21 +603,27 @@ vec3 galaxy(out vec3 col, out float sizeK) {
   col = c * level * vis;
 
   // Ending (uCollapse, after Contact): the arms wind tighter and everything
-  // is pulled into the core. Brightness and size drop as the particles pile
-  // up (so the point stays a point, not a white-out); it warms to cream,
-  // pulses once, then fades out.
-  float pull = smoothstep(0.0, 0.8, uCollapse);
+  // is pulled into a small sun (cream centre, orange edge). Brightness and
+  // size drop as the particles pile up, so it stays a sun, not a white-out.
+  // It pulses once, then settles, glowing, onto the footer's top edge
+  // (uSunOffset), where the footer hides its lower half and carries it up
+  // like a rising sun.
+  float pull = smoothstep(0.0, 0.75, uCollapse);
   th += pull * 5.0 * (0.25 + rn);
-  r = r * pow(1.0 - pull, 1.4) + 0.05 * pull * g4;
-  float dp = (uCollapse - 0.86) / 0.04;
+  r = r * pow(1.0 - pull, 1.4) + 0.24 * pull * g4 * g4;
+  float dp = (uCollapse - 0.8) / 0.05;
   float pulse = exp(-dp * dp);
-  col = mix(col, S_CREAM * vis, pull * 0.7);
-  col *= mix(1.0, 0.04, pull * pull) * (1.0 + 6.0 * pulse) * (1.0 - smoothstep(0.9, 1.0, uCollapse));
-  sizeK *= mix(1.0, 0.5, pull) * (1.0 + 1.5 * pulse);
+  float glow = smoothstep(0.75, 1.0, uCollapse);
+  col = mix(col, mix(S_CREAM, S_ORANGE, g4 * 0.8) * vis, pull * 0.8);
+  col *= mix(1.0, 0.1, pull * pull) * (1.0 + 4.0 * pulse + 3.0 * glow);
+  sizeK *= mix(1.0, 0.6, pull) * (1.0 + 1.2 * pulse);
 
   vec3 p = vec3(cos(th) * r, gauss * (kind < 0.82 && kind >= 0.7 ? 0.04 : 0.08) * (0.4 + rn) * (1.0 - pull), sin(th) * r);
   // Same orientation as a group rotated (x, 0, z) in three.js (XYZ order).
-  return rotX(rotZ(p, GALAXY_TILT.y), GALAXY_TILT.x);
+  p = rotX(rotZ(p, GALAXY_TILT.y), GALAXY_TILT.x);
+  // The sun sinks onto the footer's edge as it forms.
+  p.y += uSunOffset * smoothstep(0.35, 1.0, uCollapse);
+  return p;
 }
 
 void main() {

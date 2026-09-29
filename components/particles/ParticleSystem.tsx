@@ -87,7 +87,7 @@ export interface LayoutState {
    * About's galaxy (the last form): world centre and scale, and how centred
    * About is on screen (0..1, for the star field's gravity). Null = none.
    */
-  galaxy: { x: number; y: number; scale: number; presence: number } | null;
+  galaxy: { x: number; y: number; scale: number; presence: number; horizon: number } | null;
   /** About content box in NDC, and the brightness left behind it. */
   protect6: [number, number, number, number];
   protect6Floor: number;
@@ -155,6 +155,7 @@ export interface MorphUniforms {
   uProtect6: THREE.IUniform<THREE.Vector4>;
   uProtect6Floor: THREE.IUniform<number>;
   uCollapse: THREE.IUniform<number>;
+  uSunOffset: THREE.IUniform<number>;
   uProtect: THREE.IUniform<THREE.Vector4>;
   uProtectFloor: THREE.IUniform<number>;
 }
@@ -244,6 +245,7 @@ export function ParticleSystem({
       uProtect6: { value: new THREE.Vector4(0, 0, 0.001, 0.001) },
       uProtect6Floor: { value: 1 },
       uCollapse: { value: 0 },
+      uSunOffset: { value: 0 },
       uProtect: { value: new THREE.Vector4(0, 0, 0.001, 0.001) },
       uProtectFloor: { value: 1 },
     };
@@ -402,6 +404,9 @@ export function ParticleSystem({
     );
     root.scale.setScalar(mix(mix(L.from.scale, L.to.scale, b), G?.scale ?? 1, gw));
     onGravity?.(G ? gw * G.presence : 0, G?.x ?? 0, G?.y ?? 0);
+    // The ending's sun rests on the footer's top edge: its offset from the
+    // galaxy centre, in the particles' own units.
+    u.uSunOffset.value = G ? (G.horizon - root.position.y) / Math.max(root.scale.x, 1e-3) : 0;
 
     // --- rotation ---------------------------------------------------------
     // A "spin" look turns continuously; as it hands over to a "sway" look the
