@@ -501,7 +501,7 @@ void main() {
     vec2 d4 = abs(nd4 - uProtect4.xy) / max(uProtect4.zw, vec2(1e-3));
     float box4 = pow(pow(d4.x, 4.0) + pow(d4.y, 4.0), 0.25);
     float protect4 = mix(0.35, 1.0, smoothstep(0.85, 1.15, box4));
-    vColor = mix(vColor, th * 1.25 * protect4, torusW);
+    vColor = mix(vColor, th * 0.95 * protect4, torusW);
   }
 
   // Services ring stream: lane colours (fixed per particle, so they travel

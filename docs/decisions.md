@@ -309,7 +309,7 @@ centred Why content, which sits inside its opening.
   whole halo fits the pinned band.
 - **Size.** Points are 1.5× the story size while the halo is on screen.
 - **Colour.** The Services stream's exact bands and brightness
-  (`ringColor`, normalised hues at 1.25).
+  (`ringColor`, normalised hues), at slightly lower brightness (0.95).
   - *Bands:* orange on the inner edge facing the content, a red-orange band,
     blue to deep blue on the outer edge, plus 3% cream highlights.
   - *How it's driven:* the band comes from the live tube angle
