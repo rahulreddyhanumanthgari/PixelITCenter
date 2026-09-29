@@ -37,6 +37,7 @@ uniform float uSolarPhone;      // 1 = solar system in its compact phone-band la
 uniform vec4 uProtect5;         // How We Work step content box in NDC (dims particles behind text)
 uniform vec4 uProtect6;         // About content box in NDC (dims the galaxy behind text)
 uniform float uProtect6Floor;   // brightness left behind the About content
+uniform float uCollapse;        // galaxy ending: 0 = galaxy … 1 = collapsed and gone
 uniform float uHeroField;       // 1 while the current "from" form is the hero gravity field
 uniform vec4 uProtect;          // hero text box in NDC: centre xy, half-size zw
 uniform float uProtectFloor;    // brightness left for particles behind the hero text
@@ -600,7 +601,20 @@ vec3 galaxy(out vec3 col, out float sizeK) {
   }
   col = c * level * vis;
 
-  vec3 p = vec3(cos(th) * r, gauss * (kind < 0.82 && kind >= 0.7 ? 0.04 : 0.08) * (0.4 + rn), sin(th) * r);
+  // Ending (uCollapse, after Contact): the arms wind tighter and everything
+  // is pulled into the core. Brightness and size drop as the particles pile
+  // up (so the point stays a point, not a white-out); it warms to cream,
+  // pulses once, then fades out.
+  float pull = smoothstep(0.0, 0.8, uCollapse);
+  th += pull * 5.0 * (0.25 + rn);
+  r = r * pow(1.0 - pull, 1.4) + 0.05 * pull * g4;
+  float dp = (uCollapse - 0.86) / 0.04;
+  float pulse = exp(-dp * dp);
+  col = mix(col, S_CREAM * vis, pull * 0.7);
+  col *= mix(1.0, 0.04, pull * pull) * (1.0 + 6.0 * pulse) * (1.0 - smoothstep(0.9, 1.0, uCollapse));
+  sizeK *= mix(1.0, 0.5, pull) * (1.0 + 1.5 * pulse);
+
+  vec3 p = vec3(cos(th) * r, gauss * (kind < 0.82 && kind >= 0.7 ? 0.04 : 0.08) * (0.4 + rn) * (1.0 - pull), sin(th) * r);
   // Same orientation as a group rotated (x, 0, z) in three.js (XYZ order).
   return rotX(rotZ(p, GALAXY_TILT.y), GALAXY_TILT.x);
 }

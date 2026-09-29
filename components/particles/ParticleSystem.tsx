@@ -91,6 +91,8 @@ export interface LayoutState {
   /** About content box in NDC, and the brightness left behind it. */
   protect6: [number, number, number, number];
   protect6Floor: number;
+  /** Galaxy ending after Contact: 0 = galaxy … 1 = collapsed into its core and gone. */
+  galaxyCollapse: number;
 }
 
 interface ParticleSystemProps {
@@ -152,6 +154,7 @@ export interface MorphUniforms {
   uProtect5: THREE.IUniform<THREE.Vector4>;
   uProtect6: THREE.IUniform<THREE.Vector4>;
   uProtect6Floor: THREE.IUniform<number>;
+  uCollapse: THREE.IUniform<number>;
   uProtect: THREE.IUniform<THREE.Vector4>;
   uProtectFloor: THREE.IUniform<number>;
 }
@@ -240,6 +243,7 @@ export function ParticleSystem({
       uProtect5: { value: new THREE.Vector4(0, 0, 0.001, 0.001) },
       uProtect6: { value: new THREE.Vector4(0, 0, 0.001, 0.001) },
       uProtect6Floor: { value: 1 },
+      uCollapse: { value: 0 },
       uProtect: { value: new THREE.Vector4(0, 0, 0.001, 0.001) },
       uProtectFloor: { value: 1 },
     };
@@ -288,6 +292,7 @@ export function ParticleSystem({
     smoothStage: -1,
     spin: 0,
     anchor: 0,
+    collapse: 0,
   });
 
   useFrame((state, rawDelta) => {
@@ -336,6 +341,9 @@ export function ParticleSystem({
     u.uProtect5.value.set(...L.protect5);
     u.uProtect6.value.set(...L.protect6);
     u.uProtect6Floor.value = L.protect6Floor;
+    // Eased like the morph, so fast scrolling still plays the collapse smoothly.
+    s0.collapse += (L.galaxyCollapse - s0.collapse) * k;
+    u.uCollapse.value = s0.collapse;
     u.uProtect.value.set(...L.protect);
     u.uProtectFloor.value = L.protectFloor;
 

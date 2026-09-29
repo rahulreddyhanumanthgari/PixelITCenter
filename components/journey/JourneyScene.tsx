@@ -98,6 +98,7 @@ export default function JourneyScene() {
     galaxy: null,
     protect6: [0, 0, 0.001, 0.001],
     protect6Floor: GALAXY_VIEW.protectFloor.wide,
+    galaxyCollapse: 0,
     earthScale: 1,
   });
   // How scattered the main particles are; drives the stars and camera.
@@ -172,6 +173,7 @@ export default function JourneyScene() {
     const processContent = document.querySelector<HTMLElement>("[data-process-content]");
     const galaxyAnchor = document.querySelector<HTMLElement>("[data-galaxy-anchor]");
     const galaxyContent = Array.from(document.querySelectorAll<HTMLElement>("[data-galaxy-content]"));
+    const galaxyOutro = document.querySelector<HTMLElement>("[data-galaxy-outro]");
     // The particle layer stays on through the galaxy area (About → Contact);
     // after that the opaque footer covers it.
     const lastLit = document.querySelector<HTMLElement>("[data-galaxy-region]") ?? story;
@@ -253,6 +255,12 @@ export default function JourneyScene() {
         ];
       }
       L.protect6Floor = vw < 1024 ? GALAXY_VIEW.protectFloor.narrow : GALAXY_VIEW.protectFloor.wide;
+      // Ending: the empty stretch after Contact scrubs the collapse, from its
+      // top entering the screen (0) to the galaxy's release (1).
+      if (galaxyOutro) {
+        const o = galaxyOutro.getBoundingClientRect();
+        L.galaxyCollapse = Math.min(Math.max((vh - o.top) / Math.max(o.height, 1), 0), 1);
+      }
       if (processContent) {
         const c = processContent.getBoundingClientRect();
         L.protect5 = [

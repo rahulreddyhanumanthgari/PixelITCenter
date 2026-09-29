@@ -204,6 +204,18 @@ top of the planets, so the two merged.)
   - Particles dim behind whichever `[data-galaxy-content]` block is nearest
     the middle of the screen (About's content, the Proof Points heading). The
     cards are opaque already.
+- **Ending: the galaxy collapses.** An empty `[data-galaxy-outro]` (70svh)
+  closes the region after Contact, so the ending plays in open space rather
+  than behind the Contact card.
+  - *Driver:* scrolling through the outro sets `L.galaxyCollapse` from 0 (its
+    top enters the screen) to 1 (the galaxy's release). `ParticleSystem`
+    eases it into `uCollapse`.
+  - *In the shader:* the arms wind tighter (extra twist, more further out)
+    and are pulled into the core; by 0.8 everything is one small point.
+  - *Brightness:* colour warms to cream while brightness and point size drop
+    as the particles pile up, so the point stays a point and not a white-out.
+  - *Finish:* one soft pulse at 0.86, then a fade to nothing by 1. The footer
+    arrives over plain stars, and scrolling back up rebuilds the galaxy.
 - **Stars bend around it.** `ParticleSystem` reports gravity each frame
   (`onGravity` → `Atmosphere`). Strength = the galaxy transition × how
   centred About is on screen.
