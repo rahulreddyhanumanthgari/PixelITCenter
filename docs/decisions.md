@@ -690,7 +690,16 @@ cards are the reference.
     blending;
   - its hue is kept; whites and greys become dark slate;
   - its brightness becomes its opacity;
-  - bloom is off and the canvas clears to the light background.
+  - bloom is off and the canvas clears to the light background;
+  - hues are pushed toward full saturation and slightly deepened (yellow
+    reads as gold), dots are firmer (`pow(core, 1.1)`) and 35% larger, and
+    the galaxy is barely dimmed.
+- **Light sky** (`LightSky`). The counterpart of the dark star field, drawn
+  behind the particles in light mode only as a full-screen shader quad:
+  - a cool-to-warm gradient that darkens toward the edges;
+  - a fine dot grid (26px) of faint ink dots, stronger toward the rim.
+
+  Like black on dark, the tint gives the particle colours contrast.
 
   The same colour bands therefore read as orange and blue dots on white.
 - **Black hole speed.** The disc rotates about 30% slower (`omega` 0.38,

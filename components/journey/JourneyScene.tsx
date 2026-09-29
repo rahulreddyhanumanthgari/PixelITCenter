@@ -7,6 +7,7 @@ import { gsap } from "@/lib/gsap";
 import { ParticleCanvas } from "@/components/particles/ParticleCanvas";
 import { ParticleSystem, type LayoutState } from "@/components/particles/ParticleSystem";
 import { StarField, type Atmosphere } from "@/components/particles/StarField";
+import { LightSky } from "@/components/particles/LightSky";
 import { useDeviceTier, usePointer, useReducedMotion } from "@/components/particles/hooks";
 import type { PointerState, ProgressState } from "@/components/particles/types";
 import { PALETTE } from "@/lib/particles/palette";
@@ -345,6 +346,7 @@ export default function JourneyScene() {
         bloom: { intensity: tier.bloom.hero, ...JOURNEY_BLOOM },
       }}
     >
+      {light && <LightSky pixelRatio={dpr} />}
       <StarField
         count={tier.starCount}
         pixelRatio={dpr}

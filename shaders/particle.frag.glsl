@@ -22,9 +22,15 @@ void main() {
     vec3 hue = vColor / max(m, 1e-3);
     // 0 for white/grey, 1 for a pure hue.
     float sat = 1.0 - min(min(hue.r, hue.g), hue.b);
-    vec3 ink = mix(vec3(0.12, 0.15, 0.24), hue * 0.9, smoothstep(0.15, 0.6, sat));
-    // Dim points still need to read on white: lift faint ones strongly.
-    gl_FragColor = vec4(ink, clamp(pow(m, 0.55) * 1.5, 0.0, 1.0) * glow * vAlpha);
+    // Vivid on white: push hues toward full saturation, then deepen a touch
+    // so orange stays orange and yellow reads as gold (not pale on white).
+    float lo = min(min(hue.r, hue.g), hue.b);
+    vec3 vivid = (hue - lo) / max(1.0 - lo, 1e-3);
+    vivid = mix(hue, vivid, 0.6) * mix(0.95, 0.8, vivid.g * (1.0 - vivid.b));
+    vec3 ink = mix(vec3(0.12, 0.15, 0.24), vivid, smoothstep(0.12, 0.5, sat));
+    // A firmer, more opaque dot than the soft glow used on dark.
+    float solid = pow(core, 1.1);
+    gl_FragColor = vec4(ink, clamp(pow(m, 0.4) * 2.0, 0.0, 1.0) * solid * vAlpha);
     return;
   }
 

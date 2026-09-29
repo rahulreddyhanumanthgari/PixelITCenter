@@ -35,6 +35,7 @@ uniform vec4 uProtect4;         // Why content box in NDC (dims the torus behind
 uniform float uTorusScale;      // Why torus display scale (smaller in the phone band)
 uniform float uSolarPhone;      // 1 = solar system in its compact phone-band layout
 uniform vec4 uProtect5;         // How We Work step content box in NDC (dims particles behind text)
+uniform float uLight;           // 1 = light theme (bigger, fuller points)
 uniform float uCollapse;        // galaxy ending: 0 = galaxy … 1 = a sun on the footer's edge
 uniform float uSunOffset;       // local y from the galaxy centre down to the footer's top edge
 uniform float uHeroField;       // 1 while the current "from" form is the hero gravity field
@@ -617,6 +618,8 @@ vec3 galaxy(out vec3 col, out float sizeK) {
   // its full glow: the dimming lifts only as it reaches the footer's edge.
   // Dimmer toward the centre, where the text sits.
   float sitBack = kind >= 0.7 && kind < 0.82 ? GALAXY_CORE_DIM : mix(GALAXY_CORE_DIM, GALAXY_DIM, smoothstep(0.05, 0.4, rn));
+  // (On white there is no glow to compete with the text: barely dimmed.)
+  sitBack = mix(sitBack, 0.9, uLight);
   col = c * level * vis * mix(sitBack, 1.0, smoothstep(0.75, 1.0, uCollapse));
 
   // Ending (uCollapse, after Contact): the arms wind tighter and everything
@@ -773,6 +776,8 @@ void main() {
              * mix(1.0, 1.5, torusNear)
              * mix(1.0, solarSize, solarW)
              * mix(1.0, galaxySize, galaxyW);
+  // Light theme: ink dots on white need a little more size to read.
+  size *= mix(1.0, 1.35, uLight);
   gl_PointSize = clamp(size * uPixelRatio / depth, 1.0, 28.0 * uPixelRatio);
 
   // Near particles brighter, far ones dimmer; a soft twinkle on top. Spread
