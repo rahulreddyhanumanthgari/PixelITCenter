@@ -16,6 +16,7 @@ export const JOURNEY_FORMS: readonly FormName[] = [
   "ringStream",
   "earth",
   "torusFlow",
+  "logoNode",
   "process",
 ];
 
@@ -42,7 +43,8 @@ export const HERO_FIELD = {
  */
 // Fractions mix between the left and right slots: Staffing's Earth sits at
 // 0.75 (≈63% across), reaching just past the centre of the screen.
-export const STORY_SIDES: readonly number[] = [0, 0.75, 1, 0];
+// The Why torus sits right; the node symbol it becomes is centred (0.5).
+export const STORY_SIDES: readonly number[] = [0, 0.75, 1, 0.5, 0];
 
 /**
  * Staffing's Earth on desktop: drawn `scale`× larger, and placed from the
@@ -62,6 +64,23 @@ export const CAMERA_MOTION = { pointerX: 0.14, pointerY: 0.09, fieldPullBack: 0.
  * Scroll windows for each transition (ScrollTrigger syntax): each runs while
  * the section that owns the *next* form scrolls into view.
  */
+/**
+ * Which story section owns each transition (one per form after the hero
+ * field, in JOURNEY_FORMS order). Why owns two: the torus arrives with the
+ * section, then becomes the node symbol while the section is scrolled
+ * (its own window in `windows`).
+ */
+export const STEP_SECTIONS: readonly number[] = [0, 1, 2, 2, 3];
+type StepWindow = { start: string; end: string };
+export const STEP_WINDOWS: { columns: Readonly<Record<number, StepWindow>>; band: Readonly<Record<number, StepWindow>> } = {
+  // Desktop: Why is 175vh tall with its content pinned; the symbol forms
+  // while it scrolls.
+  columns: { 3: { start: "top 2%", end: "top -58%" } },
+  // Phones/tablets: Why keeps its normal height; the symbol forms over the
+  // section's second half, finishing before How We Work starts to arrive.
+  band: { 3: { start: "center 55%", end: "bottom 102%" } },
+};
+
 export const TRANSITIONS = {
   intoStory: { desktop: { start: "top 96%", end: "top 18%" }, mobile: { start: "top 100%", end: "top 50%" } },
   story: { start: "top 96%", end: "top 14%" },

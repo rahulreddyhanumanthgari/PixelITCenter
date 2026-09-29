@@ -20,6 +20,8 @@ import {
   CAMERA_MOTION,
   EARTH_VIEW,
   HERO_FIELD,
+  STEP_SECTIONS,
+  STEP_WINDOWS,
   STORY_HANDOFF,
   STORY_LOOK,
   STORY_SIDES,
@@ -90,6 +92,7 @@ export default function JourneyScene() {
     protectFloor: HERO_FIELD.protectFloor.wide,
     protect2: [0, 0, 0.001, 0.001],
     protect3: [0, 0, 0.001, 0.001],
+    protect4: [0, 0, 0.001, 0.001],
     earthScale: 1,
   });
   // How scattered the main particles are; drives the stars and camera.
@@ -130,7 +133,9 @@ export default function JourneyScene() {
       steps.forEach((step, i) => {
         // Each form assembles as the section that owns it arrives; the first
         // step is the hero field breaking out into the Services ring.
-        const trigger = { trigger: sections[i], ...(i === 0 ? intoStory : TRANSITIONS.story) };
+        const windows = isColumnLayout() ? STEP_WINDOWS.columns : STEP_WINDOWS.band;
+        const window = windows[i] ?? (i === 0 ? intoStory : TRANSITIONS.story);
+        const trigger = { trigger: sections[STEP_SECTIONS[i] ?? i], ...window };
         gsap.to(step, {
           v: 1,
           ease: "none",
@@ -153,6 +158,7 @@ export default function JourneyScene() {
     const heroContent = document.querySelector<HTMLElement>("[data-hero-content]");
     const servicesContent = document.querySelector<HTMLElement>("[data-services-content]");
     const staffingContent = document.querySelector<HTMLElement>("[data-staffing-content]");
+    const whyContent = document.querySelector<HTMLElement>("[data-why-content]");
     // The particle layer stays on through About Us (the vortex); after that the
     // opaque sections cover it.
     const lastLit = document.querySelector<HTMLElement>("[data-about]") ?? story;
@@ -200,6 +206,15 @@ export default function JourneyScene() {
       L.from.y = 0;
       L.from.scale = voidPx * wpp;
       L.protectFloor = vw < 768 ? HERO_FIELD.protectFloor.narrow : HERO_FIELD.protectFloor.wide;
+      if (whyContent) {
+        const c = whyContent.getBoundingClientRect();
+        L.protect4 = [
+          ((c.left + c.width / 2) / vw) * 2 - 1,
+          -(((c.top + c.height / 2) / vh) * 2 - 1),
+          (c.width / vw) * 1.02,
+          (c.height / vh) * 1.02,
+        ];
+      }
       if (staffingContent) {
         const c = staffingContent.getBoundingClientRect();
         L.protect3 = [

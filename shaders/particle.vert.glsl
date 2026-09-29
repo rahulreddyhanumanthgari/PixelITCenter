@@ -33,6 +33,7 @@ uniform float uFlowTo;          // live form being arrived at (same codes)
 uniform vec4 uProtect2;         // Services content box in NDC (dims the ring stream behind text)
 uniform vec4 uProtect3;         // Staffing content box in NDC (dims the Earth behind text)
 uniform float uEarthScale;      // extra display scale for the Staffing Earth
+uniform vec4 uProtect4;         // Why content box in NDC (dims the node symbol behind text)
 uniform float uHeroField;       // 1 while the current "from" form is the hero gravity field
 uniform vec4 uProtect;          // hero text box in NDC: centre xy, half-size zw
 uniform float uProtectFloor;    // brightness left for particles behind the hero text
@@ -321,6 +322,56 @@ vec3 earthSpin(vec3 p, out float shell, out float facing) {
   return f * uEarthScale;
 }
 
+// --- Why: the Pixel IT node symbol, gently alive ---------------------------
+// Nodes (x, y, _, radius) in the form's local units — keep in sync with
+// LOGO_NODES (forms/logoNode.ts). Index 0 is the hub.
+const vec4 LOGO_NODE[6] = vec4[6](
+  vec4(0.052, 0.156, 0.0, 0.582),
+  vec4(1.664, 1.820, 0.0, 0.582),
+  vec4(-1.456, 1.508, 0.0, 0.380),
+  vec4(1.664, -1.040, 0.0, 0.374),
+  vec4(-1.664, -1.664, 0.0, 0.588),
+  vec4(0.260, -1.924, 0.0, 0.463)
+);
+
+// Very slow life: a small sway, breathing, and a tiny per-particle drift.
+// The symbol never loosens enough to lose its shape.
+vec3 logoLive(vec3 p) {
+  float t = uTime * uMotion;
+  p *= 1.0 + 0.012 * sin(t * 0.6 + aRandom * 6.2831);
+  p += 0.014 * vec3(sin(t * 0.4 + aRandom * 40.0), cos(t * 0.35 + aRandom * 23.0), sin(t * 0.3 + aRandom * 17.0));
+  p = rotY(p, 0.2 * sin(t * 0.09));
+  return rotX(p, 0.06 * sin(t * 0.07 + 1.1));
+}
+
+// Colour and brightness from where the particle sits on the symbol:
+// node (its own palette colour), spoke (towards cream), or field (dim blue).
+vec3 logoColor(vec3 sp, out float lvl) {
+  vec3 cream = vec3(1.0, 0.88, 0.7);
+  vec3 orange = vec3(1.0, 0.3, 0.05);
+  vec3 blue = vec3(0.07, 0.26, 1.0);
+  vec3 nodeCol[6] = vec3[6](cream, orange, blue, blue, orange, mix(cream, orange, 0.5));
+  float best = 1e9;
+  int k = 0;
+  for (int i = 0; i < 6; i++) {
+    float d = length(sp.xy - LOGO_NODE[i].xy) / LOGO_NODE[i].w;
+    if (d < best) { best = d; k = i; }
+  }
+  // Distance to the nearest spoke (hub → node i).
+  float spoke = 1e9;
+  for (int i = 1; i < 6; i++) {
+    vec2 a = LOGO_NODE[0].xy;
+    vec2 ab = LOGO_NODE[i].xy - a;
+    float h = clamp(dot(sp.xy - a, ab) / dot(ab, ab), 0.0, 1.0);
+    spoke = min(spoke, length(sp.xy - a - ab * h));
+  }
+  if (best < 1.05) { lvl = 1.25; return mix(nodeCol[k], cream, aRandom * 0.25); }
+  if (spoke < 0.16) { lvl = 1.05; return mix(nodeCol[k], cream, 0.45 + aRandom * 0.3); }
+  if (best < 2.0) { lvl = 0.55; return mix(nodeCol[k], blue, 0.3); }
+  lvl = 0.35;
+  return mix(blue, cream, aRandom * 0.25);
+}
+
 void main() {
   vec3 A = position;
   vec3 B = aTarget;
@@ -352,10 +403,12 @@ void main() {
   float shellB = 0.0;
   float faceA = 1.0;
   float faceB = 1.0;
-  if (uFlowFrom > 2.5) A = earthSpin(A, shellA, faceA);
+  if (uFlowFrom > 3.5) A = logoLive(A);
+  else if (uFlowFrom > 2.5) A = earthSpin(A, shellA, faceA);
   else if (uFlowFrom > 1.5) A = ringStream(A, laneA, arcA);
   else if (uFlowFrom > 0.5) A = torusFlow(A);
-  if (uFlowTo > 2.5) B = earthSpin(B, shellB, faceB);
+  if (uFlowTo > 3.5) B = logoLive(B);
+  else if (uFlowTo > 2.5) B = earthSpin(B, shellB, faceB);
   else if (uFlowTo > 1.5) B = ringStream(B, laneB, arcB);
   else if (uFlowTo > 0.5) B = torusFlow(B);
 
@@ -447,8 +500,9 @@ void main() {
   // Services ring stream: closer to the camera, so slightly larger points.
   float ringNear = step(1.5, uFlowFrom) * step(uFlowFrom, 2.5) * (1.0 - eOut)
                  + step(1.5, uFlowTo) * step(uFlowTo, 2.5) * eIn;
-  float earthNear = step(2.5, uFlowFrom) * (1.0 - eOut) + step(2.5, uFlowTo) * eIn;
-  float earthFace = step(2.5, uFlowFrom) * (1.0 - eOut) > 0.0 ? faceA : faceB;
+  float earthNear = step(2.5, uFlowFrom) * step(uFlowFrom, 3.5) * (1.0 - eOut)
+                  + step(2.5, uFlowTo) * step(uFlowTo, 3.5) * eIn;
+  float earthFace = step(2.5, uFlowFrom) * step(uFlowFrom, 3.5) * (1.0 - eOut) > 0.0 ? faceA : faceB;
   float size = uSize * aScale * stageSize * heroSize * mix(1.0, 1.3, ringNear)
              * mix(1.0, mix(0.7, 1.12, earthFace), earthNear);
   gl_PointSize = clamp(size * uPixelRatio / depth, 1.0, 28.0 * uPixelRatio);
@@ -490,8 +544,8 @@ void main() {
 
   // Staffing Earth: mostly white (each particle keeps a trace of its accent),
   // the shell a little dimmer than the planet, dimmed behind the content.
-  float earthFrom = step(2.5, uFlowFrom) * (1.0 - eOut);
-  float earthW = earthFrom + step(2.5, uFlowTo) * eIn;
+  float earthFrom = step(2.5, uFlowFrom) * step(uFlowFrom, 3.5) * (1.0 - eOut);
+  float earthW = earthFrom + step(2.5, uFlowTo) * step(uFlowTo, 3.5) * eIn;
   if (earthW > 0.001) {
     float shell = earthFrom > 0.0 ? shellA : shellB;
     float facing = earthFrom > 0.0 ? faceA : faceB;
@@ -537,6 +591,21 @@ void main() {
     float box3 = pow(pow(d3.x, 4.0) + pow(d3.y, 4.0), 0.25);
     float protect3 = mix(0.4, 1.0, smoothstep(0.85, 1.15, box3));
     vColor = mix(vColor, ec * mix(1.0, 0.6, shell) * protect3, earthW);
+  }
+
+  // Why node symbol: palette colours by position on the symbol, dimmed
+  // behind the centred content.
+  float logoFrom = step(3.5, uFlowFrom) * (1.0 - eOut);
+  float logoW = logoFrom + step(3.5, uFlowTo) * eIn;
+  if (logoW > 0.001) {
+    vec3 sp = logoFrom > 0.0 ? position : aTarget;
+    float lvl;
+    vec3 lc = logoColor(sp, lvl);
+    vec2 nd4 = gl_Position.xy / gl_Position.w;
+    vec2 d4 = abs(nd4 - uProtect4.xy) / max(uProtect4.zw, vec2(1e-3));
+    float box4 = pow(pow(d4.x, 4.0) + pow(d4.y, 4.0), 0.25);
+    float protect4 = mix(0.42, 1.0, smoothstep(0.85, 1.15, box4));
+    vColor = mix(vColor, lc * lvl * 1.3 * depthFade * twinkle * protect4, logoW);
   }
 
   // Hero: keep the centred text calm — particles projected behind it dim.

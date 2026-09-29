@@ -5,6 +5,7 @@ import { PALETTE_LINEAR, pushColor } from "./palette";
 import { mulberry32, smoothstep, type Rand } from "./random";
 import { generateRingStreamParticles } from "./forms/ringStream";
 import { generateEarthParticles } from "./forms/earth";
+import { generateLogoNodeParticles } from "./forms/logoNode";
 import { generateTorusFlowParticles } from "./forms/torusFlow";
 import { annotateProcessStages, generateProcessParticles } from "./forms/process";
 
@@ -21,6 +22,7 @@ export type FormName =
   | "sculpture"
   | "ringStream"
   | "earth"
+  | "logoNode"
   | "torusFlow"
   | "process";
 
@@ -90,6 +92,8 @@ export const FORMS: Record<FormName, FormDefinition> = {
   ringStream: { generate: generateRingStreamParticles },
   // Live form: the shader spins the Earth and its shell (earthSpin).
   earth: { generate: generateEarthParticles },
+  // Live form: the Pixel IT node symbol, kept gently alive by the shader.
+  logoNode: { generate: generateLogoNodeParticles },
   // Live flowing form: the shader moves these particles (torusFlow).
   torusFlow: { generate: generateTorusFlowParticles },
   process: { generate: generateProcessParticles, annotate: annotateProcessStages },

@@ -76,6 +76,8 @@ export interface LayoutState {
   protect3: [number, number, number, number];
   /** Extra display scale for the Staffing Earth (larger on desktop). */
   earthScale: number;
+  /** Why content box in NDC; node-symbol particles behind it dim. */
+  protect4: [number, number, number, number];
 }
 
 interface ParticleSystemProps {
@@ -128,6 +130,7 @@ export interface MorphUniforms {
   uProtect2: THREE.IUniform<THREE.Vector4>;
   uProtect3: THREE.IUniform<THREE.Vector4>;
   uEarthScale: THREE.IUniform<number>;
+  uProtect4: THREE.IUniform<THREE.Vector4>;
   uProtect: THREE.IUniform<THREE.Vector4>;
   uProtectFloor: THREE.IUniform<number>;
 }
@@ -211,6 +214,7 @@ export function ParticleSystem({
       uProtect2: { value: new THREE.Vector4(0, 0, 0.001, 0.001) },
       uProtect3: { value: new THREE.Vector4(0, 0, 0.001, 0.001) },
       uEarthScale: { value: 1 },
+      uProtect4: { value: new THREE.Vector4(0, 0, 0.001, 0.001) },
       uProtect: { value: new THREE.Vector4(0, 0, 0.001, 0.001) },
       uProtectFloor: { value: 1 },
     };
@@ -287,9 +291,9 @@ export function ParticleSystem({
     u.uHeroField.value = formNames[0] === "heroField" && controller.fromIndex === 0 ? 1 : 0;
     // Flowing torus (Why): live whether it is being left or arrived at.
     // Live flowing forms: 1 = torus (Why), 2 = ring stream (Services).
-    // 3 = Earth (Staffing).
+    // 3 = Earth (Staffing), 4 = node symbol (Why).
     const liveKind = (name: FormName | undefined) =>
-      name === "torusFlow" ? 1 : name === "ringStream" ? 2 : name === "earth" ? 3 : 0;
+      name === "torusFlow" ? 1 : name === "ringStream" ? 2 : name === "earth" ? 3 : name === "logoNode" ? 4 : 0;
     const fromKind = liveKind(formNames[controller.fromIndex]);
     const toKind = liveKind(formNames[controller.toIndex]);
     u.uFlowFrom.value = fromKind;
@@ -301,6 +305,7 @@ export function ParticleSystem({
     u.uProtect2.value.set(...L.protect2);
     u.uProtect3.value.set(...L.protect3);
     u.uEarthScale.value = L.earthScale;
+    u.uProtect4.value.set(...L.protect4);
     u.uProtect.value.set(...L.protect);
     u.uProtectFloor.value = L.protectFloor;
 
