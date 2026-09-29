@@ -254,7 +254,7 @@ vec3 torusFlow(vec3 p) {
 // sync with RING_STREAM (ringStream.ts).
 const float RING_CX = -3.4;
 const float RING_IN = 2.0;
-const float RING_OUT = 6.2;
+const float RING_OUT = 4.3;
 // Display: the ring is drawn much larger than it is generated (as if far
 // closer to the camera) and centred further right, so its inner lanes come in
 // behind the start of the centred content.
@@ -287,16 +287,16 @@ vec3 ringStream(vec3 p, out float lane, out float arcVis) {
 // deep navy. Orange / blue / white are the site palette (linear); the red is
 // taken from the reference image.
 vec3 ringColor(float lane) {
-  // Same palette as the Staffing Earth: cream, saturated orange, red-orange,
-  // rich blue, deep blue. Orange and blue carry the stream.
-  vec3 cream = vec3(1.0, 0.86, 0.66);
-  vec3 orange = vec3(1.0, 0.3, 0.05);
-  vec3 red = vec3(0.85, 0.07, 0.02);
-  vec3 blue = vec3(0.07, 0.24, 1.0);
-  vec3 deep = vec3(0.02, 0.06, 0.32);
-  vec3 c = orange;  // (cream now appears only as scattered highlights)
-  c = mix(c, red, smoothstep(0.28, 0.42, lane));
-  c = mix(c, blue, smoothstep(0.44, 0.54, lane));
+  // Solid colour bands across the stream, like the reference: orange inside,
+  // a red-orange edge, then blue to deep blue outside. Bands (not per-dot
+  // mixing) keep colours readable — alternating orange/blue dots blend into
+  // grey-white at viewing distance.
+  vec3 orange = vec3(1.0, 0.32, 0.05);
+  vec3 red = vec3(0.9, 0.08, 0.02);
+  vec3 blue = vec3(0.07, 0.26, 1.0);
+  vec3 deep = vec3(0.04, 0.1, 0.62);
+  vec3 c = mix(orange, red, smoothstep(0.34, 0.46, lane));
+  c = mix(c, blue, smoothstep(0.5, 0.58, lane));
   return mix(c, deep, smoothstep(0.78, 1.0, lane));
 }
 
@@ -491,14 +491,10 @@ void main() {
   if (ringW > 0.001) {
     float lane = ringFrom > 0.0 ? laneA : laneB;
     float arcVis = ringFrom > 0.0 ? arcA : arcB;
-    // Pick the hue: orange / red-orange from the lane, blue mixed through
-    // every lane (more toward the outside), a few cream highlights.
+    // Hue from the particle's band; a few cream highlights.
     vec3 hue = ringColor(min(lane, 1.0));
-    float blueShare = 0.3 + 0.45 * smoothstep(0.3, 0.9, lane);
-    float pick = fract(aRandom * 29.0);
-    if (pick < blueShare) hue = fract(aRandom * 5.0) < 0.7 ? vec3(0.07, 0.24, 1.0) : vec3(0.04, 0.1, 0.6);
-    if (fract(aRandom * 13.0) > 0.95) hue = vec3(1.0, 0.86, 0.66);
-    if (lane > 1.05) hue = ringColor(fract(aRandom * 7.0) * 0.8);  // sparks
+    if (fract(aRandom * 13.0) > 0.97) hue = vec3(1.0, 0.86, 0.66);
+    if (lane > 1.05) hue = ringColor(fract(aRandom * 7.0));  // sparks
     // Keep colours pure: normalise so the strongest channel is 1, then cap
     // the brightness below 1. Anything brighter clips per channel and the
     // tone mapping pulls it toward white — that washed the colours out.

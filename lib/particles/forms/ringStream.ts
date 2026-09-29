@@ -13,9 +13,10 @@ export const RING_STREAM = {
   /** Ring centre x, local units (left of the form's slot). */
   cx: -3.4,
   inner: 2.0,
-  outer: 6.2,
+  // Narrow band: the same particles packed ~2× denser.
+  outer: 4.3,
   /** Share of particles flung off the lanes as scattered sparks. */
-  sparkShare: 0.07,
+  sparkShare: 0.025,
 } as const;
 
 export function generateRingStreamParticles(count: number, rand: Rand): Float32Array {

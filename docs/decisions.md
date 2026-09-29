@@ -271,15 +271,16 @@ While it is being left or arrived at (`uFlowFrom` / `uFlowTo` = 2),
   at x −3.9 (`RING_VIEW_CX`), with points 1.3× larger. This makes it look
   close to the camera, with its inner lanes reaching in behind the start of
   the centred content.
-- *Colour:* the Staffing Earth's palette. Saturated orange to red-orange,
-  and blue to deep blue on the outer lanes. Blue is also mixed through every
-  lane (30% to 75%, rising outward), plus 5% cream highlights.
-  - *Keeping colours pure:* each particle's hue is normalised so its
-    strongest channel is 1, and brightness is capped below 1. Anything
-    brighter clips per channel and ACES tone mapping pulls it toward white,
-    which is what washed the colours out.
-  - *Visibility:* it comes from point size (2.5× on this form) instead of
-    brightness.
+- *Colour:* solid bands across the stream, like the reference: orange
+  inside, a red-orange edge, then blue to deep blue outside, plus 3% cream
+  highlights. Bands, not per-dot mixing: alternating orange/blue dots blend
+  into grey-white at viewing distance, and overlaps add up to white.
+  - *Keeping colours pure:* each hue is normalised (strongest channel = 1)
+    and brightness is capped below 1, because anything brighter clips and
+    ACES tone mapping whitens it.
+  - *Visibility:* it comes from point size (2.5×) and density.
+- *Density:* the ring spans lanes 2.0–4.3 (it was 6.2), so the same
+  particles are about twice as dense. Sparks are down to 2.5%.
 - *Fading:* it fades out toward the right, and dims to 45% behind
   `[data-services-content]` (`uProtect2`).
 
