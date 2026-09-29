@@ -9,6 +9,7 @@ import { Staffing } from "@/components/sections/Staffing";
 import { WhyUs } from "@/components/sections/WhyUs";
 import { Process } from "@/components/sections/Process";
 import { About } from "@/components/sections/About";
+import { Careers } from "@/components/sections/Careers";
 import { Testimonials } from "@/components/sections/Testimonials";
 import { ContactCta } from "@/components/sections/ContactCta";
 import { CardLight } from "@/components/ui/card-light";
@@ -33,7 +34,7 @@ export default function HomePage() {
           <WhyUs />
           <Process />
         </ParticleStory>
-        {/* About, Proof Points and Contact share one background: the
+        {/* About, Careers, Proof Points and Contact share one background: the
             particle galaxy (and the star field) show through them. The
             galaxy's anchor is pinned to the screen while this area scrolls,
             then leaves with it as the footer arrives. */}
@@ -44,6 +45,7 @@ export default function HomePage() {
             className="pointer-events-none sticky top-0 -mb-[100svh] h-[100svh]"
           />
           <About />
+          <Careers />
           <Testimonials />
           <ContactCta />
           {/* The ending: space where the galaxy collapses into a small sun

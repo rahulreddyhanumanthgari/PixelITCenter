@@ -162,7 +162,8 @@ export const testimonials = {
 } as const;
 
 export const careers = {
-  title: "Build your career with us",
+  eyebrow: "Careers",
+  title: "Build your *career* with us",
   body: "We're always looking for engineers, analysts and technology specialists.",
   cta: { label: "View open roles", href: "#contact" },
 } as const;

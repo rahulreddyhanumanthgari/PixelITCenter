@@ -607,11 +607,12 @@ cards are the reference.
   | Staffing | horizontal cards |
   | Why | a 2×2 of separate cards (no longer a joined grid) |
   | Testimonials | quote cards |
-  | About | the careers card |
   | Contact | featured |
 
   Sizes differ by content; the look never does.
 - **Excluded on purpose.**
+  - Careers is a whole section (`Careers.tsx`, between About and Proof
+    Points), not a card. Sections are never cards, whatever their size.
   - The client logo tiles stay white, because the logos need a white
     background.
   - The How We Work step is open text over the planets. A card there was

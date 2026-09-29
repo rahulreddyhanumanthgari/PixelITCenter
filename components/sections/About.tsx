@@ -1,14 +1,11 @@
-import { about, careers } from "@/content/site";
-import { buttonVariants } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
-import { Card } from "@/components/ui/card";
+import { about } from "@/content/site";
 import { Container, SectionHeader } from "./SectionHeader";
 
 /**
  * About Us — centred content framed by a particle spiral galaxy. The
  * galaxy is the journey's last form: How We Work's planets break up and
  * re-form into it as About scrolls in. It stays pinned behind About,
- * Proof Points and Contact ([data-galaxy-anchor] in app/page.tsx); particles behind [data-about-content] are dimmed so
+ * Careers, Proof Points and Contact ([data-galaxy-anchor] in app/page.tsx); particles behind [data-about-content] are dimmed so
  * the text stays calm. This section is transparent. Content enters with the
  * same scroll choreography as the story sections ([data-reveal]).
  */
@@ -38,17 +35,6 @@ export function About() {
               </div>
             ))}
           </dl>
-
-          <Card data-reveal="4" id="careers" className="mx-auto mt-12 max-w-xl scroll-mt-24">
-            <h3 className="type-heading card-title">{careers.title}</h3>
-            <p className="type-body mx-auto mt-2">{careers.body}</p>
-            <a
-              href={careers.cta.href}
-              className={cn(buttonVariants({ variant: "outline" }), "mt-5 h-11 rounded-full border-white/20 bg-transparent px-5")}
-            >
-              {careers.cta.label}
-            </a>
-          </Card>
         </div>
       </Container>
     </section>
