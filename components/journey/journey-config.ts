@@ -42,7 +42,8 @@ export const HERO_FIELD = {
  */
 // Fractions mix between the left and right slots: Staffing's Earth sits at
 // 0.75 (≈63% across), reaching just past the centre of the screen.
-export const STORY_SIDES: readonly number[] = [0, 0.75, 1, 0];
+// Why's torus is centred (0.5): its opening frames the centred content.
+export const STORY_SIDES: readonly number[] = [0, 0.75, 0.5, 0];
 
 /**
  * Staffing's Earth on desktop: drawn `scale`× larger, and placed from the

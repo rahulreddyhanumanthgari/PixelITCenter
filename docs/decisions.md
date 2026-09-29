@@ -284,25 +284,26 @@ Services content is centred (`storySectionClass("center")`) and its
 particles sit in the left slot (`STORY_SIDES[0] = 0`). Keep `RING_*` in the
 shader in sync with `RING_STREAM`.
 
-### Why Pixel IT Center: flowing torus
+### Why Pixel IT Center: particle halo
 
-The Why form (`torusFlow`) is a thick torus of particles: an even dot lattice
-(three particles per dot, denser on the inner side) plus an inner volume. It
-is generated flat and untilted. While it is the form being left or arrived
-at (`uFlowFrom` / `uFlowTo`), `particle.vert.glsl` (`torusFlow()`) moves it:
+The Why form (`torusFlow`) is a large, calm particle torus centred behind the
+centred Why content, which sits inside its opening.
 
-- *Recovering coordinates:* the shader recovers each particle's ring angle
-  (u), tube angle (v) and tube radius from its static position.
-- *Flow:* particles roll around the tube (minor orbit, 0.22 rad/s) and travel
-  around the ring (major orbit), the inner side slightly faster. A small
-  drift is shared per dot, so dots stay crisp.
-- *Tilt:* the result is tilted to an oblique view that slowly precesses.
-
-It is a pure function of time, with no resets. Particles land on the moving
-torus and break away from it, so the morph is continuous. Colours are the
-usual per-particle rocket colours, blended about 58% toward white, so the
-torus reads mostly white and each particle keeps its accent as it flows.
-Keep `TORUS_R` in the shader in sync with `TORUS_FLOW.R`.
+- **Geometry** (`forms/torusFlow.ts`). R 3.65, tube r 0.78, so the opening
+  (R − r ≈ 2.9 units) holds the heading and four cards on desktop. An even
+  dot lattice, two particles per dot, plus an inner volume for depth.
+- **Motion** (`torusFlow()` in the shader). Slow roll through the tube
+  (0.07 rad/s), slow drift round the ring (about 0.035 rad/s), barely-there
+  per-dot drift. The tilt (about 46°) breathes by only a few hundredths of a
+  radian. A pure function of time, with no resets.
+- **Layout.** `STORY_SIDES[2] = 0.5` (centred). The content is centred in a
+  720px-wide block (`[data-why-content]`); torus particles behind it dim to
+  35% (`uProtect4`).
+- **Phones and tablets.** The ring is drawn at 0.4× (`uTorusScale`) so the
+  whole halo fits the pinned band.
+- **Colour.** Per-particle rocket colours blended about 58% toward white:
+  white-dominant, with faint orange/blue accents.
+- Keep `TORUS_R` in the shader in sync with `TORUS_FLOW.R`.
 
 ### How We Work (current version)
 

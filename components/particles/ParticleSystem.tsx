@@ -76,6 +76,10 @@ export interface LayoutState {
   protect3: [number, number, number, number];
   /** Extra display scale for the Staffing Earth (larger on desktop). */
   earthScale: number;
+  /** Why content box in NDC; torus particles behind it dim. */
+  protect4: [number, number, number, number];
+  /** Why torus display scale: 1 on desktop, smaller to fit the phone band. */
+  torusScale: number;
 }
 
 interface ParticleSystemProps {
@@ -128,6 +132,8 @@ export interface MorphUniforms {
   uProtect2: THREE.IUniform<THREE.Vector4>;
   uProtect3: THREE.IUniform<THREE.Vector4>;
   uEarthScale: THREE.IUniform<number>;
+  uProtect4: THREE.IUniform<THREE.Vector4>;
+  uTorusScale: THREE.IUniform<number>;
   uProtect: THREE.IUniform<THREE.Vector4>;
   uProtectFloor: THREE.IUniform<number>;
 }
@@ -211,6 +217,8 @@ export function ParticleSystem({
       uProtect2: { value: new THREE.Vector4(0, 0, 0.001, 0.001) },
       uProtect3: { value: new THREE.Vector4(0, 0, 0.001, 0.001) },
       uEarthScale: { value: 1 },
+      uProtect4: { value: new THREE.Vector4(0, 0, 0.001, 0.001) },
+      uTorusScale: { value: 1 },
       uProtect: { value: new THREE.Vector4(0, 0, 0.001, 0.001) },
       uProtectFloor: { value: 1 },
     };
@@ -301,6 +309,8 @@ export function ParticleSystem({
     u.uProtect2.value.set(...L.protect2);
     u.uProtect3.value.set(...L.protect3);
     u.uEarthScale.value = L.earthScale;
+    u.uProtect4.value.set(...L.protect4);
+    u.uTorusScale.value = L.torusScale;
     u.uProtect.value.set(...L.protect);
     u.uProtectFloor.value = L.protectFloor;
 

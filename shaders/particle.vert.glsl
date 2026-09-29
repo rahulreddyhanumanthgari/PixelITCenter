@@ -33,6 +33,8 @@ uniform float uFlowTo;          // live form being arrived at (same codes)
 uniform vec4 uProtect2;         // Services content box in NDC (dims the ring stream behind text)
 uniform vec4 uProtect3;         // Staffing content box in NDC (dims the Earth behind text)
 uniform float uEarthScale;      // extra display scale for the Staffing Earth
+uniform vec4 uProtect4;         // Why content box in NDC (dims the torus behind text)
+uniform float uTorusScale;      // Why torus display scale (smaller in the phone band)
 uniform float uHeroField;       // 1 while the current "from" form is the hero gravity field
 uniform vec4 uProtect;          // hero text box in NDC: centre xy, half-size zw
 uniform float uProtectFloor;    // brightness left for particles behind the hero text
@@ -213,7 +215,7 @@ vec3 heroField(out float visible, out float glow, out float grow) {
 // moves it around the ring (major orbit) and around the tube (minor orbit),
 // then tilts the whole torus, which slowly precesses. Pure function of time:
 // no resets. Keep TORUS_R / TORUS_r in sync with TORUS_FLOW (torusFlow.ts).
-const float TORUS_R = 1.3;
+const float TORUS_R = 3.65;
 
 vec3 rotY(vec3 p, float a) { float c = cos(a), s = sin(a); return vec3(c * p.x + s * p.z, p.y, -s * p.x + c * p.z); }
 vec3 rotZ(vec3 p, float a) { float c = cos(a), s = sin(a); return vec3(c * p.x - s * p.y, s * p.x + c * p.y, p.z); }
@@ -231,15 +233,18 @@ vec3 torusFlow(vec3 p) {
   // (Drift phase comes from the dot's own place, so a dot's particles move
   // together and stay crisp.)
   float seed = floor(u * 40.0) * 1.7 + floor(v * 20.0) * 3.1;
-  v += t * 0.22;
-  u += t * (0.09 + 0.035 * cos(v)) + 0.01 * sin(t * 0.6 + seed);
-  rt *= 1.0 + 0.012 * sin(t * 0.9 + seed * 1.3);
+  // Calm: a slow roll through the tube, a slow drift round the ring, and
+  // barely-there per-dot movement — noticeable only after a few seconds.
+  v += t * 0.07;
+  u += t * (0.035 + 0.01 * cos(v)) + 0.004 * sin(t * 0.5 + seed);
+  rt *= 1.0 + 0.01 * sin(t * 0.7 + seed * 1.3);
   float dd = TORUS_R + rt * cos(v);
   vec3 f = vec3(cos(u) * dd, rt * sin(v), sin(u) * dd);
-  // Seen at an angle like the reference; the tilt slowly precesses.
-  f = rotX(f, 0.78 + 0.12 * sin(t * 0.07));
-  f = rotZ(f, 0.55 + 0.1 * sin(t * 0.05 + 1.3));
-  return rotY(f, -0.35 + 0.08 * sin(t * 0.04));
+  // Centred halo seen at a gentle angle, so its opening frames the content;
+  // the tilt breathes very slowly.
+  f = rotX(f, 0.8 + 0.03 * sin(t * 0.05));
+  f = rotZ(f, 0.04 * sin(t * 0.04 + 1.3));
+  return rotY(f, 0.05 * sin(t * 0.03)) * uTorusScale;
 }
 
 // --- Services: a huge ring of particle streams ------------------------------
@@ -468,6 +473,13 @@ void main() {
                + step(0.5, uFlowTo) * step(uFlowTo, 1.5) * eIn;
   float lum = dot(vColor, vec3(0.3, 0.5, 0.2));
   vColor = mix(vColor, vec3(0.95, 0.96, 1.0) * lum * 1.15, 0.58 * torusW);
+  if (torusW > 0.001) {
+    // Keep the opening calm around the centred content.
+    vec2 nd4 = gl_Position.xy / gl_Position.w;
+    vec2 d4 = abs(nd4 - uProtect4.xy) / max(uProtect4.zw, vec2(1e-3));
+    float box4 = pow(pow(d4.x, 4.0) + pow(d4.y, 4.0), 0.25);
+    vColor *= mix(1.0, mix(0.35, 1.0, smoothstep(0.85, 1.15, box4)), torusW);
+  }
 
   // Services ring stream: lane colours (fixed per particle, so they travel
   // with the flow), fading into the dark toward the right and dimmed behind

@@ -7,9 +7,12 @@ import type { Rand } from "../random";
  * shaders/particle.vert.glsl (torusFlow) recovers each particle's torus
  * coordinates, flows it around the ring and the tube, and applies the tilt.
  *
- * Keep R and r in sync with TORUS_R / TORUS_r in particle.vert.glsl.
+ * Sized so its opening holds the centred Why content (≈400px hole radius
+ * on desktop at the story scale): R − r ≈ 2.9 local units.
+ *
+ * Keep R in sync with TORUS_R in particle.vert.glsl.
  */
-export const TORUS_FLOW = { R: 1.3, r: 0.74, surfaceShare: 0.9, perDot: 3 } as const;
+export const TORUS_FLOW = { R: 3.65, r: 0.78, surfaceShare: 0.9, perDot: 2 } as const;
 
 export function generateTorusFlowParticles(count: number, rand: Rand): Float32Array {
   const { R, r, surfaceShare, perDot } = TORUS_FLOW;

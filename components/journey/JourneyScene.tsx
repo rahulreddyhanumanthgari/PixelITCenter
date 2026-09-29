@@ -90,6 +90,8 @@ export default function JourneyScene() {
     protectFloor: HERO_FIELD.protectFloor.wide,
     protect2: [0, 0, 0.001, 0.001],
     protect3: [0, 0, 0.001, 0.001],
+    protect4: [0, 0, 0.001, 0.001],
+    torusScale: 1,
     earthScale: 1,
   });
   // How scattered the main particles are; drives the stars and camera.
@@ -153,6 +155,7 @@ export default function JourneyScene() {
     const heroContent = document.querySelector<HTMLElement>("[data-hero-content]");
     const servicesContent = document.querySelector<HTMLElement>("[data-services-content]");
     const staffingContent = document.querySelector<HTMLElement>("[data-staffing-content]");
+    const whyContent = document.querySelector<HTMLElement>("[data-why-content]");
     // The particle layer stays on through About Us (the vortex); after that the
     // opaque sections cover it.
     const lastLit = document.querySelector<HTMLElement>("[data-about]") ?? story;
@@ -175,6 +178,9 @@ export default function JourneyScene() {
       const xAt = (fraction: number) => (rect.left + rect.width * fraction - vw / 2) * wpp;
       L.sides = columns ? { left: xAt(STORY_SLOTS.left), right: xAt(STORY_SLOTS.right), byForm: STORY_SIDES } : null;
       L.earthScale = columns ? EARTH_VIEW.scale : 1;
+      // The Why halo is sized to frame desktop content; in the phone band the
+      // whole ring must fit instead.
+      L.torusScale = columns ? 1 : 0.4;
       L.to.x = columns ? xAt(STORY_SIDES[0] ? STORY_SLOTS.right : STORY_SLOTS.left) : xAt(0.5);
       // Pinned position while the anchor is stuck (or still arriving); once
       // the story ends, the form scrolls away with it. The release point is
@@ -200,6 +206,15 @@ export default function JourneyScene() {
       L.from.y = 0;
       L.from.scale = voidPx * wpp;
       L.protectFloor = vw < 768 ? HERO_FIELD.protectFloor.narrow : HERO_FIELD.protectFloor.wide;
+      if (whyContent) {
+        const c = whyContent.getBoundingClientRect();
+        L.protect4 = [
+          ((c.left + c.width / 2) / vw) * 2 - 1,
+          -(((c.top + c.height / 2) / vh) * 2 - 1),
+          (c.width / vw) * 1.02,
+          (c.height / vh) * 1.02,
+        ];
+      }
       if (staffingContent) {
         const c = staffingContent.getBoundingClientRect();
         L.protect3 = [
