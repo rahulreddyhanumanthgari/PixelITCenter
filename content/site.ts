@@ -1,6 +1,9 @@
 // All homepage copy in one place. In headings, `*word*` marks an important
 // word (accent colour) and ` | ` a preferred line break — see HeadingText.
-// Everything here is DEMO / PLACEHOLDER copy
+//
+// Facts and much of the wording come from the live pixelitcenter.com (contact
+// details, services, about/mission/vision, recruiting approach, testimonials),
+// lightly edited for length and grammar. Copy marked "(own)" is new. Everything here is DEMO / PLACEHOLDER copy
 // written for the redesign direction in the modernization plan — replace it
 // with business-approved wording (plan phase 0D) before launch.
 
@@ -9,13 +12,14 @@ export const site = {
   url: "https://pixelitcenter.com",
   portalUrl: "https://portal.pixelitcenter.com",
   description:
-    "Pixel IT Center delivers technology services and specialized IT talent — cloud, data, AI, cybersecurity, DevOps and staffing — for teams building what's next.",
-  // TODO: replace with the approved contact details.
+    "Pixel IT Center Corporation delivers IT staffing and technology services — AI, cloud, cybersecurity, big data, DevOps and QA automation — for teams building what's next.",
+  // From pixelitcenter.com.
   contact: {
     email: "info@pixelitcenter.com",
-    phone: "+1 (000) 000-0000",
-    location: "United States",
+    phone: "+1 (336) 944-6562",
+    location: "189 Tarleton Dr, Fuquay Varina, NC 27526",
   },
+  linkedin: "https://www.linkedin.com/company/pixel-it-center/",
 } as const;
 
 export const nav = [
@@ -75,13 +79,13 @@ export const services = {
       name: "Technology Services",
       summary: "Hands-on delivery for the platforms your business runs on.",
       items: [
-        { title: "AI & Data", body: "Practical AI use cases, data pipelines and models that reach production." },
-        { title: "Cloud — AWS / Azure / GCP", body: "Migration, architecture and cost-aware operations across the major clouds." },
-        { title: "Cybersecurity", body: "Assessments, hardening and security built into delivery from day one." },
-        { title: "DevOps", body: "CI/CD, infrastructure as code and reliable release pipelines." },
-        { title: "QA Automation", body: "Automated test suites that catch regressions before your customers do." },
-        { title: "Data & Analytics", body: "Reporting and analytics your teams can trust and act on." },
-        { title: "Networking / Infrastructure", body: "Stable, secure networks and infrastructure that scale with you." },
+        { title: "AI", body: "AI consulting and solutions that help you reach your business goals faster and set you up for long-term growth." },
+        { title: "Cloud — AWS / Azure / GCP", body: "AWS expertise, stable Azure hybrid-cloud architectures, and big data and machine learning on GCP." },
+        { title: "Cybersecurity", body: "Security services, solutions and risk assessments that stop attacks and meet compliance goals." },
+        { title: "Big Data Analytics", body: "Analysis of growing, varied data that gives your business deeper, data-driven insight." },
+        { title: "DevOps", body: "Complete DevOps services for any application, from enterprise platforms to consumer products." },
+        { title: "QA Automation", body: "A full range of test automation that speeds up testing and saves real money." },
+        { title: "Networking Solutions", body: "Network solutions built on robust architecture design, aligned with your business goals." },
       ],
     },
     {
@@ -91,8 +95,8 @@ export const services = {
         { title: "IT Staffing", body: "Pre-screened technology professionals matched to your stack and culture." },
         { title: "Contract Staffing", body: "Flexible capacity for projects, peaks and specialist gaps." },
         { title: "Professional Services", body: "Outcome-based engagements delivered by an accountable team." },
-        { title: "Project / Program Support", body: "Experienced managers who keep delivery on scope and on time." },
-        { title: "Business Analysis", body: "Clear requirements that connect business goals to technical work." },
+        { title: "Project Management", body: "Planning, organizing and managing project work to deliver within agreed constraints." },
+        { title: "Business Analysis", body: "Analysis that clarifies organizational dynamics and keeps project execution consistent." },
         { title: "Specialized Technology Talent", body: "Hard-to-find skills sourced through a focused network." },
       ],
     },
@@ -106,7 +110,7 @@ export const staffing = {
   points: [
     { title: "Staff augmentation", body: "Add vetted engineers to your team in weeks, not months." },
     { title: "Managed delivery", body: "Hand us a defined outcome; we own the plan and the result." },
-    { title: "Direct hire", body: "Find long-term team members with the skills and fit you need." },
+    { title: "Direct hire", body: "Roles matched to your team structure and job descriptions, for a tailored selection." },
   ],
 } as const;
 
@@ -114,8 +118,8 @@ export const whyUs = {
   eyebrow: "Why Pixel IT Center",
   title: "Built around *clarity* and accountability",
   reasons: [
-    { title: "Technical depth", body: "Consultants and recruiters who understand the technology they deliver." },
-    { title: "Right-fit matching", body: "Candidates screened for skills, communication and team fit." },
+    { title: "Technical depth", body: "Recruiters with technical backgrounds and deep experience in the industries they serve." },
+    { title: "Right-fit matching", body: "We match on competence, skills and personality, for employers and job seekers alike." },
     { title: "Transparent engagement", body: "Clear scope, regular updates and no surprises on cost." },
     { title: "Long-term partnership", body: "We measure success by the relationships that last." },
   ],
@@ -135,13 +139,15 @@ export const process = {
 export const about = {
   eyebrow: "About us",
   title: "A technology *partner* focused on people",
-  body: "Pixel IT Center brings together technology services and IT talent under one roof. Our mission is to help organizations deliver technology with confidence by pairing them with the right expertise at the right time.",
-  // Placeholder — confirm with the business before publishing any figures.
+  body: "Technology is the main inspiration for how we solve problems and adapt to what our customers need. Our mission is to address our clients' technology needs and business problems through innovative, exceptional IT expertise.",
   highlights: [
-    { label: "Focus", value: "Technology & talent" },
-    { label: "Delivery", value: "Onshore teams" },
-    { label: "Engagements", value: "Project to long-term" },
+    { label: "Focus", value: "IT staffing & services" },
+    { label: "Approach", value: "Consultative matching" },
+    { label: "Based in", value: "North Carolina, USA" },
   ],
+  /** From the live site's Vision, shortened. */
+  vision:
+    "To be a technology-driven, customer-centric, employee-focused IT partner — exceeding expectations on quality, budget and time.",
 } as const;
 
 // Placeholder — replace with approved client testimonials (plan phase 0A).
@@ -180,7 +186,7 @@ export const footer = {
     {
       title: "Services",
       links: [
-        { label: "AI & Data", href: "#services" },
+        { label: "AI", href: "#services" },
         { label: "Cloud", href: "#services" },
         { label: "Cybersecurity", href: "#services" },
         { label: "DevOps", href: "#services" },
@@ -194,6 +200,7 @@ export const footer = {
         { label: "Careers", href: "#careers" },
         { label: "Contact", href: "#contact" },
         { label: "Portal Login", href: site.portalUrl },
+        { label: "LinkedIn", href: site.linkedin },
       ],
     },
   ],

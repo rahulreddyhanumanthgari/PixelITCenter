@@ -26,6 +26,9 @@ export function About() {
             body={about.body}
             className="mx-auto"
           />
+          <p data-reveal="2" className="type-body mx-auto mt-4 italic">
+            <span className="not-italic font-medium text-[var(--text-primary)]">Our vision:</span> {about.vision}
+          </p>
 
           <dl className="mt-12 grid border-y border-border sm:grid-cols-3 sm:divide-x sm:divide-border">
             {about.highlights.map((h) => (

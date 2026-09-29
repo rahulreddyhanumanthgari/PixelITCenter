@@ -632,6 +632,25 @@ cards are the reference.
 
 ## Content
 
+**Source: the live pixelitcenter.com.** The live site's facts and wording
+are used where they exist, lightly edited for length and grammar:
+
+- *Contact:* phone +1 (336) 944-6562; 189 Tarleton Dr, Fuquay Varina,
+  NC 27526; info@pixelitcenter.com; LinkedIn.
+- *Services:* AI; Cloud (AWS / Azure / GCP); Cybersecurity; Big Data
+  Analytics; DevOps; QA Automation; Networking Solutions; Project
+  Management; Business Analysis.
+- *About:* the body, mission and a shortened vision.
+- *Why:* the recruiters' technical backgrounds and matching on
+  competence, skills and personality.
+- *Staffing:* direct hire uses the live site's tailored-selection line.
+- *Testimonials:* word for word.
+
+The hero, section headings, How We Work, Careers and Contact wording are our
+own. The live hero tagline ("Expect Nothing Less Than Exceptional Service")
+was not used.
+
+
 All copy is in `content/site.ts` and is placeholder text. Client logos,
 testimonials, contact details and any figures need business approval before
 launch.
