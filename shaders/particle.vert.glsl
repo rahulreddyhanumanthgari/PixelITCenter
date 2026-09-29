@@ -259,7 +259,7 @@ const float RING_OUT = 4.3;
 // closer to the camera) and centred further right, so its inner lanes come in
 // behind the start of the centred content.
 const float RING_SCALE = 1.8;
-const float RING_VIEW_CX = -4.7;
+const float RING_VIEW_CX = -5.6;
 
 vec3 ringStream(vec3 p, out float lane, out float arcVis) {
   float t = uTime * uMotion;

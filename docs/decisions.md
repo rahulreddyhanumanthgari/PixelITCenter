@@ -268,7 +268,7 @@ While it is being left or arrived at (`uFlowFrom` / `uFlowTo` = 2),
   wrap back off-screen with a fade at both ends. Every particle is spent
   where it can be seen, so the stream stays dense.
 - *Scale:* the ring is drawn 1.8× its generated size (`RING_SCALE`), centred
-  at x −4.7 (`RING_VIEW_CX`), with points 1.3× larger. This makes it look
+  at x −5.6 (`RING_VIEW_CX`), with points 1.3× larger. This makes it look
   close to the camera, with its inner lanes reaching in behind the start of
   the centred content.
 - *Colour:* solid bands across the stream, like the reference: orange
