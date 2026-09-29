@@ -776,8 +776,9 @@ void main() {
              * mix(1.0, 1.5, torusNear)
              * mix(1.0, solarSize, solarW)
              * mix(1.0, galaxySize, galaxyW);
-  // Light theme: ink dots on white need a little more size to read.
-  size *= mix(1.0, 1.35, uLight);
+  // Light theme: the sprite also holds each dot's glow, so it is larger
+  // (the solid centre stays about the dark theme's dot size).
+  size *= mix(1.0, 2.3, uLight);
   gl_PointSize = clamp(size * uPixelRatio / depth, 1.0, 28.0 * uPixelRatio);
 
   // Near particles brighter, far ones dimmer; a soft twinkle on top. Spread

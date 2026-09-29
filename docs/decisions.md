@@ -691,9 +691,10 @@ cards are the reference.
   - its hue is kept; whites and greys become dark slate;
   - its brightness becomes its opacity;
   - bloom is off and the canvas clears to the light background;
-  - hues are pushed toward full saturation and slightly deepened (yellow
-    reads as gold), dots are firmer (`pow(core, 1.1)`) and 35% larger, and
-    the galaxy is barely dimmed.
+  - hues are pushed to full saturation (yellow only slightly deepened), and
+    each dot is a solid centre inside a soft glow of its own colour (the
+    light-mode stand-in for bloom). Sprites are 2.3× so they have room for
+    the glow, and the galaxy is barely dimmed.
 - **Light sky** (`LightSky`). The counterpart of the dark star field, drawn
   behind the particles in light mode only as a full-screen shader quad:
   - a cool-to-warm gradient that darkens toward the edges;
