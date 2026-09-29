@@ -5,7 +5,7 @@ import { PALETTE_LINEAR, pushColor } from "./palette";
 import { mulberry32, smoothstep, type Rand } from "./random";
 import { generateServicesParticles } from "./forms/services";
 import { generateGlobeParticles } from "./forms/globe";
-import { generateSegmentedRingParticles } from "./forms/segmentedRing";
+import { generateTorusFlowParticles } from "./forms/torusFlow";
 import { annotateProcessStages, generateProcessParticles } from "./forms/process";
 
 /**
@@ -21,7 +21,7 @@ export type FormName =
   | "sculpture"
   | "services"
   | "globe"
-  | "segmentedRing"
+  | "torusFlow"
   | "process";
 
 interface FormDefinition {
@@ -88,7 +88,8 @@ export const FORMS: Record<FormName, FormDefinition> = {
   // Section story forms (Services → Staffing → Why us → How we work).
   services: { generate: generateServicesParticles },
   globe: { generate: generateGlobeParticles },
-  segmentedRing: { generate: generateSegmentedRingParticles },
+  // Live flowing form: the shader moves these particles (torusFlow).
+  torusFlow: { generate: generateTorusFlowParticles },
   process: { generate: generateProcessParticles, annotate: annotateProcessStages },
 };
 

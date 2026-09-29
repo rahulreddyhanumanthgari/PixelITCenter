@@ -28,6 +28,8 @@ uniform vec3 uMouse;            // pointer, in the particles' local space
 uniform float uStage;           // process progress: 0 = Discover active … 4 = all done
 uniform float uStageMix;        // 0 = no stage effects, 1 = fully on (process form)
 uniform vec3 uAccent;           // rocket accent, for active checkpoints
+uniform float uFlowFrom;        // 1 while the form being left is the flowing torus
+uniform float uFlowTo;          // 1 while the form being arrived at is the flowing torus
 uniform float uHeroField;       // 1 while the current "from" form is the hero gravity field
 uniform vec4 uProtect;          // hero text box in NDC: centre xy, half-size zw
 uniform float uProtectFloor;    // brightness left for particles behind the hero text
@@ -203,6 +205,40 @@ vec3 heroField(out float visible, out float glow, out float grow) {
   return rotX(p, aScatterDir.x * 0.04);
 }
 
+// --- Why Pixel IT Center: particles flowing through a thick torus ----------
+// Recovers a particle's torus coordinates from its (untilted) form position,
+// moves it around the ring (major orbit) and around the tube (minor orbit),
+// then tilts the whole torus, which slowly precesses. Pure function of time:
+// no resets. Keep TORUS_R / TORUS_r in sync with TORUS_FLOW (torusFlow.ts).
+const float TORUS_R = 1.3;
+
+vec3 rotY(vec3 p, float a) { float c = cos(a), s = sin(a); return vec3(c * p.x + s * p.z, p.y, -s * p.x + c * p.z); }
+vec3 rotZ(vec3 p, float a) { float c = cos(a), s = sin(a); return vec3(c * p.x - s * p.y, s * p.x + c * p.y, p.z); }
+
+vec3 torusFlow(vec3 p) {
+  float t = uTime * uMotion;
+  float d = length(p.xz);
+  float u = atan(p.z, p.x);
+  vec2 q = vec2(d - TORUS_R, p.y);
+  float rt = length(q);
+  float v = atan(q.y, q.x);
+  // Minor orbit: particles roll through the tube. Major orbit: they travel
+  // round the ring, the inner side a little faster (a gentle shear). Small
+  // bounded per-particle drift keeps it organic without smearing the lattice.
+  // (Drift phase comes from the dot's own place, so a dot's particles move
+  // together and stay crisp.)
+  float seed = floor(u * 40.0) * 1.7 + floor(v * 20.0) * 3.1;
+  v += t * 0.22;
+  u += t * (0.09 + 0.035 * cos(v)) + 0.01 * sin(t * 0.6 + seed);
+  rt *= 1.0 + 0.012 * sin(t * 0.9 + seed * 1.3);
+  float dd = TORUS_R + rt * cos(v);
+  vec3 f = vec3(cos(u) * dd, rt * sin(v), sin(u) * dd);
+  // Seen at an angle like the reference; the tilt slowly precesses.
+  f = rotX(f, 0.78 + 0.12 * sin(t * 0.07));
+  f = rotZ(f, 0.55 + 0.1 * sin(t * 0.05 + 1.3));
+  return rotY(f, -0.35 + 0.08 * sin(t * 0.04));
+}
+
 void main() {
   vec3 A = position;
   vec3 B = aTarget;
@@ -219,9 +255,15 @@ void main() {
   // particles tend to peel away (and land) together — organic, not uniform.
   // (Uses the static form position so delays stay fixed in the moving field.)
   float clumpOut = snoise(position * 0.75 + 3.1) * 0.5 + 0.5;
-  float clumpIn = snoise(B * 0.75 - 5.3) * 0.5 + 0.5;
+  float clumpIn = snoise(aTarget * 0.75 - 5.3) * 0.5 + 0.5;
   float delayOut = mix(aDelay, clumpOut, 0.55) * OUT_SPREAD;
   float delayIn = IN_START + mix(aRandom, clumpIn, 0.55) * IN_SPREAD;
+
+  // Flowing torus: its live positions replace the static form, so particles
+  // land on (and leave from) the moving structure. Delays above use the
+  // static positions, so they stay fixed.
+  if (uFlowFrom > 0.5) A = torusFlow(A);
+  if (uFlowTo > 0.5) B = torusFlow(B);
 
   float outLocal = clamp((uProgress - delayOut) / OUT_LENGTH, 0.0, 1.0);
   float inLocal = clamp((uProgress - delayIn) / IN_LENGTH, 0.0, 1.0);
@@ -319,6 +361,12 @@ void main() {
   vColor = aColor * depthFade * twinkle * (1.0 + push * 0.6 + flight * 0.25 + field * 0.6) * stageLevel;
   vColor = mix(vColor, uAccent * length(vColor) * 0.75, clamp(stageAccent, 0.0, 0.6));
   vAlpha = clamp(depthFade, 0.0, 1.0);
+
+  // Flowing torus reads mostly white; each particle keeps a trace of its
+  // own orange/blue, so accents travel with the flow.
+  float torusW = uFlowFrom * (1.0 - eOut) + uFlowTo * eIn;
+  float lum = dot(vColor, vec3(0.3, 0.5, 0.2));
+  vColor = mix(vColor, vec3(0.95, 0.96, 1.0) * lum * 1.15, 0.58 * torusW);
 
   // Hero: keep the centred text calm — particles projected behind it dim.
   vec2 ndc = gl_Position.xy / gl_Position.w;

@@ -27,7 +27,7 @@ gravity field, then physically morph through four forms and stop on the last
 one:
 
 hero gravity field → Services (radial dotted ring) → Staffing (a network
-globe) → Why us (segmented block ring) → How we work (four-stage path).
+globe) → Why us (flowing particle torus) → How we work (four-stage path).
 
 They never fade: every particle breaks away, scatters, drifts, curves back and
 reassembles. Each particle keeps the rocket palette colour it has always had
@@ -204,6 +204,26 @@ enters a gravity well. The rule is: same appearance, different movement.
   30% brightness on wide screens and 42% on narrow ones.
 - **Counts.** 26k desktop / 16k tablet / 10k mobile.
 
+### Why Pixel IT Center: flowing torus
+
+The Why form (`torusFlow`) is a thick torus of particles: an even dot lattice
+(three particles per dot, denser on the inner side) plus an inner volume. It
+is generated flat and untilted. While it is the form being left or arrived
+at (`uFlowFrom` / `uFlowTo`), `particle.vert.glsl` (`torusFlow()`) moves it:
+
+- *Recovering coordinates:* the shader recovers each particle's ring angle
+  (u), tube angle (v) and tube radius from its static position.
+- *Flow:* particles roll around the tube (minor orbit, 0.22 rad/s) and travel
+  around the ring (major orbit), the inner side slightly faster. A small
+  drift is shared per dot, so dots stay crisp.
+- *Tilt:* the result is tilted to an oblique view that slowly precesses.
+
+It is a pure function of time, with no resets. Particles land on the moving
+torus and break away from it, so the morph is continuous. Colours are the
+usual per-particle rocket colours, blended about 58% toward white, so the
+torus reads mostly white and each particle keeps its accent as it flows.
+Keep `TORUS_R` in the shader in sync with `TORUS_FLOW.R`.
+
 ### How We Work (current version)
 
 - **Shape.** The process form is a straight particle path (`forms/process.ts`):
@@ -241,7 +261,7 @@ enters a gravity well. The rule is: same appearance, different movement.
 | File | Role |
 |---|---|
 | `generateRocketParticles.ts` | No longer shown. Its per-part colouring is still the source of the site's particle palette (`heroField.colorize` and the About vortex) |
-| `forms/*.ts` | `services`, `globe` (dotted continents from a noise land-mask on a lat/long dot grid, inside a geodesic network cage), `segmentedRing`, `process` |
+| `forms/*.ts` | `torusFlow` (Why: thick dotted torus lattice; the shader flows it), `services`, `globe` (dotted continents from a noise land-mask on a lat/long dot grid, inside a geodesic network cage), `process` |
 | `geometryToParticles.ts` | `geometryToParticlePositions` (area-weighted surface sampling, seeded), `geometryEdgesToParticlePositions` (points along triangle edges → wireframe look), merge/transform helpers |
 | `generateTarget.ts` | `FORMS` registry, `alignByHeight`, colours (`colorsForSequence`, `monochromeColors`) |
 | `stars.ts`, `palette.ts`, `random.ts` | Background stars, colours, seeded PRNG |

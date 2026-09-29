@@ -117,6 +117,8 @@ export interface MorphUniforms {
   uStageMix: THREE.IUniform<number>;
   uAccent: THREE.IUniform<THREE.Color>;
   uHeroField: THREE.IUniform<number>;
+  uFlowFrom: THREE.IUniform<number>;
+  uFlowTo: THREE.IUniform<number>;
   uProtect: THREE.IUniform<THREE.Vector4>;
   uProtectFloor: THREE.IUniform<number>;
 }
@@ -195,6 +197,8 @@ export function ParticleSystem({
       uStageMix: { value: 0 },
       uAccent: { value: PALETTE_LINEAR.orange.clone() },
       uHeroField: { value: 0 },
+      uFlowFrom: { value: 0 },
+      uFlowTo: { value: 0 },
       uProtect: { value: new THREE.Vector4(0, 0, 0.001, 0.001) },
       uProtectFloor: { value: 1 },
     };
@@ -268,6 +272,9 @@ export function ParticleSystem({
     u.uProgress.value = controller.update(s0.smoothProgress);
     // The hero gravity field is live while it is the form being left/held.
     u.uHeroField.value = formNames[0] === "heroField" && controller.fromIndex === 0 ? 1 : 0;
+    // Flowing torus (Why): live whether it is being left or arrived at.
+    u.uFlowFrom.value = formNames[controller.fromIndex] === "torusFlow" ? 1 : 0;
+    u.uFlowTo.value = formNames[controller.toIndex] === "torusFlow" ? 1 : 0;
     u.uProtect.value.set(...L.protect);
     u.uProtectFloor.value = L.protectFloor;
 

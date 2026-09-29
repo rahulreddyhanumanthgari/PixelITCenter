@@ -15,7 +15,7 @@ export const JOURNEY_FORMS: readonly FormName[] = [
   "heroField",
   "services",
   "globe",
-  "segmentedRing",
+  "torusFlow",
   "process",
 ];
 

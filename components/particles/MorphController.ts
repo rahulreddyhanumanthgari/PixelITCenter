@@ -98,6 +98,11 @@ export class MorphController {
     return this.from;
   }
 
+  /** Index of the form the particles are heading to. */
+  get toIndex(): number {
+    return this.to;
+  }
+
   constructor(
     private readonly geometry: THREE.BufferGeometry,
     private readonly forms: Float32Array[],
