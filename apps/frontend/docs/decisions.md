@@ -636,27 +636,40 @@ rejected; this is their replacement.
 - **Background.** Opaque, so the galaxy's sun rests on the footer's top
   edge, with faint blue and orange glows at the bottom.
 
-## Light theme (blue sky)
+## Light theme (bright, premium)
+
+The same scroll-driven particle world, translated to a light atmosphere.
+Every scrubbed transition, pinned section and rotation is shared with the
+dark theme; only colour and blending change. (Two earlier versions, an
+ink-on-white and a blue sky, were replaced.)
 
 - **Toggle.** A sun/moon button in the header (`ThemeToggle`, `lib/theme.ts`)
-  sets `data-theme="light"` on `<html>`.
+  sets `data-theme="light"` and removes `.dark`.
   - The choice is remembered in localStorage.
-  - `THEME_SCRIPT` (`lib/theme-script.ts`) applies it before first paint.
-- **Look.** A daytime-blue sky with white stars, after the owner's reference.
-  - `:root[data-theme="light"]` sets a blue page (`#2b6e8d`) and white text.
-  - Cards are deep, translucent blue, and the orange is lighter (`#ffa05a`)
-    so it reads on blue.
-  - Hard-coded colours are variables, so the theme reaches everything.
-- **Sky** (`LightSky`). Drawn in the particle canvas behind everything:
-  - a blue gradient, deeper at the rim, with soft lighter patches;
-  - three layers of twinkling white stars, plus a few bigger warm-cream
-    glowing ones, drifting slowly.
+  - `THEME_SCRIPT` applies it before first paint.
+- **Palette.**
 
-  The particles, star field and bloom draw on top as in the dark theme,
-  but in a three-colour palette that stands out on the blue (`skyRemap`,
-  `uSkyTheme`): orange becomes gold, red-orange becomes coral, and blue
-  becomes ice white. Each particle keeps its brightness. An earlier white theme drew the particles as ink dots; it was
-  replaced and that code removed.
+  | Role | Colour |
+  |---|---|
+  | Background | `#F8FAFC` |
+  | Primary text | `#0B1B33` |
+  | Secondary text | `#64748B` |
+  | Accent | `#FF6B1A` |
+  | Technology blue | `#1677FF` |
+
+  Cards are near-white and translucent, with navy hairlines.
+- **Sky** (`LightSky`):
+  - a white → `#F3F8FE` gradient, cooler at the rim;
+  - soft blue and faint warm light drifting slowly;
+  - fine navy / blue dust.
+- **Particles.** `particle.frag.glsl` (`uLight`) draws each point as a
+  coloured dot with normal blending, and bloom is off. The light palette:
+  - orange → `#FF6B1A`, red-orange → deep orange;
+  - blue → `#1677FF` / electric blue, deep blue → deep navy;
+  - whites → soft steel blue.
+
+  Brightness becomes opacity, so text-protect dimming makes particles
+  fainter behind text in both themes. Dots are 1.3× larger.
 - **Black hole speed.** The disc rotates about 30% slower (`omega` 0.38,
   was 0.55), with slower infall and streams.
 

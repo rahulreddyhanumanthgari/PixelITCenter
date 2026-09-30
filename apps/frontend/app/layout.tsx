@@ -41,9 +41,9 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   themeColor: [
     { media: "(prefers-color-scheme: dark)", color: "#05060a" },
-    { media: "(prefers-color-scheme: light)", color: "#2b6e8d" },
+    { media: "(prefers-color-scheme: light)", color: "#f8fafc" },
   ],
-  colorScheme: "dark",
+  colorScheme: "dark light",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

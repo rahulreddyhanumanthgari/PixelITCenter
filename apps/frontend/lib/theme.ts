@@ -6,7 +6,7 @@ import { THEME_KEY } from "./theme-script";
 /**
  * Site colour theme. Dark is the default; light is opt-in via the header
  * toggle and remembered in localStorage. The choice lives on <html> as
- * `data-theme` (both themes are dark-surfaced for shadcn, so `.dark` stays), set
+ * `data-theme` (plus the `.dark` class shadcn's dark: variants read), set
  * before first paint by THEME_SCRIPT (lib/theme-script.ts) in app/layout.tsx.
  */
 export type Theme = "dark" | "light";
@@ -18,6 +18,7 @@ export function getTheme(): Theme {
 export function setTheme(theme: Theme) {
   const root = document.documentElement;
   root.dataset.theme = theme;
+  root.classList.toggle("dark", theme === "dark");
   try {
     localStorage.setItem(THEME_KEY, theme);
   } catch {

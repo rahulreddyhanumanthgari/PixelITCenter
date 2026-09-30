@@ -35,7 +35,7 @@ uniform vec4 uProtect4;         // Why content box in NDC (dims the torus behind
 uniform float uTorusScale;      // Why torus display scale (smaller in the phone band)
 uniform float uSolarPhone;      // 1 = solar system in its compact phone-band layout
 uniform vec4 uProtect5;         // How We Work step content box in NDC (dims particles behind text)
-uniform float uSkyTheme;        // 1 = light (blue-sky) theme: gold / coral / ice palette
+uniform float uLight;           // 1 = light theme (dots drawn as ink; see particle.frag.glsl)
 uniform float uCollapse;        // galaxy ending: 0 = galaxy … 1 = a sun on the footer's edge
 uniform float uSunOffset;       // local y from the galaxy centre down to the footer's top edge
 uniform float uHeroField;       // 1 while the current "from" form is the hero gravity field
@@ -647,27 +647,6 @@ vec3 galaxy(out vec3 col, out float sizeK) {
   return p;
 }
 
-// Light (blue-sky) theme palette: the three colours that stand out best on
-// the teal-blue sky. Every particle keeps its brightness and role; only its
-// hue is mapped: orange → gold, red-orange → coral, blue → ice white,
-// cream/white → white.
-vec3 skyRemap(vec3 c) {
-  float m = max(max(c.r, c.g), c.b);
-  if (m < 1e-4) return c;
-  vec3 h = c / m;
-  vec3 gold = vec3(1.0, 0.68, 0.08);
-  vec3 coral = vec3(1.0, 0.3, 0.18);
-  vec3 ice = vec3(0.86, 0.96, 1.0);
-  float sat = 1.0 - min(min(h.r, h.g), h.b);
-  float blueness = smoothstep(0.0, 0.35, h.b - h.r);
-  vec3 warm = mix(coral, gold, smoothstep(0.12, 0.3, h.g));
-  vec3 target = mix(warm, ice, blueness);
-  target = mix(vec3(1.0), target, smoothstep(0.15, 0.5, sat));
-  // Capped below the point where additive overlap and bloom turn the
-  // colours white on the bright sky.
-  return target * min(m, 0.8);
-}
-
 void main() {
   vec3 A = position;
   vec3 B = aTarget;
@@ -795,6 +774,8 @@ void main() {
              * mix(1.0, 1.5, torusNear)
              * mix(1.0, solarSize, solarW)
              * mix(1.0, galaxySize, galaxyW);
+  // Light theme: dots without glow need a little more size to read.
+  size *= mix(1.0, 1.3, uLight);
   gl_PointSize = clamp(size * uPixelRatio / depth, 1.0, 28.0 * uPixelRatio);
 
   // Near particles brighter, far ones dimmer; a soft twinkle on top. Spread
@@ -929,6 +910,4 @@ void main() {
   vColor = mix(vColor, heroHue * heroBright * twinkle * heroVisible * protect, heroW);
   vAlpha *= mix(1.0, heroVisible, heroW);
 
-  // Light theme: remap to the blue-sky palette (see skyRemap).
-  if (uSkyTheme > 0.5) vColor = skyRemap(vColor);
 }

@@ -125,47 +125,47 @@
   --galaxy-text-muted: #b8c0d0;
 }
 
-/* Light theme: a daytime-blue sky with white stars (the canvas draws the
-   sky; see LightSky). Text is white on the blue; cards are deep, translucent
-   blue; the orange is a touch lighter so it reads on blue. */
+/* Light theme: a bright, premium atmosphere (white → #F3F8FE, drawn by
+   LightSky) with navy text, the same scroll-driven particle world drawn as
+   deep navy / blue / electric blue / orange dots without glow. */
 :root[data-theme="light"] {
-  --brand-orange: #ffa05a;
-  --brand-blue: #9fd2ff;
-  --background: #2b6e8d;
-  --surface: #1f5874;
-  --surface-2: #24617f;
-  --foreground: #ffffff;
-  --muted: #235f7c;
-  --muted-foreground: #c9dfea;
-  --border: rgb(255 255 255 / 0.16);
-  --input: rgb(255 255 255 / 0.22);
-  --ring: #bfe6ff;
-  --primary: #ffffff;
-  --primary-foreground: #123c52;
-  --accent-foreground: #123c52;
+  --brand-orange: #ff6b1a;
+  --brand-blue: #1677ff;
+  --background: #f8fafc;
+  --surface: #ffffff;
+  --surface-2: #f3f8fe;
+  --foreground: #0b1b33;
+  --muted: #eef3f9;
+  --muted-foreground: #64748b;
+  --border: rgb(11 27 51 / 0.1);
+  --input: rgb(11 27 51 / 0.16);
+  --ring: #1677ff;
+  --primary: #0b1b33;
+  --primary-foreground: #ffffff;
+  --accent-foreground: #ffffff;
 
-  --text-primary: #ffffff;
-  --text-secondary: #e0edf4;
-  --text-muted: #bcd6e3;
-  --text-strong: #ffffff;
-  --accent-blue: #bfe6ff;
+  --text-primary: #0b1b33;
+  --text-secondary: #334155;
+  --text-muted: #64748b;
+  --text-strong: #06101f;
+  --accent-blue: #1677ff;
 
-  --card-bg: rgb(12 50 72 / 0.28);
-  --card-bg-hover: rgb(12 50 72 / 0.38);
-  --card-edge: rgb(255 255 255 / 0.18);
-  --panel-body: rgb(224 237 244 / 0.8);
+  --card-bg: rgb(255 255 255 / 0.55);
+  --card-bg-hover: rgb(255 255 255 / 0.8);
+  --card-edge: rgb(11 27 51 / 0.12);
+  --panel-body: #64748b;
 
-  --hero-kicker: #eaf4f9;
-  --hero-statement: #ffffff;
-  --icon-node: #ffffff;
-  --footer-label: #d3e7f1;
-  --footer-wordmark: rgb(255 255 255 / 0.07);
-  --footer-wordmark-stroke: rgb(255 255 255 / 0.1);
-  --footer-dust: #ffffff;
-  --galaxy-text-primary: #ffffff;
-  --galaxy-text-secondary: #eef6fa;
-  --galaxy-text-muted: #d2e5ee;
-  color-scheme: dark;
+  --hero-kicker: #1e2d47;
+  --hero-statement: #0b1b33;
+  --icon-node: #0b1b33;
+  --footer-label: #475569;
+  --footer-wordmark: rgb(11 27 51 / 0.05);
+  --footer-wordmark-stroke: rgb(11 27 51 / 0.08);
+  --footer-dust: #1677ff;
+  --galaxy-text-primary: #0b1b33;
+  --galaxy-text-secondary: #1e293b;
+  --galaxy-text-muted: #475569;
+  color-scheme: light;
 }
 
 @layer base {
