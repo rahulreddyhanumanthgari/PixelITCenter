@@ -536,7 +536,7 @@ and restrained so it frames them rather than competing with them.
   statement is one line from md up. The entrance is line by line.
 - **No long dashes** (—) in visible copy; they read as machine-written.
   Hyphens inside words (long-term, right-fit) are fine.
-- **Classes** (`app/globals.css`, `@layer components`). Use these instead of
+- **Classes** (`styles/globals.css`, `@layer components`). Use these instead of
   one-off heading styles.
   - `type-display-xl`: hero. 700, uppercase, line-height 0.95, tracking
     -0.025em.
@@ -594,7 +594,7 @@ and restrained so it frames them rather than competing with them.
 One card system for the whole site. The Staffing & Consulting horizontal
 cards are the reference.
 
-- **Tokens** (`:root` in `app/globals.css`). Change one and every card
+- **Tokens** (`:root` in `styles/globals.css`). Change one and every card
   follows:
 
   | Token | Value |

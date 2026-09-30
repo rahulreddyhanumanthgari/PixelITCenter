@@ -1,7 +1,7 @@
 // Every tunable number for the particle journey lives here: the one particle
 // system that runs from the landing hero's gravity field down to About Us.
 
-import type { DeviceTier } from "@/components/particles/hooks";
+import type { DeviceTier } from "@/hooks/device";
 import type { ParticleLook } from "@/components/particles/ParticleSystem";
 import type { FormName } from "@/lib/particles/generateTarget";
 

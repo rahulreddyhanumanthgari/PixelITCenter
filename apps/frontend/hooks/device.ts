@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type RefObject } from "react";
-import type { PointerState } from "./types";
+import type { PointerState } from "@/components/particles/types";
 
 export type DeviceTier = "desktop" | "tablet" | "mobile";
 

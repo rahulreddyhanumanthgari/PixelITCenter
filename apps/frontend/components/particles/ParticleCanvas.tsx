@@ -4,7 +4,7 @@ import { useState, type ReactNode, type Ref } from "react";
 import { Canvas } from "@react-three/fiber";
 import { Bloom, EffectComposer } from "@react-three/postprocessing";
 import type { BloomEffect } from "postprocessing";
-import { hasWebGL } from "./hooks";
+import { hasWebGL } from "@/hooks/device";
 
 export interface CanvasSettings {
   cameraFov: number;

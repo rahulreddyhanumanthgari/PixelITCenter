@@ -31,7 +31,7 @@ feature/<name>  ──PR──▶  develop  ──PR──▶  master
 
 | Workflow | Runs on | Checks |
 |---|---|---|
-| `.github/workflows/ci.yml` | PRs into `develop` / `master`, pushes to `develop` | `npm run lint`, `npm run typecheck`, `npm run build` |
+| `.github/workflows/ci.yml` | PRs into `develop` / `master`, pushes to `develop` | In `apps/frontend`: `npm run lint`, `npm run typecheck`, `npm run build` |
 | `.github/workflows/only-develop-to-master.yml` | PRs into `master` | Fails unless the PR comes from `develop` |
 
 ## Branch protection (repo admin, one-time)

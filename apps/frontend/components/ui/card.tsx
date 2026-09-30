@@ -10,7 +10,7 @@ type CardProps<T extends ElementType> = {
 } & Omit<ComponentPropsWithoutRef<T>, "as">;
 
 /**
- * The one card used across the site (styles: `.card` in app/globals.css).
+ * The one card used across the site (styles: `.card` in styles/globals.css).
  * Sections pick the element and the internal layout; the surface, border,
  * radius, accent, depth, hover and active state always come from here.
  * Put `card-title` on the card's heading and `card-index` on its number.
