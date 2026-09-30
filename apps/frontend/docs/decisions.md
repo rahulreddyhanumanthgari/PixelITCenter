@@ -636,6 +636,19 @@ cards are the reference.
   | Testimonials | quote cards |
 
   Sizes differ by content; the look never does.
+- **Service panels.** Service cards use `ServiceCard`
+  (`components/ui/service-card.tsx`), which is `Card` with `variant="panel"`
+  (`.card--panel`): the same family, not a separate design.
+  - *Top:* a small orange reference number with a short tag taken from the
+    service itself (`01 / AI · Data`), and a small dot icon on the right.
+  - *Middle:* the title (`type-heading`) as the strongest element, then a
+    muted cool-grey description (`--panel-bg`, `--panel-body`).
+  - *Foot:* a partial orange-to-blue energy line and an arrow.
+  - *Surface:* more translucent (`--panel-bg`), so the particles show
+    faintly behind.
+  - *Hover:* the surface lifts, a faint blue inner edge appears, the icon
+    brightens, the energy line extends, the arrow nudges 3px, and the blue
+    cursor light shows.
 - **Particle icons.** Every Services card has a small dot-drawn icon for
   its field (`components/ui/particle-icon.tsx`). The icon's shapes are
   sampled into dots: orange for the main shape, blue for secondary lines,

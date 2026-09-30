@@ -3,8 +3,11 @@ import { cn } from "@/lib/utils";
 
 type CardProps<T extends ElementType> = {
   as?: T;
-  /** "default" | "featured" — the same card family, a little more presence. */
-  variant?: "default" | "featured";
+  /**
+   * "default" | "featured" (a little more presence) | "panel" (a technical
+   * panel: translucent, energy line at the foot; see ServiceCard).
+   */
+  variant?: "default" | "featured" | "panel";
   /** The card represents the current state (e.g. the active process step). */
   active?: boolean;
 } & Omit<ComponentPropsWithoutRef<T>, "as">;
@@ -20,7 +23,7 @@ export function Card<T extends ElementType = "div">({ as, variant = "default", a
   const Tag = (as ?? "div") as "div";
   return (
     <Tag
-      className={cn("card", variant === "featured" && "card--featured", className as string | undefined)}
+      className={cn("card", variant !== "default" && `card--${variant}`, className as string | undefined)}
       data-active={active === undefined ? undefined : String(active)}
       {...(props as ComponentPropsWithoutRef<"div">)}
     />

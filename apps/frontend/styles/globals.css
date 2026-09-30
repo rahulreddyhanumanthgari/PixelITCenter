@@ -115,6 +115,11 @@
   --card-accent: var(--brand-orange);
   --card-light: rgb(255 255 255 / 0.04);
   --card-transition: 350ms cubic-bezier(0.22, 1, 0.36, 1);
+  /* Panel variant (service cards): more translucent, a blue cursor light. */
+  --panel-bg: rgb(7 10 16 / 0.72);
+  --panel-bg-hover: rgb(10 14 22 / 0.8);
+  --panel-body: rgb(180 190 210 / 0.72);
+  --panel-light: rgb(37 99 235 / 0.07);
 
   /* Theme-dependent one-offs. */
   --hero-kicker: #e6eaf2;
@@ -162,6 +167,10 @@
   --card-shadow: inset 0 1px 0 rgb(255 255 255 / 0.06), 0 18px 40px -28px rgb(4 20 32 / 0.8);
   --card-glow: 0 0 48px -24px rgb(255 160 90 / 0.4);
   --card-light: rgb(255 255 255 / 0.06);
+  --panel-bg: rgb(12 50 72 / 0.45);
+  --panel-bg-hover: rgb(12 50 72 / 0.6);
+  --panel-body: rgb(224 237 244 / 0.8);
+  --panel-light: rgb(255 255 255 / 0.07);
 
   --hero-kicker: #eaf4f9;
   --hero-statement: #ffffff;
@@ -423,11 +432,126 @@
     height: 1.75rem;
   }
 
+  /* Panel: the technical-panel variant used by ServiceCard. Same family
+     (border, radius, depth, cursor light, hover), but more translucent so
+     the particle field shows faintly behind, and its accent is a partial
+     orange energy line at the foot instead of the left mark. */
+  .card--panel {
+    --card-padding-x: clamp(1.5rem, 1.1rem + 1.2vw, 2rem);
+    --card-padding-y: clamp(1.5rem, 1.1rem + 1.2vw, 2rem);
+    --card-light: var(--panel-light);
+    display: flex;
+    flex-direction: column;
+    background: var(--panel-bg);
+  }
+  .card--panel::before {
+    display: none;
+  }
+  .card--panel::after {
+    background: radial-gradient(circle at var(--mx, 50%) var(--my, 0%), var(--card-light), transparent 45%);
+  }
+  .panel-meta {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    font-size: 0.6875rem;
+    font-weight: 500;
+    line-height: 1.3;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+  .panel-index {
+    font-family: var(--font-display);
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    font-variant-numeric: tabular-nums;
+    color: var(--accent-orange);
+  }
+  .panel-icon {
+    width: 2rem;
+    height: 2rem;
+    flex: none;
+    opacity: 0.7;
+  }
+  .panel-title {
+    margin-top: 1.75rem;
+  }
+  .panel-body {
+    margin-top: 0.75rem;
+    font-size: var(--text-small);
+    line-height: 1.55;
+    color: var(--panel-body);
+    text-wrap: pretty;
+  }
+  .panel-foot {
+    display: flex;
+    align-items: center;
+    gap: 0.875rem;
+    margin-top: auto;
+    padding-top: 1.75rem;
+  }
+  /* The energy line: a short orange stretch, a hint of blue, then fading. */
+  .panel-line {
+    position: relative;
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, var(--card-border), transparent);
+  }
+  .panel-line::before {
+    content: "";
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 22%;
+    background: linear-gradient(90deg, var(--accent-orange) 70%, var(--accent-blue));
+    opacity: 0.7;
+    transition:
+      width var(--card-transition),
+      opacity var(--card-transition);
+  }
+  .panel-arrow {
+    width: 1rem;
+    height: 1rem;
+    flex: none;
+    color: var(--text-muted);
+    transition:
+      transform var(--card-transition),
+      color var(--card-transition);
+  }
+  @media (hover: hover) {
+    .card--panel:hover {
+      background-color: var(--panel-bg-hover);
+      box-shadow: var(--card-shadow), inset 0 0 28px -16px var(--accent-blue);
+    }
+    .card--panel:hover .panel-icon {
+      opacity: 1;
+    }
+    .card--panel:hover .panel-line::before {
+      width: 38%;
+      opacity: 1;
+    }
+    .card--panel:hover .panel-arrow {
+      color: var(--accent-orange);
+      transform: translate(3px, -3px);
+    }
+  }
+  /* Emphasised panel: same design, a little more contrast. */
+  .card--panel[data-active="true"] .panel-line::before {
+    width: 38%;
+    opacity: 1;
+  }
+  .card--panel[data-active="true"] .panel-icon {
+    opacity: 1;
+  }
+
   @media (prefers-reduced-motion: reduce) {
     .card,
     .card::before,
     .card::after,
-    .card-title {
+    .card-title,
+    .panel-line::before,
+    .panel-arrow {
       transition: none;
     }
   }
