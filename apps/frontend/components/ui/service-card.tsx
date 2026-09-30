@@ -1,41 +1,31 @@
-import { ArrowUpRight } from "lucide-react";
 import { Card } from "@/components/ui/card";
-import { ParticleIcon, type ParticleIconName } from "@/components/ui/particle-icon";
 
 interface ServiceCardProps {
-  /** Position in its group, shown as a small orange reference number (01, 02…). */
+  /** Position in its group: the large, light orange number (01, 02…). */
   index: number;
-  /** Short technical identifier shown next to the number (from the service itself). */
-  tag: string;
-  icon: ParticleIconName;
   title: string;
   description: string;
+  /** Tiny technical label, bottom right (from the service itself). */
+  label: string;
 }
 
 /**
- * A service as a technical panel: the site's one card system in its `panel`
- * variant (`.card--panel` in styles/globals.css) — reference number + tag
- * and a small icon on top, the title as the strongest element, a muted
- * description, and a partial orange energy line with an arrow at the foot.
- * Every service uses this same structure; only icon, number and copy change.
+ * A service as a quiet editorial panel on the site's one card system
+ * (`.card`, `.card--panel` in styles/globals.css): number, title, a partial
+ * accent line, a narrow description and a small label. No icon or box —
+ * the title is the identifier and whitespace does the separating. Odd and
+ * even panels alternate an orange / orange-to-blue accent line.
  */
-export function ServiceCard({ index, tag, icon, title, description }: ServiceCardProps) {
+export function ServiceCard({ index, title, description, label }: ServiceCardProps) {
   return (
-    <Card as="li" variant="panel" data-reveal="5">
-      <div className="panel-meta">
-        <span>
-          <span className="panel-index">{String(index).padStart(2, "0")}</span>
-          <span aria-hidden="true"> / </span>
-          {tag}
-        </span>
-        <ParticleIcon name={icon} className="panel-icon" />
-      </div>
-      <h4 className="type-heading card-title panel-title">{title}</h4>
+    <Card as="li" variant="panel" data-reveal="5" data-accent={index % 2 === 0 ? "blue" : undefined}>
+      <span className="panel-index" aria-hidden="true">
+        {String(index).padStart(2, "0")}
+      </span>
+      <h4 className="card-title panel-title">{title}</h4>
+      <span className="panel-line" aria-hidden="true" />
       <p className="panel-body">{description}</p>
-      <div className="panel-foot" aria-hidden="true">
-        <span className="panel-line" />
-        <ArrowUpRight className="panel-arrow" />
-      </div>
+      <span className="panel-label">{label}</span>
     </Card>
   );
 }

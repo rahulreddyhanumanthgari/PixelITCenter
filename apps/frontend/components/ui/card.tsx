@@ -3,11 +3,8 @@ import { cn } from "@/lib/utils";
 
 type CardProps<T extends ElementType> = {
   as?: T;
-  /**
-   * "default" | "featured" (a little more presence) | "panel" (a technical
-   * panel: translucent, energy line at the foot; see ServiceCard).
-   */
-  variant?: "default" | "featured" | "panel";
+  /** "default" | "panel" (an editorial service panel; see ServiceCard). */
+  variant?: "default" | "panel";
   /** The card represents the current state (e.g. the active process step). */
   active?: boolean;
 } & Omit<ComponentPropsWithoutRef<T>, "as">;

@@ -40,15 +40,14 @@ export function Services() {
               <p data-reveal="4" className="type-body mx-auto mt-4 text-center">
                 {group.summary}
               </p>
-              <ul className="mt-6 grid gap-[var(--card-gap)] sm:grid-cols-2">
+              <ul className="mt-10 grid gap-x-10 gap-y-12 sm:grid-cols-2 lg:gap-x-14 lg:gap-y-16">
                 {group.items.map((item, i) => (
                   <ServiceCard
                     key={item.title}
                     index={i + 1}
-                    tag={item.tag}
-                    icon={item.icon}
                     title={item.title}
                     description={item.body}
+                    label={item.label}
                   />
                 ))}
               </ul>

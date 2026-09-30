@@ -591,77 +591,29 @@ and restrained so it frames them rather than competing with them.
 
 ## Cards
 
-One card system for the whole site. The Staffing & Consulting horizontal
-cards are the reference.
+One quiet, editorial card language for the whole site: Services, Staffing,
+Why and Testimonials. (How We Work, Careers and Contact are open text.)
+Earlier outlined "SaaS" cards and a technical-panel version with icons were
+rejected; this is their replacement.
 
-- **Tokens** (`:root` in `styles/globals.css`). Change one and every card
-  follows:
+- **Look** (`.card` in `styles/globals.css`).
+  - The surface is almost the page colour: `--card-bg` is
+    `rgb(10 14 22 / 0.35)`.
+  - Corners are 4px, and there is no outline or shadow.
+  - The edges are a top hairline and a left hairline that fades downward
+    (`--card-edge`).
+  - The one decoration is a short orange accent line over the top edge.
+- **Hover.** The surface gets slightly lighter, the title brighter, and the
+  accent longer. Nothing moves, scales or glows.
+- **Service panels** (`ServiceCard`, `.card--panel`), top to bottom:
+  - a large, light orange number;
+  - the title, the strongest element;
+  - a partial accent line (orange, alternating with orange-to-blue);
+  - the description, narrow (34ch) and muted;
+  - a tiny uppercase label bottom right (`label` in `content/site.ts`).
 
-  | Token | Value |
-  |---|---|
-  | `--card-bg` | `rgb(8 11 17 / 0.88)` |
-  | `--card-bg-hover` | slightly lighter |
-  | `--card-border` | `rgb(255 255 255 / 0.07)` |
-  | `--card-border-hover` / `--card-border-active` | brighter |
-  | `--card-radius` | 16px |
-  | `--card-padding-x` / `--card-padding-y` | fluid |
-  | `--card-gap` | 1rem |
-  | `--card-shadow` | a very low inset highlight plus a soft drop |
-  | `--card-glow` | the active state's faint orange ambience |
-  | `--card-accent` | orange |
-  | `--card-light` | the cursor light |
-  | `--card-transition` | 350ms ease-out |
-
-- **Classes.**
-  - `.card`: the dark surface, 1px border, radius, depth, and the accent: a
-    short 2px orange mark on the left edge, level with the title.
-  - `.card-title`: brightens on hover.
-  - `.card-index`: orange display-face numbers, no badges.
-  - `.card--active` (or `data-active="true"`): lighter surface, stronger
-    border, full accent, white title, faint glow.
-  - `.card--featured`: more room, a stronger border and a longer accent.
-- **Hover** (pointer devices only). Border and surface brighten, the accent
-  grows, the title brightens, and a very faint radial light follows the
-  cursor. `CardLight` (`components/ui/card-light.tsx`) sets `--mx` / `--my`
-  with one delegated pointer listener. There is no scale, lift, rotation or
-  strong glow.
-- **Component.** Every section uses `<Card>` (`components/ui/card.tsx`,
-  `as`, `variant`, `active`):
-
-  | Section | Card |
-  |---|---|
-  | Services | grid cards |
-  | Staffing | horizontal cards |
-  | Why | a 2×2 of separate cards (no longer a joined grid) |
-  | Testimonials | quote cards |
-
-  Sizes differ by content; the look never does.
-- **Service panels.** Service cards use `ServiceCard`
-  (`components/ui/service-card.tsx`), which is `Card` with `variant="panel"`
-  (`.card--panel`): the same family, not a separate design.
-  - *Top:* a small orange reference number with a short tag taken from the
-    service itself (`01 / AI · Data`), and a small dot icon on the right.
-  - *Middle:* the title (`type-heading`) as the strongest element, then a
-    muted cool-grey description (`--panel-bg`, `--panel-body`).
-  - *Foot:* a partial orange-to-blue energy line and an arrow.
-  - *Surface:* more translucent (`--panel-bg`), so the particles show
-    faintly behind.
-  - *Hover:* the surface lifts, a faint blue inner edge appears, the icon
-    brightens, the energy line extends, the arrow nudges 3px, and the blue
-    cursor light shows.
-- **Particle icons.** Every Services card has a small dot-drawn icon for
-  its field (`components/ui/particle-icon.tsx`). The icon's shapes are
-  sampled into dots: orange for the main shape, blue for secondary lines,
-  cream for nodes. A few dots twinkle slowly, and the icon brightens on
-  card hover.
-- **Excluded on purpose.**
-  - Contact is a whole section too: centred text, no card.
-  - Careers is a whole section (`Careers.tsx`, between About and Proof
-    Points), not a card. Sections are never cards, whatever their size.
-  - The client logo tiles stay white, because the logos need a white
-    background.
-  - The How We Work step is open text over the planets. A card there was
-    tried and rejected: it boxed in the solar system.
+  The grid has generous gaps. There are no icons and no cursor light (both
+  removed).
 
 ## Footer: the closing scene
 
