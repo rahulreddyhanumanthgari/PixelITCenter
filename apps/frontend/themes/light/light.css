@@ -200,28 +200,29 @@ body {
   left: 0;
   top: 0;
   display: grid;
-  width: 60px;
-  height: 60px;
+  width: 76px;
+  height: 76px;
   place-items: center;
   border-radius: 9999px;
   background: #6b8fb0;
   will-change: transform;
 }
 .svc-orb-icon {
-  width: 26px;
-  height: 26px;
+  width: 34px;
+  height: 34px;
   color: #ffffff;
 }
-/* The flowing tail: a tapered streak in the disc's colour, strongest at the
+/* The flowing tail: a tapered pale-blue streak, strongest at the
    disc and fading away behind it along the ring. */
 .svc-trail {
   position: absolute;
   left: 0;
   top: 0;
-  width: 92px; /* set from the ring size in ServicesOrbit */
-  height: 43px; /* 0.72 × the disc */
+  width: 100px; /* set from the ring size in ServicesOrbit */
+  height: 55px; /* 0.72 × the disc */
   border-radius: 9999px;
-  background: linear-gradient(90deg, rgb(107 143 176 / 0) 0%, rgb(107 143 176 / 0.12) 40%, rgb(107 143 176 / 0.45) 100%);
+  /* Light and airy, never a dark shadow: a pale tint of the disc blue. */
+  background: linear-gradient(90deg, rgb(196 215 235 / 0) 0%, rgb(196 215 235 / 0.25) 40%, rgb(196 215 235 / 0.7) 100%);
   clip-path: polygon(0 42%, 100% 0, 100% 100%, 0 58%);
   filter: blur(2px);
   will-change: transform;

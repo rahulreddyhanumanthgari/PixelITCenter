@@ -740,10 +740,10 @@ day. The light-mode code paths in the shared particle engine (`uLight`,
   - *Discs*: one per service (13, lucide icons mapped by title in
     `ServicesOrbit`), evenly spaced round the full circle and turning once
     every 70 s, so they enter at the top and leave at the bottom. Each is a
-    flat 2D disc in the light hero's mountain blue (`#6b8fb0`) with a plain
+    flat 2D 76 px disc in the light hero's mountain blue (`#6b8fb0`) with a plain
     white icon (an earlier glossy 3D navy version was replaced at the
-    owner's request), trailing a tapered flowing tail in the same blue that
-    fades away behind it. The tail is at most 92 px and never more than
+    owner's request), trailing a tapered flowing tail in a pale tint of that blue (never a dark shadow) that
+    fades away behind it. The tail is at most 100 px and never more than
     0.55 of the gap between discs, so tails never join up (phones).
     Positions come from one rAF loop writing transforms (no React renders);
     it stops off screen, pauses on hover and is still for reduced motion.

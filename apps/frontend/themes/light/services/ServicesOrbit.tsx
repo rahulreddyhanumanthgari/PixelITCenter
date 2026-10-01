@@ -2,19 +2,19 @@
 
 import { useEffect, useRef } from "react";
 import {
-  Award,
   BrainCircuit,
-  Briefcase,
-  ChartNoAxesCombined,
-  ChartPie,
-  Cloud,
-  FilePen,
-  FlaskConical,
+  BriefcaseBusiness,
+  BugOff,
+  ChartGantt,
+  CloudCog,
+  DatabaseZap,
+  FileSignature,
   Infinity as InfinityIcon,
   Network,
+  Presentation,
   ShieldCheck,
-  SquareKanban,
-  Users,
+  UserRoundSearch,
+  UserStar,
   type LucideIcon,
 } from "lucide-react";
 import { services } from "@/content/site";
@@ -29,26 +29,27 @@ import { services } from "@/content/site";
  * Hovering the ring pauses it; reduced motion shows the orbs still.
  */
 
+// One clear, literal icon per service.
 const ICONS: Record<string, LucideIcon> = {
   AI: BrainCircuit,
-  "Cloud (AWS, Azure, GCP)": Cloud,
+  "Cloud (AWS, Azure, GCP)": CloudCog,
   Cybersecurity: ShieldCheck,
-  "Big Data Analytics": ChartNoAxesCombined,
-  DevOps: InfinityIcon,
-  "QA Automation": FlaskConical,
+  "Big Data Analytics": DatabaseZap,
+  DevOps: InfinityIcon, // the DevOps loop
+  "QA Automation": BugOff,
   "Networking Solutions": Network,
-  "IT Staffing": Users,
-  "Contract Staffing": FilePen,
-  "Professional Services": Briefcase,
-  "Project Management": SquareKanban,
-  "Business Analysis": ChartPie,
-  "Specialized Technology Talent": Award,
+  "IT Staffing": UserRoundSearch,
+  "Contract Staffing": FileSignature,
+  "Professional Services": BriefcaseBusiness,
+  "Project Management": ChartGantt,
+  "Business Analysis": Presentation,
+  "Specialized Technology Talent": UserStar,
 };
 
 const ITEMS = services.groups.flatMap((g) => g.items.map((i) => i.title));
 const PERIOD = 70; // seconds for one full turn
-const ORB = 60; // px
-const TAIL = 92; // px: longest flowing tail; shorter when the discs are closer (phones)
+const ORB = 76; // px
+const TAIL = 100; // px: longest flowing tail; shorter when the discs are closer (phones)
 
 const STATS = [
   { value: String(services.groups[0].items.length), label: "Technology services" },
@@ -171,7 +172,7 @@ export function ServicesOrbit() {
 
       <div aria-hidden="true">
         {ITEMS.map((title, i) => {
-          const Icon = ICONS[title] ?? Award;
+          const Icon = ICONS[title] ?? BrainCircuit;
           return (
             <div key={title}>
               <div
