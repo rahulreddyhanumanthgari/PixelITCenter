@@ -129,6 +129,7 @@ function Tube({ count, reducedMotion }: { count: number; reducedMotion: boolean 
 
   const stage = useRef(-1);
   const flow = useRef(0);
+  const spin = useRef(0);
   const tmp = useMemo(
     () => ({
       m: new THREE.Matrix4(),
@@ -137,6 +138,7 @@ function Tube({ count, reducedMotion }: { count: number; reducedMotion: boolean 
       s: new THREE.Vector3(),
       t: new THREE.Vector3(),
       x: new THREE.Vector3(),
+      x2: new THREE.Vector3(),
       z: new THREE.Vector3(),
       view: new THREE.Vector3(0, 0, 1),
       basis: new THREE.Matrix4(),
@@ -163,6 +165,9 @@ function Tube({ count, reducedMotion }: { count: number; reducedMotion: boolean 
     const T = thickness[a] * (1 - e) + thickness[b] * e;
 
     if (!reducedMotion) flow.current = (flow.current + dt * 0.006) % 1;
+    // Constant rotation of the square slats about the tube's own axis (as in
+    // the reference), a little faster while the page is scrolling.
+    if (!reducedMotion) spin.current += dt * (0.45 + Math.min(2, Math.abs(target - s) * 6));
     const pt = (u: number, out: Vec3) => {
       const pa = A.at(u, W, H, wide);
       const pb = B.at(u, W, H, wide);
@@ -182,13 +187,20 @@ function Tube({ count, reducedMotion }: { count: number; reducedMotion: boolean 
       pt(Math.max(0, u - d), p1);
       pt(Math.min(1, u + d), p2);
       tmp.t.set(p2[0] - p1[0], p2[1] - p1[1], p2[2] - p1[2]).normalize();
-      // Square frame: the slat's thickness runs along the tube, and one flat
-      // side always faces the viewer, so the tube reads as a square duct.
+      // Square frame: the slat's thickness runs along the tube; it starts
+      // with a flat side to the viewer and then spins (below).
       tmp.x.crossVectors(tmp.t, tmp.view);
       if (tmp.x.lengthSq() < 1e-6) tmp.x.set(1, 0, 0);
       tmp.x.normalize();
       tmp.z.crossVectors(tmp.x, tmp.t).normalize();
-      tmp.basis.makeBasis(tmp.x, tmp.t, tmp.z);
+      // Spin each slat about the tangent; the phase steps along the tube so
+      // the rotation ripples down it.
+      const ang = spin.current + u * Math.PI * 3;
+      const c = Math.cos(ang);
+      const sn = Math.sin(ang);
+      tmp.x2.copy(tmp.x).multiplyScalar(c).addScaledVector(tmp.z, sn);
+      tmp.z.multiplyScalar(c).addScaledVector(tmp.x, -sn);
+      tmp.basis.makeBasis(tmp.x2, tmp.t, tmp.z);
       tmp.q.setFromRotationMatrix(tmp.basis);
       // The ends taper to nothing, so a fin wrapping from one end to the other is never seen.
       const end = smooth(Math.min(1, u / 0.05)) * smooth(Math.min(1, (1 - u) / 0.05));

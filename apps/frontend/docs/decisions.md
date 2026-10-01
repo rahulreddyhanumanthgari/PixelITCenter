@@ -702,9 +702,12 @@ orbit, white relief globe, off-white #F4EFEC page) were removed for it.
   A form holds while its section fills the screen; across each section edge
   (±0.35 of the viewport) every fin glides from its place in one form to its
   place in the next, eased, with a swell toward the camera mid-way. Fins
-  slide slowly along the tube; the object leans a little with the pointer.
+  slide slowly along the tube and spin constantly about the tube's own axis
+  (0.45 rad/s, faster while scrolling; the phase steps 3π along the tube so
+  the turn ripples down it, as in the reference); the object leans a little
+  with the pointer.
   Fin thickness follows each form's length so spacing stays even. Reduced
-  motion stops the slide and the lean; the morph still follows scroll.
+  motion stops the slide, the spin and the lean; the morph still follows scroll.
 - **Hero** (`LightHero`): the approved headline and CTAs centred at the top,
   the arch below, the description bottom right and a scroll cue bottom left
   (phones: the description follows the CTAs).
