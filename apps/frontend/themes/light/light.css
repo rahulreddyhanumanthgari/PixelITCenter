@@ -42,14 +42,18 @@
   --text-secondary: #334155;
   --text-muted: #64748b;
   --text-strong: #06101f;
-  --accent-orange: var(--brand-orange);
+  /* Accent words, labels, numbers and card accents follow the theme: blue
+     (the token keeps its shared name; orange stays only on brand marks). */
+  --accent-orange: #2563eb;
   --accent-blue: #1677ff;
 
   /* Cards (Light Theme pack §7): editorial panels, minimal border, nearly
      no outline, no glassmorphism. */
-  --card-bg: rgb(255 255 255 / 0.88);
+  --card-bg: #ffffff;
   --card-bg-hover: #ffffff;
-  --card-edge: rgb(11 27 51 / 0.07);
+  --card-edge: rgb(11 27 51 / 0.08);
+  --card-radius: 6px;
+  --card-accent: #2563eb;
   --panel-body: #64748b;
 
   /* One-offs */
@@ -72,15 +76,17 @@
     radial-gradient(80% 70% at 50% 30%, #ffffff 0%, #f8fafc 55%, #eef4fd 100%);
 }
 
-/* Hero: the site's headline type, a little smaller so the arch has room. */
-.light-hero-title .hero-kicker,
-.light-hero-title .hero-statement {
-  font-size: clamp(2.5rem, 1rem + 6.4vw, 4.75rem);
+.light-hero-copy strong {
+  color: #2563eb;
 }
-@media (min-width: 768px) {
-  .light-hero-title .hero-kicker,
-  .light-hero-title .hero-statement {
-    font-size: clamp(2.75rem, 4.7vw, 4.75rem);
+@media (min-width: 640px) {
+  /* Bottom right it sits over the arch's foot: a soft white card keeps it readable. */
+  .light-hero-copy {
+    padding: 1rem 1.25rem;
+    border-radius: 6px;
+    background: rgb(255 255 255 / 0.82);
+    backdrop-filter: blur(8px);
+    box-shadow: 0 18px 36px -26px rgb(11 27 51 / 0.25);
   }
 }
 .light-hero-copy {
@@ -126,4 +132,109 @@
   font-size: 19vw;
   margin-left: -2vw;
   margin-right: -2vw;
+}
+
+/* ---------------------------------------------------------------------------
+   Typography (after the reference animation's editorial type): headings in
+   a display serif, sentence case, regular weight; the important word in
+   italic blue instead of uppercase orange. Body text stays Inter.
+   ------------------------------------------------------------------------ */
+.type-display-lg,
+.hero-title {
+  font-family: var(--font-serif-display), Georgia, serif;
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: -0.015em;
+}
+.type-display-lg {
+  font-size: clamp(2.5rem, 1.5rem + 3.6vw, 4.5rem);
+  line-height: 1.02;
+}
+.light-hero-title .hero-kicker,
+.light-hero-title .hero-statement {
+  font-weight: 400;
+  line-height: 0.98;
+  letter-spacing: -0.02em;
+  font-size: clamp(3rem, 1.4rem + 7vw, 6rem);
+}
+@media (min-width: 768px) {
+  .light-hero-title .hero-kicker,
+  .light-hero-title .hero-statement {
+    font-size: clamp(3.25rem, 5.8vw, 6rem);
+  }
+}
+.light-hero-title .hero-kicker {
+  color: var(--text-primary);
+}
+.type-heading,
+.panel-title {
+  font-family: var(--font-serif-display), Georgia, serif;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+}
+.type-heading {
+  font-size: clamp(1.5rem, 1.3rem + 0.6vw, 1.875rem);
+}
+.panel-title {
+  font-size: clamp(1.75rem, 1.4rem + 1vw, 2.25rem);
+}
+.highlight {
+  font-style: italic;
+  padding-right: 0.06em; /* the italic overhang */
+}
+.type-eyebrow {
+  font-size: 0.75rem;
+  letter-spacing: 0.22em;
+}
+
+/* ---------------------------------------------------------------------------
+   Cards: clean white tiles, a thin edge, a whisper of shadow and one short
+   blue accent line. No glass, no glow.
+   ------------------------------------------------------------------------ */
+.card {
+  border: 1px solid var(--card-edge);
+  box-shadow:
+    0 1px 2px rgb(11 27 51 / 0.04),
+    0 18px 36px -24px rgb(11 27 51 / 0.2);
+}
+.card::before {
+  display: none;
+}
+.card--panel[data-accent="blue"] .panel-line {
+  background: linear-gradient(90deg, #2563eb, #60a5fa);
+}
+
+/* About: the vision as an editorial pull quote, and the highlights as
+   square tiles (like the reference's client tiles). */
+.light-about-vision blockquote {
+  padding-left: 1.25rem;
+  border-left: 2px solid #2563eb;
+  font-family: var(--font-serif-display), Georgia, serif;
+  font-size: clamp(1.375rem, 1.2rem + 0.6vw, 1.75rem);
+  font-style: italic;
+  line-height: 1.3;
+  color: var(--text-primary);
+}
+.light-tile {
+  display: flex;
+  min-height: 8.5rem;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 1.25rem;
+  border: 1px solid var(--card-edge);
+  border-radius: var(--card-radius);
+  background: #ffffff;
+  box-shadow: 0 18px 36px -26px rgb(11 27 51 / 0.22);
+}
+@media (min-width: 640px) {
+  .light-tile {
+    aspect-ratio: 1;
+    min-height: 0;
+  }
+}
+.light-tile-value {
+  font-family: var(--font-serif-display), Georgia, serif;
+  font-size: clamp(1.375rem, 1.2rem + 0.5vw, 1.625rem);
+  line-height: 1.15;
+  color: var(--text-primary);
 }

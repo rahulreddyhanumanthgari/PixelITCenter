@@ -49,7 +49,7 @@ export function LightHero() {
       {/* Phones: the description follows the CTAs (the arch fills the bottom);
           larger screens: it sits bottom right, the scroll cue bottom left. */}
       <p className="light-hero-copy mx-auto mt-6 px-6 text-center sm:absolute sm:bottom-10 sm:right-6 sm:mt-0 sm:px-0 sm:text-left lg:right-[max(2rem,calc((100vw-80rem)/2+2rem))]">
-        <RichText text={hero.description} strongClassName="font-medium text-brand-orange" />
+        <RichText text={hero.description} strongClassName="font-medium" />
       </p>
       <a
         href="#services"

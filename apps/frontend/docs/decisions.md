@@ -697,8 +697,9 @@ orbit, white relief globe, off-white #F4EFEC page) were removed for it.
   screen, so its two sides frame the content. Why: a spine down the left.
   How we work: the tube runs horizontally across the screen, set back in depth, weaving
   behind the heading and all four steps (a soft veil behind the pinned step
-  content keeps the text readable), then flows on into About. About: a wide spiral framing
-  the text. Contact: a deep spiral "eye" with a small glass sphere in it.
+  content keeps the text readable), then flows on into About. About: a tall column on the right that bows and twists through
+  depth (the reference's agency scene), the statement left-aligned on the
+  left (`themes/light/about/LightAbout.tsx`). Contact: a deep spiral "eye" with a small glass sphere in it.
   Portrait screens move shapes to the edges; large shapes crop naturally.
 - **Scroll** (`readStage`): the stage runs 0…6 across the section anchors.
   A form holds while its section fills the screen; across each section edge
@@ -715,6 +716,13 @@ orbit, white relief globe, off-white #F4EFEC page) were removed for it.
   (phones: the description follows the CTAs).
 - **Readability**: the cards are near-solid white; Contact (inside the eye)
   has a soft page-colour veil behind its text (`#contact::before`).
+- **Typography & colour (light only)**: headings (`type-display-lg`, hero,
+  `type-heading`, panel titles) in Instrument Serif, sentence case, regular
+  weight; the highlighted word italic blue. `--accent-orange` is set to
+  #2563EB in light, so eyebrows, numbers and accent lines follow the blue
+  theme (orange stays on brand marks).
+- **Cards (light only)**: white, 1px hairline edge, 6px radius, a whisper of
+  shadow, one short blue accent line; About's highlights are square tiles.
 - **Palette**: `--background` #F8FAFC (atmosphere #FFFFFF → #EEF4FD), navy
   text #0B1B33, slate #64748B, orange #FF6B1A kept as the restrained accent.
 

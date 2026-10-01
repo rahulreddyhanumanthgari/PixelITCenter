@@ -14,18 +14,20 @@ import { Testimonials } from "@/themes/core/components/sections/Testimonials";
 import { ContactCta } from "@/themes/core/components/sections/ContactCta";
 
 // Homepage flow from the modernization plan (section 04). Both designs render
-// it; a design can swap in its own hero, Services and Staffing, and turn the particle
+// it; a design can swap in its own hero, Services, Staffing and About, and turn the particle
 // journey off (the light design has no particles for now).
 export default function HomePage({
   hero = <Hero />,
   services = <Services />,
   staffing = <Staffing />,
+  about = <About />,
   particles = true,
   backdrop,
 }: {
   hero?: React.ReactNode;
   services?: React.ReactNode;
   staffing?: React.ReactNode;
+  about?: React.ReactNode;
   particles?: boolean;
   /** Drawn behind the page instead of the particle journey (the light design's object). */
   backdrop?: React.ReactNode;
@@ -57,7 +59,7 @@ export default function HomePage({
             aria-hidden="true"
             className="pointer-events-none sticky top-0 -mb-[100svh] h-[100svh]"
           />
-          <About />
+          {about}
           <Careers />
           <Testimonials />
           <ContactCta />

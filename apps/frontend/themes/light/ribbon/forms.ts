@@ -26,7 +26,7 @@ const arch: Form = {
     const a = Math.PI + 0.42 - u * (Math.PI + 0.84);
     const rx = wide ? 0.6 * W : 0.8 * W;
     const ry = wide ? 0.6 * H : 0.42 * H;
-    return [rx * Math.cos(a), -0.64 * H + ry * Math.sin(a), 0.6 * Math.sin(Math.PI * u)];
+    return [rx * Math.cos(a), -0.74 * H + ry * Math.sin(a), 0.6 * Math.sin(Math.PI * u)];
   },
   radius: (W, H, wide) => (wide ? Math.min(0.11 * H, 0.08 * W) : 0.1 * W),
 };
@@ -75,16 +75,17 @@ const behindProcess: Form = {
   radius: (W, H, wide) => (wide ? Math.min(0.085 * H, 0.065 * W) : 0.1 * W),
 };
 
-/** About: a wide spiral sweeping in from beyond the screen, framing the text. */
-const spiral: Form = {
+/**
+ * About (the reference's "agency" scene): a tall column on the right that
+ * bows and twists through depth, the statement on the left.
+ */
+const aboutColumn: Form = {
   at(u, W, H, wide) {
-    const a = 0.5 + 1.3 * TAU * u;
-    const k = 1 - u;
-    const rx = (wide ? 0.38 * W : 0.55 * W) + k * 0.55 * W;
-    const ry = 0.44 * H + k * 0.5 * H;
-    return [rx * Math.cos(a), ry * Math.sin(a), -1.2 * u];
+    const x0 = wide ? 0.27 * W : 0.46 * W;
+    const y = (0.78 - 1.56 * u) * H;
+    return [x0 + 0.09 * W * Math.sin(Math.PI * u) - 0.04 * W * Math.sin(TAU * u), y, 1.6 * Math.sin(Math.PI * u) - 0.6];
   },
-  radius: (W, H, wide) => (wide ? Math.min(0.07 * H, 0.055 * W) : 0.08 * W),
+  radius: (W, H, wide) => (wide ? Math.min(0.13 * H, 0.09 * W) : 0.1 * W),
 };
 
 /** Contact: a deep spiral "eye", winding from beyond the screen into a tunnel. */
@@ -101,7 +102,7 @@ const eye: Form = {
  * In page order. Anchors (see RibbonScene) pick the section each form
  * belongs to: hero, Services, Staffing, Why, How we work, About, Contact.
  */
-export const FORMS: Form[] = [arch, columnRight, orbit, spineLeft, behindProcess, spiral, eye];
+export const FORMS: Form[] = [arch, columnRight, orbit, spineLeft, behindProcess, aboutColumn, eye];
 
 /** Index of the Contact eye (its glass sphere shows with it). */
 export const EYE = FORMS.length - 1;
