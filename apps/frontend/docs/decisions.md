@@ -716,9 +716,9 @@ orbit, white relief globe, off-white #F4EFEC page) were removed for it.
   (phones: the description follows the CTAs).
 - **Readability**: the cards are near-solid white; Contact (inside the eye)
   has a soft page-colour veil behind its text (`#contact::before`).
-- **Typography & colour (light only)**: headings (`type-display-lg`, hero,
-  `type-heading`, panel titles) in Instrument Serif, sentence case, regular
-  weight; the highlighted word italic blue. `--accent-orange` is set to
+- **Typography & colour (light only)**: the site's simple bold sans
+  (Space Grotesk, uppercase headings), as the owner preferred over a trial
+  serif; the highlighted word is plain blue. `--accent-orange` is set to
   #2563EB in light, so eyebrows, numbers and accent lines follow the blue
   theme (orange stays on brand marks).
 - **Cards (light only)**: white, 1px hairline edge, 6px radius, a whisper of
