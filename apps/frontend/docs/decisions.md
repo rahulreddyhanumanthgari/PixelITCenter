@@ -7,6 +7,52 @@ Amplify), analytics and Terraform are not set up yet — `infrastructure/` will 
 added when hosting is decided. The portal is a separate application and must not
 live in this repo (plan, section 02).
 
+## Two candidate designs
+
+The homepage is built twice, as two fully different designs, so the team can
+compare them on the real site before choosing one. This is not a colour
+theme: each design has its own components, stylesheet, fonts and layout.
+
+- **Folders.** `themes/dark/` (the particle journey described below) and
+  `themes/light/`. They share only `content/site.ts` and `public/`; neither
+  imports from the other.
+- **Separate root layouts.** `app/(dark)/layout.tsx` and
+  `app/(light)/layout.tsx` each load their own fonts and CSS, so a page never
+  ships the other design's styles. Moving between them is a full page load,
+  which Next.js does anyway across root layouts. With no single root layout,
+  the 404 page is `app/global-not-found.tsx` (`experimental.globalNotFound`).
+- **Choosing.** `DesignSwitch` writes the `pixelit-design` cookie and loads
+  `/` again (a navigation, not `reload()`, which would restore the old
+  page's scroll position). A `beforeFiles` rewrite in `next.config.ts` serves
+  `/light` at `/` when the cookie is `light`. Both pages remain static, and
+  the right design is in the first HTML, so nothing flashes. Search engines
+  never carry the cookie, so they always see the dark design at `/`; the
+  light page's canonical is `/`.
+- **Visibility.** The switch shows by default; `NEXT_PUBLIC_DESIGN_SWITCH=off`
+  hides it.
+- **Removal.** See the README ("Two designs, one switch").
+
+### Light design
+
+Deliberately unlike the dark one:
+
+- **Palette.** White and a cool mist (`#EDF5F5`), deep teal ink `#102A2E`,
+  the logo's teal `#51D7D1` for fills (`#0E7C76` where teal is text), and
+  amber only for the hero's hub.
+- **Type.** Bricolage Grotesque for headings, IBM Plex Sans for text,
+  sentence case. Heading markup in `content/site.ts` (`*word*`, ` | `,
+  `**…**`) is stripped (`themes/light/lib/text.ts`): no accent words.
+- **Layout.** Left aligned. On desktop each section's heading holds the left
+  third and stays in view; the content takes the right two-thirds.
+- **The one bold element.** The hero's network (`NetworkMark`): the logo's
+  node mark grown into "your team" (amber hub) linked to skill nodes. It
+  draws itself once on load and then stays still; reduced motion shows it
+  complete.
+- **Structure as information.** Filled vs open nodes tell the two service
+  groups apart; only How We Work (a real sequence) is numbered. Staffing and
+  Contact are the two dark bands that change the pace.
+- **No WebGL, no JavaScript** except the mobile menu and the switch.
+
 ## Page rendering
 
 Everything is a Server Component except:

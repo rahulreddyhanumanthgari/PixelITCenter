@@ -25,31 +25,50 @@ Don't run `npm run dev` and `npm run build` at the same time: they share
 `.next/`. For a test build next to a running dev server, use
 `NEXT_DIST_DIR=.next-test npm run build`.
 
+## Two designs, one switch
+
+The homepage exists in two complete designs while the team picks one. Each
+lives in its own folder and shares only the copy (`content/site.ts`) and
+`public/`:
+
+| Design | Folder | Route | Look |
+|---|---|---|---|
+| Dark | `themes/dark/` | `app/(dark)` → `/` | Cinematic particle journey (WebGL) |
+| Light | `themes/light/` | `app/(light)` → `/light` | Light, editorial, the logo's teal and a node-network hero |
+
+A floating **Design: Dark / Light** control (`components/DesignSwitch.tsx`)
+saves the choice in a cookie; `next.config.ts` then serves the chosen design
+at `/`. Both stay statically prerendered. Hide the control with
+`NEXT_PUBLIC_DESIGN_SWITCH=off`.
+
+**When a design is chosen:** delete the other `themes/` folder and its
+`app/(…)` route group, `components/DesignSwitch.tsx`, `lib/design.ts` and the
+rewrite in `next.config.ts`. If light wins, move `app/(light)/light/page.tsx`
+up to `app/(light)/page.tsx` so it is served at `/`.
+
 ## Folders
 
 ```
-app/            routes, root layout, metadata, sitemap.ts, robots.ts
-components/
-  hero/         landing hero (h1, copy, CTAs)
-  journey/      the page-wide particle journey + its config (journey-config.ts)
-  particles/    particle engine: system, morph controller, stars, sky, canvas
-  story/        layout + scroll choreography for the story sections
-  layout/       header, nav, theme toggle, footer, logo, mobile menu
-  sections/     homepage sections (services, staffing, why, process, about…)
-  ui/           shared UI: shadcn button, card, heading text, particle icons
+app/
+  (dark)/       root layout + "/" for the dark design
+  (light)/      root layout + "/light" for the light design
+  global-not-found.tsx, sitemap.ts, robots.ts, icon.png (shared)
+themes/
+  dark/         the dark design: DarkHome.tsx, dark.css, and its own
+                components/ (hero, journey, particles, story, layout, sections, ui),
+                lib/ (particle forms, gsap), hooks/, shaders/
+  light/        the light design: LightHome.tsx, light.css, components/, lib/
+components/     shared: DesignSwitch
 content/        ALL site copy (site.ts): edit text here, not in components
-hooks/          shared React hooks (device tier, pointer, reduced motion)
-lib/            helpers: particle forms/shapes, theme, gsap, utils
-shaders/        GLSL for the particles and stars
-styles/         globals.css: design tokens, themes, type, cards, footer
+lib/            shared: design switch, metadata, utils
 types/          ambient type declarations (e.g. *.glsl imports)
 public/         static files: brand logo, client logos
 docs/           decisions.md: why each part works the way it does
 ```
 
-## Tuning the particles
+## Tuning the particles (dark design)
 
 Every visual number for the particle journey is in
-[`components/journey/journey-config.ts`](components/journey/journey-config.ts);
-the shapes themselves are in `lib/particles/`, and their motion and colour in
-`shaders/particle.vert.glsl`.
+[`themes/dark/components/journey/journey-config.ts`](themes/dark/components/journey/journey-config.ts);
+the shapes themselves are in `themes/dark/lib/particles/`, and their motion
+and colour in `themes/dark/shaders/particle.vert.glsl`.
