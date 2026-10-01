@@ -32,6 +32,9 @@ const ANCHORS = [
 /** Fraction of the viewport over which one form morphs into the next, either side of a section edge. */
 const MORPH_BAND = 0.35;
 
+/** How large each square slat is relative to the tube radius of its form. */
+const SLAT = 1.25;
+
 const smooth = (t: number) => t * t * (3 - 2 * t);
 const ease = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
 
@@ -189,7 +192,8 @@ function Tube({ count, reducedMotion }: { count: number; reducedMotion: boolean 
       tmp.q.setFromRotationMatrix(tmp.basis);
       // The ends taper to nothing, so a fin wrapping from one end to the other is never seen.
       const end = smooth(Math.min(1, u / 0.05)) * smooth(Math.min(1, (1 - u) / 0.05));
-      tmp.s.set(R * end, T * end, R * end);
+      // Slats a little larger than the tube path needs (owner: "square a bit bigger").
+      tmp.s.set(R * SLAT * end, T * end, R * SLAT * end);
       tmp.p.set(p0[0], p0[1], p0[2]);
       tmp.m.compose(tmp.p, tmp.q, tmp.s);
       m.setMatrixAt(i, tmp.m);

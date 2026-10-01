@@ -685,7 +685,8 @@ orbit, white relief globe, off-white #F4EFEC page) were removed for it.
   `particles={false}` so the dark journey never mounts). `RibbonLayer` is a
   fixed full-screen layer (the white atmosphere, `.light-atmosphere`) with
   `RibbonScene`: one InstancedMesh of 180 thin blue rounded-square slats
-  (110 on phones; square like the reference, one flat side always facing
+  (110 on phones; square like the reference, drawn 1.25× the tube radius
+  (`SLAT`), one flat side always facing
   the viewer so the tube reads as a square duct, not round discs),
   one draw call, a refined light blue range (#2f6fe6 … #7fb3fa), glossy
   clearcoat, local `Lightformer` reflections (no network), neutral tone
