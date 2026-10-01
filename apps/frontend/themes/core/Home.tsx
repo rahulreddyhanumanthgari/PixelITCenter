@@ -14,13 +14,15 @@ import { Testimonials } from "@/themes/core/components/sections/Testimonials";
 import { ContactCta } from "@/themes/core/components/sections/ContactCta";
 
 // Homepage flow from the modernization plan (section 04). Both designs render
-// it; a design can swap in its own hero, and turn the particle journey off
-// (the light design has no particles for now).
+// it; a design can swap in its own hero and Services, and turn the particle
+// journey off (the light design has no particles for now).
 export default function HomePage({
   hero = <Hero />,
+  services = <Services />,
   particles = true,
 }: {
   hero?: React.ReactNode;
+  services?: React.ReactNode;
   particles?: boolean;
 }) {
   return (
@@ -34,8 +36,8 @@ export default function HomePage({
       <main className="relative z-10 flex-1">
         {hero}
         <ClientProof />
-        <ParticleStory>
-          <Services />
+        <ParticleStory anchor={particles}>
+          {services}
           <Staffing />
           <WhyUs />
           <Process />

@@ -724,6 +724,30 @@ day. The light-mode code paths in the shared particle engine (`uLight`,
     It renders only while on screen; no WebGL → nothing is drawn.
   - For an exact match to the reference, a modelled `.glb` could replace the
     generated fins with the same lighting and mouse behaviour.
+- **Page colour.** Below the blue hero the whole light page is the owner's
+  off-white, `#F4EFEC` (`--background`, sampled from their swatch).
+- **Services** (`themes/light/services/`, passed to `Home` as `services`),
+  after the owner's reference: heading and the service panels on the left
+  (7 of 12 columns); on the right a services orbit that stays in view on
+  desktop (sticky) and sits under the heading on phones.
+  - *Ring*: a soft warm grey-beige band (`#e2ddd8` halo, `#d4cec9` core,
+    blurred; the reference measures ~`#cbc5c0` at its strongest) whose centre
+    is on the screen's right edge, so only its left half shows: in at the top
+    right, round to the left, out at the bottom right. The stage bleeds past
+    the content column by the page gutter (`--bleed`) so the ring runs off
+    the screen edge; `body { overflow-x: clip }` stops the 100vw maths from
+    scrolling sideways. The radius leaves room for the band's soft edge.
+  - *Orbs*: one per service (13, lucide icons mapped by title in
+    `ServicesOrbit`), evenly spaced round the full circle and turning once
+    every 70 s, so they enter at the top and leave at the bottom. Each is a
+    glossy 3D navy sphere (radial gradient, inner shading, specular spot,
+    drop shadow) with a raised white icon, trailing a blurred navy smear
+    along the ring. Positions come from one rAF loop writing transforms (no
+    React renders); it stops off screen, pauses on hover and is still for
+    reduced motion.
+  - *Figures* inside the ring: 7 technology services, 6 talent & delivery
+    services, 3 cloud platforms (counts from `content/site.ts`, no invented
+    statistics), placed from the ring's measured size so they clear the orbs.
 - **Cards.** Near-solid white (`--card-bg` 0.88) with an almost invisible
   edge (Light Theme pack §7).
 - **Footer.** The wordmark is sized past the viewport (19vw) so it is

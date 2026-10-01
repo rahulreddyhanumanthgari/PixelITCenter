@@ -13,7 +13,7 @@ import { StoryChoreography } from "./StoryChoreography";
  *
  * Children must be the four story sections, each marked `data-story-section`.
  */
-export function ParticleStory({ children }: { children: ReactNode }) {
+export function ParticleStory({ children, anchor = true }: { children: ReactNode; /** false when the page has no particles. */ anchor?: boolean }) {
   return (
     <div data-story className="relative border-t border-border">
       <div className="mx-auto max-w-7xl lg:px-8">
@@ -23,11 +23,13 @@ export function ParticleStory({ children }: { children: ReactNode }) {
           is drawn on top of it, clipped to its box. Until then it is
           see-through. Desktop: always transparent; particles show from behind.
         */}
-        <div
-          data-story-anchor
-          aria-hidden="true"
-          className="pointer-events-none sticky top-16 z-10 h-[34svh] border-b border-transparent data-[stuck=true]:border-border data-[stuck=true]:bg-background lg:top-0 lg:-mb-[100vh] lg:h-screen lg:border-0 lg:data-[stuck=true]:bg-transparent"
-        />
+        {anchor && (
+          <div
+            data-story-anchor
+            aria-hidden="true"
+            className="pointer-events-none sticky top-16 z-10 h-[34svh] border-b border-transparent data-[stuck=true]:border-border data-[stuck=true]:bg-background lg:top-0 lg:-mb-[100vh] lg:h-screen lg:border-0 lg:data-[stuck=true]:bg-transparent"
+          />
+        )}
         <div className="relative px-4 sm:px-6 lg:px-0">{children}</div>
       </div>
       <StoryChoreography />
