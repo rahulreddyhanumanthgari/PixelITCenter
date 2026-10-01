@@ -203,16 +203,16 @@ body {
   left: 0;
   top: 0;
   display: grid;
-  width: 76px;
-  height: 76px;
+  width: 92px;
+  height: 92px;
   place-items: center;
   border-radius: 9999px;
   background: #6b8fb0;
   will-change: transform;
 }
 .svc-orb-icon {
-  width: 34px;
-  height: 34px;
+  width: 40px;
+  height: 40px;
   color: #ffffff;
 }
 /* The flowing tail: a tapered pale-blue streak, strongest at the
@@ -222,7 +222,7 @@ body {
   left: 0;
   top: 0;
   width: 100px; /* set from the ring size in ServicesOrbit */
-  height: 55px; /* 0.72 × the disc */
+  height: 66px; /* 0.72 × the disc */
   border-radius: 9999px;
   /* Light and airy, never a dark shadow: a pale tint of the disc blue. */
   background: linear-gradient(90deg, rgb(196 215 235 / 0) 0%, rgb(196 215 235 / 0.25) 40%, rgb(196 215 235 / 0.7) 100%);

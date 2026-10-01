@@ -47,9 +47,9 @@ const ICONS: Record<string, LucideIcon> = {
 };
 
 const ITEMS = services.groups.flatMap((g) => g.items.map((i) => i.title));
-const ORB = 76; // px
-const GAP = ORB * 1.65; // px along the ring between one disc and the next
-const SPEED = 24; // px per second along the ring
+const ORB = 92; // px
+const VISIBLE = 3; // discs on screen at a time
+const SPEED = 32; // px per second along the ring
 const TAIL = 100; // px: longest flowing tail (never more than about half the gap)
 
 const STATS = [
@@ -70,7 +70,7 @@ export function ServicesOrbit() {
     const el = stage.current;
     if (!el) return;
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    let w = 0, h = 0, R = 0, band = 0, tail = TAIL;
+    let w = 0, h = 0, R = 0, band = 0, tail = TAIL, gap = ORB * 3, reach = 0;
     let visible = true;
     let paused = false;
     let raf = 0;
@@ -95,29 +95,41 @@ export function ServicesOrbit() {
       // The figures sit in the ring's open centre, clear of the orbs.
       if (stats.current) stats.current.style.left = `${w - R + band / 2 + ORB / 2 + 16}px`;
       // Each tail ends well before the disc behind it.
-      tail = Math.min(TAIL, GAP * 0.55);
+      // Spacing: the arc visible inside the area holds exactly VISIBLE discs.
+      const visibleArc = 2 * R * Math.asin(Math.min(1, h / 2 / R));
+      // How far along the ring (from its left point) a disc can still be seen.
+      reach = visibleArc / 2 + ORB;
+      gap = Math.max(ORB * 1.4, visibleArc / VISIBLE);
+      tail = Math.min(TAIL, gap * 0.4);
       for (const t of trails.current) if (t) t.style.width = `${tail}px`;
     };
 
-    // The discs ride one loop of GAP-spaced slots centred on the ring's
+    // The discs ride one loop of evenly spaced slots centred on the ring's
     // leftmost point: they flow down from above the area, sweep past the
     // left and leave below it, then wrap round unseen to come in at the top
     // again. So the visible arc is always evenly filled, however wide.
     const place = () => {
       const n = ITEMS.length;
-      const loop = n * GAP;
+      const loop = n * gap;
       ITEMS.forEach((_, i) => {
-        const s = (((i * GAP + travelled) % loop) + loop) % loop; // 0 = top end of the loop
-        const a = Math.PI + (loop / 2 - s) / R; // above the left point → below it
+        const s = (((i * gap + travelled) % loop) + loop) % loop; // 0 = top end of the loop
+        const d = loop / 2 - s; // arc distance from the ring's left point (+ above, − below)
+        const a = Math.PI + d / R; // above the left point → below it
+        // Off the visible arc the disc waits unseen (it may overlap others there).
+        const shown = Math.abs(d) <= reach;
         const x = w + R * Math.cos(a);
         const y = h / 2 + R * Math.sin(a);
         const orb = orbs.current[i];
-        if (orb) orb.style.transform = `translate(${x - ORB / 2}px, ${y - ORB / 2}px)`;
+        if (orb) {
+          orb.style.visibility = shown ? "" : "hidden";
+          orb.style.transform = `translate(${x - ORB / 2}px, ${y - ORB / 2}px)`;
+        }
         // The blur trails behind the orb, along the ring.
         const vx = Math.sin(a);
         const vy = -Math.cos(a);
         const trail = trails.current[i];
-        if (trail) {
+        if (trail) trail.style.visibility = shown ? "" : "hidden";
+        if (trail && shown) {
           // The tail runs from the disc back along the ring.
           const tx = x - vx * (tail / 2);
           const ty = y - vy * (tail / 2);
@@ -170,12 +182,12 @@ export function ServicesOrbit() {
       <svg aria-hidden="true" className="absolute inset-0 h-full w-full overflow-visible">
         <defs>
           <filter id="svc-soft" x="-20%" y="-20%" width="140%" height="140%">
-            <feGaussianBlur stdDeviation="14" />
+            <feGaussianBlur stdDeviation="5" />
           </filter>
         </defs>
-        {/* The band: a wide soft halo and a firmer core, warm grey-beige. */}
-        <circle ref={ringSoft} fill="none" stroke="#e2ddd8" filter="url(#svc-soft)" />
-        <circle ref={ring} fill="none" stroke="#d4cec9" filter="url(#svc-soft)" opacity="0.9" />
+        {/* The band: light beige, a shade darker than the page, a slightly soft edge (never a dark shadow). */}
+        <circle ref={ringSoft} fill="none" stroke="#ede8e3" filter="url(#svc-soft)" />
+        <circle ref={ring} fill="none" stroke="#e7e1db" filter="url(#svc-soft)" />
       </svg>
 
       <div aria-hidden="true">
