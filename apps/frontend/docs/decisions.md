@@ -686,17 +686,32 @@ day. The light-mode code paths in the shared particle engine (`uLight`,
   "Two candidate designs"): `app/(light)` sets `data-theme="light"` and loads
   `themes/light/light.css`.
 - **Hero** (`themes/light/hero/LightHero.tsx`, passed to `Home` as its
-  `hero`): the approved headline, copy and CTAs centred on a white →
-  `#F3F8FE` atmosphere, above the 3D spiral shell sculpture, with three still
-  info cards (`hero.cards` in `content/site.ts`) floating beside it on
-  desktop and in a row under it below `lg`.
-  - *Sculpture* (`SculptureScene`, the owner's reference image): solid 3D,
-    not particles. 34 thin discs (fins) stand on a nautilus spiral of
-    0.97 of a turn, each growing (radius 0.42 → 1.2), every disc's face
-    holding the radial and depth axes, with a 0.55 rad turbine twist.
-    Pale-blue glossy physical material, a warm key light from the right, a
-    cool blue fill, local `Lightformer` reflections (no network), a soft
-    contact shadow and six small floating spheres.
+  `hero`), laid out like the owner's reference landing page ("A New Dawn of
+  Possibilities"): full screen, the header transparent over it.
+  - *Landscape* (`SceneBackdrop`, one SVG, no image): steel-blue sky easing
+    to a peach sunrise behind the sculpture, misty mountain ranges left and
+    right, low peach clouds, a lake from 65% down that mirrors the ranges,
+    a bright horizon line and faint ripples. `slice` cropping fills any size.
+    The reference image itself is not used (third-party, watermarked).
+  - *Type* (Montserrat, loaded by `app/(light)/layout.tsx`): the h1 is a
+    small, widely spaced white TECHNOLOGY & TALENT (700, 0.07em) with BUILT
+    FOR WHAT'S NEXT as the tiny spaced line under it (0.42em), the
+    description as faint small copy; centred at 25% height. The CTAs are
+    the small spaced white links bottom-left, the email bottom-right.
+  - *3D layer* (`SculptureScene`, full-bleed canvas): the shell centred at
+    56.5% height, about 0.42 of the height across, standing on the water;
+    its reflection is the same shell mirrored about its base (shared pose,
+    32% opacity), and `.light-scene-water` (from `--water`, which the scene
+    sets at the shell's base) softens and tints it like water. A small
+    shell (0.27×) sits upper left with droplets near it, and a loose trail
+    of droplets leads toward the big one; on portrait screens the small
+    shell and its droplets are dropped.
+  - *Sculpture*: solid 3D, not particles. 34 thin discs (fins) stand on a
+    nautilus spiral of 0.97 of a turn, each growing (radius 0.42 → 1.2),
+    every disc's face holding the radial and depth axes, with a 0.55 rad
+    turbine twist. Pale-blue glossy physical material lit for dawn: a warm
+    low sun behind it, soft white from the front, cool blue from the left,
+    local `Lightformer` reflections (no network).
   - *Mouse*: it tilts toward the pointer anywhere on the page (eased); hovering
     it fans the fins further open in a wave and speeds its slow turn;
     leaving lets it settle. Reduced motion keeps it still unless hovered.

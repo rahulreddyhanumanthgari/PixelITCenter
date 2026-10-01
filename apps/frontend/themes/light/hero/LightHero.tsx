@@ -1,70 +1,47 @@
-import { ArrowRight } from "lucide-react";
-import { hero } from "@/content/site";
-import { buttonVariants } from "@/themes/core/components/ui/button";
-import { RichText } from "@/themes/core/components/ui/rich-text";
-import { cn } from "@/lib/utils";
+import { hero, site } from "@/content/site";
+import { SceneBackdrop } from "./SceneBackdrop";
 import { Sculpture } from "./Sculpture";
 
 /**
- * Light hero: centred hero hierarchy (the approved TECHNOLOGY & TALENT /
- * BUILT FOR WHAT'S NEXT headline, copy, CTAs) in a pale-blue atmosphere,
- * above the 3D spiral shell sculpture (no particles), with three info cards.
+ * Light hero, laid out like the owner's reference landing page: a full-screen
+ * dawn landscape (sky, misty mountains, a lake), the white spiral shell
+ * sculpture standing on the water in the middle with its reflection, a small
+ * shell at the upper left and drifting droplets. A small, widely spaced white
+ * headline sits centred above the sculpture with a tiny spaced line and faint
+ * copy under it; small spaced links sit in the bottom corners.
  */
 export function LightHero() {
   return (
-    <section id="top" data-hero aria-labelledby="hero-title" className="light-hero relative overflow-hidden">
-      <div className="mx-auto w-full max-w-7xl px-6 pb-16 pt-28 lg:px-8 lg:pb-20 lg:pt-32">
-        <div data-hero-content className="mx-auto flex max-w-4xl flex-col items-center text-center">
-          <h1 id="hero-title" className="hero-title light-hero-title">
-            <span className="hero-kicker block">
-              {hero.kicker[0]}
-              <br className="sm:hidden" />
-              <span className="hidden sm:inline"> </span>
-              <span className="highlight">&amp;</span> {hero.kicker[1]}
-            </span>
-            <span className="hero-statement mt-1 block sm:mt-2">
-              {hero.statement[0]}
-              <br className="md:hidden" />
-              <span className="hidden md:inline"> </span>
-              {hero.statement[1]}
-            </span>
-          </h1>
+    <section
+      id="top"
+      data-hero
+      aria-labelledby="hero-title"
+      className="light-scene relative isolate flex min-h-[100svh] overflow-hidden"
+    >
+      <SceneBackdrop />
+      <Sculpture />
+      {/* The lake's surface over the lower part of the reflection. */}
+      <div aria-hidden="true" className="light-scene-water" />
 
-          <p className="type-body mx-auto mt-6 max-w-[36rem] text-center text-balance md:max-w-[44rem]">
-            <RichText text={hero.description} strongClassName="font-medium whitespace-nowrap text-brand-orange" />
-          </p>
-
-          <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-            <a href={hero.primaryCta.href} className={cn(buttonVariants(), "h-11 rounded-full px-6 text-sm font-medium")}>
-              {hero.primaryCta.label}
-              <ArrowRight data-icon="inline-end" />
-            </a>
-            <a
-              href={hero.secondaryCta.href}
-              className={cn(
-                buttonVariants({ variant: "ghost" }),
-                "h-11 rounded-full px-5 text-sm font-medium text-[var(--text-secondary)] hover:bg-foreground/5 hover:text-foreground",
-              )}
-            >
-              {hero.secondaryCta.label}
-            </a>
-          </div>
-        </div>
-
-        {/* The central object: the 3D spiral shell sculpture. The info cards
-            float beside it on desktop and sit in a row under it on phones. */}
-        <div className="light-hero-stage">
-          <Sculpture />
-          <ul className="light-hero-cards">
-            {hero.cards.map((card, i) => (
-              <li key={card.label} className="light-hero-card" data-slot={i} data-accent={card.accent}>
-                <span className="light-hero-card-label">{card.label}</span>
-                <span className="light-hero-card-value">{card.value}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
+      <div data-hero-content className="light-scene-copy">
+        <h1 id="hero-title">
+          <span className="light-scene-title">
+            {hero.kicker[0]} &amp; {hero.kicker[1]}
+          </span>
+          <span className="light-scene-subtitle">
+            {hero.statement[0]} {hero.statement[1]}
+          </span>
+        </h1>
+        <p className="light-scene-text">{hero.description.replace(/\*\*/g, "")}</p>
       </div>
+
+      <nav aria-label="Get started" className="light-scene-corner light-scene-corner--left">
+        <a href={hero.primaryCta.href}>{hero.primaryCta.label}:</a>
+        <a href={hero.secondaryCta.href}>{hero.secondaryCta.label}</a>
+      </nav>
+      <a href={`mailto:${site.contact.email}`} className="light-scene-corner light-scene-corner--right">
+        {site.contact.email}
+      </a>
     </section>
   );
 }

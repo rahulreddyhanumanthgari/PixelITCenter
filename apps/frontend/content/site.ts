@@ -43,16 +43,6 @@ export const hero = {
     "We help organizations modernize their technology and **build high‑performing teams**, backed by expertise in cloud, data and specialized IT talent.",
   primaryCta: { label: "Talk to our team", href: "#contact" },
   secondaryCta: { label: "Explore services", href: "#services" },
-  /**
-   * Light design only: the three small info cards in the light hero
-   * (Light Theme pack, hero reference). Facts from this file; the client
-   * count is the logo strip below and needs business approval like the rest.
-   */
-  cards: [
-    { label: "Technology services", value: "AI · Cloud · Security", accent: "blue" },
-    { label: "IT staffing", value: "Contract & direct hire", accent: "orange" },
-    { label: "Trusted by", value: "16 enterprise clients", accent: "blue" },
-  ],
 } as const;
 
 // Client logos carried over from the current pixelitcenter.com "Our Clients"

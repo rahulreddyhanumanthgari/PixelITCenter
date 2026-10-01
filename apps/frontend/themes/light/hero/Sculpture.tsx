@@ -7,7 +7,7 @@ import { hasWebGL } from "@/themes/core/hooks/device";
 
 const SculptureScene = dynamic(() => import("./SculptureScene"), { ssr: false, loading: () => null });
 
-/** The hero sculpture's stage: WebGL only, and it renders only while on screen. */
+/** The hero's 3D layer, full-bleed over the landscape. WebGL only; renders only while on screen. */
 export function Sculpture() {
   const stage = useRef<HTMLDivElement>(null);
   const [active, setActive] = useState(true);
@@ -24,7 +24,7 @@ export function Sculpture() {
   }, []);
 
   return (
-    <div ref={stage} className="light-sculpture" aria-hidden="true">
+    <div ref={stage} className="absolute inset-0" aria-hidden="true">
       {webgl && (
         <SceneErrorBoundary>
           <SculptureScene active={active} />
