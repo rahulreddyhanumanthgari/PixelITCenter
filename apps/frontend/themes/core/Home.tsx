@@ -13,8 +13,9 @@ import { Careers } from "@/themes/core/components/sections/Careers";
 import { Testimonials } from "@/themes/core/components/sections/Testimonials";
 import { ContactCta } from "@/themes/core/components/sections/ContactCta";
 
-// Homepage flow from the modernization plan (section 04).
-export default function HomePage() {
+// Homepage flow from the modernization plan (section 04). Both designs render
+// it; a design can swap in its own hero (the light design's globe hero).
+export default function HomePage({ hero = <Hero /> }: { hero?: React.ReactNode }) {
   return (
     <>
       <Header />
@@ -24,7 +25,7 @@ export default function HomePage() {
           and story are transparent so the particles show through, and so is
           the galaxy area after it (About → Contact). */}
       <main className="relative z-10 flex-1">
-        <Hero />
+        {hero}
         <ClientProof />
         <ParticleStory>
           <Services />

@@ -681,6 +681,20 @@ ink-on-white and a blue sky, were replaced.)
 - **How it is shown.** It is the light design of the Design switch (see
   "Two candidate designs"): `app/(light)` sets `data-theme="light"` and loads
   `themes/light/light.css`.
+- **Hero** (`themes/light/hero/`, passed to `Home` as its `hero`). After the
+  pack's hero references: the approved headline, copy and CTAs centred above
+  one large sculptural object, the particle globe, in a white → `#F3F8FE`
+  atmosphere with a soft blue glow, and three still floating cards
+  (`hero.cards` in `content/site.ts`; md and up).
+  - *Globe* (`GlobeScene`): the core earth form's particles (continents,
+    coastlines, haze, dotted orbital shell) in navy / blue / electric blue
+    with ~7% orange, no glow, over a soft white lit sphere so it reads as a
+    solid object. The Earth turns clockwise, the shell the other way;
+    scrolling the hero adds a slow extra turn and a slight lift. It renders
+    only while on screen; reduced motion stops the turning.
+  - *Hand-off*: the journey layer (whose first form is the dark design's
+    black hole) is hidden during the hero and fades in as Services arrives,
+    so its particles are seen gathering into the Services ring.
 - **Palette.**
 
   | Role | Colour |
