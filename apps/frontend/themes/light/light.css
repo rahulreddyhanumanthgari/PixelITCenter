@@ -193,53 +193,37 @@ a.light-scene-corner:hover {
 body {
   overflow-x: clip;
 }
-/* A glossy navy orb: lit from the upper left, shaded lower right, a soft
-   shadow under it, a specular highlight on top. */
+/* A flat steel-blue disc (the light hero's mountain blue) with a plain
+   white icon: 2D, no gloss or shading. */
 .svc-orb {
   position: absolute;
   left: 0;
   top: 0;
   display: grid;
-  width: 64px;
-  height: 64px;
+  width: 60px;
+  height: 60px;
   place-items: center;
   border-radius: 9999px;
-  background: radial-gradient(circle at 34% 28%, #5f6ca8 0%, #2c3769 36%, #1a2150 70%, #10153a 100%);
-  box-shadow:
-    inset -6px -9px 16px rgb(5 8 30 / 0.45),
-    inset 5px 6px 12px rgb(255 255 255 / 0.14),
-    0 16px 26px -12px rgb(16 21 58 / 0.6);
+  background: #6b8fb0;
   will-change: transform;
 }
-.svc-orb::after {
-  content: "";
-  position: absolute;
-  left: 18%;
-  top: 11%;
-  width: 36%;
-  height: 22%;
-  border-radius: 9999px;
-  background: radial-gradient(closest-side, rgb(255 255 255 / 0.55), transparent);
-  pointer-events: none;
-}
-/* The icon is raised: white face, a dark edge below and a light one above. */
 .svc-orb-icon {
-  position: relative;
-  width: 28px;
-  height: 28px;
+  width: 26px;
+  height: 26px;
   color: #ffffff;
-  filter: drop-shadow(0 1.5px 0 rgb(0 0 0 / 0.4)) drop-shadow(0 -0.5px 0 rgb(255 255 255 / 0.35));
 }
-/* Motion blur trailing each orb along the ring. */
+/* The flowing tail: a tapered streak in the disc's colour, strongest at the
+   disc and fading away behind it along the ring. */
 .svc-trail {
   position: absolute;
   left: 0;
   top: 0;
-  width: 110px;
-  height: 60px;
+  width: 92px; /* set from the ring size in ServicesOrbit */
+  height: 43px; /* 0.72 × the disc */
   border-radius: 9999px;
-  background: radial-gradient(closest-side, rgb(22 27 62 / 0.55), rgb(22 27 62 / 0));
-  filter: blur(10px);
+  background: linear-gradient(90deg, rgb(107 143 176 / 0) 0%, rgb(107 143 176 / 0.12) 40%, rgb(107 143 176 / 0.45) 100%);
+  clip-path: polygon(0 42%, 100% 0, 100% 100%, 0 58%);
+  filter: blur(2px);
   will-change: transform;
   pointer-events: none;
 }

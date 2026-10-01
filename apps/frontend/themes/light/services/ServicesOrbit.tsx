@@ -23,8 +23,8 @@ import { services } from "@/content/site";
  * Light design, Services (owner's reference): a wide, soft beige ring whose
  * centre sits on the column's right edge, so only its left half shows: it
  * enters at the top right, curves round to the left and leaves at the bottom
- * right. Every service travels round it as a glossy 3D navy orb with its
- * icon, trailing a soft motion blur: they come in at the top and go out at
+ * right. Every service travels round it as a flat steel-blue disc with its
+ * icon, trailing a tapered flowing tail: they come in at the top and go out at
  * the bottom, round and round. Three figures sit inside the ring.
  * Hovering the ring pauses it; reduced motion shows the orbs still.
  */
@@ -47,7 +47,8 @@ const ICONS: Record<string, LucideIcon> = {
 
 const ITEMS = services.groups.flatMap((g) => g.items.map((i) => i.title));
 const PERIOD = 70; // seconds for one full turn
-const ORB = 64; // px
+const ORB = 60; // px
+const TAIL = 92; // px: longest flowing tail; shorter when the discs are closer (phones)
 
 const STATS = [
   { value: String(services.groups[0].items.length), label: "Technology services" },
@@ -67,7 +68,7 @@ export function ServicesOrbit() {
     const el = stage.current;
     if (!el) return;
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    let w = 0, h = 0, R = 0, band = 0;
+    let w = 0, h = 0, R = 0, band = 0, tail = TAIL;
     let visible = true;
     let paused = false;
     let raf = 0;
@@ -89,6 +90,9 @@ export function ServicesOrbit() {
       ringSoft.current?.setAttribute("stroke-width", String(band));
       // The figures sit in the ring's open centre, clear of the orbs.
       if (stats.current) stats.current.style.left = `${w - R + band / 2 + ORB / 2 + 16}px`;
+      // Each tail ends well before the disc behind it.
+      tail = Math.min(TAIL, ((2 * Math.PI * R) / ITEMS.length) * 0.55);
+      for (const t of trails.current) if (t) t.style.width = `${tail}px`;
     };
 
     const place = () => {
@@ -105,9 +109,10 @@ export function ServicesOrbit() {
         const vy = -Math.cos(a);
         const trail = trails.current[i];
         if (trail) {
-          const tx = x - vx * 34;
-          const ty = y - vy * 34;
-          trail.style.transform = `translate(${tx - 55}px, ${ty - 30}px) rotate(${Math.atan2(vy, vx)}rad)`;
+          // The tail runs from the disc back along the ring.
+          const tx = x - vx * (tail / 2);
+          const ty = y - vy * (tail / 2);
+          trail.style.transform = `translate(${tx - tail / 2}px, ${ty - ORB * 0.36}px) rotate(${Math.atan2(vy, vx)}rad)`;
         }
       });
     };

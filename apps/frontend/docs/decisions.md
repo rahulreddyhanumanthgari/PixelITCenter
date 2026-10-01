@@ -737,14 +737,16 @@ day. The light-mode code paths in the shared particle engine (`uLight`,
     the content column by the page gutter (`--bleed`) so the ring runs off
     the screen edge; `body { overflow-x: clip }` stops the 100vw maths from
     scrolling sideways. The radius leaves room for the band's soft edge.
-  - *Orbs*: one per service (13, lucide icons mapped by title in
+  - *Discs*: one per service (13, lucide icons mapped by title in
     `ServicesOrbit`), evenly spaced round the full circle and turning once
     every 70 s, so they enter at the top and leave at the bottom. Each is a
-    glossy 3D navy sphere (radial gradient, inner shading, specular spot,
-    drop shadow) with a raised white icon, trailing a blurred navy smear
-    along the ring. Positions come from one rAF loop writing transforms (no
-    React renders); it stops off screen, pauses on hover and is still for
-    reduced motion.
+    flat 2D disc in the light hero's mountain blue (`#6b8fb0`) with a plain
+    white icon (an earlier glossy 3D navy version was replaced at the
+    owner's request), trailing a tapered flowing tail in the same blue that
+    fades away behind it. The tail is at most 92 px and never more than
+    0.55 of the gap between discs, so tails never join up (phones).
+    Positions come from one rAF loop writing transforms (no React renders);
+    it stops off screen, pauses on hover and is still for reduced motion.
   - *Figures* inside the ring: 7 technology services, 6 talent & delivery
     services, 3 cloud platforms (counts from `content/site.ts`, no invented
     statistics), placed from the ring's measured size so they clear the orbs.
