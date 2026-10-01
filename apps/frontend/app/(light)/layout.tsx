@@ -1,34 +1,25 @@
 import type { Metadata, Viewport } from "next";
-import { Bricolage_Grotesque, IBM_Plex_Sans } from "next/font/google";
 import { DesignSwitch } from "@/components/DesignSwitch";
 import { siteMetadata } from "@/lib/metadata";
+import { fontVariables } from "@/themes/core/fonts";
+import "@/themes/core/core.css";
 import "@/themes/light/light.css";
 
-// Root layout for the light design (themes/light). The dark design has its
-// own root layout in app/(dark); see lib/design.ts for how one is chosen.
-
-const bricolage = Bricolage_Grotesque({
-  variable: "--font-bricolage",
-  subsets: ["latin"],
-});
-
-const plex = IBM_Plex_Sans({
-  variable: "--font-plex",
-  subsets: ["latin"],
-  weight: ["400", "500", "600"],
-});
+// Root layout for the light design: the shared particle site (themes/core)
+// in daylight (themes/light). `data-theme="light"` switches the particles to
+// ink dots over the light sky. See lib/design.ts for how a design is chosen.
 
 export const metadata: Metadata = siteMetadata;
 
 export const viewport: Viewport = {
-  themeColor: "#ffffff",
+  themeColor: "#f8fafc",
   colorScheme: "light",
 };
 
 export default function LightLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={`${bricolage.variable} ${plex.variable} antialiased`}>
-      <body>
+    <html lang="en" data-theme="light" className={`${fontVariables} h-full antialiased`}>
+      <body className="min-h-full flex flex-col">
         {children}
         <DesignSwitch current="light" />
       </body>

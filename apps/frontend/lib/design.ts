@@ -1,12 +1,12 @@
-// Which homepage design a visitor sees while the team compares the two
-// candidates (themes/dark and themes/light). Server-safe: also imported by
-// next.config.ts.
+// Which design a visitor sees while the team compares them: the shared
+// particle site (themes/core) in dark (themes/dark) or in daylight
+// (themes/light). Server-safe: also imported by next.config.ts.
 //
 // The choice is a cookie. next.config.ts rewrites "/" to "/light" when it is
 // "light", so both designs stay statically prerendered and the right one is
 // served on first paint with no flash. Once a design is chosen: delete the
 // other theme folder, its route group, this file, the rewrite and
-// components/DesignSwitch.tsx.
+// components/DesignSwitch.tsx (see the README).
 
 export type Design = "dark" | "light";
 

@@ -9,18 +9,26 @@ live in this repo (plan, section 02).
 
 ## Two candidate designs
 
-The homepage is built twice, as two fully different designs, so the team can
-compare them on the real site before choosing one. This is not a colour
-theme: each design has its own components, stylesheet, fonts and layout.
+The team compares two designs on the real site before choosing one: the
+particle site in the dark, and the same site in daylight (the light design
+follows the "Light Theme Live Team Recreation Pack": same cinematic
+universe, bright atmosphere, navy type, controlled orange and blue
+particles). A separate teal/editorial light design was tried first and
+removed once that brief arrived.
 
-- **Folders.** `themes/dark/` (the particle journey described below) and
-  `themes/light/`. They share only `content/site.ts` and `public/`; neither
-  imports from the other.
+- **Folders.** `themes/core/` is the shared site (everything described
+  below). `themes/dark/` holds the dark colours; `themes/light/` holds the
+  daylight colours and `LightSky`. A section that needs a light-only
+  treatment adds its component or styles under `themes/light/`.
 - **Separate root layouts.** `app/(dark)/layout.tsx` and
-  `app/(light)/layout.tsx` each load their own fonts and CSS, so a page never
-  ships the other design's styles. Moving between them is a full page load,
-  which Next.js does anyway across root layouts. With no single root layout,
-  the 404 page is `app/global-not-found.tsx` (`experimental.globalNotFound`).
+  `app/(light)/layout.tsx` each load `core.css` plus their own colours, and
+  set `<html data-theme>` (dark also gets `.dark` for shadcn). `useTheme()`
+  (`themes/core/lib/theme.ts`) reads that attribute; it never changes during
+  a page's life. Moving between the designs is a full page load, which
+  Next.js does anyway across root layouts. With no single root layout, the
+  404 page is `app/global-not-found.tsx` (`experimental.globalNotFound`).
+- **Replaces the sun/moon toggle.** The old header toggle (localStorage +
+  a before-paint script) is gone; the Design switch is the only control.
 - **Choosing.** `DesignSwitch` writes the `pixelit-design` cookie and loads
   `/` again (a navigation, not `reload()`, which would restore the old
   page's scroll position). A `beforeFiles` rewrite in `next.config.ts` serves
@@ -32,26 +40,7 @@ theme: each design has its own components, stylesheet, fonts and layout.
   hides it.
 - **Removal.** See the README ("Two designs, one switch").
 
-### Light design
-
-Deliberately unlike the dark one:
-
-- **Palette.** White and a cool mist (`#EDF5F5`), deep teal ink `#102A2E`,
-  the logo's teal `#51D7D1` for fills (`#0E7C76` where teal is text), and
-  amber only for the hero's hub.
-- **Type.** Bricolage Grotesque for headings, IBM Plex Sans for text,
-  sentence case. Heading markup in `content/site.ts` (`*word*`, ` | `,
-  `**…**`) is stripped (`themes/light/lib/text.ts`): no accent words.
-- **Layout.** Left aligned. On desktop each section's heading holds the left
-  third and stays in view; the content takes the right two-thirds.
-- **The one bold element.** The hero's network (`NetworkMark`): the logo's
-  node mark grown into "your team" (amber hub) linked to skill nodes. It
-  draws itself once on load and then stays still; reduced motion shows it
-  complete.
-- **Structure as information.** Filled vs open nodes tell the two service
-  groups apart; only How We Work (a real sequence) is numbered. Staffing and
-  Contact are the two dark bands that change the pace.
-- **No WebGL, no JavaScript** except the mobile menu and the switch.
+The light design's details are under "Light theme (bright, premium)" below.
 
 ## Page rendering
 
@@ -689,10 +678,9 @@ Every scrubbed transition, pinned section and rotation is shared with the
 dark theme; only colour and blending change. (Two earlier versions, an
 ink-on-white and a blue sky, were replaced.)
 
-- **Toggle.** A sun/moon button in the header (`ThemeToggle`, `lib/theme.ts`)
-  sets `data-theme="light"` and removes `.dark`.
-  - The choice is remembered in localStorage.
-  - `THEME_SCRIPT` applies it before first paint.
+- **How it is shown.** It is the light design of the Design switch (see
+  "Two candidate designs"): `app/(light)` sets `data-theme="light"` and loads
+  `themes/light/light.css`.
 - **Palette.**
 
   | Role | Colour |

@@ -1,0 +1,528 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+/* ---------------------------------------------------------------------------
+   Pixel IT Center: everything both designs share (type, cards, footer).
+   The colours live with each design: themes/dark/dark.css and
+   themes/light/light.css, loaded by app/(dark) and app/(light). The dark
+   design's <html> carries .dark for shadcn components that use dark:.
+   ------------------------------------------------------------------------ */
+
+@theme inline {
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-space-grotesk), var(--font-inter), ui-sans-serif, sans-serif;
+  --font-heading: var(--font-display);
+
+  --color-brand-blue: var(--brand-blue);
+  --color-brand-orange: var(--brand-orange);
+  --color-brand-white: var(--brand-white);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+}
+
+/* Shared, colour-free tokens. Colours: themes/dark/dark.css, themes/light/light.css. */
+:root {
+  --radius: 0.75rem;
+
+  /* Typography — scale (fluid, so tablets and phones get their own sizes). */
+  --text-display-xl: clamp(2.5rem, 1.1rem + 6vw, 5.25rem);
+  --text-display-lg: clamp(2rem, 1.3rem + 2.9vw, 3.5rem);
+  --text-heading: clamp(1.1875rem, 1.05rem + 0.45vw, 1.4375rem);
+  --text-subheading: 1.0625rem;
+  --text-body: clamp(1rem, 0.96rem + 0.2vw, 1.125rem);
+  --text-small: 0.9375rem;
+  --text-eyebrow: clamp(0.875rem, 0.8rem + 0.3vw, 1.0625rem);
+  --text-label: 0.75rem;
+
+  /* Cards — one system for the whole site (see .card below). Change a
+     token here and every card follows. */
+  --card-radius: 4px;
+  --card-padding-x: clamp(1.25rem, 0.95rem + 1.1vw, 2rem);
+  --card-padding-y: clamp(1.25rem, 1rem + 0.8vw, 1.75rem);
+  --card-gap: 1.25rem;
+  --card-accent: var(--brand-orange);
+  --card-transition: 350ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html {
+    @apply font-sans;
+    scroll-behavior: smooth;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 3px;
+  }
+  /* A quiet brand selection instead of the browser's blue blocks. */
+  ::selection {
+    background: rgb(255 122 46 / 0.28);
+    color: var(--text-primary);
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Typography system. One display family (Space Grotesk) + one body family
+   (Inter). Use these classes instead of one-off heading styles.
+   ------------------------------------------------------------------------ */
+@layer components {
+  /* Level 1 — hero. */
+  .type-display-xl {
+    font-family: var(--font-display);
+    font-size: var(--text-display-xl);
+    font-weight: 700;
+    line-height: 0.95;
+    letter-spacing: -0.025em;
+    text-transform: uppercase;
+    color: var(--text-primary);
+  }
+  /* Hero headline. Two levels: a smaller positioning line and the primary
+     statement. White does the work; orange is only the "&". No shadow or
+     glow: the particle ring frames the text from outside instead. */
+  .hero-title {
+    font-family: var(--font-display);
+    text-transform: uppercase;
+    color: var(--hero-statement);
+  }
+  /* Same size as the statement (the owner's call); 600 and a softer white
+     keep a hint of hierarchy. */
+  .hero-kicker,
+  .hero-statement {
+    font-size: clamp(3rem, 1.2rem + 7.2vw, min(7rem, 12.5svh));
+    line-height: 0.92;
+    letter-spacing: -0.03em;
+  }
+  .hero-kicker {
+    font-weight: 600;
+    color: var(--hero-kicker);
+  }
+  .hero-statement {
+    white-space: nowrap;
+    font-weight: 700;
+    color: var(--hero-statement);
+  }
+  /* One line from md up, so a little smaller there. */
+  @media (min-width: 768px) {
+    .hero-kicker,
+    .hero-statement {
+      font-size: clamp(2.75rem, 5.4vw, min(5.75rem, 11svh));
+    }
+  }
+  /* Level 2 — section headings. */
+  .type-display-lg {
+    font-family: var(--font-display);
+    font-size: var(--text-display-lg);
+    font-weight: 700;
+    line-height: 1.02;
+    letter-spacing: -0.02em;
+    text-transform: uppercase;
+    text-wrap: balance;
+    color: var(--text-primary);
+  }
+  /* Level 3 — card / subsection headings. */
+  .type-heading {
+    font-family: var(--font-display);
+    font-size: var(--text-heading);
+    font-weight: 600;
+    line-height: 1.2;
+    letter-spacing: -0.015em;
+    text-wrap: balance;
+    color: var(--text-primary);
+  }
+  /* Small card titles. */
+  .type-subheading {
+    font-family: var(--font-display);
+    font-size: var(--text-subheading);
+    font-weight: 600;
+    line-height: 1.35;
+    letter-spacing: -0.01em;
+    color: var(--text-primary);
+  }
+  /* Level 4 — body. Readable measure: ~60 characters a line. */
+  .type-body {
+    font-size: var(--text-body);
+    font-weight: 400;
+    line-height: 1.65;
+    letter-spacing: 0.005em;
+    color: var(--text-secondary);
+    max-width: 62ch;
+    text-wrap: pretty;
+  }
+  /* Card descriptions. */
+  .type-body-sm {
+    font-size: var(--text-small);
+    font-weight: 400;
+    line-height: 1.55;
+    color: var(--text-muted);
+    text-wrap: pretty;
+  }
+  /* Level 5 — eyebrow: a section identifier, never competing with the heading. */
+  .type-eyebrow {
+    font-size: var(--text-eyebrow);
+    font-weight: 600;
+    line-height: 1.3;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent-orange);
+  }
+  /* Quiet uppercase labels (footer columns, stat labels, the client strip). */
+  .type-label {
+    font-size: var(--text-label);
+    font-weight: 500;
+    line-height: 1.3;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+  .type-nav {
+    font-size: 0.9375rem;
+    font-weight: 500;
+    line-height: 1.3;
+    letter-spacing: 0.01em;
+  }
+
+  /* ---- Card system -------------------------------------------------------
+     Quiet, editorial panels that almost disappear into the page: nearly the
+     page's own colour, 4px corners, no outline — only a hairline along the
+     top and a fading hairline down the left, plus one short orange accent
+     line. The title is the identifier; whitespace does the separating.
+     Hover is restrained: slightly lighter surface, brighter title, longer
+     accent. Variants: `.card--panel` (service panels), [data-active]. */
+  .card {
+    position: relative;
+    padding: var(--card-padding-y) var(--card-padding-x);
+    background: var(--card-bg);
+    border-top: 1px solid var(--card-edge);
+    border-radius: var(--card-radius);
+    transition: background-color var(--card-transition);
+  }
+  /* Left edge: a hairline that fades out downward. */
+  .card::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 1px;
+    height: 70%;
+    background: linear-gradient(var(--card-edge), transparent);
+    pointer-events: none;
+  }
+  /* The accent: a short orange line over the top edge. */
+  .card::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: -1px;
+    width: 3rem;
+    height: 1px;
+    background: var(--card-accent);
+    opacity: 0.8;
+    transition:
+      width var(--card-transition),
+      opacity var(--card-transition);
+  }
+  .card-title {
+    transition: color var(--card-transition);
+  }
+  /* Index numbers (01, 02 …): orange, display face, no badges. */
+  .card-index {
+    font-family: var(--font-display);
+    font-size: 1.5rem;
+    font-weight: 500;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums;
+    color: var(--accent-orange);
+  }
+  @media (hover: hover) {
+    .card:hover {
+      background-color: var(--card-bg-hover);
+    }
+    .card:hover::after {
+      width: 4.5rem;
+      opacity: 1;
+    }
+    .card:hover .card-title {
+      color: var(--text-strong);
+    }
+  }
+  .card[data-active="true"] {
+    background-color: var(--card-bg-hover);
+  }
+  .card[data-active="true"]::after {
+    width: 4.5rem;
+    opacity: 1;
+  }
+
+  /* Service panel: number → title → partial accent line → narrow
+     description → small label bottom right. Its accent is the line under
+     the title, so the top-edge accent is not drawn. */
+  .card--panel {
+    --card-padding-x: clamp(1.25rem, 1rem + 1vw, 1.75rem);
+    --card-padding-y: clamp(1.5rem, 1.2rem + 1vw, 2rem);
+    display: flex;
+    flex-direction: column;
+  }
+  .card--panel::after {
+    display: none;
+  }
+  .panel-index {
+    font-family: var(--font-display);
+    font-size: clamp(2rem, 1.6rem + 1.2vw, 2.75rem);
+    font-weight: 500;
+    line-height: 1;
+    letter-spacing: -0.04em;
+    font-variant-numeric: tabular-nums;
+    color: var(--accent-orange);
+    opacity: 0.85;
+  }
+  .panel-title {
+    margin-top: 1.25rem;
+    font-family: var(--font-display);
+    font-size: clamp(1.375rem, 1.15rem + 0.8vw, 1.875rem);
+    font-weight: 600;
+    line-height: 1.12;
+    letter-spacing: -0.02em;
+    color: var(--text-primary);
+    text-wrap: balance;
+  }
+  .panel-line {
+    display: block;
+    width: 38%;
+    height: 1px;
+    margin-top: 1.25rem;
+    background: var(--accent-orange);
+    opacity: 0.8;
+    transition:
+      width var(--card-transition),
+      opacity var(--card-transition);
+  }
+  .card--panel[data-accent="blue"] .panel-line {
+    background: linear-gradient(90deg, var(--accent-orange), var(--accent-blue));
+  }
+  .panel-body {
+    max-width: 34ch;
+    margin-top: 1.25rem;
+    font-size: var(--text-small);
+    line-height: 1.6;
+    color: var(--panel-body);
+    text-wrap: pretty;
+  }
+  .panel-label {
+    align-self: flex-end;
+    margin-top: auto;
+    padding-top: 1.5rem;
+    font-size: 0.6875rem;
+    font-weight: 500;
+    line-height: 1;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    opacity: 0.75;
+    transition: opacity var(--card-transition);
+  }
+  @media (hover: hover) {
+    .card--panel:hover .panel-line {
+      width: 52%;
+      opacity: 1;
+    }
+    .card--panel:hover .panel-label {
+      opacity: 1;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .card,
+    .card::after,
+    .card-title,
+    .panel-line,
+    .panel-label {
+      transition: none;
+    }
+  }
+
+  /* Over the galaxy (About → Contact) the particles are dimmed evenly and
+     the text is brightened, so they separate by contrast — no dark patches. */
+  [data-galaxy-region] {
+    --text-primary: var(--galaxy-text-primary);
+    --text-secondary: var(--galaxy-text-secondary);
+    --text-muted: var(--galaxy-text-muted);
+  }
+  [data-galaxy-region] .type-display-lg,
+  [data-galaxy-region] .type-heading,
+  [data-galaxy-region] .type-subheading {
+    color: var(--text-primary);
+  }
+
+  /* ---- Footer: the closing scene ---------------------------------------- */
+  .footer-scene {
+    background:
+      radial-gradient(60% 45% at 12% 100%, rgb(59 124 255 / 0.07), transparent 70%),
+      radial-gradient(45% 35% at 88% 100%, rgb(255 122 46 / 0.05), transparent 70%),
+      var(--background);
+    border-top: 1px solid var(--border);
+  }
+  .footer-label {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    font-size: var(--text-label);
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--footer-label);
+  }
+  .footer-label::before {
+    content: "";
+    width: 0.75rem;
+    height: 1px;
+    background: var(--accent-orange);
+  }
+  .footer-link {
+    font-size: 0.9375rem;
+    line-height: 1.4;
+    color: var(--text-secondary);
+    transition: color 300ms ease;
+  }
+  /* A small orange tick appears beside the link on hover; the text never moves. */
+  .footer-link-tick {
+    position: absolute;
+    left: -0.95rem;
+    top: 50%;
+    width: 0.5rem;
+    height: 1px;
+    background: var(--accent-orange);
+    opacity: 0;
+    transform: scaleX(0);
+    transform-origin: right;
+    transition:
+      opacity 300ms ease,
+      transform 300ms ease;
+  }
+  .footer-link:hover {
+    color: var(--text-strong);
+  }
+  .footer-link:hover .footer-link-tick {
+    opacity: 1;
+    transform: scaleX(1);
+  }
+  .footer-email {
+    font-family: var(--font-display);
+    font-size: 1.0625rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    transition: color 300ms ease;
+  }
+  .footer-email:hover {
+    color: var(--accent-orange);
+  }
+  /* The oversized wordmark: an object, not a heading. Barely there,
+     spanning the full width of the screen. */
+  .footer-wordmark {
+    margin: 1.25rem 0 0;
+    padding-bottom: 0.06em;
+    text-align: center;
+    white-space: nowrap;
+    font-family: var(--font-display);
+    /* Sized so the whole name fits the screen width. */
+    font-size: min(13.6vw, 22rem);
+    font-weight: 700;
+    line-height: 0.8;
+    letter-spacing: -0.05em;
+    text-transform: uppercase;
+    color: var(--footer-wordmark);
+    -webkit-text-stroke: 1px var(--footer-wordmark-stroke);
+    user-select: none;
+  }
+  .footer-dust {
+    position: absolute;
+    border-radius: 9999px;
+    background: var(--footer-dust);
+    opacity: 0.35;
+    animation: footer-drift 38s ease-in-out infinite alternate;
+  }
+  .footer-dust[data-tone="blue"] {
+    background: var(--accent-blue);
+    opacity: 0.45;
+  }
+  .footer-dust[data-tone="orange"] {
+    background: var(--accent-orange);
+    opacity: 0.5;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .footer-dust {
+      animation: none;
+    }
+  }
+
+  /* Emphasis for strategically important words inside headings. Colour
+     only — no glow, gradient, shadow or background. Orange by default;
+     data-tone="blue" | "white" for the others. */
+  .highlight {
+    color: var(--highlight, var(--accent-orange));
+  }
+  .highlight[data-tone="blue"] {
+    --highlight: var(--accent-blue);
+  }
+  .highlight[data-tone="white"] {
+    --highlight: var(--text-strong);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+@keyframes footer-drift {
+  from {
+    transform: translate(0, 0);
+  }
+  to {
+    transform: translate(6px, -14px);
+  }
+}
+
+/* Client logo strip: the track holds two identical lists; move by half. */
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(calc(-50% - 0.5rem));
+  }
+}
