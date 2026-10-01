@@ -762,8 +762,11 @@ day. The light-mode code paths in the shared particle engine (`uLight`,
   land and a slight blur, is both the displacement (0.07) and bump map of a
   matte white sphere, so the continents stand up craggy and the sea stays
   smooth. It starts facing Europe and Africa, turns slowly, and is lit soft
-  white from the upper left with a light-hero blue from the lower right;
-  `.light-staffing-glow` adds the soft blue halo past its edge. Solid 3D,
+  white from the upper left with a light-hero blue from the lower right.
+  The continents glow (no halo behind the globe, at the owner's request): a
+  light-blue emissive on the land, plus a thin shell just above it carrying
+  a blurred copy of the land at 20% opacity, so the glow spills softly past
+  the coasts without hiding the relief. Solid 3D,
   not particles; renders only on screen; still for reduced motion.
 - **Cards.** Near-solid white (`--card-bg` 0.88) with an almost invisible
   edge (Light Theme pack §7).

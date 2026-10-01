@@ -263,7 +263,7 @@ body {
 
 /* ---------------------------------------------------------------------------
    Staffing globe (themes/light/staffing): a large white sculpted globe behind
-   the Staffing content, with a soft glow in the light hero's blue.
+   the Staffing content; its continents glow in the light hero's blue.
    ------------------------------------------------------------------------ */
 .light-staffing-globe {
   position: relative;
@@ -271,15 +271,7 @@ body {
   aspect-ratio: 1;
   flex-shrink: 0;
 }
-.light-staffing-glow {
-  position: absolute;
-  /* The globe spans ~83% of the stage; the glow reaches past its edge as a
-     soft blue halo in the light hero's colours. */
-  inset: -6%;
-  border-radius: 9999px;
-  background: radial-gradient(closest-side, rgb(158 194 236 / 0.55) 70%, rgb(166 193 211 / 0.3) 84%, transparent 100%);
-  filter: blur(30px);
-}
+
 
 /* Footer: the oversized, subtle wordmark is cropped by the viewport. No
    drifting particle dust in the light design. */

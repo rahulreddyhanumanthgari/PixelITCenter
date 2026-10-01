@@ -11,14 +11,18 @@ import { useReducedMotion } from "@/themes/core/hooks/device";
  * Light design, Staffing (owner's reference): a white, matte, sculpted
  * globe. The continents (the site's Natural Earth land mask) are raised in
  * relief on the sphere so they catch the light; lit softly from the upper
- * left with a cool blue from the lower right, as in the reference. Turns
+ * left with a cool blue from the lower right; the continents glow a soft
+ * light blue that spills past the coasts. Turns
  * slowly. Solid 3D, not particles.
  */
 
 const START_TURN = -0.95;
 
-/** The land mask as a softened greyscale map: white land, black sea. */
-function reliefTexture(): THREE.CanvasTexture {
+/**
+ * The land mask as a greyscale map: white land, black sea. `noise` makes the
+ * land craggy (for the relief); `blur` softens the coasts (more for the glow).
+ */
+function landTexture(noise: boolean, blur: number): THREE.CanvasTexture {
   const { width: W, height: H } = LAND_MASK;
   const grid = decodeMask();
   const mask = document.createElement("canvas");
@@ -30,7 +34,7 @@ function reliefTexture(): THREE.CanvasTexture {
   let seed = 7;
   const rand = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
   for (let i = 0; i < W * H; i++) {
-    const v = grid[i] ? Math.round(170 + rand() * 85) : 0;
+    const v = grid[i] ? (noise ? Math.round(170 + rand() * 85) : 255) : 0;
     img.data[i * 4] = v;
     img.data[i * 4 + 1] = v;
     img.data[i * 4 + 2] = v;
@@ -43,7 +47,7 @@ function reliefTexture(): THREE.CanvasTexture {
   out.width = 2048;
   out.height = 1024;
   const ctx = out.getContext("2d")!;
-  ctx.filter = "blur(1.2px)";
+  ctx.filter = `blur(${blur}px)`;
   ctx.drawImage(mask, 0, 0, out.width, out.height);
   const tex = new THREE.CanvasTexture(out);
   tex.colorSpace = THREE.NoColorSpace;
@@ -52,7 +56,8 @@ function reliefTexture(): THREE.CanvasTexture {
 }
 
 function Globe({ reducedMotion }: { reducedMotion: boolean }) {
-  const map = useMemo(() => reliefTexture(), []);
+  const map = useMemo(() => landTexture(true, 1.2), []);
+  const glowMap = useMemo(() => landTexture(false, 7), []);
   const geometry = useMemo(() => new THREE.SphereGeometry(1.6, 320, 160), []);
   const material = useMemo(
     () =>
@@ -64,9 +69,28 @@ function Globe({ reducedMotion }: { reducedMotion: boolean }) {
         displacementScale: 0.07,
         bumpMap: map,
         bumpScale: 3.5,
+        // The continents glow: they give off a soft light-blue light.
+        emissive: "#cfe3fb",
+        emissiveMap: map,
+        emissiveIntensity: 0.4,
       }),
     [map],
   );
+  // A thin shell just above the land carrying a blurred copy of it, so the
+  // glow spills softly past the coastlines.
+  const glow = useMemo(
+    () =>
+      new THREE.MeshBasicMaterial({
+        color: "#b4d3f6",
+        alphaMap: glowMap,
+        transparent: true,
+        opacity: 0.2,
+        depthWrite: false,
+      }),
+    [glowMap],
+  );
+  useEffect(() => () => glowMap.dispose(), [glowMap]);
+  useEffect(() => () => glow.dispose(), [glow]);
   useEffect(() => () => map.dispose(), [map]);
   useEffect(() => () => geometry.dispose(), [geometry]);
   useEffect(() => () => material.dispose(), [material]);
@@ -83,7 +107,11 @@ function Globe({ reducedMotion }: { reducedMotion: boolean }) {
   return (
     // Tilted like the reference: the northern lands toward the viewer.
     <group rotation={[0.42, -0.6, 0.12]}>
-      <mesh ref={spin} geometry={geometry} material={material} />
+      <mesh ref={spin} geometry={geometry} material={material}>
+        <mesh material={glow}>
+          <sphereGeometry args={[1.6 + 0.075, 160, 80]} />
+        </mesh>
+      </mesh>
     </group>
   );
 }
