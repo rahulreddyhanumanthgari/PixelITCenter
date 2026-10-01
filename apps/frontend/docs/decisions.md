@@ -673,105 +673,42 @@ rejected; this is their replacement.
 
 ## Light theme (bright, premium)
 
-**No particles for now (decided 2026-10-01).** The owner had all particle
-objects removed from the light design; its objects will be decided one by
-one and built afresh. `app/(light)` renders `Home` with `particles={false}`,
-so the journey layer (every particle form, the star field and `LightSky`)
-never mounts, and the galaxy's empty ending space is dropped. A particle
-globe hero, About bubbles and a Contact orb were built and removed the same
-day. The light-mode code paths in the shared particle engine (`uLight`,
-`LightSky`) are dormant until particles return.
+**Current direction (2026-10-02): one blue object.** The owner supplied a
+reference animation (a dark site where one ribbed tube travels the whole
+page) and the "Light Theme reference-animation & Claude Code handoff" PDF:
+keep all Pixel IT content and sections, copy the animation language only,
+on a white/light atmosphere with a large BLUE object. Earlier light
+experiments (dawn-lake hero with a white shell sculpture, Services icon
+orbit, white relief globe, off-white #F4EFEC page) were removed for it.
 
-- **How it is shown.** It is the light design of the Design switch (see
-  "Two candidate designs"): `app/(light)` sets `data-theme="light"` and loads
-  `themes/light/light.css`.
-- **Hero** (`themes/light/hero/LightHero.tsx`, passed to `Home` as its
-  `hero`), laid out like the owner's reference landing page ("A New Dawn of
-  Possibilities"): full screen, the header transparent over it.
-  - *Landscape* (`SceneBackdrop`, one SVG, no image): steel-blue sky easing
-    to a peach sunrise behind the sculpture, misty mountain ranges left and
-    right, low peach clouds, a lake from 65% down that mirrors the ranges,
-    a bright horizon line and faint ripples. `slice` cropping fills any size.
-    The reference image itself is not used (third-party, watermarked).
-  - *Type* (Montserrat, loaded by `app/(light)/layout.tsx`): the h1 is a
-    small, widely spaced white TECHNOLOGY & TALENT (700, 0.07em) with BUILT
-    FOR WHAT'S NEXT as the tiny spaced line under it (0.42em), the
-    description as faint small copy; centred at 25% height. The CTAs are
-    the small spaced white links bottom-left, the email bottom-right.
-  - *3D layer* (`SculptureScene`, full-bleed canvas): the shell centred at
-    56.5% height, about 0.48 of the height across, standing on the water;
-    its reflection is the same shell mirrored about its base (shared pose,
-    32% opacity), and `.light-scene-water` (from `--water`, which the scene
-    sets at the shell's base) softens and tints it like water. A small
-    shell (0.27×) sits upper left with droplets near it, and a loose trail
-    of droplets leads toward the big one; on portrait screens the small
-    shell and its droplets are dropped.
-  - *Sculpture*: solid 3D, not particles. 36 equal thin discs (fins, radius
-    0.78, centres 0.98 from the axis) evenly round a closed ring (no start or
-    end; an earlier growing nautilus read as one end swallowing the other),
-    every disc's face holding the radial and depth axes, with a 0.55 rad
-    turbine twist; fins 0.04 thick so their bright edges show.
-    Colour and light matched to the reference: a near-white, faintly blue,
-    glossy clearcoat material (`#e8f1fb`), where the blue comes from the
-    shading (hemisphere light with a blue ground, a soft blue fill from the
-    left, blue lake reflections below), white highlights from the front and
-    right, and a strong low peach sunrise behind, upper left, that warms the
-    inner fins. Neutral tone mapping keeps those colours true. Local
-    `Lightformer` reflections only (no network).
-  - *Mouse*: it tilts toward the pointer anywhere on the page (eased); hovering
-    it fans the fins further open in a wave and speeds its slow turn;
-    leaving lets it settle. Reduced motion keeps it still unless hovered.
-    It renders only while on screen; no WebGL → nothing is drawn.
-  - For an exact match to the reference, a modelled `.glb` could replace the
-    generated fins with the same lighting and mouse behaviour.
-- **Page colour.** Below the blue hero the whole light page is the owner's
-  off-white, `#F4EFEC` (`--background`, sampled from their swatch).
-- **Services** (`themes/light/services/`, passed to `Home` as `services`),
-  after the owner's reference: heading and the service panels on the left
-  (half the width); on the right half a services orbit that stays in view on
-  desktop (sticky) and sits under the heading on phones.
-  - *Ring*: a light beige band, only a shade darker than the page (`#ede8e3`
-    soft edge, `#e7e1db` core, 5 px blur; the owner asked twice for no dark shadow behind the icons, so it stays light) whose centre
-    is on the screen's right edge, so only its left half shows: in at the top
-    right, round to the left, out at the bottom right. The stage bleeds past
-    the content column by the page gutter (`--bleed`) so the ring runs off
-    the screen edge; `body { overflow-x: clip }` stops the 100vw maths from
-    scrolling sideways. The ring is wide: radius = min(0.95 × width,
-    width − a disc, 0.72 × height), so it runs past the top and bottom of
-    its area, whose edges fade out (mask) so nothing is cut off hard.
-  - *Discs*: one per service (13, lucide icons mapped by title in
-    `ServicesOrbit`) ride one loop of evenly spaced slots, centred on the
-    ring's leftmost point, at 32 px/s; the gap is a third of the arc visible inside the area, so exactly three discs show at a time; a disc off that arc is hidden. They flow down from above the area,
-    sweep past the left and leave below it, then wrap round unseen, so the
-    visible arc is always evenly filled however wide the ring is. Each is a
-    flat 2D 92 px disc in the light hero's mountain blue (`#6b8fb0`) with a plain
-    white icon (an earlier glossy 3D navy version was replaced at the
-    owner's request), trailing a tapered flowing tail in a pale tint of that blue (never a dark shadow) that
-    fades away behind it. The tail is at most 100 px and never more than
-    0.4 of the gap between discs, so tails never join up.
-    Positions come from one rAF loop writing transforms (no React renders);
-    it stops off screen, pauses on hover and is still for reduced motion.
-  - *Figures* inside the ring: 7 technology services, 6 talent & delivery
-    services, 3 cloud platforms (counts from `content/site.ts`, no invented
-    statistics), placed from the ring's measured size so they clear the orbs.
-- **Staffing** (`themes/light/staffing/`, passed to `Home` as `staffing`):
-  the shared Staffing content in front of a large white sculpted globe
-  (owner's reference: a matte white relief globe with a faint blue glow).
-  `GlobeRelief` builds it from the site's land mask (`decodeMask`, now
-  exported from the earth form): the mask, with a little height noise on
-  land and a slight blur, is both the displacement (0.07) and bump map of a
-  matte white sphere, so the continents stand up craggy and the sea stays
-  smooth. It starts facing Europe and Africa, turns slowly, and is lit soft
-  white from the upper left with a light-hero blue from the lower right.
-  The continents glow (no halo behind the globe, at the owner's request): a
-  light-blue emissive on the land, plus a thin shell just above it carrying
-  a blurred copy of the land at 20% opacity, so the glow spills softly past
-  the coasts without hiding the relief. Solid 3D,
-  not particles; renders only on screen; still for reduced motion.
-- **Cards.** Near-solid white (`--card-bg` 0.88) with an almost invisible
-  edge (Light Theme pack §7).
-- **Footer.** The wordmark is sized past the viewport (19vw) so it is
-  cropped at both edges, on `#F8FAFC`; no drifting dust.
+- **The object** (`themes/light/ribbon/`, passed to `Home` as `backdrop`;
+  `particles={false}` so the dark journey never mounts). `RibbonLayer` is a
+  fixed full-screen layer (the white atmosphere, `.light-atmosphere`) with
+  `RibbonScene`: one InstancedMesh of 180 thin blue fins (110 on phones),
+  one draw call, a refined light blue range (#2f6fe6 … #7fb3fa), glossy
+  clearcoat, local `Lightformer` reflections (no network), neutral tone
+  mapping.
+- **Forms** (`forms.ts`): each section holds the tube in a shape. Hero: a
+  large arch under the headline. Services: a tall twisting column on the
+  right (the services fill the left half). Staffing: a ring taller than the
+  screen, so its two sides frame the content. Why: a spine down the left.
+  How we work: a twisting column on the right. About: a wide spiral framing
+  the text. Contact: a deep spiral "eye" with a small glass sphere in it.
+  Portrait screens move shapes to the edges; large shapes crop naturally.
+- **Scroll** (`readStage`): the stage runs 0…6 across the section anchors.
+  A form holds while its section fills the screen; across each section edge
+  (±0.35 of the viewport) every fin glides from its place in one form to its
+  place in the next, eased, with a swell toward the camera mid-way. Fins
+  slide slowly along the tube; the object leans a little with the pointer.
+  Fin thickness follows each form's length so spacing stays even. Reduced
+  motion stops the slide and the lean; the morph still follows scroll.
+- **Hero** (`LightHero`): the approved headline and CTAs centred at the top,
+  the arch below, the description bottom right and a scroll cue bottom left
+  (phones: the description follows the CTAs).
+- **Readability**: the cards are near-solid white; Contact (inside the eye)
+  has a soft page-colour veil behind its text (`#contact::before`).
+- **Palette**: `--background` #F8FAFC (atmosphere #FFFFFF → #EEF4FD), navy
+  text #0B1B33, slate #64748B, orange #FF6B1A kept as the restrained accent.
 
 The notes below describe how the particles were drawn in light mode, for
 when they return.

@@ -21,17 +21,20 @@ export default function HomePage({
   services = <Services />,
   staffing = <Staffing />,
   particles = true,
+  backdrop,
 }: {
   hero?: React.ReactNode;
   services?: React.ReactNode;
   staffing?: React.ReactNode;
   particles?: boolean;
+  /** Drawn behind the page instead of the particle journey (the light design's object). */
+  backdrop?: React.ReactNode;
 }) {
   return (
     <>
       <Header />
       {/* One particle system for the whole journey, fixed behind the page. */}
-      {particles && <JourneyLayer />}
+      {particles ? <JourneyLayer /> : backdrop}
       {/* Content sits above the particle layer (z-10). The hero, client strip
           and story are transparent so the particles show through, and so is
           the galaxy area after it (About → Contact). */}

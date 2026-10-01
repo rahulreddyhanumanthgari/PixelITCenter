@@ -1,8 +1,8 @@
 /* ---------------------------------------------------------------------------
-   Light design: the Pixel IT site in daylight (Light Theme Live Team
-   Recreation Pack palette). These are its colours. It has no particles for
-   now: app/(light) renders Home with particles={false}. Everything else is
-   shared in themes/core. Loaded only by app/(light).
+   Light design (Light Theme reference-animation handoff): the Pixel IT site
+   on a white atmosphere with one large blue object (themes/light/ribbon).
+   These are its colours; everything else is shared in themes/core. Loaded
+   only by app/(light).
    ------------------------------------------------------------------------ */
 
 :root {
@@ -13,8 +13,8 @@
   --brand-orange: #ff6b1a;
   --brand-white: #f2f6ff;
 
-  /* Surfaces: below the blue hero, the whole page is the owner's off-white. */
-  --background: #f4efec;
+  /* Surfaces: white and light atmospheric (#FFFFFF, #F8FAFC, #F3F8FE). */
+  --background: #f8fafc;
   --surface: #ffffff;
   --surface-2: #f3f8fe;
   --foreground: #0b1b33;
@@ -65,221 +65,49 @@
   --galaxy-text-muted: #475569;
 }
 
-/* ---------------------------------------------------------------------------
-   Light hero (themes/light/hero), laid out like the owner's reference landing
-   page: a full-screen dawn landscape (SceneBackdrop), the 3D shell on the
-   lake (Sculpture), small widely spaced white type centred above it, and
-   small spaced links in the bottom corners. Font: Montserrat.
-   ------------------------------------------------------------------------ */
-.light-scene {
-  background: #a6c1d3;
-  color: #ffffff;
+/* The atmosphere behind the page: white, cooling to a faint blue at the
+   edges. The blue object is drawn over it (RibbonLayer). */
+.light-atmosphere {
+  background:
+    radial-gradient(80% 70% at 50% 30%, #ffffff 0%, #f8fafc 55%, #eef4fd 100%);
 }
-/* The lake's surface: from the shell's waterline (--water, set by the 3D
-   scene) down, it softens and tints the reflection like water. */
-.light-scene-water {
-  position: absolute;
-  inset: var(--water, 78%) 0 0 0;
-  background: linear-gradient(rgb(146 183 210 / 0.05), rgb(110 157 194 / 0.55));
-  backdrop-filter: blur(1.5px);
-  pointer-events: none;
+
+/* Hero: the site's headline type, a little smaller so the arch has room. */
+.light-hero-title .hero-kicker,
+.light-hero-title .hero-statement {
+  font-size: clamp(2.5rem, 1rem + 6.4vw, 4.75rem);
 }
-.light-scene-copy {
-  position: absolute;
-  inset: 25% 1.5rem auto;
-  z-index: 10;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  pointer-events: none;
-  text-shadow: 0 1px 14px rgb(46 84 116 / 0.28);
+@media (min-width: 768px) {
+  .light-hero-title .hero-kicker,
+  .light-hero-title .hero-statement {
+    font-size: clamp(2.75rem, 4.7vw, 4.75rem);
+  }
 }
-.light-scene-title {
-  display: block;
-  font-family: var(--font-montserrat), sans-serif;
-  font-size: clamp(1.25rem, 0.55rem + 2.2vw, 2.4rem);
-  font-weight: 700;
-  line-height: 1.15;
-  letter-spacing: 0.07em;
-  text-transform: uppercase;
-}
-.light-scene-subtitle {
-  display: block;
-  margin-top: 0.85rem;
-  font-family: var(--font-montserrat), sans-serif;
-  font-size: clamp(0.625rem, 0.55rem + 0.25vw, 0.8125rem);
-  font-weight: 600;
-  letter-spacing: 0.42em;
-  text-transform: uppercase;
-  opacity: 0.92;
-}
-.light-scene-text {
-  max-width: 34rem;
-  margin-top: 1rem;
-  font-family: var(--font-montserrat), sans-serif;
-  font-size: 0.75rem;
-  line-height: 1.7;
-  opacity: 0.78;
-}
-.light-scene-corner {
-  position: absolute;
-  bottom: 2.25rem;
-  z-index: 10;
-  display: flex;
-  flex-direction: column;
-  font-family: var(--font-montserrat), sans-serif;
-  font-size: clamp(0.625rem, 0.58rem + 0.15vw, 0.75rem);
-  font-weight: 700;
+.light-hero-copy {
+  max-width: 24rem;
+  font-size: 0.9375rem;
   line-height: 1.6;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: #ffffff;
-}
-.light-scene-corner a,
-a.light-scene-corner {
-  text-underline-offset: 0.25em;
-}
-.light-scene-corner a:hover,
-a.light-scene-corner:hover {
-  text-decoration: underline;
-}
-.light-scene-corner--left {
-  left: max(1.5rem, 15%);
-}
-.light-scene-corner--right {
-  right: max(1.5rem, 15%);
-  text-transform: none;
-  letter-spacing: 0.06em;
-}
-@media (max-width: 639px) {
-  .light-scene-copy {
-    inset: 17% 1.25rem auto;
-  }
-  .light-scene-corner {
-    bottom: 5rem; /* clear of the Design switch */
-  }
-  .light-scene-corner--right {
-    display: none;
-  }
+  color: var(--text-secondary);
 }
 
-/* ---------------------------------------------------------------------------
-   Services orbit (themes/light/services): a soft warm-grey half ring on the
-   right of the Services section, the services' 3D icons travelling round it.
-   ------------------------------------------------------------------------ */
-/* The ring runs off the screen's right edge, as in the reference: the stage
-   bleeds past the content column by the page's side gutter (--bleed). */
-.svc-orbit {
-  --bleed: 1rem;
+/* Where the object passes behind text, a soft veil of the page colour keeps
+   it readable (Contact sits in the eye). */
+#contact {
   position: relative;
-  height: 36rem;
-  margin-right: calc(-1 * var(--bleed));
-  overflow: hidden;
-  /* The ring runs past the top and bottom: fade those edges so the band and
-     the discs drift in and out instead of being cut off. */
-  mask-image: linear-gradient(transparent 0, #000 13%, #000 87%, transparent 100%);
 }
-@media (min-width: 640px) {
-  .svc-orbit {
-    --bleed: 1.5rem;
-  }
-}
-@media (min-width: 1024px) {
-  .svc-orbit {
-    /* Container: max-w-7xl (80rem) with 2rem side padding. */
-    --bleed: calc(max(0px, (100vw - 80rem) / 2) + 2rem);
-    height: 100%;
-  }
-}
-/* 100vw counts the scrollbar; never let the bleed scroll the page sideways. */
-body {
-  overflow-x: clip;
-}
-/* A flat steel-blue disc (the light hero's mountain blue) with a plain
-   white icon: 2D, no gloss or shading. */
-.svc-orb {
+#contact::before {
+  content: "";
   position: absolute;
-  left: 0;
-  top: 0;
-  display: grid;
-  width: 92px;
-  height: 92px;
-  place-items: center;
-  border-radius: 9999px;
-  background: #6b8fb0;
-  will-change: transform;
-}
-.svc-orb-icon {
-  width: 40px;
-  height: 40px;
-  color: #ffffff;
-}
-/* The flowing tail: a tapered pale-blue streak, strongest at the
-   disc and fading away behind it along the ring. */
-.svc-trail {
-  position: absolute;
-  left: 0;
-  top: 0;
-  width: 100px; /* set from the ring size in ServicesOrbit */
-  height: 66px; /* 0.72 × the disc */
-  border-radius: 9999px;
-  /* Light and airy, never a dark shadow: a pale tint of the disc blue. */
-  background: linear-gradient(90deg, rgb(196 215 235 / 0) 0%, rgb(196 215 235 / 0.25) 40%, rgb(196 215 235 / 0.7) 100%);
-  clip-path: polygon(0 42%, 100% 0, 100% 100%, 0 58%);
-  filter: blur(2px);
-  will-change: transform;
+  inset: 0 8%;
+  z-index: -1;
+  background: radial-gradient(closest-side, rgb(248 250 252 / 0.95) 45%, rgb(248 250 252 / 0.7) 70%, transparent);
   pointer-events: none;
 }
-/* The figures sit inside the ring, near the right edge. */
-.svc-stats {
-  position: absolute;
-  right: calc(var(--bleed) + 0.5rem); /* left is set from the ring's size (ServicesOrbit) */
-  top: 50%;
-  display: grid;
-  gap: 1.6rem;
-  transform: translateY(-50%);
-}
-.svc-stat-value {
-  font-family: var(--font-montserrat), sans-serif;
-  font-size: clamp(1.5rem, 1.2rem + 1vw, 2rem);
-  font-weight: 600;
-  line-height: 1.1;
-  letter-spacing: -0.02em;
-  color: #161b33;
-}
-.svc-stat-label {
-  margin-top: 0.4rem;
-  font-family: var(--font-montserrat), sans-serif;
-  font-size: 0.8125rem;
-  color: #5b6070;
-}
-@media (prefers-reduced-motion: reduce) {
-  .svc-orb,
-  .svc-trail {
-    will-change: auto;
-  }
-}
 
-/* ---------------------------------------------------------------------------
-   Staffing globe (themes/light/staffing): a large white sculpted globe behind
-   the Staffing content; its continents glow in the light hero's blue.
-   ------------------------------------------------------------------------ */
-.light-staffing-globe {
-  position: relative;
-  width: min(900px, 118vw);
-  aspect-ratio: 1;
-  flex-shrink: 0;
-}
-
-
-/* Footer: the oversized, subtle wordmark is cropped by the viewport. No
-   drifting particle dust in the light design. */
+/* Footer: oversized Pixel IT Center wordmark, cropped by the viewport, with
+   the shared subtle blue dust. */
 .footer-wordmark {
   font-size: 19vw;
   margin-left: -2vw;
   margin-right: -2vw;
-}
-.footer-dust {
-  display: none;
 }
