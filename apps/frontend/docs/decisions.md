@@ -695,7 +695,7 @@ orbit, white relief globe, off-white #F4EFEC page) were removed for it.
   large arch under the headline. Services: a tall twisting column on the
   right (the services fill the left half). Staffing: a ring taller than the
   screen, so its two sides frame the content. Why: a spine down the left.
-  How we work: the tube runs down the middle, set back in depth, weaving
+  How we work: the tube runs horizontally across the screen, set back in depth, weaving
   behind the heading and all four steps (a soft veil behind the pinned step
   content keeps the text readable), then flows on into About. About: a wide spiral framing
   the text. Contact: a deep spiral "eye" with a small glass sphere in it.

@@ -63,14 +63,14 @@ const spineLeft: Form = {
 };
 
 /**
- * How we work: the tube runs down the middle, set back in depth, weaving
- * gently behind the heading and all four steps (the steps sit in front of
- * it), then carries on down into About.
+ * How we work: the tube runs horizontally across the screen, set back in
+ * depth, weaving gently behind the heading and the four steps (the steps sit
+ * in front of it), then carries on down into About.
  */
 const behindProcess: Form = {
   at(u, W, H, wide) {
-    const sway = (wide ? 0.16 : 0.22) * W;
-    return [sway * Math.sin(TAU * 0.85 * u + 0.6), (0.75 - 1.5 * u) * H, -2.4 + 0.8 * Math.sin(TAU * 0.6 * u)];
+    const sway = (wide ? 0.1 : 0.06) * H;
+    return [(-0.75 + 1.5 * u) * W, 0.02 * H + sway * Math.sin(TAU * 0.9 * u + 0.4), -2.4 + 0.8 * Math.sin(TAU * 0.6 * u)];
   },
   radius: (W, H, wide) => (wide ? Math.min(0.085 * H, 0.065 * W) : 0.1 * W),
 };
