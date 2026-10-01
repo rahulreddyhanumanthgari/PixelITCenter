@@ -79,14 +79,43 @@ void main() {
 `;
 
 const pointsFragment = /* glsl */ `
+uniform float uFade;
 varying vec3 vColor;
 varying float vAlpha;
 void main() {
   float d = length(gl_PointCoord - 0.5);
   if (d > 0.5) discard;
-  gl_FragColor = vec4(vColor, vAlpha * (1.0 - smoothstep(0.3, 0.5, d)));
+  gl_FragColor = vec4(vColor, uFade * vAlpha * (1.0 - smoothstep(0.3, 0.5, d)));
 }
 `;
+
+/**
+ * "Orb" variant (the Contact section's one calm large object): only the
+ * dotted orbital shell, the same latitude rows and soft gaps as the Earth's
+ * shell, without the Earth inside.
+ */
+function orbParticles(count: number): Float32Array {
+  const rand = mulberry32(5150);
+  const out = new Float32Array(count * 3);
+  const rows = 56;
+  const perRow = Math.max(1, Math.round(count / (rows * 0.7)));
+  let w = 0;
+  while (w < count) {
+    const row = Math.floor(rand() * rows);
+    const lat = -Math.PI / 2 + ((row + 0.5) / rows) * Math.PI;
+    const slots = Math.max(6, Math.round(perRow * Math.cos(lat)));
+    const lon = (Math.floor(rand() * slots) / slots) * Math.PI * 2 - Math.PI + (row % 2) * (Math.PI / slots);
+    const gap = Math.sin(lon * 2 + lat * 3 + 1.2) * Math.cos(lon * 1.3 - lat * 2.1) > 0.45;
+    if (gap && rand() < 0.9) continue;
+    const c = Math.cos(lat);
+    const r = EARTH.shell * (1 + (rand() - 0.5) * 0.01);
+    out[w * 3] = Math.cos(lon) * c * r;
+    out[w * 3 + 1] = Math.sin(lat) * r;
+    out[w * 3 + 2] = -Math.sin(lon) * c * r;
+    w++;
+  }
+  return out;
+}
 
 // The globe's body: soft white with a cool shadow side and a pale-blue rim,
 // lit from the upper left, so the object feels physically present.
@@ -116,18 +145,22 @@ interface GlobeProps {
   /** 0 at the top of the hero → 1 when it has scrolled away. */
   scroll: React.RefObject<number>;
   reducedMotion: boolean;
+  /** "earth" (hero): the particle Earth on a white body. "orb" (Contact): the dotted shell alone, calmer. */
+  variant?: "earth" | "orb";
 }
 
-function Globe({ count, scroll, reducedMotion }: GlobeProps) {
+function Globe({ count, scroll, reducedMotion, variant = "earth" }: GlobeProps) {
+  const orb = variant === "orb";
   const geometry = useMemo(() => {
     const g = new THREE.BufferGeometry();
-    g.setAttribute("position", new THREE.BufferAttribute(generateEarthParticles(count, mulberry32(20261001)), 3));
+    const positions = orb ? orbParticles(count) : generateEarthParticles(count, mulberry32(20261001));
+    g.setAttribute("position", new THREE.BufferAttribute(positions, 3));
     const rand = mulberry32(7);
     const seeds = new Float32Array(count);
     for (let i = 0; i < count; i++) seeds[i] = rand();
     g.setAttribute("aSeed", new THREE.BufferAttribute(seeds, 1));
     return g;
-  }, [count]);
+  }, [count, orb]);
 
   const material = useMemo(
     () =>
@@ -135,7 +168,8 @@ function Globe({ count, scroll, reducedMotion }: GlobeProps) {
         uniforms: {
           uSpin: { value: 0 },
           uShellSpin: { value: 0 },
-          uSize: { value: 2.5 },
+          uSize: { value: orb ? 2.8 : 2.5 },
+          uFade: { value: orb ? 0.7 : 1 },
           uPixelRatio: { value: Math.min(window.devicePixelRatio || 1, 2) },
         },
         vertexShader: pointsVertex,
@@ -143,7 +177,7 @@ function Globe({ count, scroll, reducedMotion }: GlobeProps) {
         transparent: true,
         depthWrite: false,
       }),
-    [],
+    [orb],
   );
   const bodyMaterial = useMemo(
     () => new THREE.ShaderMaterial({ vertexShader: bodyVertex, fragmentShader: bodyFragment }),
@@ -167,9 +201,9 @@ function Globe({ count, scroll, reducedMotion }: GlobeProps) {
     const u = (points.current?.material as THREE.ShaderMaterial | undefined)?.uniforms;
     if (u) {
       u.uSpin.value = time.current * 0.07 + s * 0.9;
-      u.uShellSpin.value = time.current * 0.035 + s * 0.45;
+      u.uShellSpin.value = time.current * (orb ? 0.025 : 0.035) + s * 0.45;
     }
-    if (group.current) {
+    if (group.current && !orb) {
       group.current.position.y = s * 0.45;
       group.current.scale.setScalar(1 + s * 0.06);
     }
@@ -177,9 +211,11 @@ function Globe({ count, scroll, reducedMotion }: GlobeProps) {
 
   return (
     <group ref={group}>
-      <mesh material={bodyMaterial}>
-        <sphereGeometry args={[BODY_RADIUS, 96, 96]} />
-      </mesh>
+      {!orb && (
+        <mesh material={bodyMaterial}>
+          <sphereGeometry args={[BODY_RADIUS, 96, 96]} />
+        </mesh>
+      )}
       <points ref={points} geometry={geometry} material={material} />
     </group>
   );
@@ -197,7 +233,7 @@ export default function GlobeScene(props: Omit<GlobeProps, "reducedMotion"> & { 
       gl={{ alpha: true, antialias: true, powerPreference: "high-performance" }}
       style={{ background: "transparent" }}
     >
-      <Globe count={props.count} scroll={props.scroll} reducedMotion={reducedMotion} />
+      <Globe count={props.count} scroll={props.scroll} reducedMotion={reducedMotion} variant={props.variant} />
     </Canvas>
   );
 }

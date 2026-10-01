@@ -46,10 +46,12 @@
   --accent-orange: var(--brand-orange);
   --accent-blue: #1677ff;
 
-  /* Cards: near-white and translucent, navy hairlines. */
-  --card-bg: rgb(255 255 255 / 0.55);
-  --card-bg-hover: rgb(255 255 255 / 0.8);
-  --card-edge: rgb(11 27 51 / 0.12);
+  /* Cards (Light Theme pack §7): editorial panels, minimal border, nearly
+     no outline, no glassmorphism. Solid enough that the particles behind
+     never run through the text. */
+  --card-bg: rgb(255 255 255 / 0.88);
+  --card-bg-hover: #ffffff;
+  --card-edge: rgb(11 27 51 / 0.07);
   --panel-body: #64748b;
 
   /* One-offs */
@@ -193,4 +195,18 @@
   font-weight: 600;
   letter-spacing: -0.01em;
   color: var(--text-primary);
+}
+
+/* Contact: one calm large particle object behind the centred text. */
+.light-contact-orb {
+  width: min(760px, 120vw);
+  aspect-ratio: 1;
+  flex-shrink: 0;
+}
+
+/* Footer: the oversized, subtle wordmark is cropped by the viewport. */
+.footer-wordmark {
+  font-size: 19vw;
+  margin-left: -2vw;
+  margin-right: -2vw;
 }

@@ -695,6 +695,21 @@ ink-on-white and a blue sky, were replaced.)
   - *Hand-off*: the journey layer (whose first form is the dark design's
     black hole) is hidden during the hero and fades in as Services arrives,
     so its particles are seen gathering into the Services ring.
+- **Services, Staffing, Why, How We Work.** The pack's targets for these are
+  the shared forms (ring stream + numbered editorial panels, particle Earth,
+  halo with the content in its opening, four-planet solar system), so they
+  are unchanged. Light cards are near-solid white (`--card-bg` 0.88) with an
+  almost invisible edge, so particles never run through the text.
+- **About** (pack page 5: particles gathering and separating). In light only,
+  about one in nine of the galaxy's particles is drawn as a large, soft,
+  translucent bubble of varied size (`vBubble` in `particle.vert.glsl` /
+  `particle.frag.glsl`, gated by `uLight` and the galaxy weight, so bubbles
+  grow out of the morph and shrink back). The stars' shader sets it to 0.
+- **Contact** ("one calm large particle object"): `ContactOrb`, passed to
+  `Home` as `contactBackdrop`: the hero globe's dotted orbital shell alone,
+  large, turning slowly behind the centred text (renders only on screen).
+- **Footer.** The wordmark is sized past the viewport (19vw) so it is
+  cropped at both edges, on `#F8FAFC`.
 - **Palette.**
 
   | Role | Colour |

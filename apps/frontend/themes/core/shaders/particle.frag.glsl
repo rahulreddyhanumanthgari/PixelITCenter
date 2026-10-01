@@ -10,6 +10,7 @@ uniform float uLight;
 
 varying vec3 vColor;
 varying float vAlpha;
+varying float vBubble; // light theme, About: 1 = a soft bubble instead of a dot
 
 vec3 toLinear(vec3 c) { return pow(c, vec3(2.2)); }
 
@@ -39,7 +40,11 @@ void main() {
     vec3 ink = mix(warm, cool, blueness);
     ink = mix(soft, ink, smoothstep(0.12, 0.45, sat));
     float a = clamp(pow(m, 0.45) * 1.7, 0.0, 1.0);
-    gl_FragColor = vec4(ink, a * pow(core, 1.3) * vAlpha);
+    // Bubble: a translucent disc with a slightly stronger rim, soft edge.
+    float fill = 1.0 - smoothstep(0.43, 0.5, d);
+    float rim = smoothstep(0.28, 0.47, d) * fill;
+    float bubbleA = (0.12 + 0.24 * rim) * fill * clamp(a * 1.5, 0.0, 1.0);
+    gl_FragColor = vec4(ink, mix(a * pow(core, 1.3), bubbleA, vBubble) * vAlpha);
     return;
   }
 
