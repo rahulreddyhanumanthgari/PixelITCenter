@@ -86,13 +86,57 @@
   }
 }
 
-/* Info cards: still, white, a thin accent line. A row, stacked on phones. */
+/* The sculpture's stage under the CTAs: large, centred. */
+.light-hero-stage {
+  position: relative;
+  margin-top: 0.5rem;
+}
+.light-sculpture {
+  width: min(900px, 100%);
+  aspect-ratio: 16 / 10;
+  margin: 0 auto;
+}
+@media (max-width: 639px) {
+  .light-sculpture {
+    width: 115vw;
+    margin-left: calc(50% - 57.5vw);
+    aspect-ratio: 1 / 0.9;
+  }
+}
+
+/* Info cards: still, white, a thin accent line. A row under the sculpture
+   on phones and tablets; floating beside it on desktop. */
 .light-hero-cards {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
   gap: 1rem;
-  margin-top: 4rem;
+  margin-top: 1rem;
+}
+@media (min-width: 1024px) {
+  .light-hero-cards {
+    position: absolute;
+    inset: 0;
+    display: block;
+    margin: 0;
+    pointer-events: none;
+  }
+  .light-hero-card {
+    position: absolute;
+    pointer-events: auto;
+  }
+  .light-hero-card[data-slot="0"] {
+    left: 3%;
+    top: 20%;
+  }
+  .light-hero-card[data-slot="1"] {
+    right: 2%;
+    top: 42%;
+  }
+  .light-hero-card[data-slot="2"] {
+    left: 7%;
+    top: 66%;
+  }
 }
 .light-hero-card {
   display: flex;

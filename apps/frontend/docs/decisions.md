@@ -687,8 +687,22 @@ day. The light-mode code paths in the shared particle engine (`uLight`,
   `themes/light/light.css`.
 - **Hero** (`themes/light/hero/LightHero.tsx`, passed to `Home` as its
   `hero`): the approved headline, copy and CTAs centred on a white →
-  `#F3F8FE` atmosphere, with three still info cards in a row
-  (`hero.cards` in `content/site.ts`). The central object is to be decided.
+  `#F3F8FE` atmosphere, above the 3D spiral shell sculpture, with three still
+  info cards (`hero.cards` in `content/site.ts`) floating beside it on
+  desktop and in a row under it below `lg`.
+  - *Sculpture* (`SculptureScene`, the owner's reference image): solid 3D,
+    not particles. 34 thin discs (fins) stand on a nautilus spiral of
+    0.97 of a turn, each growing (radius 0.42 → 1.2), every disc's face
+    holding the radial and depth axes, with a 0.55 rad turbine twist.
+    Pale-blue glossy physical material, a warm key light from the right, a
+    cool blue fill, local `Lightformer` reflections (no network), a soft
+    contact shadow and six small floating spheres.
+  - *Mouse*: it tilts toward the pointer anywhere on the page (eased); hovering
+    it fans the fins further open in a wave and speeds its slow turn;
+    leaving lets it settle. Reduced motion keeps it still unless hovered.
+    It renders only while on screen; no WebGL → nothing is drawn.
+  - For an exact match to the reference, a modelled `.glb` could replace the
+    generated fins with the same lighting and mouse behaviour.
 - **Cards.** Near-solid white (`--card-bg` 0.88) with an almost invisible
   edge (Light Theme pack §7).
 - **Footer.** The wordmark is sized past the viewport (19vw) so it is
