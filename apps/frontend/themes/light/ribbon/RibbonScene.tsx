@@ -4,12 +4,13 @@ import { useEffect, useMemo, useRef } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { Environment, Lightformer } from "@react-three/drei";
 import * as THREE from "three";
+import { RoundedBoxGeometry } from "three/examples/jsm/geometries/RoundedBoxGeometry.js";
 import { useReducedMotion } from "@/themes/core/hooks/device";
 import { EYE, FORMS, type Vec3 } from "./forms";
 
 /**
  * The light design's one object, drawn once for the whole page: a blue
- * ribbed tube of FINS thin discs (one InstancedMesh, one draw call). Scroll
+ * ribbed square duct of thin rounded-square slats (one InstancedMesh, one draw call). Scroll
  * picks the form: each section anchor holds its form while it is on screen,
  * and the gap between two anchors morphs one form into the next (every fin
  * glides from its place in one shape to its place in the other, with a
@@ -60,7 +61,9 @@ function Tube({ count, reducedMotion }: { count: number; reducedMotion: boolean 
   const sphere = useRef<THREE.Mesh>(null);
   const group = useRef<THREE.Group>(null);
 
-  const geometry = useMemo(() => new THREE.CylinderGeometry(1, 1, 1, 40, 1), []);
+  // Each fin is a flat square slat with softly rounded corners (as in the
+  // reference), 2 × 2 across and 1 thick before scaling.
+  const geometry = useMemo(() => new RoundedBoxGeometry(2, 1, 2, 4, 0.3), []);
   const material = useMemo(
     () =>
       new THREE.MeshPhysicalMaterial({
@@ -130,7 +133,10 @@ function Tube({ count, reducedMotion }: { count: number; reducedMotion: boolean 
       p: new THREE.Vector3(),
       s: new THREE.Vector3(),
       t: new THREE.Vector3(),
-      up: new THREE.Vector3(0, 1, 0),
+      x: new THREE.Vector3(),
+      z: new THREE.Vector3(),
+      view: new THREE.Vector3(0, 0, 1),
+      basis: new THREE.Matrix4(),
     }),
     [],
   );
@@ -173,7 +179,14 @@ function Tube({ count, reducedMotion }: { count: number; reducedMotion: boolean 
       pt(Math.max(0, u - d), p1);
       pt(Math.min(1, u + d), p2);
       tmp.t.set(p2[0] - p1[0], p2[1] - p1[1], p2[2] - p1[2]).normalize();
-      tmp.q.setFromUnitVectors(tmp.up, tmp.t);
+      // Square frame: the slat's thickness runs along the tube, and one flat
+      // side always faces the viewer, so the tube reads as a square duct.
+      tmp.x.crossVectors(tmp.t, tmp.view);
+      if (tmp.x.lengthSq() < 1e-6) tmp.x.set(1, 0, 0);
+      tmp.x.normalize();
+      tmp.z.crossVectors(tmp.x, tmp.t).normalize();
+      tmp.basis.makeBasis(tmp.x, tmp.t, tmp.z);
+      tmp.q.setFromRotationMatrix(tmp.basis);
       // The ends taper to nothing, so a fin wrapping from one end to the other is never seen.
       const end = smooth(Math.min(1, u / 0.05)) * smooth(Math.min(1, (1 - u) / 0.05));
       tmp.s.set(R * end, T * end, R * end);
