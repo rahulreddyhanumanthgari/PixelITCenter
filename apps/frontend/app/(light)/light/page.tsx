@@ -1,10 +1,11 @@
 import Home from "@/themes/core/Home";
 import { LightHero } from "@/themes/light/hero/LightHero";
 import { LightServices } from "@/themes/light/services/LightServices";
+import { LightStaffing } from "@/themes/light/staffing/LightStaffing";
 
-// The light design: the shared site with its own hero and Services and, for
-// now, no particles. Visitors who chose it get this at "/" through the
-// rewrite in next.config.ts; /light also works directly.
+// The light design: the shared site with its own hero, Services and Staffing
+// and, for now, no particles. Visitors who chose it get this at "/" through
+// the rewrite in next.config.ts; /light also works directly.
 export default function Page() {
-  return <Home hero={<LightHero />} services={<LightServices />} particles={false} />;
+  return <Home hero={<LightHero />} services={<LightServices />} staffing={<LightStaffing />} particles={false} />;
 }

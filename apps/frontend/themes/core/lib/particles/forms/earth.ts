@@ -23,7 +23,7 @@ export const EARTH = {
 const TAU = Math.PI * 2;
 
 /** Decodes the run-length mask into one byte per cell (1 = land). */
-function decodeMask(): Uint8Array {
+export function decodeMask(): Uint8Array {
   const { width, height, rows } = LAND_MASK;
   const grid = new Uint8Array(width * height);
   rows.split("|").forEach((row, y) => {
