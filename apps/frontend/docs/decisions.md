@@ -710,9 +710,14 @@ day. The light-mode code paths in the shared particle engine (`uLight`,
     0.78, centres 0.98 from the axis) evenly round a closed ring (no start or
     end; an earlier growing nautilus read as one end swallowing the other),
     every disc's face holding the radial and depth axes, with a 0.55 rad
-    turbine twist. Pale-blue glossy physical material lit for dawn: a warm
-    low sun behind it, soft white from the front, cool blue from the left,
-    local `Lightformer` reflections (no network).
+    turbine twist; fins 0.04 thick so their bright edges show.
+    Colour and light matched to the reference: a near-white, faintly blue,
+    glossy clearcoat material (`#e8f1fb`), where the blue comes from the
+    shading (hemisphere light with a blue ground, a soft blue fill from the
+    left, blue lake reflections below), white highlights from the front and
+    right, and a strong low peach sunrise behind, upper left, that warms the
+    inner fins. Neutral tone mapping keeps those colours true. Local
+    `Lightformer` reflections only (no network).
   - *Mouse*: it tilts toward the pointer anywhere on the page (eased); hovering
     it fans the fins further open in a wave and speeds its slow turn;
     leaving lets it settle. Reduced motion keeps it still unless hovered.

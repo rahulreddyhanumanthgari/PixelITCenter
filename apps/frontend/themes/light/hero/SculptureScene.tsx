@@ -21,7 +21,7 @@ import { useReducedMotion } from "@/themes/core/hooks/device";
 
 const FINS = 36;
 const TURN = Math.PI * 2; // a full, closed ring: no start or end
-const THICKNESS = 0.022;
+const THICKNESS = 0.04; // thick enough to show the bright fin edges of the reference
 
 interface Fin {
   angle: number;
@@ -155,12 +155,12 @@ function Stage({ pointer, reducedMotion }: { pointer: React.RefObject<THREE.Vect
 
   const materials = useMemo(() => {
     const solid = new THREE.MeshPhysicalMaterial({
-      color: "#dae8f7",
-      roughness: 0.34,
+      color: "#e8f1fb", // near-white with a breath of blue; the blue lives in the shading
+      roughness: 0.22,
       metalness: 0,
-      clearcoat: 0.55,
-      clearcoatRoughness: 0.25,
-      envMapIntensity: 1.25,
+      clearcoat: 1,
+      clearcoatRoughness: 0.12,
+      envMapIntensity: 1.6,
     });
     const reflection = solid.clone();
     reflection.transparent = true;
@@ -212,7 +212,7 @@ function Stage({ pointer, reducedMotion }: { pointer: React.RefObject<THREE.Vect
         <Float key={i} speed={reducedMotion ? 0 : 0.9 + i * 0.12} floatIntensity={reducedMotion ? 0 : 0.25} rotationIntensity={0}>
           <mesh position={[x(px), y(py), 0.2]}>
             <sphereGeometry args={[r * H, 32, 32]} />
-            <meshPhysicalMaterial color="#e9f1fb" roughness={0.1} clearcoat={1} />
+            <meshPhysicalMaterial color="#eaf2fc" roughness={0.08} clearcoat={1} envMapIntensity={1.6} />
           </mesh>
         </Float>
       ))}
@@ -237,20 +237,22 @@ export default function SculptureScene({ active }: { active: boolean }) {
       frameloop={active ? "always" : "never"}
       dpr={[1, 2]}
       camera={{ fov: 32, position: [0, 0, 7] }}
-      gl={{ alpha: true, antialias: true, powerPreference: "high-performance" }}
+      gl={{ alpha: true, antialias: true, powerPreference: "high-performance", toneMapping: THREE.NeutralToneMapping }}
       style={{ background: "transparent" }}
     >
-      {/* Dawn light: the sun low behind the shell (warm rim), soft white from
-          the front, cool blue from the left. */}
-      <hemisphereLight args={["#eef5ff", "#c9d8ea", 1.2]} />
-      <directionalLight position={[0, 1, 6]} intensity={1.15} color="#ffffff" />
-      <directionalLight position={[-1, 2, -4]} intensity={1.6} color="#ffd7bd" />
-      <directionalLight position={[4, 3, 3]} intensity={1.2} color="#ffe6d2" />
-      <directionalLight position={[-4, 1.5, 2]} intensity={1.2} color="#c6dbff" />
+      {/* Dawn light, matched to the reference. Sky-blue from above, deeper blue bouncing up from the lake: the blue shading between the fins. */}
+      <hemisphereLight args={["#ffffff", "#9fbde2", 1.15]} />
+      <directionalLight position={[0, 1, 6]} intensity={1.2} color="#ffffff" />
+      {/* The low sunrise behind, upper left: peach on the fins' edges and inner faces. */}
+      <directionalLight position={[-1.5, 1.5, -3]} intensity={3.4} color="#ffc6a2" />
+      <directionalLight position={[4, 3, 3]} intensity={1.45} color="#ffffff" />
+      <directionalLight position={[-4, 1.5, 2]} intensity={1.0} color="#b3d0f0" />
       <Environment resolution={256}>
-        <Lightformer form="rect" intensity={2} position={[0, 4, 2]} scale={[8, 2, 1]} color="#ffffff" />
-        <Lightformer form="rect" intensity={1.4} position={[5, 0, 1]} scale={[2, 6, 1]} color="#ffd9b8" />
-        <Lightformer form="rect" intensity={1.2} position={[-5, 0, 1]} scale={[2, 6, 1]} color="#cfe1ff" />
+        <Lightformer form="rect" intensity={2.2} position={[0, 4, 2]} scale={[8, 2, 1]} color="#ffffff" />
+        <Lightformer form="rect" intensity={0.9} position={[0, -3, 2]} scale={[10, 3, 1]} color="#a9c6e6" />
+        <Lightformer form="rect" intensity={2.4} position={[-2, 1.5, -4]} scale={[4, 3, 1]} color="#ffcbaa" />
+        <Lightformer form="rect" intensity={1.4} position={[-5, 0, 1]} scale={[2, 6, 1]} color="#b7d3f3" />
+        <Lightformer form="rect" intensity={1.1} position={[5, 0, 1]} scale={[2, 6, 1]} color="#dbe9f8" />
       </Environment>
       <Stage pointer={pointer} reducedMotion={reducedMotion} />
     </Canvas>
