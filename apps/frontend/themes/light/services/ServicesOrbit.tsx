@@ -47,9 +47,10 @@ const ICONS: Record<string, LucideIcon> = {
 };
 
 const ITEMS = services.groups.flatMap((g) => g.items.map((i) => i.title));
-const PERIOD = 70; // seconds for one full turn
 const ORB = 76; // px
-const TAIL = 100; // px: longest flowing tail; shorter when the discs are closer (phones)
+const GAP = ORB * 1.65; // px along the ring between one disc and the next
+const SPEED = 24; // px per second along the ring
+const TAIL = 100; // px: longest flowing tail (never more than about half the gap)
 
 const STATS = [
   { value: String(services.groups[0].items.length), label: "Technology services" },
@@ -73,15 +74,17 @@ export function ServicesOrbit() {
     let visible = true;
     let paused = false;
     let raf = 0;
-    let phase = 0; // radians turned so far
+    let travelled = 0; // px moved along the ring so far
     let last = performance.now();
 
     const measure = () => {
       w = el.clientWidth;
       h = el.clientHeight;
-      // Leave room above and below for the band's soft edge (band = 0.3R, plus blur).
-      R = Math.max(80, Math.min(w * 0.88, (h / 2 - 24) / 1.15));
-      band = R * 0.3;
+      // A wide sweep: the ring reaches far to the left and runs past the top
+      // and bottom of its area, so the discs enter and leave along those edges.
+      // Never so far left that a disc is cut off at the column edge.
+      R = Math.max(80, Math.min(w * 0.95, w - ORB / 2 - 10, h * 0.72));
+      band = R * 0.34;
       for (const c of [ring.current, ringSoft.current]) {
         c?.setAttribute("cx", String(w));
         c?.setAttribute("cy", String(h / 2));
@@ -92,15 +95,20 @@ export function ServicesOrbit() {
       // The figures sit in the ring's open centre, clear of the orbs.
       if (stats.current) stats.current.style.left = `${w - R + band / 2 + ORB / 2 + 16}px`;
       // Each tail ends well before the disc behind it.
-      tail = Math.min(TAIL, ((2 * Math.PI * R) / ITEMS.length) * 0.55);
+      tail = Math.min(TAIL, GAP * 0.55);
       for (const t of trails.current) if (t) t.style.width = `${tail}px`;
     };
 
+    // The discs ride one loop of GAP-spaced slots centred on the ring's
+    // leftmost point: they flow down from above the area, sweep past the
+    // left and leave below it, then wrap round unseen to come in at the top
+    // again. So the visible arc is always evenly filled, however wide.
     const place = () => {
       const n = ITEMS.length;
+      const loop = n * GAP;
       ITEMS.forEach((_, i) => {
-        // Top → left → bottom: the angle decreases from 270° through 180° to 90°.
-        const a = (3 * Math.PI) / 2 - phase + (i * 2 * Math.PI) / n;
+        const s = (((i * GAP + travelled) % loop) + loop) % loop; // 0 = top end of the loop
+        const a = Math.PI + (loop / 2 - s) / R; // above the left point → below it
         const x = w + R * Math.cos(a);
         const y = h / 2 + R * Math.sin(a);
         const orb = orbs.current[i];
@@ -121,7 +129,7 @@ export function ServicesOrbit() {
     const tick = (now: number) => {
       const dt = Math.min((now - last) / 1000, 0.05);
       last = now;
-      if (!paused) phase += (dt * 2 * Math.PI) / PERIOD;
+      if (!paused) travelled += dt * SPEED;
       place();
       raf = visible ? requestAnimationFrame(tick) : 0;
     };

@@ -173,9 +173,12 @@ a.light-scene-corner:hover {
 .svc-orbit {
   --bleed: 1rem;
   position: relative;
-  height: 34rem;
+  height: 36rem;
   margin-right: calc(-1 * var(--bleed));
   overflow: hidden;
+  /* The ring runs past the top and bottom: fade those edges so the band and
+     the discs drift in and out instead of being cut off. */
+  mask-image: linear-gradient(transparent 0, #000 13%, #000 87%, transparent 100%);
 }
 @media (min-width: 640px) {
   .svc-orbit {

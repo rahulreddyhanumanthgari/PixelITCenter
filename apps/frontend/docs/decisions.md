@@ -728,7 +728,7 @@ day. The light-mode code paths in the shared particle engine (`uLight`,
   off-white, `#F4EFEC` (`--background`, sampled from their swatch).
 - **Services** (`themes/light/services/`, passed to `Home` as `services`),
   after the owner's reference: heading and the service panels on the left
-  (7 of 12 columns); on the right a services orbit that stays in view on
+  (half the width); on the right half a services orbit that stays in view on
   desktop (sticky) and sits under the heading on phones.
   - *Ring*: a soft warm grey-beige band (`#e2ddd8` halo, `#d4cec9` core,
     blurred; the reference measures ~`#cbc5c0` at its strongest) whose centre
@@ -736,15 +736,19 @@ day. The light-mode code paths in the shared particle engine (`uLight`,
     right, round to the left, out at the bottom right. The stage bleeds past
     the content column by the page gutter (`--bleed`) so the ring runs off
     the screen edge; `body { overflow-x: clip }` stops the 100vw maths from
-    scrolling sideways. The radius leaves room for the band's soft edge.
+    scrolling sideways. The ring is wide: radius = min(0.95 × width,
+    width − a disc, 0.72 × height), so it runs past the top and bottom of
+    its area, whose edges fade out (mask) so nothing is cut off hard.
   - *Discs*: one per service (13, lucide icons mapped by title in
-    `ServicesOrbit`), evenly spaced round the full circle and turning once
-    every 70 s, so they enter at the top and leave at the bottom. Each is a
+    `ServicesOrbit`) ride one loop of slots 1.65 discs apart, centred on the
+    ring's leftmost point, at 24 px/s: they flow down from above the area,
+    sweep past the left and leave below it, then wrap round unseen, so the
+    visible arc is always evenly filled however wide the ring is. Each is a
     flat 2D 76 px disc in the light hero's mountain blue (`#6b8fb0`) with a plain
     white icon (an earlier glossy 3D navy version was replaced at the
     owner's request), trailing a tapered flowing tail in a pale tint of that blue (never a dark shadow) that
     fades away behind it. The tail is at most 100 px and never more than
-    0.55 of the gap between discs, so tails never join up (phones).
+    0.55 of the gap between discs, so tails never join up.
     Positions come from one rAF loop writing transforms (no React renders);
     it stops off screen, pauses on hover and is still for reduced motion.
   - *Figures* inside the ring: 7 technology services, 6 talent & delivery

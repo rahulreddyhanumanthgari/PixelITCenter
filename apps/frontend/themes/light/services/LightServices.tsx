@@ -17,17 +17,17 @@ export function LightServices() {
       aria-labelledby="services-title"
       className="scroll-mt-20 py-20 sm:py-24 lg:grid lg:grid-cols-12 lg:gap-x-12 lg:py-28"
     >
-      <div className="lg:col-span-7 lg:row-start-1">
+      <div className="lg:col-span-6 lg:row-start-1">
         <SectionHeader id="services-title" eyebrow={services.eyebrow} title={services.title} className="mx-0 text-left" />
       </div>
 
-      <div className="mt-10 lg:col-span-5 lg:col-start-8 lg:row-span-2 lg:row-start-1 lg:mt-0">
+      <div className="mt-10 lg:col-span-6 lg:col-start-7 lg:row-span-2 lg:row-start-1 lg:mt-0">
         <div className="lg:sticky lg:top-20 lg:h-[calc(100svh-6rem)]">
           <ServicesOrbit />
         </div>
       </div>
 
-      <div data-services-content className="mt-12 grid gap-12 lg:col-span-7 lg:row-start-2">
+      <div data-services-content className="mt-12 grid gap-12 lg:col-span-6 lg:row-start-2">
         {services.groups.map((group, gi) => (
           <div key={group.name}>
             <div data-reveal="3" className="flex items-center gap-3 border-b border-border pb-4">
