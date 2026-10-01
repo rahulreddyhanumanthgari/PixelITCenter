@@ -12,15 +12,15 @@ import { useReducedMotion } from "@/themes/core/hooks/device";
  * reflection, a small second shell at the upper left, and glossy droplets
  * drifting between them. Solid 3D, not particles.
  *
- * The shell: thin discs (fins) on a nautilus spiral, growing as it turns,
+ * The shell: thin, equal discs (fins) evenly spaced round a closed ring,
  * each with a slight turbine twist. Mouse: it tilts toward the pointer
  * anywhere on the page; hovering it fans the fins further open in a wave and
  * speeds its turn; leaving lets it settle. Reduced motion keeps it still
  * unless hovered.
  */
 
-const FINS = 34;
-const TURN = Math.PI * 2 * 0.97;
+const FINS = 36;
+const TURN = Math.PI * 2; // a full, closed ring: no start or end
 const THICKNESS = 0.022;
 
 interface Fin {
@@ -41,10 +41,10 @@ function buildFins() {
   const fins: Fin[] = [];
   let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
   for (let i = 0; i < FINS; i++) {
-    const t = i / (FINS - 1);
+    const t = i / FINS; // 0 … just under 1: evenly round the ring
     const angle = t * TURN;
-    const radius = 0.42 + 0.78 * Math.pow(t, 1.1);
-    const dist = 0.18 + radius * 0.92;
+    const radius = 0.78; // every fin the same size
+    const dist = 0.98; // so the ring keeps a small open centre
     fins.push({ angle, radius, dist, t });
     const x = Math.cos(angle) * dist;
     const y = Math.sin(angle) * dist;
@@ -143,9 +143,9 @@ function Stage({ pointer, reducedMotion }: { pointer: React.RefObject<THREE.Vect
 
   // Composition from the reference: the shell is centred, a little below the
   // middle, about two-fifths of the height across; it stands on the water.
-  const size = Math.min(H * 0.42, W * 0.78);
+  const size = Math.min(H * 0.48, W * 0.84);
   const cy = y(0.565);
-  const water = cy - size * 0.4; // the shell's visible base (its fins overhang less than its width)
+  const water = cy - size * 0.44; // the ring's visible base under its tilt
 
   // Let the page lay the water's veil exactly at the shell's waterline.
   useEffect(() => {

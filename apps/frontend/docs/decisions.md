@@ -699,15 +699,16 @@ day. The light-mode code paths in the shared particle engine (`uLight`,
     description as faint small copy; centred at 25% height. The CTAs are
     the small spaced white links bottom-left, the email bottom-right.
   - *3D layer* (`SculptureScene`, full-bleed canvas): the shell centred at
-    56.5% height, about 0.42 of the height across, standing on the water;
+    56.5% height, about 0.48 of the height across, standing on the water;
     its reflection is the same shell mirrored about its base (shared pose,
     32% opacity), and `.light-scene-water` (from `--water`, which the scene
     sets at the shell's base) softens and tints it like water. A small
     shell (0.27×) sits upper left with droplets near it, and a loose trail
     of droplets leads toward the big one; on portrait screens the small
     shell and its droplets are dropped.
-  - *Sculpture*: solid 3D, not particles. 34 thin discs (fins) stand on a
-    nautilus spiral of 0.97 of a turn, each growing (radius 0.42 → 1.2),
+  - *Sculpture*: solid 3D, not particles. 36 equal thin discs (fins, radius
+    0.78, centres 0.98 from the axis) evenly round a closed ring (no start or
+    end; an earlier growing nautilus read as one end swallowing the other),
     every disc's face holding the radial and depth axes, with a 0.55 rad
     turbine twist. Pale-blue glossy physical material lit for dawn: a warm
     low sun behind it, soft white from the front, cool blue from the left,
