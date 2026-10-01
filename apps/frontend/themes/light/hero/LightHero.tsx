@@ -3,19 +3,16 @@ import { hero } from "@/content/site";
 import { buttonVariants } from "@/themes/core/components/ui/button";
 import { RichText } from "@/themes/core/components/ui/rich-text";
 import { cn } from "@/lib/utils";
-import { HeroGlobe } from "./HeroGlobe";
-
 /**
- * Light hero, after the Light Theme pack: centred hero hierarchy (the
- * approved TECHNOLOGY & TALENT / BUILT FOR WHAT'S NEXT headline, copy, CTAs)
- * above one large sculptural object, the particle globe, in a pale-blue
- * atmosphere, with three restrained floating cards around it. The text is
- * still; only the globe moves.
+ * Light hero: centred hero hierarchy (the approved TECHNOLOGY & TALENT /
+ * BUILT FOR WHAT'S NEXT headline, copy, CTAs) in a pale-blue atmosphere,
+ * with three info cards. No particles: the central object is still to be
+ * decided.
  */
 export function LightHero() {
   return (
     <section id="top" data-hero aria-labelledby="hero-title" className="light-hero relative overflow-hidden">
-      <div className="mx-auto w-full max-w-7xl px-6 pt-28 lg:px-8 lg:pt-28">
+      <div className="mx-auto w-full max-w-7xl px-6 pb-24 pt-28 lg:px-8 lg:pb-32 lg:pt-36">
         <div data-hero-content className="mx-auto flex max-w-4xl flex-col items-center text-center">
           <h1 id="hero-title" className="hero-title light-hero-title">
             <span className="hero-kicker block">
@@ -53,17 +50,16 @@ export function LightHero() {
           </div>
         </div>
 
-        <div className="light-globe-frame">
-          <HeroGlobe />
-          <ul className="light-hero-cards">
-            {hero.cards.map((card, i) => (
-              <li key={card.label} className="light-hero-card" data-slot={i} data-accent={card.accent}>
-                <span className="light-hero-card-label">{card.label}</span>
-                <span className="light-hero-card-value">{card.value}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
+        {/* The hero's central object will go here (to be decided). Until
+            then the three info cards sit in a row under the CTAs. */}
+        <ul className="light-hero-cards">
+          {hero.cards.map((card) => (
+            <li key={card.label} className="light-hero-card" data-accent={card.accent}>
+              <span className="light-hero-card-label">{card.label}</span>
+              <span className="light-hero-card-value">{card.value}</span>
+            </li>
+          ))}
+        </ul>
       </div>
     </section>
   );

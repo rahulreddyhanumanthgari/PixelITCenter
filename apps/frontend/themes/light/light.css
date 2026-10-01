@@ -1,9 +1,8 @@
 /* ---------------------------------------------------------------------------
-   Light design: the same Pixel IT particle universe, in daylight (Light
-   Theme Live Team Recreation Pack). These are its colours; the particles
-   switch to ink dots without glow over LightSky (themes/light/LightSky.tsx)
-   when <html data-theme="light">. Everything else is shared in themes/core.
-   Loaded only by app/(light).
+   Light design: the Pixel IT site in daylight (Light Theme Live Team
+   Recreation Pack palette). These are its colours. It has no particles for
+   now: app/(light) renders Home with particles={false}. Everything else is
+   shared in themes/core. Loaded only by app/(light).
    ------------------------------------------------------------------------ */
 
 :root {
@@ -47,8 +46,7 @@
   --accent-blue: #1677ff;
 
   /* Cards (Light Theme pack §7): editorial panels, minimal border, nearly
-     no outline, no glassmorphism. Solid enough that the particles behind
-     never run through the text. */
+     no outline, no glassmorphism. */
   --card-bg: rgb(255 255 255 / 0.88);
   --card-bg-hover: #ffffff;
   --card-edge: rgb(11 27 51 / 0.07);
@@ -68,24 +66,15 @@
 }
 
 /* ---------------------------------------------------------------------------
-   Light hero (themes/light/hero): centred headline above one large particle
-   globe in a pale-blue atmosphere, with three restrained floating cards.
+   Light hero (themes/light/hero): centred headline, copy and CTAs in a
+   pale-blue atmosphere, with three info cards in a row. No particles; the
+   central object is still to be decided.
    ------------------------------------------------------------------------ */
 .light-hero {
   background:
-    radial-gradient(60% 55% at 50% 78%, rgb(22 119 255 / 0.09), transparent 70%),
+    radial-gradient(60% 55% at 50% 78%, rgb(22 119 255 / 0.07), transparent 70%),
     linear-gradient(180deg, #ffffff 0%, #f3f8fe 100%);
 }
-/* Blend the cropped globe into the next section. */
-.light-hero::after {
-  content: "";
-  position: absolute;
-  inset: auto 0 0 0;
-  height: 7rem;
-  background: linear-gradient(transparent, var(--background));
-  pointer-events: none;
-}
-/* Same type system; a little smaller so the object has room. */
 .light-hero-title .hero-kicker,
 .light-hero-title .hero-statement {
   font-size: clamp(2.5rem, 1rem + 6.4vw, 4.75rem);
@@ -97,60 +86,15 @@
   }
 }
 
-/* The globe's frame: square stage, bottom cropped by the section. */
-.light-globe-frame {
-  position: relative;
-  width: min(780px, 100%);
-  aspect-ratio: 1 / 0.8;
-  margin: -1.5rem auto 0;
-}
-@media (max-width: 639px) {
-  .light-globe-frame {
-    width: 128vw;
-    margin-left: calc(50% - 64vw);
-  }
-}
-.light-globe-stage {
-  position: absolute;
-  inset: 0 0 auto 0;
-  aspect-ratio: 1;
-}
-.light-globe-glow {
-  position: absolute;
-  inset: 8%;
-  border-radius: 9999px;
-  background: radial-gradient(closest-side, rgb(22 119 255 / 0.16), rgb(22 119 255 / 0.05) 70%, transparent);
-  filter: blur(24px);
-}
-.light-globe-shadow {
-  position: absolute;
-  left: 28%;
-  right: 16%;
-  top: 30%;
-  bottom: 6%;
-  border-radius: 9999px;
-  background: rgb(11 27 51 / 0.1);
-  filter: blur(48px);
-  transform: translate(6%, 8%);
-}
-.light-globe-fallback {
-  position: absolute;
-  inset: 17%;
-  border-radius: 9999px;
-  background: radial-gradient(circle at 35% 30%, #ffffff, #e3ebf6 70%, #cfdff7);
-}
-
-/* Floating cards: sparse, still, white, a thin accent line. */
+/* Info cards: still, white, a thin accent line. A row, stacked on phones. */
 .light-hero-cards {
-  display: none;
-}
-@media (min-width: 768px) {
-  .light-hero-cards {
-    display: block;
-  }
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 4rem;
 }
 .light-hero-card {
-  position: absolute;
   display: flex;
   min-width: 12.5rem;
   flex-direction: column;
@@ -158,9 +102,8 @@
   padding: 0.95rem 1.15rem 1rem;
   border: 1px solid rgb(11 27 51 / 0.06);
   border-radius: 0.875rem;
-  background: rgb(255 255 255 / 0.92);
+  background: #ffffff;
   box-shadow: 0 22px 44px -24px rgb(11 27 51 / 0.28);
-  backdrop-filter: blur(6px);
 }
 .light-hero-card::before {
   content: "";
@@ -172,18 +115,6 @@
 }
 .light-hero-card[data-accent="orange"]::before {
   background: var(--accent-orange);
-}
-.light-hero-card[data-slot="0"] {
-  left: -4%;
-  top: 26%;
-}
-.light-hero-card[data-slot="1"] {
-  right: -6%;
-  top: 44%;
-}
-.light-hero-card[data-slot="2"] {
-  left: 4%;
-  top: 66%;
 }
 .light-hero-card-label {
   font-size: 0.75rem;
@@ -197,16 +128,13 @@
   color: var(--text-primary);
 }
 
-/* Contact: one calm large particle object behind the centred text. */
-.light-contact-orb {
-  width: min(760px, 120vw);
-  aspect-ratio: 1;
-  flex-shrink: 0;
-}
-
-/* Footer: the oversized, subtle wordmark is cropped by the viewport. */
+/* Footer: the oversized, subtle wordmark is cropped by the viewport. No
+   drifting particle dust in the light design. */
 .footer-wordmark {
   font-size: 19vw;
   margin-left: -2vw;
   margin-right: -2vw;
+}
+.footer-dust {
+  display: none;
 }

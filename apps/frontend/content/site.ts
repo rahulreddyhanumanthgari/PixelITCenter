@@ -44,7 +44,7 @@ export const hero = {
   primaryCta: { label: "Talk to our team", href: "#contact" },
   secondaryCta: { label: "Explore services", href: "#services" },
   /**
-   * Light design only: the 2–3 small floating cards around the hero globe
+   * Light design only: the three small info cards in the light hero
    * (Light Theme pack, hero reference). Facts from this file; the client
    * count is the logo strip below and needs business approval like the rest.
    */

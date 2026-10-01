@@ -55,7 +55,6 @@ attribute vec3 aStageCenter;    // solar system: the role's coordinates
 
 varying vec3 vColor;
 varying float vAlpha;
-varying float vBubble;          // light theme, About: 1 = drawn as a soft bubble (see below)
 
 // Timing of one transition, in uProgress units. Departures all finish before
 // arrivals start, leaving a short moment where everything is a floating field.
@@ -777,13 +776,7 @@ void main() {
              * mix(1.0, galaxySize, galaxyW);
   // Light theme: dots without glow need a little more size to read.
   size *= mix(1.0, 1.3, uLight);
-  // Light theme, About (Light Theme pack, page 5): about one in nine of the
-  // galaxy's particles become large, soft bubbles of varied size, so the
-  // galaxy reads as a cluster of digital matter gathering and separating.
-  // Follows galaxyW, so bubbles grow out of the morph and shrink back.
-  vBubble = uLight * galaxyW * step(0.89, fract(aRandom * 7.31));
-  float bubbleK = 1.0 + vBubble * (2.0 + 7.0 * pow(fract(aRandom * 3.7), 2.0));
-  gl_PointSize = clamp(size * bubbleK * uPixelRatio / depth, 1.0, mix(28.0, 90.0, vBubble) * uPixelRatio);
+  gl_PointSize = clamp(size * uPixelRatio / depth, 1.0, 28.0 * uPixelRatio);
 
   // Near particles brighter, far ones dimmer; a soft twinkle on top. Spread
   // out, the field has far fewer overlapping points than a form, so it gets a

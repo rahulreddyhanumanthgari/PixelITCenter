@@ -14,20 +14,20 @@ import { Testimonials } from "@/themes/core/components/sections/Testimonials";
 import { ContactCta } from "@/themes/core/components/sections/ContactCta";
 
 // Homepage flow from the modernization plan (section 04). Both designs render
-// it; a design can swap in its own hero (the light design's globe hero).
+// it; a design can swap in its own hero, and turn the particle journey off
+// (the light design has no particles for now).
 export default function HomePage({
   hero = <Hero />,
-  contactBackdrop,
+  particles = true,
 }: {
   hero?: React.ReactNode;
-  /** Optional object drawn behind the Contact section (the light design's calm orb). */
-  contactBackdrop?: React.ReactNode;
+  particles?: boolean;
 }) {
   return (
     <>
       <Header />
       {/* One particle system for the whole journey, fixed behind the page. */}
-      <JourneyLayer />
+      {particles && <JourneyLayer />}
       {/* Content sits above the particle layer (z-10). The hero, client strip
           and story are transparent so the particles show through, and so is
           the galaxy area after it (About → Contact). */}
@@ -53,17 +53,10 @@ export default function HomePage({
           <About />
           <Careers />
           <Testimonials />
-          {contactBackdrop ? (
-            <div className="relative">
-              {contactBackdrop}
-              <ContactCta />
-            </div>
-          ) : (
-            <ContactCta />
-          )}
+          <ContactCta />
           {/* The ending: space where the galaxy collapses into a small sun
               that settles on the footer's top edge, half hidden by it. */}
-          <div data-galaxy-outro aria-hidden="true" className="h-[20svh]" />
+          {particles && <div data-galaxy-outro aria-hidden="true" className="h-[20svh]" />}
         </div>
       </main>
       {/* Opaque, so the galaxy never shows through the footer. */}

@@ -673,43 +673,29 @@ rejected; this is their replacement.
 
 ## Light theme (bright, premium)
 
-The same scroll-driven particle world, translated to a light atmosphere.
-Every scrubbed transition, pinned section and rotation is shared with the
-dark theme; only colour and blending change. (Two earlier versions, an
-ink-on-white and a blue sky, were replaced.)
+**No particles for now (decided 2026-10-01).** The owner had all particle
+objects removed from the light design; its objects will be decided one by
+one and built afresh. `app/(light)` renders `Home` with `particles={false}`,
+so the journey layer (every particle form, the star field and `LightSky`)
+never mounts, and the galaxy's empty ending space is dropped. A particle
+globe hero, About bubbles and a Contact orb were built and removed the same
+day. The light-mode code paths in the shared particle engine (`uLight`,
+`LightSky`) are dormant until particles return.
 
 - **How it is shown.** It is the light design of the Design switch (see
   "Two candidate designs"): `app/(light)` sets `data-theme="light"` and loads
   `themes/light/light.css`.
-- **Hero** (`themes/light/hero/`, passed to `Home` as its `hero`). After the
-  pack's hero references: the approved headline, copy and CTAs centred above
-  one large sculptural object, the particle globe, in a white → `#F3F8FE`
-  atmosphere with a soft blue glow, and three still floating cards
-  (`hero.cards` in `content/site.ts`; md and up).
-  - *Globe* (`GlobeScene`): the core earth form's particles (continents,
-    coastlines, haze, dotted orbital shell) in navy / blue / electric blue
-    with ~7% orange, no glow, over a soft white lit sphere so it reads as a
-    solid object. The Earth turns clockwise, the shell the other way;
-    scrolling the hero adds a slow extra turn and a slight lift. It renders
-    only while on screen; reduced motion stops the turning.
-  - *Hand-off*: the journey layer (whose first form is the dark design's
-    black hole) is hidden during the hero and fades in as Services arrives,
-    so its particles are seen gathering into the Services ring.
-- **Services, Staffing, Why, How We Work.** The pack's targets for these are
-  the shared forms (ring stream + numbered editorial panels, particle Earth,
-  halo with the content in its opening, four-planet solar system), so they
-  are unchanged. Light cards are near-solid white (`--card-bg` 0.88) with an
-  almost invisible edge, so particles never run through the text.
-- **About** (pack page 5: particles gathering and separating). In light only,
-  about one in nine of the galaxy's particles is drawn as a large, soft,
-  translucent bubble of varied size (`vBubble` in `particle.vert.glsl` /
-  `particle.frag.glsl`, gated by `uLight` and the galaxy weight, so bubbles
-  grow out of the morph and shrink back). The stars' shader sets it to 0.
-- **Contact** ("one calm large particle object"): `ContactOrb`, passed to
-  `Home` as `contactBackdrop`: the hero globe's dotted orbital shell alone,
-  large, turning slowly behind the centred text (renders only on screen).
+- **Hero** (`themes/light/hero/LightHero.tsx`, passed to `Home` as its
+  `hero`): the approved headline, copy and CTAs centred on a white →
+  `#F3F8FE` atmosphere, with three still info cards in a row
+  (`hero.cards` in `content/site.ts`). The central object is to be decided.
+- **Cards.** Near-solid white (`--card-bg` 0.88) with an almost invisible
+  edge (Light Theme pack §7).
 - **Footer.** The wordmark is sized past the viewport (19vw) so it is
-  cropped at both edges, on `#F8FAFC`.
+  cropped at both edges, on `#F8FAFC`; no drifting dust.
+
+The notes below describe how the particles were drawn in light mode, for
+when they return.
 - **Palette.**
 
   | Role | Colour |
