@@ -62,13 +62,17 @@ const spineLeft: Form = {
   radius: (W, H, wide) => (wide ? Math.min(0.07 * H, 0.055 * W) : 0.08 * W),
 };
 
-/** How we work: a column on the right with a wider, slower twist. */
-const columnTwist: Form = {
+/**
+ * How we work: the tube runs down the middle, set back in depth, weaving
+ * gently behind the heading and all four steps (the steps sit in front of
+ * it), then carries on down into About.
+ */
+const behindProcess: Form = {
   at(u, W, H, wide) {
-    const x0 = wide ? 0.41 * W : 0.5 * W;
-    return [x0 + 0.04 * W * Math.cos(TAU * 0.6 * u), (0.72 - 1.44 * u) * H, 1.3 * Math.sin(TAU * 0.6 * u)];
+    const sway = (wide ? 0.16 : 0.22) * W;
+    return [sway * Math.sin(TAU * 0.85 * u + 0.6), (0.75 - 1.5 * u) * H, -2.4 + 0.8 * Math.sin(TAU * 0.6 * u)];
   },
-  radius: (W, H, wide) => (wide ? Math.min(0.075 * H, 0.06 * W) : 0.085 * W),
+  radius: (W, H, wide) => (wide ? Math.min(0.085 * H, 0.065 * W) : 0.1 * W),
 };
 
 /** About: a wide spiral sweeping in from beyond the screen, framing the text. */
@@ -97,7 +101,7 @@ const eye: Form = {
  * In page order. Anchors (see RibbonScene) pick the section each form
  * belongs to: hero, Services, Staffing, Why, How we work, About, Contact.
  */
-export const FORMS: Form[] = [arch, columnRight, orbit, spineLeft, columnTwist, spiral, eye];
+export const FORMS: Form[] = [arch, columnRight, orbit, spineLeft, behindProcess, spiral, eye];
 
 /** Index of the Contact eye (its glass sphere shows with it). */
 export const EYE = FORMS.length - 1;
