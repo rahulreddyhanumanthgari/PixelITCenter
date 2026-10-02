@@ -90,15 +90,25 @@ const aboutColumn: Form = {
   radius: (W, H, wide) => (wide ? Math.min(0.13 * H, 0.09 * W) : 0.1 * W),
 };
 
-/**
- * Careers and What clients say: the tube rests as a column at the far right
- * edge, half off-screen, so it never crosses that content; it winds into the
- * Contact eye only as Contact arrives.
- */
-const parkedRight: Form = {
+/** Careers: a curving column on the left, clear of the centred Careers text. */
+const careersLeft: Form = {
   at(u, W, H, wide) {
-    const x0 = wide ? 0.53 * W : 0.56 * W;
-    return [x0 + 0.02 * W * Math.sin(TAU * 0.8 * u), (0.75 - 1.5 * u) * H, -0.4 + 0.6 * Math.sin(Math.PI * u)];
+    const x0 = wide ? -0.36 * W : -0.5 * W;
+    return [x0 - 0.06 * W * Math.sin(Math.PI * u), (-0.78 + 1.56 * u) * H, 1.2 * Math.sin(Math.PI * u) - 0.4];
+  },
+  radius: (W, H, wide) => (wide ? Math.min(0.11 * H, 0.08 * W) : 0.09 * W),
+};
+
+/**
+ * What clients say: a large horizontal wave flowing behind the row of client
+ * cards. The cards are solid, so every quote stays readable, while the tube
+ * shows above, below and between them and out to both sides; it stays below
+ * the heading.
+ */
+const behindQuotes: Form = {
+  at(u, W, H, wide) {
+    const sway = (wide ? 0.05 : 0.04) * H;
+    return [(-0.75 + 1.5 * u) * W, -0.15 * H + sway * Math.sin(TAU * 1.1 * u + 0.8), -1.2 + 0.9 * Math.sin(TAU * 0.5 * u)];
   },
   radius: (W, H, wide) => (wide ? Math.min(0.1 * H, 0.075 * W) : 0.09 * W),
 };
@@ -118,7 +128,7 @@ const eye: Form = {
  * belongs to: hero, Services, Staffing, Why, How we work, About, Careers,
  * What clients say, Contact.
  */
-export const FORMS: Form[] = [arch, columnRight, orbit, spineLeft, behindProcess, aboutColumn, parkedRight, parkedRight, eye];
+export const FORMS: Form[] = [arch, columnRight, orbit, spineLeft, behindProcess, aboutColumn, careersLeft, behindQuotes, eye];
 
 /** Index of the Contact eye (its glass sphere shows with it). */
 export const EYE = FORMS.length - 1;

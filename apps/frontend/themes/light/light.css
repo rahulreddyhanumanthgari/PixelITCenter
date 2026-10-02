@@ -101,6 +101,26 @@
   pointer-events: none;
 }
 
+/* What clients say: the object waves behind the cards; a soft veil behind
+   the heading keeps it clear even mid-transition. */
+#testimonials-title {
+  position: relative;
+}
+#testimonials-title::before {
+  content: "";
+  position: absolute;
+  inset: -1.5rem 0;
+  z-index: -1;
+  background: radial-gradient(closest-side, rgb(248 250 252 / 0.95) 50%, rgb(248 250 252 / 0.6) 75%, transparent);
+  pointer-events: none;
+}
+
+@media (min-width: 640px) {
+  #testimonials-title::before {
+    inset: -1.5rem -3rem;
+  }
+}
+
 /* How we work: the object runs behind the pinned heading and steps; a soft
    veil of the page colour behind them keeps the text readable. */
 [data-process-content]::before {

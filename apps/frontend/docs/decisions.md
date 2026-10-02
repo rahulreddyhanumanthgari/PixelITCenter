@@ -699,8 +699,10 @@ orbit, white relief globe, off-white #F4EFEC page) were removed for it.
   behind the heading and all four steps (a soft veil behind the pinned step
   content keeps the text readable), then flows on into About. About: a tall column on the right that bows and twists through
   depth (the reference's agency scene), the statement left-aligned on the
-  left (`themes/light/about/LightAbout.tsx`). Careers and What clients say: the tube rests as a column at the far
-  right edge, half off-screen, so it never crosses that content. Contact: a
+  left (`themes/light/about/LightAbout.tsx`). Careers: a curving column on the left, clear of the centred text.
+  What clients say: a large horizontal wave behind the row of client cards
+  (solid white, so every quote stays readable), below the heading, which
+  has a soft veil. Contact: a
   deep spiral "eye" with a small glass sphere in it, formed only as Contact
   arrives.
   Portrait screens move shapes to the edges; large shapes crop naturally.
