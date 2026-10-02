@@ -6,7 +6,7 @@ import { Environment, Lightformer } from "@react-three/drei";
 import * as THREE from "three";
 import { RoundedBoxGeometry } from "three/examples/jsm/geometries/RoundedBoxGeometry.js";
 import { useReducedMotion } from "@/themes/core/hooks/device";
-import { EYE, FORMS, type Vec3 } from "./forms";
+import { EYE, EYE_CORE, FORMS, type Vec3 } from "./forms";
 
 /**
  * The light design's one object, drawn once for the whole page: a blue
@@ -111,7 +111,8 @@ function Tube({ count, reducedMotion }: { count: number; reducedMotion: boolean 
           len += Math.hypot(p[0] - prev[0], p[1] - prev[1], p[2] - prev[2]);
           prev = p;
         }
-        return Math.min(Math.max((len / count) * 0.5, 0.003 * H), 0.05 * H);
+        // Even, slim slats everywhere: about half the gap, within a narrow band.
+        return Math.min(Math.max((len / count) * 0.5, 0.004 * H), 0.008 * H);
       }),
     [W, H, wide, count],
   );
@@ -218,7 +219,7 @@ function Tube({ count, reducedMotion }: { count: number; reducedMotion: boolean 
     const eyeW = a === EYE ? 1 : b === EYE ? e : 0;
     if (sphere.current) {
       sphere.current.visible = eyeW > 0.01;
-      sphere.current.scale.setScalar(Math.max(0.001, eyeW) * 0.06 * H);
+      sphere.current.scale.setScalar(Math.max(0.001, eyeW) * 0.1 * H);
     }
 
     // Camera-like lean toward the pointer.
@@ -232,7 +233,7 @@ function Tube({ count, reducedMotion }: { count: number; reducedMotion: boolean 
   return (
     <group ref={group}>
       <instancedMesh ref={mesh} args={[geometry, material, count]} frustumCulled={false} />
-      <mesh ref={sphere} position={[0, 0.02 * H, -6]} visible={false}>
+      <mesh ref={sphere} position={[0, EYE_CORE.y * H, EYE_CORE.z]} visible={false}>
         <sphereGeometry args={[1, 48, 48]} />
         <meshPhysicalMaterial color="#dbeafe" roughness={0.05} clearcoat={1} envMapIntensity={1.6} />
       </mesh>

@@ -700,11 +700,16 @@ orbit, white relief globe, off-white #F4EFEC page) were removed for it.
   content keeps the text readable), then flows on into About. About: a tall column on the right that bows and twists through
   depth (the reference's agency scene), the statement left-aligned on the
   left (`themes/light/about/LightAbout.tsx`). Careers: a curving column on the left, clear of the centred text.
-  What clients say: a large horizontal wave behind the row of client cards
-  (solid white, so every quote stays readable), below the heading, which
-  has a soft veil. Contact: a
-  deep spiral "eye" with a small glass sphere in it, formed only as Contact
-  arrives.
+  What clients say: an infinity loop lying behind the row of client cards
+  (lobes behind the outer cards, crossing behind the middle one, strands at
+  different depths), below the heading; deliberately unlike How We Work's
+  horizontal wave. Contact: a
+  vortex: 2.3 turns tightening and receding into the glass core sphere at
+  its centre (`EYE_CORE`), every turn meeting the core; formed only as
+  Contact arrives. Slat size is consistent across sections (about 0.085 H
+  after How We Work) and slat thickness is held to 0.004–0.008 H everywhere,
+  so no section looks heavier. The footer wordmark uses the shared rule that
+  fits the full PIXEL IT CENTER on screen.
   Portrait screens move shapes to the edges; large shapes crop naturally.
 - **Scroll** (`readStage`): the stage runs 0…6 across the section anchors.
   A form holds while its section fills the screen; across each section edge

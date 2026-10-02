@@ -97,8 +97,17 @@
   position: absolute;
   inset: 0 8%;
   z-index: -1;
-  background: radial-gradient(closest-side, rgb(248 250 252 / 0.95) 45%, rgb(248 250 252 / 0.7) 70%, transparent);
+  /* Light enough that the vortex can be seen converging into its core. */
+  background: radial-gradient(closest-side, rgb(248 250 252 / 0.72) 40%, rgb(248 250 252 / 0.45) 65%, transparent 85%);
   pointer-events: none;
+}
+
+@media (max-width: 639px) {
+  /* Phones: the vortex sits right behind the text, so the veil is firmer. */
+  #contact::before {
+    inset: 0;
+    background: radial-gradient(closest-side, rgb(248 250 252 / 0.9) 55%, rgb(248 250 252 / 0.6) 80%, transparent);
+  }
 }
 
 /* What clients say: the object waves behind the cards; a soft veil behind
@@ -135,14 +144,6 @@
   [data-process-content]::before {
     inset: -2.5rem -4rem;
   }
-}
-
-/* Footer: oversized Pixel IT Center wordmark, cropped by the viewport, with
-   the shared subtle blue dust. */
-.footer-wordmark {
-  font-size: 19vw;
-  margin-left: -2vw;
-  margin-right: -2vw;
 }
 
 /* Typography: the site's simple bold sans (Space Grotesk) throughout; the

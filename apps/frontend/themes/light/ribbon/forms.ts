@@ -87,7 +87,7 @@ const aboutColumn: Form = {
     const y = (0.78 - 1.56 * u) * H;
     return [x0 + 0.09 * W * Math.sin(Math.PI * u) - 0.04 * W * Math.sin(TAU * u), y, 1.6 * Math.sin(Math.PI * u) - 0.6];
   },
-  radius: (W, H, wide) => (wide ? Math.min(0.13 * H, 0.09 * W) : 0.1 * W),
+  radius: (W, H, wide) => (wide ? Math.min(0.088 * H, 0.068 * W) : 0.085 * W),
 };
 
 /** Careers: a curving column on the left, clear of the centred Careers text. */
@@ -96,31 +96,40 @@ const careersLeft: Form = {
     const x0 = wide ? -0.36 * W : -0.5 * W;
     return [x0 - 0.06 * W * Math.sin(Math.PI * u), (-0.78 + 1.56 * u) * H, 1.2 * Math.sin(Math.PI * u) - 0.4];
   },
-  radius: (W, H, wide) => (wide ? Math.min(0.11 * H, 0.08 * W) : 0.09 * W),
+  radius: (W, H, wide) => (wide ? Math.min(0.085 * H, 0.065 * W) : 0.085 * W),
 };
 
 /**
- * What clients say: a large horizontal wave flowing behind the row of client
- * cards. The cards are solid, so every quote stays readable, while the tube
- * shows above, below and between them and out to both sides; it stays below
- * the heading.
+ * What clients say: an infinity loop (long-term partnership) lying behind the row of client cards
+ * (its lobes behind the outer cards, its crossing behind the middle one).
+ * The cards are solid, so every quote stays readable; the loop shows round
+ * them, below the heading. The two strands cross at different depths.
  */
-const behindQuotes: Form = {
+const infinityLoop: Form = {
   at(u, W, H, wide) {
-    const sway = (wide ? 0.05 : 0.04) * H;
-    return [(-0.75 + 1.5 * u) * W, -0.15 * H + sway * Math.sin(TAU * 1.1 * u + 0.8), -1.2 + 0.9 * Math.sin(TAU * 0.5 * u)];
+    const t = Math.PI / 2 + TAU * u; // the ends meet at the crossing, hidden behind the middle card
+    const d = 1 + Math.sin(t) * Math.sin(t);
+    const a = wide ? 0.62 * W : 0.7 * W;
+    const x = (a * Math.cos(t)) / d;
+    const y = ((a * Math.sin(t) * Math.cos(t)) / d) * (wide ? 0.36 : 0.6);
+    return [x, -0.2 * H + y, -1.2 + 1.0 * Math.sin(t)];
   },
-  radius: (W, H, wide) => (wide ? Math.min(0.1 * H, 0.075 * W) : 0.09 * W),
+  radius: (W, H, wide) => (wide ? Math.min(0.075 * H, 0.06 * W) : 0.075 * W),
 };
 
-/** Contact: a deep spiral "eye", winding from beyond the screen into a tunnel. */
+/**
+ * Contact: a vortex. The tube winds in from beyond the screen, tightening and
+ * receding, and every turn ends in the centre, where it merges into the glass
+ * core (RibbonScene's sphere, at the same point).
+ */
+export const EYE_CORE = { y: 0.02, z: -6 };
 const eye: Form = {
   at(u, W, H) {
-    const a = 0.3 + 2.5 * TAU * u;
-    const r = Math.max(W, H) * (0.8 - 0.38 * Math.pow(u, 0.8)); // the eye stays open round the text
-    return [r * Math.cos(a), r * 0.85 * Math.sin(a) + 0.02 * H, -9 * u];
+    const a = 0.3 + 2.3 * TAU * u;
+    const r = Math.max(W, H) * 0.6 * Math.pow(1 - u, 1.1);
+    return [r * Math.cos(a), r * 0.85 * Math.sin(a) + EYE_CORE.y * H, EYE_CORE.z * Math.pow(u, 0.7)];
   },
-  radius: (W, H) => Math.min(0.1 * H, 0.08 * W),
+  radius: (W, H) => Math.min(0.085 * H, 0.068 * W),
 };
 
 /**
@@ -128,7 +137,7 @@ const eye: Form = {
  * belongs to: hero, Services, Staffing, Why, How we work, About, Careers,
  * What clients say, Contact.
  */
-export const FORMS: Form[] = [arch, columnRight, orbit, spineLeft, behindProcess, aboutColumn, careersLeft, behindQuotes, eye];
+export const FORMS: Form[] = [arch, columnRight, orbit, spineLeft, behindProcess, aboutColumn, careersLeft, infinityLoop, eye];
 
 /** Index of the Contact eye (its glass sphere shows with it). */
 export const EYE = FORMS.length - 1;
