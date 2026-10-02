@@ -700,10 +700,8 @@ orbit, white relief globe, off-white #F4EFEC page) were removed for it.
   content keeps the text readable), then flows on into About. About: a tall column on the right that bows and twists through
   depth (the reference's agency scene), the statement left-aligned on the
   left (`themes/light/about/LightAbout.tsx`). Careers: a curving column on the left, clear of the centred text.
-  What clients say: an infinity loop lying behind the row of client cards
-  (lobes behind the outer cards, crossing behind the middle one, strands at
-  different depths), below the heading; deliberately unlike How We Work's
-  horizontal wave. Contact: a
+  What clients say: one slim, gentle curve dipping just under the client
+  cards and rising at both sides (the owner found an infinity loop too busy). Contact: a
   vortex: 2.3 turns tightening and receding into the glass core sphere at
   its centre (`EYE_CORE`), every turn meeting the core; formed only as
   Contact arrives. Slat size is consistent across sections (about 0.085 H

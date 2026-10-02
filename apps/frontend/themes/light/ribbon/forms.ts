@@ -100,21 +100,15 @@ const careersLeft: Form = {
 };
 
 /**
- * What clients say: an infinity loop (long-term partnership) lying behind the row of client cards
- * (its lobes behind the outer cards, its crossing behind the middle one).
- * The cards are solid, so every quote stays readable; the loop shows round
- * them, below the heading. The two strands cross at different depths.
+ * What clients say: one slim, gentle curve that dips just under the row of
+ * client cards and rises at both sides. Simple and calm, below the heading.
  */
-const infinityLoop: Form = {
-  at(u, W, H, wide) {
-    const t = Math.PI / 2 + TAU * u; // the ends meet at the crossing, hidden behind the middle card
-    const d = 1 + Math.sin(t) * Math.sin(t);
-    const a = wide ? 0.62 * W : 0.7 * W;
-    const x = (a * Math.cos(t)) / d;
-    const y = ((a * Math.sin(t) * Math.cos(t)) / d) * (wide ? 0.36 : 0.6);
-    return [x, -0.2 * H + y, -1.2 + 1.0 * Math.sin(t)];
+const underQuotes: Form = {
+  at(u, W, H) {
+    const k = 2 * u - 1;
+    return [(-0.75 + 1.5 * u) * W, -0.34 * H + 0.3 * H * k * k, -0.8];
   },
-  radius: (W, H, wide) => (wide ? Math.min(0.075 * H, 0.06 * W) : 0.075 * W),
+  radius: (W, H, wide) => (wide ? Math.min(0.055 * H, 0.045 * W) : 0.06 * W),
 };
 
 /**
@@ -137,7 +131,7 @@ const eye: Form = {
  * belongs to: hero, Services, Staffing, Why, How we work, About, Careers,
  * What clients say, Contact.
  */
-export const FORMS: Form[] = [arch, columnRight, orbit, spineLeft, behindProcess, aboutColumn, careersLeft, infinityLoop, eye];
+export const FORMS: Form[] = [arch, columnRight, orbit, spineLeft, behindProcess, aboutColumn, careersLeft, underQuotes, eye];
 
 /** Index of the Contact eye (its glass sphere shows with it). */
 export const EYE = FORMS.length - 1;
