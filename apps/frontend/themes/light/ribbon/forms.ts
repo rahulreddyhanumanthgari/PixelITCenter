@@ -90,6 +90,19 @@ const aboutColumn: Form = {
   radius: (W, H, wide) => (wide ? Math.min(0.13 * H, 0.09 * W) : 0.1 * W),
 };
 
+/**
+ * Careers and What clients say: the tube rests as a column at the far right
+ * edge, half off-screen, so it never crosses that content; it winds into the
+ * Contact eye only as Contact arrives.
+ */
+const parkedRight: Form = {
+  at(u, W, H, wide) {
+    const x0 = wide ? 0.53 * W : 0.56 * W;
+    return [x0 + 0.02 * W * Math.sin(TAU * 0.8 * u), (0.75 - 1.5 * u) * H, -0.4 + 0.6 * Math.sin(Math.PI * u)];
+  },
+  radius: (W, H, wide) => (wide ? Math.min(0.1 * H, 0.075 * W) : 0.09 * W),
+};
+
 /** Contact: a deep spiral "eye", winding from beyond the screen into a tunnel. */
 const eye: Form = {
   at(u, W, H) {
@@ -102,9 +115,10 @@ const eye: Form = {
 
 /**
  * In page order. Anchors (see RibbonScene) pick the section each form
- * belongs to: hero, Services, Staffing, Why, How we work, About, Contact.
+ * belongs to: hero, Services, Staffing, Why, How we work, About, Careers,
+ * What clients say, Contact.
  */
-export const FORMS: Form[] = [arch, columnRight, orbit, spineLeft, behindProcess, aboutColumn, eye];
+export const FORMS: Form[] = [arch, columnRight, orbit, spineLeft, behindProcess, aboutColumn, parkedRight, parkedRight, eye];
 
 /** Index of the Contact eye (its glass sphere shows with it). */
 export const EYE = FORMS.length - 1;

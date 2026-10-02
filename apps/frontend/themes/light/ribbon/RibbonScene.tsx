@@ -26,6 +26,8 @@ const ANCHORS = [
   'section[aria-labelledby="why-title"]',
   'section[aria-labelledby="process-title"]',
   "#about",
+  "#careers",
+  'section[aria-labelledby="testimonials-title"]',
   "#contact",
 ];
 
