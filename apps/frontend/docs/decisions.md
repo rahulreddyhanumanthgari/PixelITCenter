@@ -711,9 +711,10 @@ orbit, white relief globe, off-white #F4EFEC page) were removed for it.
   with the pointer.
   Fin thickness follows each form's length so spacing stays even. Reduced
   motion stops the slide, the spin and the lean; the morph still follows scroll.
-- **Hero** (`LightHero`): the approved headline and CTAs centred at the top,
-  the arch below, the description bottom right and a scroll cue bottom left
-  (phones: the description follows the CTAs).
+- **Hero** (`LightHero`): the approved headline, the description under it
+  and the CTAs, centred at the top; the arch below, low enough to clear them
+  (centre −0.86 H on wide screens, −0.66 H on phones); a scroll cue bottom
+  left.
 - **Readability**: the cards are near-solid white; Contact (inside the eye)
   has a soft page-colour veil behind its text (`#contact::before`).
 - **Typography & colour (light only)**: the site's simple bold sans

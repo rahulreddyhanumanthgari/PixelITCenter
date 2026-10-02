@@ -26,7 +26,9 @@ const arch: Form = {
     const a = Math.PI + 0.42 - u * (Math.PI + 0.84);
     const rx = wide ? 0.6 * W : 0.8 * W;
     const ry = wide ? 0.6 * H : 0.42 * H;
-    return [rx * Math.cos(a), -0.74 * H + ry * Math.sin(a), 0.6 * Math.sin(Math.PI * u)];
+    // Low enough to clear the headline, description and buttons.
+    const cy = wide ? -0.86 * H : -0.66 * H;
+    return [rx * Math.cos(a), cy + ry * Math.sin(a), 0.6 * Math.sin(Math.PI * u)];
   },
   radius: (W, H, wide) => (wide ? Math.min(0.11 * H, 0.08 * W) : 0.1 * W),
 };

@@ -76,24 +76,15 @@
     radial-gradient(80% 70% at 50% 30%, #ffffff 0%, #f8fafc 55%, #eef4fd 100%);
 }
 
-.light-hero-copy strong {
-  color: #2563eb;
-}
-@media (min-width: 640px) {
-  /* Bottom right it sits over the arch's foot: a soft white card keeps it readable. */
-  .light-hero-copy {
-    padding: 1rem 1.25rem;
-    border-radius: 6px;
-    background: rgb(255 255 255 / 0.82);
-    backdrop-filter: blur(8px);
-    box-shadow: 0 18px 36px -26px rgb(11 27 51 / 0.25);
-  }
-}
 .light-hero-copy {
-  max-width: 24rem;
-  font-size: 0.9375rem;
+  max-width: 40rem;
+  font-size: clamp(1rem, 0.95rem + 0.25vw, 1.125rem);
   line-height: 1.6;
   color: var(--text-secondary);
+  text-wrap: balance;
+}
+.light-hero-copy strong {
+  color: #2563eb;
 }
 
 /* Where the object passes behind text, a soft veil of the page colour keeps
