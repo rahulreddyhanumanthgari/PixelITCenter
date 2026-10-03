@@ -673,19 +673,17 @@ rejected; this is their replacement.
 
 ## Light theme (bright, premium)
 
-**The sun (2026-10-03).** Dark is space; light is the sun. `LightSky` (the
-light-mode backdrop) now draws a sun: in the landing hero a glowing disc
-fills the black hole's void (same centre and size, `HERO_FIELD.voidRadius`),
-near-white at the centre where the headline sits, warming to sun yellow and
-a hot orange limb, with a golden corona, so the particle ring around it
-reads as the sun's corona. Slow sun rays, warm light spreading across a
-cream sky (#FFF8EE … #FFEFDB) and golden dust motes. As the story begins
-(`Atmosphere.heroBlend`, written by JourneyScene's `onBlend`) the sun rises
-above the screen; its light and rays stay over every section, and the
-journey still ends in the galaxy's sun setting on the footer. The palette
-follows: accents deep sunset orange #D9480F (readable on cream), gold
-#F59E0B, cards lit from the upper left (white inset highlight, soft amber
-shadow down and to the right).
+**The sun (2026-10-03).** Dark is space; light is the sun. In light mode
+there is no black hole: the hero is a small solid orange ball (`LightSky`
+draws it at half the void's radius, lit from the upper left) with light
+shining out from behind it: beams and a warm orange glow in the sky, and
+the hero particles (`heroField`, light branch in `particle.vert.glsl`) form
+a thin rim on its edge plus 40 rays streaming outward from behind it in the
+screen plane. Cream sky with golden motes. As the story begins
+(`Atmosphere.heroBlend`) the sun rises above the screen and its particles
+break out into the sections' forms; its warm light stays. Hero accent words
+and copy are navy (orange on orange would vanish). Palette: accents deep
+sunset orange #D9480F, gold #F59E0B, cards lit from the upper left.
 
 **Current direction (2026-10-03): the particle journey in blue on white.**
 The team liked the dark theme's particles and wanted them in the light

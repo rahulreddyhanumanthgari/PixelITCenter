@@ -67,25 +67,26 @@ void main() {
   float spread = exp(-d / (H * 0.55));
   col = mix(col, vec3(1.0, 0.87, 0.55), spread * 0.55);
 
-  // Sun rays: soft beams turning very slowly, longest near the sun.
+  // Light shining from behind the ball: beams fanning out from its edge,
+  // turning very slowly, strongest just outside it.
   float t = uTime * 0.02;
-  float beams = noise1(a * 6.0 + t * 3.0) * 0.6 + noise1(a * 13.0 - t * 5.0) * 0.4;
-  beams = smoothstep(0.45, 0.95, beams);
-  float reach = exp(-max(d - R, 0.0) / (H * 0.7));
-  col = mix(col, vec3(1.0, 0.95, 0.75), beams * reach * 0.55);
+  float beams = noise1(a * 7.0 + t * 3.0) * 0.6 + noise1(a * 15.0 - t * 5.0) * 0.4;
+  beams = smoothstep(0.4, 0.95, beams);
+  float outside = smoothstep(R * 0.98, R * 1.08, d);
+  float reach = exp(-max(d - R, 0.0) / (H * 0.45));
+  col = mix(col, vec3(1.0, 0.8, 0.45), beams * reach * outside * 0.7);
 
-  // Corona: a golden-orange glow hugging the disc.
-  float corona = exp(-max(d - R, 0.0) / (R * 0.35));
-  col = mix(col, vec3(1.0, 0.72, 0.25), corona * 0.75 * uSunDisc);
+  // A warm orange glow behind the ball.
+  float corona = exp(-max(d - R, 0.0) / (R * 0.6));
+  col = mix(col, vec3(1.0, 0.66, 0.33), corona * 0.7 * uSunDisc);
 
-  // The disc: near-white at the centre (the hero text sits on it), warming
-  // to sun yellow and a hot orange limb, with a soft edge.
-  float r = d / R;
-  vec3 disc = mix(vec3(1.0, 0.996, 0.95), vec3(1.0, 0.95, 0.68), smoothstep(0.25, 0.85, r));
-  disc = mix(disc, vec3(1.0, 0.78, 0.25), smoothstep(0.82, 1.0, r));
-  // Slow surface shimmer (granulation), very faint.
-  disc *= 1.0 - 0.025 * noise(gl_FragCoord.xy / (R * 0.06) + uTime * 0.05) * smoothstep(0.3, 1.0, r);
-  col = mix(col, disc, (1.0 - smoothstep(0.97, 1.03, r)) * uSunDisc);
+  // The ball: solid orange, lit from the upper left (a soft highlight) and
+  // shading to a deeper orange on its lower right, with a crisp edge.
+  vec2 n = dv / R;
+  float light = clamp(dot(normalize(vec3(n, sqrt(max(0.0, 1.0 - dot(n, n))))), normalize(vec3(-0.45, 0.5, 0.75))), 0.0, 1.0);
+  vec3 ball = mix(vec3(0.93, 0.36, 0.1), vec3(1.0, 0.53, 0.2), light);
+  ball = mix(ball, vec3(1.0, 0.72, 0.45), pow(light, 8.0) * 0.6);
+  col = mix(col, ball, (1.0 - smoothstep(0.985, 1.01, d / R)) * uSunDisc);
 
   // Sunlit dust motes: gold and orange.
   vec2 s1 = dust(px, 52.0, 1.0, 1.0);
@@ -101,8 +102,8 @@ void main() {
 
 /**
  * Light-theme backdrop for the particle layer: the sun. In the landing hero
- * a glowing sun disc fills the black hole's centre, so the particle ring
- * around it reads as its corona; as the story begins the sun rises above the
+ * a small solid orange ball sits at the centre with light shining out from
+ * behind it (beams and a warm glow; particle rays fan out round it); as the story begins the sun rises above the
  * screen, and its warm light, rays and golden motes stay over every section.
  * The particles draw on top as solid dots (see particle.frag.glsl).
  */
@@ -156,7 +157,7 @@ export function LightSky({
     // As the story begins it rises above the screen; its light stays.
     const cy = h * (0.5 + 0.95 * b); // y up: 0.5 = centre … above the top
     (u.uSun.value as THREE.Vector2).set((w / 2) * pixelRatio, cy * pixelRatio);
-    u.uSunR.value = voidPx * 0.92 * pixelRatio;
+    u.uSunR.value = voidPx * 0.5 * pixelRatio; // a small ball (SUN_R in particle.vert.glsl)
     u.uSunDisc.value = 1 - b;
   });
 
