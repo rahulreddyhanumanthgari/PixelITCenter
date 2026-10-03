@@ -679,11 +679,14 @@ theme. `app/(light)/light/page.tsx` now renders the shared `Home` exactly as
 the dark design does (same sections, same layout, same particle journey);
 `data-theme="light"` switches the particle engine to its light mode
 (`LightSky` white atmosphere, no bloom, normal blending). In that mode
-`particle.frag.glsl` draws every particle as a solid mix of navy #0A192F
-and orange #FF5A1F (warm hues such as discs, land and hot bands → orange;
-blues and whites → navy; bands in between blend), nearly opaque with a firm
-edge, as bold as possible on white (owner's colours, 2026-10-03; an
-all-blue version came first). The previous light version, one blue square tube
+`particle.frag.glsl` draws every particle in the sun's palette (owner's
+choice, 2026-10-03): each shape's hot core → sun yellow #FFDF22, its
+red-orange band → orange #FF7E2E, its blues → sunset red #FF6352 (the sun's
+#FFFFFF / #FFFBE0 are left out, invisible on white). Each dot takes exactly
+one colour (blends turned muddy), drawn solid with a firm edge. Light mode
+also draws 1.6× the particles, 1.55× larger, with 0.35× the loose background
+stars, so shapes read as dense forms on white. Earlier light palettes (all
+blue; navy + orange; yellow + electric blue + dark blue) came first. The previous light version, one blue square tube
 morphing through the page (`themes/light/ribbon`, `LightHero`,
 `LightServices`, `LightAbout`), is kept in the repo but not rendered; its
 history is below.

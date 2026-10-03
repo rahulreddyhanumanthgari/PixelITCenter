@@ -349,7 +349,8 @@ export default function JourneyScene() {
     >
       {light && <LightSky pixelRatio={dpr} reducedMotion={reducedMotion} />}
       <StarField
-        count={tier.starCount}
+        // Fewer loose background points on white, where they read as noise.
+        count={Math.round(tier.starCount * (light ? 0.35 : 1))}
         pixelRatio={dpr}
         reducedMotion={reducedMotion}
         pointer={pointer}
@@ -362,9 +363,11 @@ export default function JourneyScene() {
         strength={reducedMotion ? 0 : tierName === "mobile" ? 0.5 : 1}
       />
       <ParticleSystem
-        key={tierName}
+        key={`${tierName}-${light}`}
         forms={JOURNEY_FORMS}
-        count={tier.particleCount}
+        // Light theme: more particles, so each shape reads as a dense, solid
+        // form on white instead of a scattered spray.
+        count={Math.round(tier.particleCount * (light ? 1.6 : 1))}
         look={HERO_LOOK}
         lookTo={STORY_LOOK}
         handoffAt={STORY_HANDOFF}

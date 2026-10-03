@@ -775,7 +775,7 @@ void main() {
              * mix(1.0, solarSize, solarW)
              * mix(1.0, galaxySize, galaxyW);
   // Light theme: dots without glow need a little more size to read.
-  size *= mix(1.0, 1.3, uLight);
+  size *= mix(1.0, 1.55, uLight);
   gl_PointSize = clamp(size * uPixelRatio / depth, 1.0, 28.0 * uPixelRatio);
 
   // Near particles brighter, far ones dimmer; a soft twinkle on top. Spread

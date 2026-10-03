@@ -1,8 +1,8 @@
 // Turns each square point sprite into a soft round point of light.
 //
 // Light theme (uLight = 1): light can't be added to a white page, so each
-// point is drawn as a solid navy or orange dot with normal blending (see
-// below); no glow.
+// point is drawn as a solid dot in the sun's palette with normal blending
+// (see below); no glow.
 
 uniform float uLight;
 
@@ -21,18 +21,23 @@ void main() {
   float glow = pow(core, 2.4);
 
   if (uLight > 0.5) {
-    // Light theme: a mix of navy #0A192F and orange #FF5A1F, as bold as
-    // possible on white. Warm hues (discs, land, hot bands) → orange; blues
-    // and whites → navy; the bands in between blend the two. Dots are drawn
-    // nearly opaque with a firm edge.
+    // Light theme: the sun's palette (owner's choice). Each shape's hot core
+    // (orange) → sun yellow #FFDF22, its red-orange band → orange #FF7E2E,
+    // its blues → sunset red #FF6352, pale points → orange. The sun's white
+    // and whitish-yellow (#FFFFFF, #FFFBE0) are left out: they vanish on a
+    // white page. Each dot takes one colour, never a blend; drawn solid.
     float m = max(max(vColor.r, vColor.g), vColor.b);
     vec3 h = vColor / max(m, 1e-3);
+    float sat = 1.0 - min(min(h.r, h.g), h.b);
     float blueness = smoothstep(-0.05, 0.3, h.b - h.r);
-    vec3 navy = toLinear(vec3(0.039, 0.098, 0.184));    // #0A192F
-    vec3 orange = toLinear(vec3(1.0, 0.353, 0.122));    // #FF5A1F
-    vec3 ink = mix(orange, navy, blueness);
+    vec3 sun = toLinear(vec3(1.0, 0.875, 0.133));       // #FFDF22
+    vec3 orange = toLinear(vec3(1.0, 0.494, 0.18));     // #FF7E2E
+    vec3 sunset = toLinear(vec3(1.0, 0.388, 0.322));    // #FF6352
+    vec3 warm = h.g > 0.33 ? sun : orange;
+    vec3 ink = blueness > 0.5 ? sunset : warm;
+    if (sat < 0.25) ink = orange;
     float a = clamp(pow(m, 0.3) * 2.6, 0.0, 1.0);
-    gl_FragColor = vec4(ink, a * (1.0 - smoothstep(0.32, 0.5, d)) * clamp(vAlpha * 1.4, 0.0, 1.0));
+    gl_FragColor = vec4(ink, a * (1.0 - smoothstep(0.34, 0.5, d)) * clamp(vAlpha * 1.4, 0.0, 1.0));
     return;
   }
 
