@@ -10,7 +10,7 @@
 
   /* Brand: controlled orange energy, technology blue. */
   --brand-blue: #1677ff;
-  --brand-orange: #ff6b1a;
+  --brand-orange: #2563eb; /* the light design is blue only */
   --brand-white: #f2f6ff;
 
   /* Surfaces: white and light atmospheric (#FFFFFF, #F8FAFC, #F3F8FE). */
@@ -85,65 +85,6 @@
 }
 .light-hero-copy strong {
   color: #2563eb;
-}
-
-/* Where the object passes behind text, a soft veil of the page colour keeps
-   it readable (Contact sits in the eye). */
-#contact {
-  position: relative;
-}
-#contact::before {
-  content: "";
-  position: absolute;
-  inset: 0 8%;
-  z-index: -1;
-  /* Light enough that the vortex can be seen converging into its core. */
-  background: radial-gradient(closest-side, rgb(248 250 252 / 0.72) 40%, rgb(248 250 252 / 0.45) 65%, transparent 85%);
-  pointer-events: none;
-}
-
-@media (max-width: 639px) {
-  /* Phones: the vortex sits right behind the text, so the veil is firmer. */
-  #contact::before {
-    inset: 0;
-    background: radial-gradient(closest-side, rgb(248 250 252 / 0.9) 55%, rgb(248 250 252 / 0.6) 80%, transparent);
-  }
-}
-
-/* What clients say: the object waves behind the cards; a soft veil behind
-   the heading keeps it clear even mid-transition. */
-#testimonials-title {
-  position: relative;
-}
-#testimonials-title::before {
-  content: "";
-  position: absolute;
-  inset: -1.5rem 0;
-  z-index: -1;
-  background: radial-gradient(closest-side, rgb(248 250 252 / 0.95) 50%, rgb(248 250 252 / 0.6) 75%, transparent);
-  pointer-events: none;
-}
-
-@media (min-width: 640px) {
-  #testimonials-title::before {
-    inset: -1.5rem -3rem;
-  }
-}
-
-/* How we work: the object runs behind the pinned heading and steps; a soft
-   veil of the page colour behind them keeps the text readable. */
-[data-process-content]::before {
-  content: "";
-  position: absolute;
-  inset: -2.5rem 0;
-  z-index: -1;
-  background: radial-gradient(closest-side, rgb(248 250 252 / 0.92) 40%, rgb(248 250 252 / 0.6) 70%, transparent);
-  pointer-events: none;
-}
-@media (min-width: 1024px) {
-  [data-process-content]::before {
-    inset: -2.5rem -4rem;
-  }
 }
 
 /* Typography: the site's simple bold sans (Space Grotesk) throughout; the

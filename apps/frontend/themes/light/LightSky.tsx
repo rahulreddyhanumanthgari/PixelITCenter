@@ -52,12 +52,12 @@ void main() {
   float rim = length((uv - 0.5) * vec2(1.25, 1.0));
   col = mix(col, vec3(0.925, 0.952, 0.988), smoothstep(0.4, 1.0, rim));
 
-  // Soft blue and faint warm light drifting slowly (atmosphere, not clouds).
+  // Soft blue light drifting slowly (atmosphere, not clouds).
   vec2 q = px / 620.0 + vec2(uTime * 0.004, -uTime * 0.003);
   float n = noise(q) * 0.6 + noise(q * 2.1 + 7.3) * 0.4;
   float w = noise(q * 0.8 - 3.7);
   col = mix(col, vec3(0.86, 0.92, 1.0), smoothstep(0.55, 0.85, n) * 0.45);
-  col = mix(col, vec3(1.0, 0.95, 0.9), smoothstep(0.62, 0.9, w) * 0.3);
+  col = mix(col, vec3(0.9, 0.94, 1.0), smoothstep(0.62, 0.9, w) * 0.3);
 
   // Fine navy / blue dust in two layers, drifting slowly.
   vec2 s1 = dust(px, 46.0, 1.0, 1.2);

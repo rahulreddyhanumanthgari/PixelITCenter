@@ -673,6 +673,23 @@ rejected; this is their replacement.
 
 ## Light theme (bright, premium)
 
+**Current direction (2026-10-03): the particle journey in blue on white.**
+The team liked the dark theme's particles and wanted them in the light
+theme. `app/(light)/light/page.tsx` now renders the shared `Home` exactly as
+the dark design does (same sections, same layout, same particle journey);
+`data-theme="light"` switches the particle engine to its light mode
+(`LightSky` white atmosphere, no bloom, normal blending). In that mode
+`particle.frag.glsl` draws every particle in the light theme's bright blues
+(#1D4ED8 / #2563EB / #3B82F6 / #60A5FA: warm hues → bright blue, deep blues
+stay deep, whites → sky blue), and `--brand-orange` is blue in light, so the
+light page uses no orange. The previous light version, one blue square tube
+morphing through the page (`themes/light/ribbon`, `LightHero`,
+`LightServices`, `LightAbout`), is kept in the repo but not rendered; its
+history is below.
+
+### Earlier light version: the blue square tube (not rendered)
+
+
 **Current direction (2026-10-02): one blue object.** The owner supplied a
 reference animation (a dark site where one ribbed tube travels the whole
 page) and the "Light Theme reference-animation & Claude Code handoff" PDF:
