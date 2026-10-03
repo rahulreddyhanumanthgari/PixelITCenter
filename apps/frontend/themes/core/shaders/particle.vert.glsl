@@ -167,48 +167,41 @@ vec3 heroField(out float visible, out float glow, out float grow, out float lane
   grow = 1.0;
   lane = 0.7;
 
-  // Light theme: no black hole. The hero is the sun as a small orange ball
-  // (drawn solid by LightSky; radius SUN_R of the void) with its light
-  // shining out from behind it: a crisp rim of particles on its edge, and
-  // rays fanning out round it in the screen plane, starting at its edge (so
-  // they read as coming from behind it). Lanes keep every particle orange.
+  // Light theme: no black hole. The hero is a sunrise: the sun's centre is
+  // below the screen (JourneyScene places it; 1 local unit = twice its
+  // radius), so only its top shows. Particles trace a bright rim on its edge
+  // and 64 rays fanning up from behind it in the screen plane. Lanes keep
+  // them in warm orange / gold.
   if (uLight > 0.5) {
     const float SUN_R = 0.5;
-    // Toward the camera in the system's local space (undoing the hero's
-    // 0.82 rad tilt), and two axes spanning the screen plane.
-    vec3 V = vec3(0.0, 0.731, 0.682);
+    vec3 V = vec3(0.0, 0.731, 0.682); // toward the camera (undoes the 0.82 rad hero tilt)
     vec3 X = vec3(1.0, 0.0, 0.0);
     vec3 Y = cross(V, X);
     float ang = h5 * 6.2831853;
     if (h6 < 0.3) {
-      // Rim: a thin, slowly turning ring on the ball's edge.
-      float a2 = ang + t * 0.04;
-      float rr = HERO_VOID * SUN_R * (1.0 + 0.04 * (h4 - 0.5));
+      float a2 = ang + t * 0.03;
+      float rr = SUN_R * (1.0 + 0.03 * (h4 - 0.5));
       glow = 1.3;
       grow = 1.0;
       lane = 0.12 + 0.06 * h4;
-      return (cos(a2) * X + sin(a2) * Y) * rr - V * HERO_VOID * 0.1;
-    } else if (h6 < 0.92) {
-      // Rays: 40 beams from behind the ball, each particle streaming outward
-      // and fading, then starting again at the ball's edge.
-      float k = floor(h4 * 40.0);
-      float a2 = (k + 0.5) / 40.0 * 6.2831853 + (fract(sin(k * 91.7) * 43758.5) - 0.5) * 0.12
-        + (aScatterDir.x * 0.02) + t * 0.02;
-      float s = fract(h3 + t / (10.0 + aRandom * 8.0));
-      float len = 1.6 + 1.8 * fract(sin(k * 17.3) * 43758.5);
-      visible = smoothstep(0.0, 0.06, s) * (1.0 - smoothstep(0.5, 1.0, s));
+      return (cos(a2) * X + sin(a2) * Y) * rr - V * 0.05;
+    } else if (h6 < 0.94) {
+      float k = floor(h4 * 64.0);
+      float a2 = (k + 0.5) / 64.0 * 6.2831853 + (fract(sin(k * 91.7) * 43758.5) - 0.5) * 0.06
+        + aScatterDir.x * 0.012 + t * 0.012;
+      float s = fract(h3 + t / (11.0 + aRandom * 9.0));
+      float len = 0.7 + 1.1 * fract(sin(k * 17.3) * 43758.5);
+      visible = smoothstep(0.0, 0.06, s) * (1.0 - smoothstep(0.55, 1.0, s));
       glow = 1.2 * (1.0 - 0.6 * s);
       grow = 0.95 - 0.35 * s;
-      lane = 0.12 + 0.08 * s;
-      float rr = HERO_VOID * SUN_R * (1.02 + s * len);
-      return (cos(a2) * X + sin(a2) * Y) * rr - V * HERO_VOID * 0.3;
+      lane = 0.1 + 0.1 * s;
+      return (cos(a2) * X + sin(a2) * Y) * SUN_R * (1.02 + s * len) - V * 0.15;
     } else {
-      // A sparse warm haze round it.
       glow = 0.3;
       grow = 0.7;
       lane = 0.15;
       vec3 dir = normalize(aScatterDir + vec3(1e-4));
-      return sunTurn(dir, t * 0.02) * HERO_VOID * (1.6 + h4 * 3.0);
+      return sunTurn(dir, t * 0.02) * (0.9 + h4 * 1.6);
     }
   }
 

@@ -674,16 +674,17 @@ rejected; this is their replacement.
 ## Light theme (bright, premium)
 
 **The sun (2026-10-03).** Dark is space; light is the sun. In light mode
-there is no black hole: the hero is a small solid orange ball (`LightSky`
-draws it at half the void's radius, lit from the upper left) with light
-shining out from behind it: beams and a warm orange glow in the sky, and
-the hero particles (`heroField`, light branch in `particle.vert.glsl`) form
-a thin rim on its edge plus 40 rays streaming outward from behind it in the
-screen plane. Cream sky with golden motes. As the story begins
-(`Atmosphere.heroBlend`) the sun rises above the screen and its particles
-break out into the sections' forms; its warm light stays. Hero accent words
-and copy are navy (orange on orange would vanish). Palette: accents deep
-sunset orange #D9480F, gold #F59E0B, cards lit from the upper left.
+there is no black hole: the hero is a sunrise. `sunHorizon` (journey-config)
+puts a large sun's centre below the bottom edge (radius 0.45 × width, max
+0.8 × height; phones 0.8 × width), so only its top shows, below the hero
+text. `LightSky` draws it (gold at the top deepening to orange at the
+horizon) with beams and a warm glow rising behind it; JourneyScene centres
+the hero particles on it, and `heroField`'s light branch traces a bright rim
+on its edge plus 64 rays fanning up from behind it. Cream sky, golden motes.
+As the story begins (`Atmosphere.heroBlend`) the sun climbs past the top
+and its particles break out into the sections' forms; its light stays.
+Accents deep sunset orange #D9480F, gold #F59E0B; cards lit from the upper
+left. (A small orange ball in the centre was tried first and dropped.)
 
 **Current direction (2026-10-03): the particle journey in blue on white.**
 The team liked the dark theme's particles and wanted them in the light

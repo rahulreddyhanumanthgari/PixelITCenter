@@ -40,6 +40,16 @@ export const STORY_FLIGHT = { swell: 1.6 } as const;
  * width so phones still show the disc. The accretion disc runs to twice
  * that, and streams/outer space far past the viewport edges.
  */
+/**
+ * Light theme hero: a sunrise. The sun rises from below the screen's bottom
+ * edge, only its top showing, a little below the hero text. Returns its
+ * radius and how far its centre sits below the screen's centre, in px.
+ */
+export function sunHorizon(vw: number, vh: number): { r: number; dy: number } {
+  const r = vw < 768 ? 0.8 * vw : Math.min(0.45 * vw, 0.8 * vh);
+  return { r, dy: vh / 2 + 0.66 * r };
+}
+
 export const HERO_FIELD = {
   // A wide calm centre, so the ring frames the hero content rather than
   // running behind it.

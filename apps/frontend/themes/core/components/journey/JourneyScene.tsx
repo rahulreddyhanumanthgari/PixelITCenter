@@ -23,6 +23,7 @@ import {
   EARTH_VIEW,
   GALAXY_VIEW,
   HERO_FIELD,
+  sunHorizon,
   STORY_FLIGHT,
   STORY_HANDOFF,
   STORY_LOOK,
@@ -235,6 +236,14 @@ export default function JourneyScene() {
       L.from.x = 0;
       L.from.y = 0;
       L.from.scale = voidPx * wpp;
+      // Light theme: the hero is a sunrise. The particles centre on the sun,
+      // below the bottom edge, and 1 local unit = twice its radius (the
+      // shader's sun rim sits at 0.5).
+      if (lightRef.current) {
+        const sun = sunHorizon(vw, vh);
+        L.from.y = -sun.dy * wpp;
+        L.from.scale = sun.r * 2 * wpp;
+      }
       L.protectFloor = vw < 768 ? HERO_FIELD.protectFloor.narrow : HERO_FIELD.protectFloor.wide;
       // About's galaxy: centred on its pinned anchor, rim past the screen.
       if (galaxyAnchor) {

@@ -160,12 +160,7 @@
   color: var(--text-primary);
 }
 
-/* Hero: the text sits partly on the orange sun ball, so its accent words
-   and description are navy (orange on orange would vanish). */
-#top .highlight,
+/* Hero: the bold phrase in the readable deep sunset orange. */
 #top p strong {
-  color: var(--text-primary);
-}
-#top p {
-  color: var(--text-primary);
+  color: var(--accent-orange);
 }

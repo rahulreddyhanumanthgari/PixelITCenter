@@ -3,7 +3,7 @@
 import { useMemo, useRef, type RefObject } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
-import { HERO_FIELD } from "@/themes/core/components/journey/journey-config";
+import { sunHorizon } from "@/themes/core/components/journey/journey-config";
 import type { Atmosphere } from "@/themes/core/components/particles/StarField";
 
 const vertexShader = /* glsl */ `
@@ -67,26 +67,25 @@ void main() {
   float spread = exp(-d / (H * 0.55));
   col = mix(col, vec3(1.0, 0.87, 0.55), spread * 0.55);
 
-  // Light shining from behind the ball: beams fanning out from its edge,
+  // Light rising from behind the sun: beams fanning up from its edge,
   // turning very slowly, strongest just outside it.
   float t = uTime * 0.02;
   float beams = noise1(a * 7.0 + t * 3.0) * 0.6 + noise1(a * 15.0 - t * 5.0) * 0.4;
   beams = smoothstep(0.4, 0.95, beams);
   float outside = smoothstep(R * 0.98, R * 1.08, d);
-  float reach = exp(-max(d - R, 0.0) / (H * 0.45));
+  float reach = exp(-max(d - R, 0.0) / (H * 0.6));
   col = mix(col, vec3(1.0, 0.8, 0.45), beams * reach * outside * 0.7);
 
   // A warm orange glow behind the ball.
-  float corona = exp(-max(d - R, 0.0) / (R * 0.6));
+  float corona = exp(-max(d - R, 0.0) / (R * 0.35));
   col = mix(col, vec3(1.0, 0.66, 0.33), corona * 0.7 * uSunDisc);
 
-  // The ball: solid orange, lit from the upper left (a soft highlight) and
-  // shading to a deeper orange on its lower right, with a crisp edge.
-  vec2 n = dv / R;
-  float light = clamp(dot(normalize(vec3(n, sqrt(max(0.0, 1.0 - dot(n, n))))), normalize(vec3(-0.45, 0.5, 0.75))), 0.0, 1.0);
-  vec3 ball = mix(vec3(0.93, 0.36, 0.1), vec3(1.0, 0.53, 0.2), light);
-  ball = mix(ball, vec3(1.0, 0.72, 0.45), pow(light, 8.0) * 0.6);
-  col = mix(col, ball, (1.0 - smoothstep(0.985, 1.01, d / R)) * uSunDisc);
+  // The rising sun: warm gold at its top, deepening to orange toward the
+  // horizon, with a soft bright edge.
+  float h2 = clamp((gl_FragCoord.y - (uSun.y - R)) / (2.0 * R), 0.0, 1.0);
+  vec3 ball = mix(vec3(1.0, 0.42, 0.12), vec3(1.0, 0.72, 0.25), smoothstep(0.35, 1.0, h2));
+  ball = mix(ball, vec3(1.0, 0.86, 0.55), smoothstep(0.93, 1.0, d / R) * 0.6);
+  col = mix(col, ball, (1.0 - smoothstep(0.985, 1.005, d / R)) * uSunDisc);
 
   // Sunlit dust motes: gold and orange.
   vec2 s1 = dust(px, 52.0, 1.0, 1.0);
@@ -101,9 +100,9 @@ void main() {
 `;
 
 /**
- * Light-theme backdrop for the particle layer: the sun. In the landing hero
- * a small solid orange ball sits at the centre with light shining out from
- * behind it (beams and a warm glow; particle rays fan out round it); as the story begins the sun rises above the
+ * Light-theme backdrop for the particle layer: the sun. The landing hero is
+ * a sunrise: a large sun rising from below the bottom edge, only its top
+ * showing, with beams and particle rays fanning up from behind it; as the story begins the sun rises above the
  * screen, and its warm light, rays and golden motes stay over every section.
  * The particles draw on top as solid dots (see particle.frag.glsl).
  */
@@ -148,16 +147,15 @@ export function LightSky({
     (u.uResolution.value as THREE.Vector2).set(w * pixelRatio, h * pixelRatio);
     u.uPixelRatio.value = pixelRatio;
 
-    // The sun sits in the black hole's centre (same size as its void).
-    const V = HERO_FIELD.voidRadius;
-    const voidPx = Math.min(Math.max(w * V.width, h * V.height), w * V.maxWidth);
+    // Sunrise: the sun's centre below the bottom edge (only its top shows);
+    // as the story begins it climbs past the top of the screen.
+    const sun = sunHorizon(w, h);
     const target = atmosphere?.current.heroBlend ?? 0;
     eased.current += (target - eased.current) * (1 - Math.pow(0.88, dt * 60));
     const b = eased.current;
-    // As the story begins it rises above the screen; its light stays.
-    const cy = h * (0.5 + 0.95 * b); // y up: 0.5 = centre … above the top
+    const cy = h / 2 - sun.dy + b * (h + 2 * sun.r); // y up
     (u.uSun.value as THREE.Vector2).set((w / 2) * pixelRatio, cy * pixelRatio);
-    u.uSunR.value = voidPx * 0.5 * pixelRatio; // a small ball (SUN_R in particle.vert.glsl)
+    u.uSunR.value = sun.r * pixelRatio;
     u.uSunDisc.value = 1 - b;
   });
 
