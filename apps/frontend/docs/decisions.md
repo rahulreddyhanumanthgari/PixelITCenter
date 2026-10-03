@@ -673,6 +673,20 @@ rejected; this is their replacement.
 
 ## Light theme (bright, premium)
 
+**The sun (2026-10-03).** Dark is space; light is the sun. `LightSky` (the
+light-mode backdrop) now draws a sun: in the landing hero a glowing disc
+fills the black hole's void (same centre and size, `HERO_FIELD.voidRadius`),
+near-white at the centre where the headline sits, warming to sun yellow and
+a hot orange limb, with a golden corona, so the particle ring around it
+reads as the sun's corona. Slow sun rays, warm light spreading across a
+cream sky (#FFF8EE … #FFEFDB) and golden dust motes. As the story begins
+(`Atmosphere.heroBlend`, written by JourneyScene's `onBlend`) the sun rises
+above the screen; its light and rays stay over every section, and the
+journey still ends in the galaxy's sun setting on the footer. The palette
+follows: accents deep sunset orange #D9480F (readable on cream), gold
+#F59E0B, cards lit from the upper left (white inset highlight, soft amber
+shadow down and to the right).
+
 **Current direction (2026-10-03): the particle journey in blue on white.**
 The team liked the dark theme's particles and wanted them in the light
 theme. `app/(light)/light/page.tsx` now renders the shared `Home` exactly as

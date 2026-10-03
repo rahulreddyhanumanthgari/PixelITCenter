@@ -9,7 +9,7 @@ export const PALETTE = {
   deepBlue: "#1f4fd6",
   background: "#05060a",
   /** Light theme page background (= --background in globals.css). */
-  backgroundLight: "#f8fafc",
+  backgroundLight: "#fff8ee",
 } as const;
 
 /** THREE.Color converts hex to linear space, which is what the shader outputs. */

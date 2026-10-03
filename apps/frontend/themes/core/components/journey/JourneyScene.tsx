@@ -119,6 +119,7 @@ export default function JourneyScene() {
       const effect = bloom.current;
       if (effect) effect.intensity = lightRef.current ? 0 : tier.bloom.hero + (tier.bloom.story - tier.bloom.hero) * blend;
       atmosphere.current.field = field;
+      atmosphere.current.heroBlend = blend;
     },
     [tier],
   );
@@ -347,7 +348,7 @@ export default function JourneyScene() {
         bloom: { intensity: tier.bloom.hero, ...JOURNEY_BLOOM },
       }}
     >
-      {light && <LightSky pixelRatio={dpr} reducedMotion={reducedMotion} />}
+      {light && <LightSky pixelRatio={dpr} reducedMotion={reducedMotion} atmosphere={atmosphere} />}
       <StarField
         // Fewer loose background points on white, where they read as noise.
         count={Math.round(tier.starCount * (light ? 0.35 : 1))}
