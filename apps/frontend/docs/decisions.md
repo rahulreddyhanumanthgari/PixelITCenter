@@ -673,18 +673,20 @@ rejected; this is their replacement.
 
 ## Light theme (bright, premium)
 
-**The sun (2026-10-03).** Dark is space; light is the sun. In light mode
-there is no black hole: the hero is a sunrise. `sunHorizon` (journey-config)
-puts a large sun's centre below the bottom edge (radius 0.45 × width, max
-0.8 × height; phones 0.8 × width), so only its top shows, below the hero
-text. `LightSky` draws it (gold at the top deepening to orange at the
-horizon) with beams and a warm glow rising behind it; JourneyScene centres
-the hero particles on it, and `heroField`'s light branch traces a bright rim
-on its edge plus 64 rays fanning up from behind it. Cream sky, golden motes.
-As the story begins (`Atmosphere.heroBlend`) the sun climbs past the top
-and its particles break out into the sections' forms; its light stays.
-Accents deep sunset orange #D9480F, gold #F59E0B; cards lit from the upper
-left. (A small orange ball in the centre was tried first and dropped.)
+**The sun (2026-10-03).** Dark is space; light is the sun, and the light
+hero is the moment they meet: a solar eclipse (the owner gave a free hand
+after a centred ball and a sunrise). `eclipseView` (journey-config) places a
+navy moon disc (#0A192F) on the right on desktop (left half: the headline,
+`themes/light/hero/LightHero.tsx`) and above the headline on phones.
+`LightSky` draws the moon with a blazing rim, a diamond-ring bead, a gold
+inner corona and warm light across a cream sky. JourneyScene centres the
+hero particles on the moon, and `heroField`'s light branch makes them the
+outer corona: 56 tight magnetic loops (dipole field lines r = L sin^2 theta,
+particles flowing between footpoints), 22 streamers drifting outward, a rim
+and a haze; nothing is drawn over the moon. As the story begins
+(`Atmosphere.heroBlend`) the moon climbs away and the corona breaks out into
+the sections' forms. Accents deep sunset orange #D9480F, gold #F59E0B;
+cards lit from the upper left.
 
 **Current direction (2026-10-03): the particle journey in blue on white.**
 The team liked the dark theme's particles and wanted them in the light

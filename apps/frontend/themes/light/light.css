@@ -87,17 +87,15 @@
   color: #d9480f;
 }
 
-/* Typography: the site's simple bold sans (Space Grotesk) throughout; the
-   highlighted word is plain blue. The hero is a little smaller here so the
-   arch has room. */
+/* Hero headline: the site's bold sans, sized for the left half on desktop. */
 .light-hero-title .hero-kicker,
 .light-hero-title .hero-statement {
   font-size: clamp(2.5rem, 1rem + 6.4vw, 4.75rem);
 }
-@media (min-width: 768px) {
+@media (min-width: 1024px) {
   .light-hero-title .hero-kicker,
   .light-hero-title .hero-statement {
-    font-size: clamp(2.75rem, 4.7vw, 4.75rem);
+    font-size: clamp(2.75rem, 3.5vw, 4.25rem);
   }
 }
 .light-hero-title .hero-kicker {

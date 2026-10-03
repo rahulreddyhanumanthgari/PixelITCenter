@@ -3,7 +3,7 @@
 import { useMemo, useRef, type RefObject } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
-import { sunHorizon } from "@/themes/core/components/journey/journey-config";
+import { eclipseView } from "@/themes/core/components/journey/journey-config";
 import type { Atmosphere } from "@/themes/core/components/particles/StarField";
 
 const vertexShader = /* glsl */ `
@@ -63,29 +63,29 @@ void main() {
   float R = max(uSunR, 1.0);
   float a = atan(dv.y, dv.x);
 
-  // Warm light spreading from the sun across the whole sky.
-  float spread = exp(-d / (H * 0.55));
-  col = mix(col, vec3(1.0, 0.87, 0.55), spread * 0.55);
+  // Warm light from the eclipsed sun spreading across the sky.
+  float spread = exp(-d / (H * 0.45));
+  col = mix(col, vec3(1.0, 0.84, 0.55), spread * 0.5 * uSunDisc);
 
-  // Light rising from behind the sun: beams fanning up from its edge,
-  // turning very slowly, strongest just outside it.
-  float t = uTime * 0.02;
-  float beams = noise1(a * 7.0 + t * 3.0) * 0.6 + noise1(a * 15.0 - t * 5.0) * 0.4;
-  beams = smoothstep(0.4, 0.95, beams);
-  float outside = smoothstep(R * 0.98, R * 1.08, d);
-  float reach = exp(-max(d - R, 0.0) / (H * 0.6));
-  col = mix(col, vec3(1.0, 0.8, 0.45), beams * reach * outside * 0.7);
+  // Inner corona: a bright gold glow hugging the moon, with soft radial streaks.
+  float streak = 0.75 + 0.25 * noise1(a * 9.0 + uTime * 0.01);
+  float corona = exp(-max(d - R, 0.0) / (R * 0.22)) * streak;
+  col = mix(col, vec3(1.0, 0.9, 0.62), corona * 0.95 * uSunDisc);
+  float halo = exp(-max(d - R, 0.0) / (R * 0.9));
+  col = mix(col, vec3(1.0, 0.72, 0.38), halo * 0.35 * uSunDisc);
 
-  // A warm orange glow behind the ball.
-  float corona = exp(-max(d - R, 0.0) / (R * 0.35));
-  col = mix(col, vec3(1.0, 0.66, 0.33), corona * 0.7 * uSunDisc);
-
-  // The rising sun: warm gold at its top, deepening to orange toward the
-  // horizon, with a soft bright edge.
-  float h2 = clamp((gl_FragCoord.y - (uSun.y - R)) / (2.0 * R), 0.0, 1.0);
-  vec3 ball = mix(vec3(1.0, 0.42, 0.12), vec3(1.0, 0.72, 0.25), smoothstep(0.35, 1.0, h2));
-  ball = mix(ball, vec3(1.0, 0.86, 0.55), smoothstep(0.93, 1.0, d / R) * 0.6);
-  col = mix(col, ball, (1.0 - smoothstep(0.985, 1.005, d / R)) * uSunDisc);
+  // The moon: deep navy (#0A192F), faintly lit at its edge.
+  float r1 = d / R;
+  vec3 moon = mix(vec3(0.039, 0.098, 0.184), vec3(0.09, 0.15, 0.25), smoothstep(0.7, 1.0, r1));
+  float inside = 1.0 - smoothstep(0.995, 1.005, r1);
+  col = mix(col, moon, inside * uSunDisc);
+  // The rim of sunlight round it, and one diamond-ring bead (upper left).
+  float rim = exp(-abs(d - R) / (R * 0.012));
+  col = mix(col, vec3(1.0, 0.98, 0.88), rim * uSunDisc);
+  vec2 bead = uSun + R * vec2(-0.62, 0.78);
+  float bd = length(gl_FragCoord.xy - bead);
+  col = mix(col, vec3(1.0), exp(-bd / (R * 0.05)) * uSunDisc);
+  col = mix(col, vec3(1.0, 0.95, 0.8), exp(-bd / (R * 0.4)) * 0.5 * uSunDisc);
 
   // Sunlit dust motes: gold and orange.
   vec2 s1 = dust(px, 52.0, 1.0, 1.0);
@@ -101,8 +101,9 @@ void main() {
 
 /**
  * Light-theme backdrop for the particle layer: the sun. The landing hero is
- * a sunrise: a large sun rising from below the bottom edge, only its top
- * showing, with beams and particle rays fanning up from behind it; as the story begins the sun rises above the
+ * a solar eclipse (dark meets light): a navy moon disc with a blazing rim
+ * and a diamond-ring bead, a gold inner corona and warm light across the
+ * sky; the particles are its outer corona; as the story begins the sun rises above the
  * screen, and its warm light, rays and golden motes stay over every section.
  * The particles draw on top as solid dots (see particle.frag.glsl).
  */
@@ -147,15 +148,15 @@ export function LightSky({
     (u.uResolution.value as THREE.Vector2).set(w * pixelRatio, h * pixelRatio);
     u.uPixelRatio.value = pixelRatio;
 
-    // Sunrise: the sun's centre below the bottom edge (only its top shows);
-    // as the story begins it climbs past the top of the screen.
-    const sun = sunHorizon(w, h);
+    // The eclipse: the moon's centre (see eclipseView); as the story begins
+    // it climbs past the top of the screen.
+    const e = eclipseView(w, h);
     const target = atmosphere?.current.heroBlend ?? 0;
     eased.current += (target - eased.current) * (1 - Math.pow(0.88, dt * 60));
     const b = eased.current;
-    const cy = h / 2 - sun.dy + b * (h + 2 * sun.r); // y up
-    (u.uSun.value as THREE.Vector2).set((w / 2) * pixelRatio, cy * pixelRatio);
-    u.uSunR.value = sun.r * pixelRatio;
+    const cy = h / 2 - e.dy + b * (h + 2 * e.r); // y up
+    (u.uSun.value as THREE.Vector2).set((w / 2 + e.dx) * pixelRatio, cy * pixelRatio);
+    u.uSunR.value = e.r * pixelRatio;
     u.uSunDisc.value = 1 - b;
   });
 
