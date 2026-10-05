@@ -8,6 +8,7 @@ uniform float uLight;
 
 varying vec3 vColor;
 varying float vAlpha;
+varying float vWhite; // light theme: 1 = a white dot
 
 vec3 toLinear(vec3 c) { return pow(c, vec3(2.2)); }
 
@@ -37,6 +38,15 @@ void main() {
     vec3 ink = blueness > 0.5 ? sunset : warm;
     if (sat < 0.25) ink = orange;
     float a = clamp(pow(m, 0.3) * 2.6, 0.0, 1.0);
+    // White dots (Services): drawn as white pearls so they read on the peach page.
+    if (vWhite > 0.5) {
+      // A white pearl: bright centre, a soft warm shadow ring as its edge.
+      vec3 rim = toLinear(vec3(0.9, 0.6, 0.45));
+      vec3 pearl = mix(vec3(1.0), rim, smoothstep(0.26, 0.44, d));
+      float pa = 1.0 - smoothstep(0.44, 0.5, d);
+      gl_FragColor = vec4(pearl, pa * clamp(vAlpha * 1.6, 0.0, 1.0));
+      return;
+    }
     gl_FragColor = vec4(ink, a * (1.0 - smoothstep(0.34, 0.5, d)) * clamp(vAlpha * 1.4, 0.0, 1.0));
     return;
   }

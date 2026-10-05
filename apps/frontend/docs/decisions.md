@@ -715,7 +715,10 @@ field instead of the ring stream (`waveField`, used by `ringStream` when
 `uLight`): a 300 × 120 grid of particles, 44 × 16 units, three overlapping
 travelling sine waves, tilted 0.95 rad so it is seen from above and fills
 the width behind the cards; crests warmer, far rows and side edges faded;
-dots 1.6× (not the ring's 2.8×), and no right-hand fade in light. The dark
+dots 2.6×, drawn white (owner's request) as white pearls: a bright
+white centre with a soft warm rim so they read on the peach page (`vWhite`,
+set for the ring/wave weight in light; the stars' shader sets it to 0), and
+no right-hand fade in light. The dark
 theme keeps the ring stream.
 
 **Current direction (2026-10-03): the particle journey in blue on white.**

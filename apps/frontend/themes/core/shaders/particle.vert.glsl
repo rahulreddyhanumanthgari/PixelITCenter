@@ -55,6 +55,7 @@ attribute vec3 aStageCenter;    // solar system: the role's coordinates
 
 varying vec3 vColor;
 varying float vAlpha;
+varying float vWhite;          // light theme: 1 = drawn as a white dot (the Services wave field)
 
 // Timing of one transition, in uProgress units. Departures all finish before
 // arrivals start, leaving a short moment where everything is a floating field.
@@ -737,6 +738,7 @@ void main() {
   // Flowing torus: its live positions replace the static form, so particles
   // land on (and leave from) the moving structure. Delays above use the
   // static positions, so they stay fixed.
+  vWhite = 0.0;
   float laneA = 0.0;
   float laneB = 0.0;
   float bandA = 0.0;
@@ -835,7 +837,7 @@ void main() {
   float solarW = step(3.5, uFlowFrom) * step(uFlowFrom, 4.5) * (1.0 - eOut)
                + step(3.5, uFlowTo) * step(uFlowTo, 4.5) * eIn;
   float galaxyW = step(4.5, uFlowFrom) * (1.0 - eOut) + step(4.5, uFlowTo) * eIn;
-  float size = uSize * aScale * heroSize * mix(1.0, mix(2.8, 1.6, uLight), ringNear)
+  float size = uSize * aScale * heroSize * mix(1.0, mix(2.8, 2.6, uLight), ringNear)
              * mix(1.0, mix(0.7, 1.12, earthFace) * 1.6, earthNear)
              * mix(1.0, 1.5, torusNear)
              * mix(1.0, solarSize, solarW)
@@ -900,6 +902,8 @@ void main() {
     vec3 ringOut = hue * bright * rightFade * protect2 * arcVis;
     vColor = mix(vColor, ringOut, ringW);
   }
+  // Light theme: the Services wave field is white on the peach page.
+  vWhite = uLight * ringW;
 
   // Staffing Earth: mostly white (each particle keeps a trace of its accent),
   // the shell a little dimmer than the planet, dimmed behind the content.

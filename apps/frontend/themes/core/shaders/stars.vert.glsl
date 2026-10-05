@@ -19,8 +19,10 @@ attribute float aTraveler; // 0 = ambient; 1, 2 = the rare travellers
 
 varying vec3 vColor;
 varying float vAlpha;
+varying float vWhite; // shared fragment shader: stars are never white dots
 
 void main() {
+  vWhite = 0.0;
   vec3 pos = position;
   float phase = aRandom * 6.2831;
   float nearness = 1.0 - aDepth;
