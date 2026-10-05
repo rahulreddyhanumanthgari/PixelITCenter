@@ -323,7 +323,31 @@ const float RING_SCALE = 2.4255;
 const float RING_TILT = 0.52;
 const vec2 RING_ANCHOR = vec2(-18.0296, 5.1823);
 
+// Light theme, Services: a wide 3D field of particles on a grid, rippling
+// like a gentle ocean surface, seen from slightly above and stretching back
+// behind the section (instead of the ring stream). Each particle takes a grid
+// point from its own random attributes; overlapping waves lift it; colour
+// lanes run warm along the crests.
+vec3 waveField(out float lane, out float arcVis) {
+  float t = uTime * uMotion;
+  float gx = floor(fract(aRandom * 7.13 + aNoiseOffset.x * 0.0371) * 300.0);
+  float gz = floor(fract(aDelay * 5.31 + aNoiseOffset.z * 0.0293) * 120.0);
+  float x = -20.0 + gx / 300.0 * 44.0;
+  float z = -10.0 + gz / 120.0 * 16.0;
+  float y = 1.25 * sin(x * 0.3 + t * 0.5) + 0.8 * sin(z * 0.45 - t * 0.38 + x * 0.1)
+          + 0.3 * sin((x + z) * 0.75 + t * 0.85);
+  // Crests warmer (lane toward 0), troughs toward the edge colour.
+  lane = clamp(0.3 - y * 0.14, 0.0, 0.48);
+  // Fade the far rows and the side edges.
+  arcVis = smoothstep(-10.0, -6.0, z) * smoothstep(-20.0, -16.0, x) * (1.0 - smoothstep(20.0, 24.0, x));
+  vec3 f = vec3(x, y, z);
+  // Seen from well above, so the ripples spread across the screen.
+  f = rotX(f, 0.95);
+  return f + vec3(2.0, -1.5, -3.0);
+}
+
 vec3 ringStream(vec3 p, out float lane, out float arcVis) {
+  if (uLight > 0.5) return waveField(lane, arcVis);
   float t = uTime * uMotion;
   vec2 rel = vec2(p.x - RING_CX, p.z);
   float r = length(rel);
@@ -811,7 +835,7 @@ void main() {
   float solarW = step(3.5, uFlowFrom) * step(uFlowFrom, 4.5) * (1.0 - eOut)
                + step(3.5, uFlowTo) * step(uFlowTo, 4.5) * eIn;
   float galaxyW = step(4.5, uFlowFrom) * (1.0 - eOut) + step(4.5, uFlowTo) * eIn;
-  float size = uSize * aScale * heroSize * mix(1.0, 2.8, ringNear)
+  float size = uSize * aScale * heroSize * mix(1.0, mix(2.8, 1.6, uLight), ringNear)
              * mix(1.0, mix(0.7, 1.12, earthFace) * 1.6, earthNear)
              * mix(1.0, 1.5, torusNear)
              * mix(1.0, solarSize, solarW)
@@ -868,7 +892,8 @@ void main() {
     // Kept close to 1: much higher and tone mapping starts whitening.
     float bright = 1.25;
     vec2 nd = gl_Position.xy / gl_Position.w;
-    float rightFade = 1.0 - smoothstep(-0.05, 0.5, nd.x);
+    // (The light wave field spans the full width: no fade there.)
+    float rightFade = mix(1.0 - smoothstep(-0.05, 0.5, nd.x), 1.0, uLight);
     vec2 d2 = abs(nd - uProtect2.xy) / max(uProtect2.zw, vec2(1e-3));
     float box2 = pow(pow(d2.x, 4.0) + pow(d2.y, 4.0), 0.25);
     float protect2 = mix(0.45, 1.0, smoothstep(0.85, 1.15, box2));

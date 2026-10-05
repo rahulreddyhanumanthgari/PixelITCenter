@@ -707,6 +707,17 @@ Services rises (its top from 35% to −10% of the screen). Reduced motion: the
 field still follows scroll but appears without the expanding front or
 drifting motes, and the text only fades.
 
+**Services and the page colour (2026-10-05).** From Services down the light
+page is warm peach #FFF1E5 (`--background`; `LightSky` blends its studio
+grey into a peach gradient as Services rises, so the orange takeover
+dissolves into it). The light theme's Services form is a particle wave
+field instead of the ring stream (`waveField`, used by `ringStream` when
+`uLight`): a 300 × 120 grid of particles, 44 × 16 units, three overlapping
+travelling sine waves, tilted 0.95 rad so it is seen from above and fills
+the width behind the cards; crests warmer, far rows and side edges faded;
+dots 1.6× (not the ring's 2.8×), and no right-hand fade in light. The dark
+theme keeps the ring stream.
+
 **Current direction (2026-10-03): the particle journey in blue on white.**
 The team liked the dark theme's particles and wanted them in the light
 theme. `app/(light)/light/page.tsx` now renders the shared `Home` exactly as

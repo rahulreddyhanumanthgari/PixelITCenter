@@ -14,7 +14,7 @@
   --brand-white: #f2f6ff;
 
   /* Surfaces: white and light atmospheric (#FFFFFF, #F8FAFC, #F3F8FE). */
-  --background: #eceef2; /* cool light grey (owner's reference) */
+  --background: #fff1e5; /* warm peach: the page from Services down (the hero is drawn by LightSky) */
   --surface: #ffffff;
   --surface-2: #f3f8fe;
   --foreground: #0b1b33;

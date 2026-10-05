@@ -22,6 +22,7 @@ uniform float uSunDisc;   // 1 = the orb, its stage and halo are shown … 0 = g
 uniform float uTake;      // hero scroll progress 0..1: the orange takeover
 uniform float uField;     // strength of the orange field (rises with uTake, fades as Services arrives)
 uniform float uMotion;    // 0 = reduced motion
+uniform float uPeach;     // 0 = the hero's cool grey studio … 1 = warm peach (Services down)
 
 vec3 toLinear(vec3 c) { return pow(c, vec3(2.2)); }
 
@@ -63,6 +64,11 @@ void main() {
   vec3 col = mix(vec3(0.902, 0.906, 0.925), vec3(0.945, 0.949, 0.961), smoothstep(0.0, 0.85, uv.y));
   float side = smoothstep(0.25, 0.5, abs(uv.x - 0.5));
   col = mix(col, vec3(0.86, 0.865, 0.89), side * 0.35);
+  // From Services down the page is warm peach (#FFF1E5), deepening a touch
+  // toward the bottom and the edges.
+  vec3 peach = mix(vec3(1.0, 0.91, 0.84), vec3(1.0, 0.945, 0.898), smoothstep(0.0, 0.8, uv.y));
+  peach = mix(peach, vec3(0.99, 0.88, 0.8), side * 0.3);
+  col = mix(col, peach, uPeach);
 
   vec2 dv = gl_FragCoord.xy - uSun;
   float d = length(dv);
@@ -172,6 +178,7 @@ export function LightSky({ pixelRatio, reducedMotion = false }: { pixelRatio: nu
           uTake: { value: 0 },
           uField: { value: 0 },
           uMotion: { value: 1 },
+          uPeach: { value: 0 },
         },
         vertexShader,
         fragmentShader,
@@ -220,6 +227,8 @@ export function LightSky({ pixelRatio, reducedMotion = false }: { pixelRatio: nu
     u.uField.value = smooth(0.1, 0.55, p) * smooth(-0.1, 0.35, servicesTop / h);
     u.uSunDisc.value = 1 - smooth(0.45, 0.9, p);
     u.uMotion.value = reducedMotion ? 0 : 1;
+    // The peach page arrives under the orange field, so the field dissolves into it.
+    u.uPeach.value = 1 - smooth(0.0, 0.6, servicesTop / h);
   });
 
   return (
