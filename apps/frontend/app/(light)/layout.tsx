@@ -7,8 +7,8 @@ import "@/themes/core/core.css";
 import "@/themes/light/light.css";
 
 // Root layout for the light design: the shared site (themes/core) on a white
-// environment with the bead scene (themes/light). See lib/design.ts for how a
-// design is chosen.
+// environment with the light material layer of the particle engine. See
+// lib/design.ts for how a design is chosen.
 
 // Tall condensed display face for headings (after the reference video).
 const condensed = Oswald({ variable: "--font-condensed", subsets: ["latin"], weight: ["600", "700"] });

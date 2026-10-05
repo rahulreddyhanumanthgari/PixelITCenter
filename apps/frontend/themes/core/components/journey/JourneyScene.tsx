@@ -7,11 +7,13 @@ import { gsap } from "@/themes/core/lib/gsap";
 import { ParticleCanvas } from "@/themes/core/components/particles/ParticleCanvas";
 import { ParticleSystem, type LayoutState } from "@/themes/core/components/particles/ParticleSystem";
 import { StarField, type Atmosphere } from "@/themes/core/components/particles/StarField";
+import { LightSky } from "@/themes/core/components/particles/LightSky";
 import { useDeviceTier, usePointer, useReducedMotion } from "@/themes/core/hooks/device";
 import type { PointerState, ProgressState } from "@/themes/core/components/particles/types";
 import { PALETTE } from "@/themes/core/lib/particles/palette";
 import { smoothstep } from "@/themes/core/lib/particles/random";
 import { processProgress } from "@/themes/core/lib/processProgress";
+import { useTheme } from "@/themes/core/lib/theme";
 import {
   HERO_LOOK,
   JOURNEY_BLOOM,
@@ -81,6 +83,13 @@ export default function JourneyScene() {
   const tierName = useDeviceTier();
   const reducedMotion = useReducedMotion();
   const tier = getJourneyTier(tierName);
+  // Light theme: a bright atmosphere (LightSky), no bloom, particles drawn
+  // as ink dots in the light palette.
+  const light = useTheme() === "light";
+  const lightRef = useRef(light);
+  useEffect(() => {
+    lightRef.current = light;
+  }, [light]);
   const dpr = Math.min(window.devicePixelRatio || 1, tier.maxDpr);
   const [active, setActive] = useState(true);
 
@@ -108,7 +117,7 @@ export default function JourneyScene() {
   const onBlend = useCallback(
     (blend: number, field: number) => {
       const effect = bloom.current;
-      if (effect) effect.intensity = tier.bloom.hero + (tier.bloom.story - tier.bloom.hero) * blend;
+      if (effect) effect.intensity = lightRef.current ? 0 : tier.bloom.hero + (tier.bloom.story - tier.bloom.hero) * blend;
       atmosphere.current.field = field;
     },
     [tier],
@@ -333,17 +342,19 @@ export default function JourneyScene() {
       settings={{
         cameraFov: JOURNEY_CAMERA.fov,
         cameraZ: JOURNEY_CAMERA.z,
-        background: PALETTE.background,
+        background: light ? PALETTE.backgroundLight : PALETTE.background,
         dpr,
         bloom: { intensity: tier.bloom.hero, ...JOURNEY_BLOOM },
       }}
     >
+      {light && <LightSky pixelRatio={dpr} reducedMotion={reducedMotion} />}
       <StarField
         count={tier.starCount}
         pixelRatio={dpr}
         reducedMotion={reducedMotion}
         pointer={pointer}
         atmosphere={atmosphere}
+        light={light}
       />
       <CameraRig
         pointer={pointer}
@@ -367,6 +378,7 @@ export default function JourneyScene() {
         onBlend={onBlend}
         onGravity={onGravity}
         stage={stage}
+        light={light}
       />
     </ParticleCanvas>
   );

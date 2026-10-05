@@ -671,40 +671,32 @@ rejected; this is their replacement.
 - **Background.** Opaque, so the galaxy's sun rests on the footer's top
   edge, with faint blue and orange glows at the bottom.
 
-## Light theme: the bead world (rebuilt 2026-10-05)
+## Light theme: the dark site, light materials (2026-10-05)
 
-The owner had the previous light theme removed completely (code deleted, not
-switched off) and rebuilt from a reference video (supplied as 7 PDF frames;
-the video itself was not available, so motion follows the frames). All
-earlier light experiments (particle journey in light colours, sun/eclipse/
-orb heroes, ribbon tube, torus, wave field, peach page) are gone; the shared
-particle engine is dark-only again (no `uLight`, `LightSky` or `useTheme`).
+Rule from the owner: **the dark site defines the objects, animation, scroll
+behaviour and composition; the reference video defines only how it looks.**
+A bead rocket/satellite version invented from the reference was rejected
+and deleted, along with every earlier light experiment.
 
-- **Page** (`app/(light)/light/page.tsx`): the shared `Home` with
-  `LightHero`, `particles={false}` and `backdrop={<BeadLayer />}`.
-- **Environment** (`themes/light/light.css`): white #FFFFFF / #F8FAFC,
-  charcoal text #0F172A, a faint warm light upper left and cool shade lower
-  right; headings in Oswald (tall, condensed, bold, uppercase, after the
-  reference); accents darkened from the bead colours for contrast (#C2410C,
-  #0F766E); white cards with a hairline and a soft lifted shadow.
-- **Bead scene** (`themes/light/beads/`): one `THREE.Points` draw call
-  (4200 beads desktop, 2800 tablet, 1800 phone), each shaded as a small lit
-  sphere in the reference palette (orange, yellow, teal, charcoal, cream),
-  sorted back-to-front each frame, with a cheap depth of field (beads off
-  the focal plane grow and soften). Forms (`forms.ts`): a bead rocket, a
-  satellite with wireframe panels, a floating cloud through depth (a third
-  of the beads visible, the text column kept clear), and a settled drift.
-  Sequence: hero rocket (right) → Services cloud → Staffing satellite
-  (right) → Why cloud → How we work satellite (left) → About rocket (left)
-  → Contact drift. Scroll picks the stage per section; across each edge
-  (±0.25 viewport) every bead flies from its place in one form to the next,
-  staggered and scattered through space. Objects bob or turn slowly, the
-  camera pushes in through each transition and leans with the pointer, and
-  objects cast a soft shadow on the page.
-- **Readability**: section headings get a white glow; How We Work's pinned
-  step panel sits on a soft white veil.
-- **Reduced motion**: no idle drift, turn, push-in or pointer lean; morphs
-  still follow scroll with a gentler scatter.
+- **Page** (`app/(light)/light/page.tsx`): the shared `Home`, exactly as the
+  dark design renders it (same hero, sections, particle journey).
+- **Material switch**: `app/(light)` sets `data-theme="light"`;
+  `themes/core/lib/theme.ts` reads it; JourneyScene passes `light` to
+  `ParticleSystem` and `StarField` (`uLight`, normal blending instead of
+  additive), turns bloom off and adds `LightSky`.
+- **Particles** (`particle.frag.glsl`, light branch): each particle keeps its
+  dark-theme role colour and maps it to a strong palette: orange / red-orange
+  (primary) -> #F26419 / #D9480F, blue (secondary) -> teal #0E9F9A, deep
+  blue -> navy #12233F, cream highlights -> gold #F2B705, white / pale
+  points -> navy. Brightness becomes opacity (so the dark theme's depth
+  fades and text protection carry over); each dot is shaded as a small lit
+  bead (highlight upper left, darker limb), no glow; 1.25x size.
+- **Environment** (`LightSky`): white to #F8FAFC, a faint warm light upper
+  left, a cool shade lower right, barely-there charcoal dust.
+- **CSS** (`themes/light/light.css`): charcoal text, Oswald condensed
+  headings (the owner kept this typography), accents #C2410C / #0F766E,
+  white cards with a hairline and soft shadow, a white glow behind section
+  headings.
 
 ## Content
 
