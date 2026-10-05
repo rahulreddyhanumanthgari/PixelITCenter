@@ -36,12 +36,26 @@ uniform float uTorusScale;      // Why torus display scale (smaller in the phone
 uniform float uSolarPhone;      // 1 = solar system in its compact phone-band layout
 uniform vec4 uProtect5;         // How We Work step content box in NDC (dims particles behind text)
 uniform float uLight;
-uniform float uCareers;         // light theme: Careers presence (0..1), blends About's ribbon into its stream           // 1 = light theme (dots drawn as ink; see particle.frag.glsl)
+uniform float uCareers;         // light theme: Careers presence (0..1), blends About's frame into the Careers stream
 uniform float uCollapse;        // galaxy ending: 0 = galaxy … 1 = a sun on the footer's edge
 uniform float uSunOffset;       // local y from the galaxy centre down to the footer's top edge
 uniform float uHeroField;       // 1 while the current "from" form is the hero gravity field
 uniform vec4 uProtect;          // hero text box in NDC: centre xy, half-size zw
 uniform float uProtectFloor;    // brightness left for particles behind the hero text
+
+// Light theme (Correction Specification): each particle is drawn as a real
+// instanced cube. The cube corner comes in `position`/`normal` (a unit box);
+// the particle's own form position comes in the instanced `aPos`.
+#ifdef VOXEL
+attribute vec3 aPos;
+#define PPOS aPos
+uniform float uPxPerUnit;   // device px per world unit at distance 1
+uniform float uRootScale;   // the system's world scale (local -> world)
+uniform float uVoxelPx;     // the one base cube size, device px at the focal depth
+varying vec3 vNormal;
+#else
+#define PPOS position
+#endif
 
 attribute vec3 aTarget;
 attribute vec3 aColor;
@@ -308,6 +322,9 @@ vec3 ringStream(vec3 p, out float lane, out float arcVis) {
   float reach = RING_OUT * RING_SCALE;
   f.x += RING_ANCHOR.x + reach;
   f.y += RING_ANCHOR.y - sin(RING_TILT) * reach;
+  // Light theme (Reference 02): the sweeping tunnel sits on the right,
+  // leaving clean white space behind the Services heading.
+  if (uLight > 0.5) f += vec3(mix(9.5, 3.0, uSolarPhone), -1.2, 0.0);
   return f;
 }
 
@@ -339,8 +356,23 @@ const float EARTH_SPLIT = 2.1;
 vec3 earthSpin(vec3 p, out float shell, out float facing) {
   float t = uTime * uMotion;
   shell = step(EARTH_SPLIT, length(p));
-  // Light theme: the Earth only, no dotted shell (its particles join the ocean).
-  if (uLight > 0.5 && shell > 0.5) { p = normalize(p) * EARTH_R * 0.99; shell = 0.0; }
+  // Light theme (Reference 03): the shell becomes a thin orbit ring round
+  // the voxel globe.
+  // Light theme: the coastline particles fill the ocean instead, so the
+  // globe reads as a solid blue sphere of cubes with land on it.
+  float lr = length(p) / EARTH_R;
+  if (uLight > 0.5 && shell < 0.5 && lr > 1.004 && lr < 1.012) {
+    vec3 od = normalize(vec3(fract(sin(dot(p, vec3(12.9, 78.2, 37.7))) * 43758.5),
+                             fract(sin(dot(p, vec3(39.3, 11.1, 83.7))) * 43758.5),
+                             fract(sin(dot(p, vec3(71.7, 52.3, 19.1))) * 43758.5)) - 0.5 + 1e-4);
+    p = od * EARTH_R * 0.99;
+  }
+  if (uLight > 0.5 && shell > 0.5) {
+    float oa = atan(p.z, p.x);
+    float oj = fract(sin(dot(p, vec3(12.9898, 78.233, 37.719))) * 43758.5453);
+    float orr = EARTH_R * (1.42 + 0.07 * oj);
+    p = vec3(cos(oa) * orr, (oj - 0.5) * 0.07, sin(oa) * orr);
+  }
   vec3 f;
   if (shell > 0.5) {
     // Outer shell: slower, and the opposite way.
@@ -687,32 +719,15 @@ float lhash(float k) {
   return fract(sin(aRandom * 127.1 + aDelay * 311.7 + aScatterDistance * 17.3 + aNoiseOffset.x * 0.37 + k * 74.7) * 43758.5453);
 }
 
-// Services: a true hollow ring with an open centre (spec 7), on the right;
-// spiral colour bands travel with the particles as the ring turns.
-vec3 lightRing(out float idx) {
-  float t = uTime * uMotion;
-  float h1 = lhash(1.0), h2 = lhash(2.0), h3 = lhash(3.0);
-  float rn = h2;
-  float r = mix(0.95, 2.3, rn);
-  float a = h1 * 6.2831853 + t * (0.1 + 0.08 * (1.0 - rn));
-  idx = lband(fract(rn * 0.85 + h1 * 0.6), h3);
-  if (h3 > 0.96) idx = 5.0;
-  vec3 q = vec3(cos(a) * r, sin(a) * r, (h3 - 0.5) * 0.4 * (0.6 + rn));
-  q = rotX(q, 0.32);
-  q = rotY(q, -0.28);
-  q *= mix(1.0, 0.72, uSolarPhone);
-  return q + vec3(mix(4.7, 0.3, uSolarPhone), mix(0.1, 0.0, uSolarPhone), -1.0);
-}
-
 // Why: structured voxel terrain with a recessed square (spec 9): a pixel
 // lattice seen from above, a pit with white walls, bands round it.
 vec3 lightTerrain(out float idx) {
   float t = uTime * uMotion;
   float h1 = lhash(4.0), h2 = lhash(5.0), h3 = lhash(6.0);
-  float x = (floor(h1 * 210.0) / 210.0 - 0.5) * 13.0;
-  float z = (floor(h2 * 120.0) / 120.0 - 0.5) * 7.4;
-  // The recessed square sits right of the centred Why content, near the viewer.
-  vec2 c = vec2(x - 4.3, z - 0.9);
+  // Only the right of the screen (the copy keeps clean space on the left).
+  float x = (floor(h1 * 170.0) / 170.0 - 0.5) * 9.6 + 2.6;
+  float z = (floor(h2 * 110.0) / 110.0 - 0.5) * 7.0;
+  vec2 c = vec2(x - 3.3, z - 0.7);
   float d = max(abs(c.x), abs(c.y));
   const float S = 1.3;
   float y;
@@ -725,14 +740,30 @@ vec3 lightTerrain(out float idx) {
   } else {
     float e = d - S - 0.32;
     y = 0.3 * exp(-e * 1.3) + 0.1 * sin(x * 0.6 + t * 0.25) * sin(z * 0.8 - t * 0.2);
-    float b = fract(e / 3.0);
-    idx = b < 0.3 ? (h3 < 0.5 ? 0.0 : 1.0) : b < 0.42 ? 2.0 : b < 0.62 ? 3.0 : b < 0.84 ? 4.0 : 2.0;
-    if (h3 > 0.95) idx = 5.0;
+    // Bands out from the square: orange, white, cyan/blue, navy, white.
+    float b = mod(e + 0.25 * sin(x * 0.7) * sin(z * 0.9), 4.2);
+    idx = b < 0.8 ? (h3 < 0.75 ? 0.0 : 1.0) : b < 1.5 ? 2.0 : b < 2.4 ? (h3 < 0.55 ? 3.0 : 4.0) : b < 2.8 ? 5.0 : 2.0;
+    if (h3 > 0.97) idx = 5.0;
   }
   vec3 q = vec3(x, y, z);
   q = rotX(q, 0.95);
   q = rotY(q, 0.16);
   return q * uTorusScale;
+}
+
+// The light path's knots (desktop, Reference 05): rising from the lower left
+// through 01 Discover, 02 Plan, 03 Deliver, then down to 04 Support and out
+// at the upper right. Phones use the solar system's band layout.
+const vec3 LKN[6] = vec3[6](
+  vec3(-4.4, -5.0, 0.0), vec3(-1.3, -2.2, 0.2), vec3(0.8, -0.4, 0.0),
+  vec3(3.0, 1.4, -0.2), vec3(4.8, -0.1, 0.1), vec3(8.2, 2.8, -0.3)
+);
+vec4 lightKnot(int i, out vec3 m) {
+  if (uSolarPhone > 0.5) return solarKnot(i, m);
+  vec3 pv = LKN[max(i - 1, 0)];
+  vec3 nx = LKN[min(i + 1, 5)];
+  m = (nx - pv) * (i == 0 || i == 5 ? 1.0 : 0.5);
+  return vec4(LKN[i], i == 0 || i == 5 ? 0.0 : 0.5);
 }
 
 // How We Work: one continuous particle path, 01 Discover -> 04 Support
@@ -742,11 +773,11 @@ vec3 lightPath(out float idx) {
   float t = uTime * uMotion;
   float s = uStage;
   float h1 = lhash(7.0), h2 = lhash(8.0), h3 = lhash(9.0), h4 = lhash(10.0);
-  if (h4 < 0.16) {
+  if (h4 < 0.06) {
     // A station: a flat cluster at each stage.
     int k = 1 + int(floor(h1 * 3.999));
     vec3 m;
-    vec4 kn = solarKnot(k, m);
+    vec4 kn = lightKnot(k, m);
     float a = h2 * 6.2831853;
     float rr = 0.55 * sqrt(h3) * mix(1.0, 0.7, uSolarPhone);
     float fk = float(k - 1);
@@ -759,8 +790,8 @@ vec3 lightPath(out float idx) {
   float u = fract(g);
   vec3 m0;
   vec3 m1;
-  vec4 k0 = solarKnot(i, m0);
-  vec4 k1 = solarKnot(i + 1, m1);
+  vec4 k0 = lightKnot(i, m0);
+  vec4 k1 = lightKnot(i + 1, m1);
   float u2 = u * u;
   float u3 = u2 * u;
   vec3 p = (2.0 * u3 - 3.0 * u2 + 1.0) * k0.xyz + (u3 - 2.0 * u2 + u) * m0
@@ -768,42 +799,62 @@ vec3 lightPath(out float idx) {
   vec3 d = (6.0 * u2 - 6.0 * u) * k0.xyz + (3.0 * u2 - 4.0 * u + 1.0) * m0
          + (-6.0 * u2 + 6.0 * u) * k1.xyz + (3.0 * u2 - 2.0 * u) * m1;
   vec3 side = normalize(vec3(-d.y, d.x, 0.0) + 1e-5);
-  float w = 0.34 * mix(1.0, 0.65, uSolarPhone);
+  float w = 0.5 * mix(1.0, 0.65, uSolarPhone);
   float rr = w * pow(h3, 0.6);
   float a = h2 * 6.2831853;
   p += side * cos(a) * rr + vec3(0.0, 0.0, sin(a) * rr * 0.7);
   float qs = float(i) - 1.0 + u;
   float lit = smoothstep(qs - 0.05, qs + 0.05, s);
-  idx = lit > 0.5 ? (h4 < 0.6 ? 0.0 : (h4 < 0.82 ? 2.0 : 1.0))
-                  : (h4 < 0.45 ? 4.0 : (h4 < 0.75 ? 3.0 : (h4 < 0.9 ? 2.0 : 5.0)));
+  // Stripes across the path (Reference 05): blue / navy on one edge, white
+  // through the middle, orange on the other; the orange side brightens once
+  // the journey has passed it.
+  float across = cos(a) * pow(h3, 0.6);
+  idx = across < -0.35 ? (h4 < 0.65 ? 4.0 : (h4 < 0.85 ? 3.0 : 5.0))
+      : across < 0.1 ? (h4 < 0.8 ? 2.0 : 3.0)
+      : (lit > 0.5 ? (h4 < 0.8 ? 0.0 : 1.0) : (h4 < 0.5 ? 1.0 : 2.0));
   return p;
 }
 
-// About: a ribbon of pixels on the right, in negative space (spec 11);
-// Careers: the same material re-forms into a sweeping stream (spec 12). The
-// footer ending still gathers everything into the setting sun.
+// About (Reference 06): symmetrical voxel walls framing the clean centre,
+// densest at the outer edges, dissolving toward the content, with navy/blue
+// and orange bands inside the white mass. Careers: the same material
+// re-forms into a sweeping stream. The footer ending still gathers
+// everything into the setting sun.
 vec3 lightRibbon(out float idx, out float vis) {
   float t = uTime * uMotion;
   float g1 = lhash(11.0), g2 = lhash(12.0), g3 = lhash(13.0), g4 = lhash(14.0), g5 = lhash(15.0);
+  // --- the frame ---
+  float sideF = g1 < 0.5 ? -1.0 : 1.0;
+  float y = mix(-2.1, 2.1, g2);
+  float yn = (y + 2.1) / 4.2;                       // 0 bottom .. 1 top
+  float xin = mix(0.75, 2.45, pow(yn, 0.8));        // inner edge: closer at the bottom
+  float dd = 2.3 * pow(g3, 0.42);                   // depth into the wall, denser outward
+  float x = xin + dd;
+  if (dd < 0.3) x -= (0.3 - dd) * 2.6 * g5;        // dissolving pixels toward the centre
+  float z = (g4 - 0.5) * 1.4 - 0.4 + 0.12 * sin(t * 0.3 + y * 1.3);
+  vec3 pA = vec3(sideF * x, y, z);
+  float bandX = dd + 0.12 * sin(y * 2.0);
+  float iA = bandX < 0.3 ? (g5 < 0.4 ? 4.0 : (g5 < 0.7 ? 0.0 : 3.0))
+           : bandX < 0.6 ? (g5 < 0.6 ? 4.0 : 5.0)
+           : bandX < 0.95 ? (g5 < 0.8 ? 0.0 : 1.0)
+           : bandX < 1.35 ? 2.0
+           : bandX < 1.65 ? (g5 < 0.6 ? 3.0 : 4.0)
+           : (g5 < 0.8 ? 2.0 : 4.0);
+  // --- the Careers stream ---
   float u = fract(g1 + t * 0.008);
-  float w1 = 6.2831853 * 1.15 * u;
-  vec3 c1 = vec3(2.55 + 0.75 * sin(w1), 3.4 - 6.8 * u, 0.7 * cos(w1));
-  vec3 t1 = vec3(0.75 * cos(w1) * 7.2, -6.8, -0.7 * sin(w1) * 7.2);
   float w2 = 6.2831853 * u;
   vec3 c2 = vec3(0.4 + 4.0 * u, -3.4 + 6.6 * u + 0.6 * sin(w2), 0.5 * cos(w2 * 1.3));
-  vec3 t2 = vec3(4.0, 6.6 + 0.6 * cos(w2) * 6.28, -0.5 * sin(w2 * 1.3) * 8.2);
+  vec3 t2 = normalize(vec3(4.0, 6.6 + 0.6 * cos(w2) * 6.28, -0.5 * sin(w2 * 1.3) * 8.2) + 1e-5);
+  vec3 n1 = normalize(cross(t2, vec3(0.0, 0.0, 1.0)) + 1e-5);
+  vec3 n2 = cross(t2, n1);
+  float rr = 0.5 * pow(g3, 0.55);
+  float aa = g2 * 6.2831853 + u * 12.0;
+  vec3 pB = c2 + (n1 * cos(aa) + n2 * sin(aa)) * rr;
+  float iB = g5 < 0.36 ? 0.0 : (g5 < 0.7 ? 4.0 : (g5 < 0.9 ? 2.0 : 3.0));
   float k = smoothstep(0.0, 1.0, uCareers);
-  vec3 c = mix(c1, c2, k);
-  vec3 tg = normalize(mix(t1, t2, k) + 1e-5);
-  vec3 n1 = normalize(cross(tg, vec3(0.0, 0.0, 1.0)) + 1e-5);
-  vec3 n2 = cross(tg, n1);
-  float rr = mix(0.42, 0.5, k) * pow(g3, 0.55);
-  if (g4 > 0.9) rr += 0.25 + 0.5 * g5;   // loose pixels around it
-  float a = g2 * 6.2831853 + u * 12.0;
-  vec3 p = c + (n1 * cos(a) + n2 * sin(a)) * rr;
-  if (k < 0.5) idx = g5 < 0.45 ? 4.0 : (g5 < 0.72 ? 3.0 : (g5 < 0.94 ? 2.0 : 0.0));
-  else idx = g5 < 0.36 ? 0.0 : (g5 < 0.7 ? 4.0 : (g5 < 0.9 ? 2.0 : 3.0));
-  vis = smoothstep(0.0, 0.04, u) * (1.0 - smoothstep(0.96, 1.0, u));
+  vec3 p = mix(pA, pB, k);
+  idx = k < 0.5 ? iA : iB;
+  vis = mix(1.0, smoothstep(0.0, 0.04, u) * (1.0 - smoothstep(0.96, 1.0, u)), k);
   // Ending: gathered into the sun that settles on the footer's edge.
   float pull = smoothstep(0.0, 0.75, uCollapse);
   vec3 sun = normalize(vec3(g2, g3, g5) - 0.5 + 1e-4) * 0.24 * g4 * g4;
@@ -815,7 +866,7 @@ vec3 lightRibbon(out float idx, out float vis) {
 }
 
 void main() {
-  vec3 A = position;
+  vec3 A = PPOS;
   vec3 B = aTarget;
 
   // In the hero, the start point is the particle's live place in the field,
@@ -830,7 +881,7 @@ void main() {
   // Delays blend pure randomness with a coarse noise field, so neighbouring
   // particles tend to peel away (and land) together — organic, not uniform.
   // (Uses the static form position so delays stay fixed in the moving field.)
-  float clumpOut = snoise(position * 0.75 + 3.1) * 0.5 + 0.5;
+  float clumpOut = snoise(PPOS * 0.75 + 3.1) * 0.5 + 0.5;
   float clumpIn = snoise(aTarget * 0.75 - 5.3) * 0.5 + 0.5;
   float delayOut = mix(aDelay, clumpOut, 0.55) * OUT_SPREAD;
   float delayIn = IN_START + mix(aRandom, clumpIn, 0.55) * IN_SPREAD;
@@ -870,12 +921,12 @@ void main() {
   if (uFlowFrom > 4.5) A = gp;
   else if (uFlowFrom > 3.5) A = sp;
   else if (uFlowFrom > 2.5) A = earthSpin(A, shellA, faceA);
-  else if (uFlowFrom > 1.5) A = uLight > 0.5 ? lightRing(laneA) : ringStream(A, laneA, arcA);
+  else if (uFlowFrom > 1.5) A = ringStream(A, laneA, arcA);
   else if (uFlowFrom > 0.5) A = uLight > 0.5 ? lightTerrain(bandA) : torusFlow(A, bandA);
   if (uFlowTo > 4.5) B = gp;
   else if (uFlowTo > 3.5) B = sp;
   else if (uFlowTo > 2.5) B = earthSpin(B, shellB, faceB);
-  else if (uFlowTo > 1.5) B = uLight > 0.5 ? lightRing(laneB) : ringStream(B, laneB, arcB);
+  else if (uFlowTo > 1.5) B = ringStream(B, laneB, arcB);
   else if (uFlowTo > 0.5) B = uLight > 0.5 ? lightTerrain(bandB) : torusFlow(B, bandB);
 
   float outLocal = clamp((uProgress - delayOut) / OUT_LENGTH, 0.0, 1.0);
@@ -1043,8 +1094,9 @@ void main() {
     vec3 ringOut = hue * bright * rightFade * protect2 * arcVis;
     vColor = mix(vColor, ringOut, ringW);
     if (uLight > 0.5) {
-      vColor = mix(vColor, vec3(protect2), ringW);
-      if (ringW > 0.5) vInk = lpal(lane);
+      // Flowing bands (Reference 02): orange inside, white, cyan/blue, navy.
+      vColor = mix(vColor, vec3(protect2 * arcVis), ringW);
+      if (ringW > 0.5) vInk = lpal(lane > 1.05 ? floor(fract(aRandom * 7.0) * 5.0) : lband(lane, fract(aRandom * 31.7)));
     }
   }
 
@@ -1063,7 +1115,7 @@ void main() {
     // blue ocean and haze, blue to deep blue shell, a few cream highlights.
     // Each layer's role comes from its radius band (see forms/earth.ts), so
     // colours stay put on the planet.
-    vec3 sp = earthFrom > 0.0 ? position : aTarget;
+    vec3 sp = earthFrom > 0.0 ? PPOS : aTarget;
     float rn = length(sp) / EARTH_R;
     float warm = smoothstep(0.1, 0.9, sin(sp.x * 2.3 + sp.y * 1.7) * 0.5 + sin(sp.z * 3.1 - sp.y * 2.4) * 0.5);
     vec3 ec;
@@ -1089,9 +1141,15 @@ void main() {
     if (uLight > 0.5) {
       // Ocean blue / cyan / navy; land white and orange; far side faint.
       float eh = fract(aRandom * 37.1);
-      float li = (rn < 0.994 || rn >= 1.015) ? (eh < 0.6 ? 4.0 : (eh < 0.88 ? 3.0 : 5.0))
-               : (warm > 0.35 || eh < 0.35) ? (eh < 0.75 ? 0.0 : 1.0) : 2.0;
-      vColor = mix(vColor, vec3(mix(0.15, 1.0, facing) * protect3), earthW);
+      // Ocean (and the re-placed coast) blue / cyan / navy; land white with
+      // orange regions; the orbit ring white with orange (Reference 03).
+      float li = shell > 0.5 ? (eh < 0.72 ? 2.0 : 0.0)
+               : (rn < 0.995 || rn >= 1.004) ? (eh < 0.62 ? 4.0 : (eh < 0.88 ? 3.0 : 5.0))
+               : (warm > 0.55 ? (eh < 0.8 ? 0.0 : 1.0) : (eh < 0.9 ? 2.0 : 6.0));
+      // Only the facing hemisphere (and the ring) show, so the globe reads
+      // solid; the outer haze is dropped.
+      float keep = shell > 0.5 ? mix(0.35, 1.0, facing) : smoothstep(0.05, 0.35, facing) * step(rn, 1.015);
+      vColor = mix(vColor, vec3(keep * protect3), earthW);
       if (earthW > 0.5) vInk = lpal(li);
     }
   }
@@ -1141,7 +1199,40 @@ void main() {
   vAlpha *= mix(1.0, heroVisible, heroW);
   if (uLight > 0.5) {
     vColor = mix(vColor, vec3(heroVisible * protect), heroW);
-    if (heroW > 0.5) vInk = lpal(lband(heroLane, fract(aRandom * 29.3)));
+    // Spiral arms of bands round the vortex (Reference 01).
+    float hang = atan(A.z, A.x) / 6.2831853;
+    if (heroW > 0.5) vInk = lpal(lband(fract(heroLane * 1.1 + hang * 2.0 + 0.5), fract(aRandom * 29.3)));
   }
 
+
+#ifdef VOXEL
+  // One base cube size for the whole site; only perspective changes it on
+  // screen. A very few cubes are larger depth accents. Fades (depth, text
+  // protection, arrivals) shrink the cube instead of fading it, so the
+  // material stays solid.
+  float cubeVis = clamp(max(max(vColor.r, vColor.g), vColor.b) * 2.4, 0.0, 1.0) * clamp(vAlpha, 0.0, 1.0);
+  // In flight between formations the cubes shrink, so a transition reads as
+  // a controlled stream, not a cloud over the page.
+  cubeVis *= 1.0 - 0.7 * field;
+  // Hero: the typography stays clean (Reference 01) — desktop text is on the
+  // left, phone text below the formation.
+  vec2 heroNdc = gl_Position.xy / gl_Position.w;
+  float heroMask = mix(smoothstep(-0.2, 0.08, heroNdc.x), smoothstep(-0.12, 0.08, heroNdc.y), uSolarPhone);
+  cubeVis *= mix(1.0, heroMask * (1.0 - smoothstep(0.8, 0.92, heroNdc.y)), heroW);
+  // About and Careers: their copy is centred, so the frame (Reference 06)
+  // and the Careers stream keep to the sides — the outer half of the screen
+  // on desktop, thin walls at the edges on phones, where the text is full
+  // width. Arrivals are held to the sides from the moment they leave the
+  // path, so no cloud crosses the text. Only the closing sun is left alone.
+  float frameW = (step(4.5, uFlowFrom) * (1.0 - eOut) + step(4.5, uFlowTo) * eOut) * (1.0 - smoothstep(0.0, 0.2, uCollapse));
+  float sideMask = smoothstep(mix(0.5, 0.8, uSolarPhone), mix(0.62, 0.9, uSolarPhone), abs(heroNdc.x));
+  cubeVis *= mix(1.0, sideMask, frameW);
+  float accent = fract(aRandom * 911.3) < 0.0035 ? 3.0 : 1.0;
+  float worldSize = uVoxelPx * uFocusDepth / max(uPxPerUnit, 1.0) * accent;
+  float localSize = worldSize / max(uRootScale, 1e-4) * smoothstep(0.05, 0.45, cubeVis);
+  vec4 mvCube = modelViewMatrix * vec4(pos + position * localSize, 1.0);
+  gl_Position = projectionMatrix * mvCube;
+  vNormal = normalize(normalMatrix * normal);
+#endif
 }
+

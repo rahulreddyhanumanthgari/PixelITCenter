@@ -204,7 +204,8 @@ export default function JourneyScene() {
       const columns = isColumnLayout();
       const xAt = (fraction: number) => (rect.left + rect.width * fraction - vw / 2) * wpp;
       L.sides = columns ? { left: xAt(STORY_SLOTS.left), right: xAt(STORY_SLOTS.right), byForm: STORY_SIDES } : null;
-      L.earthScale = columns ? EARTH_VIEW.scale : 1;
+      // Light theme: the whole globe on the right (Reference 03).
+      L.earthScale = columns ? (lightRef.current ? 1.0 : EARTH_VIEW.scale) : 1;
       // The Why halo is sized to frame desktop content; in the phone band the
       // whole ring must fit instead.
       L.torusScale = columns ? 1 : 0.4;
@@ -222,9 +223,9 @@ export default function JourneyScene() {
       // Desktop Earth: anchor it to the right edge so a fixed share of its
       // diameter is off-screen, whatever the window width.
       if (L.sides) {
-        const earthPx = (2 * EARTH_VIEW.radius * EARTH_VIEW.scale * L.to.scale) / wpp;
+        const earthPx = (2 * EARTH_VIEW.radius * L.earthScale * L.to.scale) / wpp;
         // Light theme (spec 8): roughly half of the globe tucked outside the viewport.
-        const hidden = lightRef.current ? 0.5 : EARTH_VIEW.hiddenRight;
+        const hidden = lightRef.current ? 0.1 : EARTH_VIEW.hiddenRight;
         const xWorld = (vw - (0.5 - hidden) * earthPx - vw / 2) * wpp;
         const byForm = [...STORY_SIDES];
         byForm[EARTH_VIEW.index] = (xWorld - L.sides.left) / (L.sides.right - L.sides.left);
@@ -267,7 +268,7 @@ export default function JourneyScene() {
       // top entering the screen (0) to the galaxy's release (1).
       if (careersEl) {
         const c = careersEl.getBoundingClientRect();
-        L.careers = 1 - smoothstep(0.25, 0.8, Math.abs(c.top + c.height / 2 - vh / 2) / vh);
+        L.careers = 1 - smoothstep(0.12, 0.32, Math.abs(c.top + c.height / 2 - vh / 2) / vh);
       }
       if (galaxyOutro) {
         const o = galaxyOutro.getBoundingClientRect();
@@ -365,24 +366,27 @@ export default function JourneyScene() {
       }}
     >
       {light && <LightSky pixelRatio={dpr} reducedMotion={reducedMotion} />}
-      <StarField
-        // Light theme: only a sparse scatter of background pixels.
-        count={Math.round(tier.starCount * (light ? 0.07 : 1))}
-        pixelRatio={dpr}
-        reducedMotion={reducedMotion}
-        pointer={pointer}
-        atmosphere={atmosphere}
-        light={light}
-      />
+      {!light && (
+        <StarField
+          // Light theme: only a sparse scatter of background pixels.
+          count={Math.round(tier.starCount * (light ? 0.07 : 1))}
+          pixelRatio={dpr}
+          reducedMotion={reducedMotion}
+          pointer={pointer}
+          atmosphere={atmosphere}
+          light={light}
+        />
+      )}
       <CameraRig
         pointer={pointer}
         atmosphere={atmosphere}
         strength={reducedMotion ? 0 : tierName === "mobile" ? 0.5 : 1}
       />
       <ParticleSystem
-        key={tierName}
+        key={`${tierName}-${light}`}
         forms={JOURNEY_FORMS}
-        count={tier.particleCount}
+        // Light theme: real cubes cost more per particle than points.
+        count={Math.round(tier.particleCount * (light ? 0.6 : 1))}
         look={HERO_LOOK}
         lookTo={STORY_LOOK}
         handoffAt={STORY_HANDOFF}

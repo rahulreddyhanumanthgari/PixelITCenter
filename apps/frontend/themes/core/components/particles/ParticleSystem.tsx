@@ -160,6 +160,9 @@ export interface MorphUniforms {
   uProtect5: THREE.IUniform<THREE.Vector4>;
   uCollapse: THREE.IUniform<number>;
   uCareers: THREE.IUniform<number>;
+  uPxPerUnit: THREE.IUniform<number>;
+  uRootScale: THREE.IUniform<number>;
+  uVoxelPx: THREE.IUniform<number>;
   uLight: THREE.IUniform<number>;
   uSunOffset: THREE.IUniform<number>;
   uProtect: THREE.IUniform<THREE.Vector4>;
@@ -171,9 +174,10 @@ const MOUSE_PARKED = new THREE.Vector3(100, 100, 100);
 const TAU = Math.PI * 2;
 
 /** Light theme: normal blending + ink colours; dark: additive light. */
-export function applyTheme(points: THREE.Points, uLight: THREE.IUniform<number>, light: boolean) {
+export function applyTheme(points: THREE.Object3D, uLight: THREE.IUniform<number>, light: boolean) {
   uLight.value = light ? 1 : 0;
-  const m = points.material as THREE.Material;
+  const m = (points as THREE.Points).material as THREE.Material;
+  if (m.transparent === false) return; // the light cubes are opaque
   const blending = light ? THREE.NormalBlending : THREE.AdditiveBlending;
   if (m.blending !== blending) {
     m.blending = blending;
@@ -181,8 +185,8 @@ export function applyTheme(points: THREE.Points, uLight: THREE.IUniform<number>,
   }
 }
 
-function uniformsOf(points: THREE.Points): MorphUniforms {
-  return (points.material as THREE.ShaderMaterial).uniforms as MorphUniforms;
+function uniformsOf(points: THREE.Object3D): MorphUniforms {
+  return ((points as THREE.Points).material as THREE.ShaderMaterial).uniforms as MorphUniforms;
 }
 
 /** Frame-rate independent version of "close `damping` of the gap per frame". */
@@ -218,7 +222,7 @@ export function ParticleSystem({
 }: ParticleSystemProps) {
   const rootRef = useRef<THREE.Group>(null);
   const tiltRef = useRef<THREE.Group>(null);
-  const pointsRef = useRef<THREE.Points>(null);
+  const pointsRef = useRef<THREE.Object3D>(null);
 
   const motion = reducedMotion ? look.reducedMotionFactor : 1;
 
@@ -263,6 +267,10 @@ export function ParticleSystem({
       uProtect5: { value: new THREE.Vector4(0, 0, 0.001, 0.001) },
       uCollapse: { value: 0 },
       uCareers: { value: 0 },
+      // Light cubes only (VOXEL): screen scale, system scale, base cube size.
+      uPxPerUnit: { value: 1000 },
+      uRootScale: { value: 1 },
+      uVoxelPx: { value: 6 },
       uLight: { value: 0 },
       uSunOffset: { value: 0 },
       uProtect: { value: new THREE.Vector4(0, 0, 0.001, 0.001) },
@@ -277,6 +285,42 @@ export function ParticleSystem({
       blending: THREE.AdditiveBlending,
     });
   }, [look]);
+
+  // Light theme: the same particles drawn as real instanced cubes
+  // (Correction Specification). Instanced attributes share the point
+  // geometry's arrays, so the morph controller's updates reach both.
+  const voxel = useMemo(() => {
+    if (!light) return null;
+    const box = new THREE.BoxGeometry(1, 1, 1);
+    const g = new THREE.InstancedBufferGeometry();
+    g.index = box.index;
+    g.setAttribute("position", box.getAttribute("position"));
+    g.setAttribute("normal", box.getAttribute("normal"));
+    for (const [name, attr] of Object.entries(geometry.attributes)) {
+      const a = attr as THREE.BufferAttribute;
+      const inst = new THREE.InstancedBufferAttribute(a.array as Float32Array, a.itemSize);
+      if (name === "position" || name === "aTarget") inst.setUsage(THREE.DynamicDrawUsage);
+      g.setAttribute(name === "position" ? "aPos" : name, inst);
+    }
+    g.instanceCount = count;
+    const mat = new THREE.ShaderMaterial({
+      uniforms: material.uniforms,
+      defines: { VOXEL: "" },
+      vertexShader,
+      fragmentShader,
+      transparent: false,
+      depthWrite: true,
+      depthTest: true,
+    });
+    return { geometry: g, material: mat };
+  }, [light, geometry, material, count]);
+  useEffect(
+    () => () => {
+      voxel?.geometry.dispose();
+      voxel?.material.dispose();
+    },
+    [voxel],
+  );
 
   // Plain object held in a ref: the controller mutates geometry attributes.
   const controllerRef = useRef<MorphController | null>(null);
@@ -295,8 +339,9 @@ export function ParticleSystem({
     const u = uniformsOf(points);
     u.uPixelRatio.value = pixelRatio;
     u.uMotion.value = motion;
-    u.uScatter.value = scatter * (reducedMotion ? 0.35 : 1);
-  }, [pixelRatio, motion, scatter, reducedMotion]);
+    // Light cubes travel on tighter paths (no cloud over the page).
+    u.uScatter.value = scatter * (reducedMotion ? 0.35 : 1) * (light ? 0.4 : 1);
+  }, [pixelRatio, motion, scatter, reducedMotion, light]);
 
   useEffect(() => () => geometry.dispose(), [geometry]);
   useEffect(() => () => material.dispose(), [material]);
@@ -314,6 +359,8 @@ export function ParticleSystem({
     spin: 0,
     anchor: 0,
     collapse: 0,
+    voxFrom: -1,
+    voxTo: -1,
   });
 
   useFrame((state, rawDelta) => {
@@ -339,6 +386,14 @@ export function ParticleSystem({
     const target = progress.current.value;
     s0.smoothProgress = s0.smoothProgress < 0 ? target : s0.smoothProgress + (target - s0.smoothProgress) * k;
     u.uProgress.value = controller.update(s0.smoothProgress);
+    // Light cubes: reached through the scene object (never the memo).
+    const voxMesh = light ? (points as THREE.Mesh) : null;
+    if (voxMesh && (controller.fromIndex !== s0.voxFrom || controller.toIndex !== s0.voxTo)) {
+      s0.voxFrom = controller.fromIndex;
+      s0.voxTo = controller.toIndex;
+      voxMesh.geometry.getAttribute("aPos").needsUpdate = true;
+      voxMesh.geometry.getAttribute("aTarget").needsUpdate = true;
+    }
     // The hero gravity field is live while it is the form being left/held.
     u.uHeroField.value = formNames[0] === "heroField" && controller.fromIndex === 0 ? 1 : 0;
     // Flowing torus (Why): live whether it is being left or arrived at.
@@ -432,6 +487,14 @@ export function ParticleSystem({
     // The ending's sun rests on the footer's top edge: its offset from the
     // galaxy centre, in the particles' own units.
     u.uSunOffset.value = G ? (G.horizon - root.position.y) / Math.max(root.scale.x, 1e-3) : 0;
+    if (voxMesh) {
+      const cam = state.camera as THREE.PerspectiveCamera;
+      const hpx = state.size.height * pixelRatio;
+      u.uPxPerUnit.value = hpx / (2 * Math.tan(((cam.fov ?? 40) * Math.PI) / 360));
+      u.uRootScale.value = root.scale.x;
+      // The one base cube size: ~0.65% of the screen height at the focal depth.
+      u.uVoxelPx.value = hpx * 0.0065;
+    }
 
     // --- rotation ---------------------------------------------------------
     // A "spin" look turns continuously; as it hands over to a "sway" look the
@@ -466,7 +529,11 @@ export function ParticleSystem({
   return (
     <group ref={rootRef}>
       <group ref={tiltRef}>
-        <points ref={pointsRef} geometry={geometry} material={material} frustumCulled={false} />
+        {voxel ? (
+          <mesh ref={pointsRef} geometry={voxel.geometry} material={voxel.material} frustumCulled={false} />
+        ) : (
+          <points ref={pointsRef} geometry={geometry} material={material} frustumCulled={false} />
+        )}
       </group>
     </group>
   );

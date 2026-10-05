@@ -145,3 +145,28 @@
 .light-btn--ghost:hover {
   border-color: #0f172a;
 }
+
+/* Correction Specification: on desktop, Staffing, Why and How We Work keep
+   their copy on the left in clean white space; the voxel formation holds
+   the right (References 03-05). About stays centred (Reference 06). */
+@media (min-width: 1024px) {
+  section[aria-labelledby="staffing-title"],
+  section[aria-labelledby="why-title"],
+  section[aria-labelledby="process-title"] {
+    margin-left: 0 !important;
+    width: 44% !important;
+  }
+  section[aria-labelledby="staffing-title"] .text-center,
+  section[aria-labelledby="why-title"] .text-center,
+  section[aria-labelledby="process-title"] .text-center {
+    text-align: left;
+  }
+  section[aria-labelledby="staffing-title"] .mx-auto,
+  section[aria-labelledby="why-title"] .mx-auto,
+  section[aria-labelledby="process-title"] .mx-auto {
+    margin-left: 0;
+  }
+  section[aria-labelledby="why-title"] [data-why-content] {
+    margin-left: 0;
+  }
+}

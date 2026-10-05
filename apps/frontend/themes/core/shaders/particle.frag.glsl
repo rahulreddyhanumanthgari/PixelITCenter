@@ -18,7 +18,22 @@ varying float vFar;    // light theme: -1 foreground ... 0 focus ... 1 backgroun
 
 vec3 toLinear(vec3 c) { return pow(c, vec3(2.2)); }
 
+#ifdef VOXEL
+varying vec3 vNormal;
+#endif
+
 void main() {
+#ifdef VOXEL
+  // A solid cube in its palette colour: a soft key light from the upper
+  // left, ambient fill, each face readable.
+  vec3 nn = normalize(vNormal);
+  float key = max(dot(nn, normalize(vec3(-0.45, 0.75, 0.5))), 0.0);
+  float fill = max(dot(nn, normalize(vec3(0.6, -0.2, 0.75))), 0.0);
+  vec3 base = toLinear(vInk) * (0.95 + 0.1 * fract(vRand * 3.17));
+  vec3 col = base * (0.5 + 0.48 * key + 0.16 * fill);
+  gl_FragColor = vec4(col, 1.0);
+  return;
+#endif
   // gl_PointCoord runs 0..1 across the sprite; measure from its centre.
   float d = length(gl_PointCoord - 0.5);
   if (d > 0.5) discard;

@@ -671,46 +671,57 @@ rejected; this is their replacement.
 - **Background.** Opaque, so the galaxy's sun rests on the footer's top
   edge, with faint blue and orange glows at the bottom.
 
-## Light theme: Light Pixel Master Specification (2026-10-05)
+## Light theme: Correction Specification (2026-10-05)
 
-The owner's "Pixel IT Center Light Pixel Master Specification" PDF is the
-single source of truth for the light theme. It keeps the dark site's page,
-content, particle journey, scroll story and morphs (GSAP ScrollTrigger),
-and changes the light theme's material, palette and, where the spec names
-one, the formation. The dark theme is unchanged.
+The owner's "Pixel IT Center Correction Spec — Reference Images" PDF is the
+source of truth for the light theme. It replaces the earlier Light Pixel
+Master Specification. It keeps the dark site's page, content, particle
+journey, scroll story and morphs (GSAP ScrollTrigger), and changes the light
+theme's material, palette and per-section formations, matched to six
+reference images. The dark theme is unchanged.
 
 - **Switch**: `app/(light)` sets `data-theme="light"`; `themes/core/lib/theme.ts`
-  reads it; JourneyScene passes `light` to `ParticleSystem` / `StarField`
-  (`uLight`, normal blending), turns bloom off and adds `LightSky` (white
-  environment).
-- **Material (spec 2)**: every particle is a small voxel pixel, drawn as an
-  isometric cube (lit top, mid left face, darker right face) in
-  `particle.frag.glsl`; one consistent small size (2.1x the dark point);
-  0.6% are large out-of-focus cubes as rare depth accents; depth of field
-  softens far pixels; the star field is a sparse scatter (7%) of soft
-  background pixels.
-- **Locked palette (spec 1)**: `lpal` in `particle.vert.glsl` (= `--pi-*` in
+  reads it; JourneyScene passes `light` to `ParticleSystem` (`uLight`), turns
+  bloom off, drops the star field, uses 60% of the particles and adds
+  `LightSky` (white environment).
+- **Real cubes**: in light, `ParticleSystem` draws the same particles as
+  instanced boxes (`#define VOXEL`: `InstancedBufferGeometry` sharing the
+  particle attributes, `position` renamed `aPos`), opaque with depth
+  testing, lit by a key and a fill light in `particle.frag.glsl`. One base
+  size in screen pixels (`uVoxelPx`); 0.35% are 3x accents. Fades shrink a
+  cube instead of making it transparent, so no blurry dots.
+- **Locked palette**: `lpal` in `particle.vert.glsl` (= `--pi-*` in
   `light.css`): orange #F97316 / #FB923C, white #F8FAFC, cyan #0EA5E9, blue
-  #1D4ED8, navy #0F172A, cool grey #CBD5E1. Each form picks palette indices
-  (`vInk`); bands (`lband`): orange, white, cyan, blue, navy.
-- **Formations (light only, in `particle.vert.glsl`)**:
-  - Hero (6): the hero field on the right (desktop; `L.from` in
-    JourneyScene), above the text on phones; `LightHero` puts the headline
-    on the left.
-  - Services (7): `lightRing`, a true hollow ring with an open centre and
-    spiral bands, on the right; `LightServices` puts the content on the left.
-  - Staffing (8): the Earth only (the dotted shell joins the ocean), about
-    half tucked past the right edge; ocean blue/cyan/navy, land orange/white.
-  - Why (9): `lightTerrain`, a voxel lattice seen from above with a
-    recessed square (white walls, cyan/blue floor) right of the content and
-    orange/white/cyan/blue bands round it.
-  - How We Work (10): `lightPath`, one continuous pixel path through the
-    four stations (the solar system's knots); orange behind the progress
-    front, blue/cyan ahead; stations light up as reached.
-  - About (11) / Careers (12): `lightRibbon`, an S ribbon of pixels on the
-    right, re-forming into a sweeping orange/blue stream while Careers is on
-    screen (`uCareers`, measured in JourneyScene); the footer ending still
-    gathers it into the setting sun.
+  #1D4ED8, navy #0F172A, cool grey #CBD5E1. No purple, pink, green, red or
+  yellow.
+- **Transitions**: formation → dispersion → re-formation; in light, scatter
+  is 40% of dark's and cubes shrink in flight, so a transition reads as a
+  stream, not a cloud over the page.
+- **Clean copy**: screen-space masks in the VOXEL block. The hero keeps the
+  left clear on desktop and the lower half clear on phones. About/Careers
+  keep to the outer half of the screen on desktop and thin edge walls on
+  phones; arrivals are masked from the moment they leave the path.
+- **Formations (Reference 01–06)**:
+  - 01 Hero: the hero field as a banded vortex on the right (above the text
+    on phones); `LightHero` left-aligned typography.
+  - 02 Services: `ringStream` (same as dark) moved right as a sweeping
+    tunnel; `LightServices` content on the left.
+  - 03 Staffing: voxel Earth on the right, front hemisphere only, ocean
+    blue/cyan/navy, land white with orange; the dotted shell becomes an
+    orbit ring.
+  - 04 Why: `lightTerrain`, voxel terrain with a recessed square on the
+    right; text on the left.
+  - 05 How We Work: `lightPath`, one continuous banded path through the
+    four stations (`LKN` knots); heading on the left.
+  - 06 About: `lightRibbon`, symmetric voxel walls framing the centred
+    content; re-forms as the Careers stream (`uCareers`); the footer ending
+    still gathers it into the setting sun.
+- **Layout**: on desktop, Staffing, Why and How We Work text is left-aligned
+  at 44% width (`light.css`), leaving the right side to the formation.
+- **Performance**: instanced cubes cost more than points; about 46 fps vs
+  60 fps for dark on an Intel UHD 630 at 1440x900. Headless Chrome
+  (SwiftShader) runs at ~1 fps, so morphs there look slow-motion: test on
+  the GPU (`--use-angle=d3d11`).
 
 ## Content
 
