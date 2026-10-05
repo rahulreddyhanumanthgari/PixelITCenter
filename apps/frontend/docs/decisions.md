@@ -673,20 +673,20 @@ rejected; this is their replacement.
 
 ## Light theme (bright, premium)
 
-**The sun (2026-10-03).** Dark is space; light is the sun, and the light
-hero is the moment they meet: a solar eclipse (the owner gave a free hand
-after a centred ball and a sunrise). `eclipseView` (journey-config) places a
-navy moon disc (#0A192F) on the right on desktop (left half: the headline,
-`themes/light/hero/LightHero.tsx`) and above the headline on phones.
-`LightSky` draws the moon with a blazing rim, a diamond-ring bead, a gold
-inner corona and warm light across a cream sky. JourneyScene centres the
-hero particles on the moon, and `heroField`'s light branch makes them the
-outer corona: 56 tight magnetic loops (dipole field lines r = L sin^2 theta,
-particles flowing between footpoints), 22 streamers drifting outward, a rim
-and a haze; nothing is drawn over the moon. As the story begins
-(`Atmosphere.heroBlend`) the moon climbs away and the corona breaks out into
-the sections' forms. Accents deep sunset orange #D9480F, gold #F59E0B;
-cards lit from the upper left.
+**Light hero: the glowing orb (2026-10-05).** After the owner's reference
+(working one section at a time, hero first): a soft warm off-white studio
+backdrop (#F3F1EE); a glowing particle orb floating in the centre
+(`orbView` in journey-config: radius min(0.12 vw, 0.2 vh), a little above
+centre; phones larger and higher); the headline "Technology & Talent /
+Built for What's Next" in bold title case with the description at the
+bottom left, the CTAs at the bottom right (`themes/light/hero/LightHero.tsx`).
+`heroField`'s light branch makes the particles a slowly turning, gently
+bobbing sphere: most on the surface, a few inside, a thin haze; fine dots,
+see-through, dense at the edge and airy in the middle, fainter at the back.
+`LightSky` lights it from behind (a wide peach bloom, a white-gold core
+glow) and puts a soft shadow on the floor below. As the story begins the orb
+rises away and its glow fades. (Earlier light heroes, a centred sun ball, a
+sunrise and a solar eclipse, were tried and dropped.)
 
 **Current direction (2026-10-03): the particle journey in blue on white.**
 The team liked the dark theme's particles and wanted them in the light

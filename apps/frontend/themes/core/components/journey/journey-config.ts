@@ -41,14 +41,13 @@ export const STORY_FLIGHT = { swell: 1.6 } as const;
  * that, and streams/outer space far past the viewport edges.
  */
 /**
- * Light theme hero: a solar eclipse. Returns the moon disc's radius and its
- * centre's offset from the screen centre, in px (dx right, dy down). Desktop:
- * on the right, the headline on the left. Phones and tablets: above the
- * headline.
+ * Light theme hero: a glowing particle orb floating in the centre (after the
+ * owner's reference). Returns its radius and its centre's offset from the
+ * screen centre, in px (dx right, dy down).
  */
-export function eclipseView(vw: number, vh: number): { r: number; dx: number; dy: number } {
-  if (vw < 1024) return { r: Math.min(0.24 * vw, 0.13 * vh), dx: 0, dy: -0.3 * vh };
-  return { r: Math.min(0.13 * vw, 0.22 * vh), dx: 0.24 * vw, dy: 0.02 * vh };
+export function orbView(vw: number, vh: number): { r: number; dx: number; dy: number } {
+  if (vw < 1024) return { r: Math.min(0.3 * vw, 0.16 * vh), dx: 0, dy: -0.17 * vh };
+  return { r: Math.min(0.12 * vw, 0.2 * vh), dx: 0, dy: -0.08 * vh };
 }
 
 export const HERO_FIELD = {

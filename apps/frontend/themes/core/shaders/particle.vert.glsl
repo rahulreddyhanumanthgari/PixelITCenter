@@ -167,70 +167,40 @@ vec3 heroField(out float visible, out float glow, out float grow, out float lane
   grow = 1.0;
   lane = 0.7;
 
-  // Light theme: no black hole. The hero is a solar eclipse: the moon
-  // (LightSky's navy disc, radius SUN_R) hides the sun, and these particles
-  // are the corona round it, in the screen plane with a little depth:
-  // golden magnetic loops arching from the limb (dipole field lines,
-  // r = L sin^2 theta, particles flowing from one footpoint to the other),
-  // long streamers drifting outward, a blazing rim and a sparse haze.
-  // Nothing is drawn over the moon.
+  // Light theme: no black hole. The hero is a glowing orb of particles
+  // (owner's reference): a slowly turning sphere of radius 0.5, most
+  // particles on its surface (so its edge reads dense and its centre soft),
+  // a few inside, a thin drifting haze, and a gentle floating bob. Warm
+  // peach / orange lanes; the far side is fainter.
   if (uLight > 0.5) {
-    const float SUN_R = 0.5;
-    vec3 V = vec3(0.0, 0.731, 0.682); // toward the camera (undoes the 0.82 rad hero tilt)
-    vec3 X = vec3(1.0, 0.0, 0.0);
-    vec3 Y = cross(V, X);
+    vec3 dir = normalize(aScatterDir + vec3(1e-4));
     vec3 q;
-    if (h6 < 0.5) {
-      // Loops: 56 tight arches of different sizes round the limb.
-      float k = floor(h4 * 56.0);
-      float alpha = (k + fract(sin(k * 12.9) * 4375.8)) / 56.0 * 6.2831853 + t * 0.01;
-      float Lk = 1.12 + 0.55 * pow(fract(sin(k * 78.2) * 43758.5), 1.6);
-      float tau = (fract(sin(k * 39.4) * 43758.5) - 0.5) * 0.5;
-      float th0 = asin(sqrt(1.0 / Lk));
-      float s = fract(h3 + t / (14.0 + aRandom * 10.0));
-      float th = mix(th0, 3.14159265 - th0, s);
-      float r = Lk * sin(th) * sin(th);
-      vec3 radial = cos(alpha) * X + sin(alpha) * Y;
-      vec3 tangent = -sin(alpha) * X + cos(alpha) * Y;
-      vec3 out2 = radial * cos(tau) + V * sin(tau);
-      vec3 jitter = (aScatterDir - vec3(0.5)) * 0.015;
-      q = (out2 * sin(th) + tangent * cos(th)) * r * SUN_R + jitter * SUN_R;
-      visible = smoothstep(0.0, 0.08, s) * (1.0 - smoothstep(0.92, 1.0, s));
-      glow = 1.3 * (1.0 - 0.35 * (r - 1.0) / max(Lk - 1.0, 0.01));
-      grow = 1.0;
-      lane = 0.04 + 0.08 * h5;
-    } else if (h6 < 0.82) {
-      // Streamers: open field lines drifting outward, gently curved.
-      float k = floor(h4 * 22.0);
-      float alpha = (k + 0.5 * fract(sin(k * 51.3) * 43758.5)) / 22.0 * 6.2831853 + aScatterDir.x * 0.05 + t * 0.008;
-      float len = 2.0 + 3.5 * fract(sin(k * 17.3) * 43758.5);
-      float s = fract(h3 + t / (18.0 + aRandom * 14.0));
-      float r = 1.0 + s * len;
-      float bend = 0.08 * (r - 1.0) * (fract(sin(k * 3.7) * 43758.5) - 0.5) * 2.0;
-      q = (cos(alpha + bend) * X + sin(alpha + bend) * Y) * r * SUN_R + V * aScatterDir.y * 0.1;
-      visible = smoothstep(0.0, 0.05, s) * (1.0 - smoothstep(0.4, 1.0, s));
-      glow = 1.1 * (1.0 - 0.6 * s);
-      grow = 0.95 - 0.35 * s;
-      lane = mix(0.12, 0.6, s);
+    if (h6 < 0.78) {
+      q = dir * 0.5 * (0.985 + 0.03 * h4);
+      lane = 0.04 + 0.12 * h5;
+      glow = 1.15;
+      grow = 0.62;
     } else if (h6 < 0.95) {
-      // The rim: a thin blazing ring hugging the moon's edge.
-      float a2 = h5 * 6.2831853 + t * 0.02;
-      q = (cos(a2) * X + sin(a2) * Y) * SUN_R * (1.01 + 0.03 * h4);
-      glow = 1.6;
-      grow = 0.9;
-      lane = 0.03;
+      q = dir * 0.5 * pow(h4, 0.4);
+      lane = 0.02 + 0.06 * h5;
+      glow = 0.8;
+      grow = 0.5;
     } else {
-      // A sparse warm haze.
-      vec3 dir = normalize(aScatterDir + vec3(1e-4));
-      q = sunTurn(dir, t * 0.02) * SUN_R * (1.4 + h4 * 4.0);
-      glow = 0.3;
-      grow = 0.7;
-      lane = 0.55;
+      q = dir * 0.5 * (1.15 + 0.5 * h4);
+      lane = 0.12;
+      glow = 0.35;
+      grow = 0.6;
     }
-    // Hidden where it would cover the moon.
-    float sr = length(q - dot(q, V) * V) / SUN_R;
-    visible *= smoothstep(0.98, 1.02, sr);
-    return q;
+    q = sunTurn(q, t * 0.06);
+    // Toward the camera in local space (undoes the hero's 0.82 rad tilt).
+    vec3 V = vec3(0.0, 0.731, 0.682);
+    vec3 Y = cross(V, vec3(1.0, 0.0, 0.0));
+    float front = dot(normalize(q + vec3(1e-4)), V);
+    // Soft and see-through: dense at the edge, airy in the middle (where the
+    // white core glow shows through), fainter on the far side.
+    float edge = 1.0 - abs(front);
+    visible = (0.18 + 0.5 * edge * edge) * mix(0.55, 1.0, smoothstep(-0.6, 0.6, front));
+    return q + Y * 0.025 * sin(t * 0.5);
   }
 
   // Role: 0 disc, 1 hot inner rim, 2 stream, 3 outer space.

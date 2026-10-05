@@ -12,7 +12,7 @@ import "@/themes/light/light.css";
 export const metadata: Metadata = siteMetadata;
 
 export const viewport: Viewport = {
-  themeColor: "#fff8ee",
+  themeColor: "#f3f1ee",
   colorScheme: "light",
 };
 

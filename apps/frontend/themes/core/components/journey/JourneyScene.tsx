@@ -23,7 +23,7 @@ import {
   EARTH_VIEW,
   GALAXY_VIEW,
   HERO_FIELD,
-  eclipseView,
+  orbView,
   STORY_FLIGHT,
   STORY_HANDOFF,
   STORY_LOOK,
@@ -236,14 +236,14 @@ export default function JourneyScene() {
       L.from.x = 0;
       L.from.y = 0;
       L.from.scale = voidPx * wpp;
-      // Light theme: the hero is a solar eclipse. The particles (its corona)
-      // centre on the moon disc, and 1 local unit = twice its radius (the
-      // shader's rim sits at 0.5).
+      // Light theme: the hero is a glowing particle orb. The particles centre
+      // on it, and 1 local unit = twice its radius (the shader's sphere has
+      // radius 0.5).
       if (lightRef.current) {
-        const e = eclipseView(vw, vh);
-        L.from.x = e.dx * wpp;
-        L.from.y = -e.dy * wpp;
-        L.from.scale = e.r * 2 * wpp;
+        const o = orbView(vw, vh);
+        L.from.x = o.dx * wpp;
+        L.from.y = -o.dy * wpp;
+        L.from.scale = o.r * 2 * wpp;
       }
       L.protectFloor = vw < 768 ? HERO_FIELD.protectFloor.narrow : HERO_FIELD.protectFloor.wide;
       // About's galaxy: centred on its pinned anchor, rim past the screen.

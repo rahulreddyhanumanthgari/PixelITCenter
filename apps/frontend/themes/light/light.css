@@ -14,7 +14,7 @@
   --brand-white: #f2f6ff;
 
   /* Surfaces: white and light atmospheric (#FFFFFF, #F8FAFC, #F3F8FE). */
-  --background: #fff8ee; /* warm sunlit cream */
+  --background: #f3f1ee; /* soft warm off-white */
   --surface: #ffffff;
   --surface-2: #f3f8fe;
   --foreground: #0b1b33;
@@ -77,29 +77,27 @@
 }
 
 .light-hero-copy {
-  max-width: 40rem;
-  font-size: clamp(1rem, 0.95rem + 0.25vw, 1.125rem);
+  max-width: 30rem;
+  font-size: 0.9375rem;
   line-height: 1.6;
   color: var(--text-secondary);
-  text-wrap: balance;
 }
 .light-hero-copy strong {
   color: #d9480f;
 }
 
-/* Hero headline: the site's bold sans, sized for the left half on desktop. */
-.light-hero-title .hero-kicker,
-.light-hero-title .hero-statement {
-  font-size: clamp(2.5rem, 1rem + 6.4vw, 4.75rem);
-}
-@media (min-width: 1024px) {
-  .light-hero-title .hero-kicker,
-  .light-hero-title .hero-statement {
-    font-size: clamp(2.75rem, 3.5vw, 4.25rem);
-  }
-}
-.light-hero-title .hero-kicker {
+/* Hero headline (after the owner's reference): bold sans, title case, large,
+   dark, bottom left. */
+.light-hero-heading {
+  font-family: var(--font-display);
+  font-size: clamp(2.25rem, 1.4rem + 2.8vw, 3.5rem);
+  font-weight: 700;
+  line-height: 1.04;
+  letter-spacing: -0.03em;
   color: var(--text-primary);
+}
+.light-hero-heading .highlight {
+  color: var(--accent-orange);
 }
 
 /* ---------------------------------------------------------------------------
