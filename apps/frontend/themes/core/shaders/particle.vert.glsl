@@ -28,6 +28,7 @@ uniform vec3 uMouse;            // pointer, in the particles' local space
 uniform float uStage;           // How We Work progress: 0 = Discover active … 4 = all done
 uniform float uFlowFrom;        // live form being left: 0 none, 1 torus (Why), 2 ring stream (Services), 3 Earth, 4 solar system, 5 galaxy (About)
 uniform float uFlowTo;          // live form being arrived at (same codes)
+uniform float uSvc;             // light theme: scroll progress through Services (0..1)
 uniform vec4 uProtect2;         // Services content box in NDC (dims the ring stream behind text)
 uniform vec4 uProtect3;         // Staffing content box in NDC (dims the Earth behind text)
 uniform float uEarthScale;      // extra display scale for the Staffing Earth
@@ -55,7 +56,7 @@ attribute vec3 aStageCenter;    // solar system: the role's coordinates
 
 varying vec3 vColor;
 varying float vAlpha;
-varying float vWhite;          // light theme: 1 = drawn as a white dot (the Services wave field)
+varying float vSphere;         // light theme: 1 = drawn as a lit orange sphere (the Services torus)
 
 // Timing of one transition, in uProgress units. Departures all finish before
 // arrivals start, leaving a short moment where everything is a floating field.
@@ -324,31 +325,40 @@ const float RING_SCALE = 2.4255;
 const float RING_TILT = 0.52;
 const vec2 RING_ANCHOR = vec2(-18.0296, 5.1823);
 
-// Light theme, Services: a wide 3D field of particles on a grid, rippling
-// like a gentle ocean surface, seen from slightly above and stretching back
-// behind the section (instead of the ring stream). Each particle takes a grid
-// point from its own random attributes; overlapping waves lift it; colour
-// lanes run warm along the crests.
-vec3 waveField(out float lane, out float arcVis) {
+// Light theme, Services: a large 3D torus built from small spheres (owner's
+// reference), hollow in the middle, turning slowly with a subtle, controlled
+// organic deformation; scroll through Services adds a little turn, swell and
+// drift. Particles snap to a 150 x 34 lattice (96 x 22 on phones) on the torus (several share a
+// point, so each reads as one sphere); the fragment shader lights each as a
+// sphere. `lane` carries the orange variant (0 core, 0.5 brand, 1 deep).
+vec3 servicesTorus(out float lane, out float arcVis) {
   float t = uTime * uMotion;
-  float gx = floor(fract(aRandom * 7.13 + aNoiseOffset.x * 0.0371) * 300.0);
-  float gz = floor(fract(aDelay * 5.31 + aNoiseOffset.z * 0.0293) * 120.0);
-  float x = -20.0 + gx / 300.0 * 44.0;
-  float z = -10.0 + gz / 120.0 * 16.0;
-  float y = 1.25 * sin(x * 0.3 + t * 0.5) + 0.8 * sin(z * 0.45 - t * 0.38 + x * 0.1)
-          + 0.3 * sin((x + z) * 0.75 + t * 0.85);
-  // Crests warmer (lane toward 0), troughs toward the edge colour.
-  lane = clamp(0.3 - y * 0.14, 0.0, 0.48);
-  // Fade the far rows and the side edges.
-  arcVis = smoothstep(-10.0, -6.0, z) * smoothstep(-20.0, -16.0, x) * (1.0 - smoothstep(20.0, 24.0, x));
-  vec3 f = vec3(x, y, z);
-  // Seen from well above, so the ripples spread across the screen.
-  f = rotX(f, 0.95);
-  return f + vec3(2.0, -1.5, -3.0);
+  float sc = uSvc;
+  // Fewer, clearer spheres on phones.
+  float NU = mix(150.0, 96.0, uSolarPhone);
+  float NV = mix(34.0, 22.0, uSolarPhone);
+  float iu = floor(fract(aRandom * 7.13 + aNoiseOffset.x * 0.0371) * NU);
+  float iv = floor(fract(aDelay * 5.31 + aNoiseOffset.z * 0.0293) * NV);
+  float u = (iu + 0.5 * mod(iv, 2.0)) / NU * 6.2831853;
+  float v = iv / NV * 6.2831853;
+  // Subtle, controlled deformation: smooth waves along and round the tube.
+  float R = 5.2 + 0.28 * sin(3.0 * u + t * 0.35) * (1.0 + 0.6 * sc);
+  float r = 1.55 + 0.22 * sin(2.0 * v + 2.0 * u - t * 0.5) + 0.12 * sin(5.0 * u + t * 0.3);
+  vec3 q = vec3((R + r * cos(v)) * cos(u), (R + r * cos(v)) * sin(u), r * sin(v));
+  // Slow continuous 3D rotation; scroll adds a little more.
+  q = rotZ(q, t * 0.05 + sc * 0.6);
+  q = rotX(q, 0.55 + 0.12 * sin(t * 0.12) + sc * 0.35);
+  q = rotY(q, 0.35 * sin(t * 0.07) + sc * 0.25);
+  // Swell a touch through the section, drifting gently down with the scroll.
+  q *= mix(0.36, 0.3, uSolarPhone) * (1.0 + 0.08 * sin(3.14159 * sc));
+  lane = fract(sin((iu * 13.0 + iv * 7.0) * 12.9898) * 43758.5);
+  arcVis = 1.0;
+  // Desktop: the right half (the services fill the left); phones: the band.
+  return q + vec3(mix(5.2, 0.3, uSolarPhone), 0.2 - 0.5 * (sc - 0.5), -2.0);
 }
 
 vec3 ringStream(vec3 p, out float lane, out float arcVis) {
-  if (uLight > 0.5) return waveField(lane, arcVis);
+  if (uLight > 0.5) return servicesTorus(lane, arcVis);
   float t = uTime * uMotion;
   vec2 rel = vec2(p.x - RING_CX, p.z);
   float r = length(rel);
@@ -738,7 +748,7 @@ void main() {
   // Flowing torus: its live positions replace the static form, so particles
   // land on (and leave from) the moving structure. Delays above use the
   // static positions, so they stay fixed.
-  vWhite = 0.0;
+  vSphere = 0.0;
   float laneA = 0.0;
   float laneB = 0.0;
   float bandA = 0.0;
@@ -837,7 +847,7 @@ void main() {
   float solarW = step(3.5, uFlowFrom) * step(uFlowFrom, 4.5) * (1.0 - eOut)
                + step(3.5, uFlowTo) * step(uFlowTo, 4.5) * eIn;
   float galaxyW = step(4.5, uFlowFrom) * (1.0 - eOut) + step(4.5, uFlowTo) * eIn;
-  float size = uSize * aScale * heroSize * mix(1.0, mix(2.8, 2.6, uLight), ringNear)
+  float size = uSize * aScale * heroSize * mix(1.0, mix(2.8, 2.4, uLight), ringNear)
              * mix(1.0, mix(0.7, 1.12, earthFace) * 1.6, earthNear)
              * mix(1.0, 1.5, torusNear)
              * mix(1.0, solarSize, solarW)
@@ -902,8 +912,15 @@ void main() {
     vec3 ringOut = hue * bright * rightFade * protect2 * arcVis;
     vColor = mix(vColor, ringOut, ringW);
   }
-  // Light theme: the Services wave field is white on the peach page.
-  vWhite = uLight * ringW;
+  // Light theme: the Services torus is drawn as lit spheres in the hero orb's
+  // oranges (core #FA9E4C, brand #FF7E2E, deep #F97316), chosen per lattice
+  // point, so the object reads as one orange form with gentle variation.
+  if (uLight > 0.5 && ringW > 0.001) {
+    float lv = ringFrom > 0.0 ? laneA : laneB;
+    vec3 c = lv < 0.45 ? vec3(1.0, 0.494, 0.18) : lv < 0.8 ? vec3(0.98, 0.62, 0.3) : vec3(0.976, 0.451, 0.086);
+    vColor = mix(vColor, pow(c, vec3(2.2)), ringW);
+    vSphere = ringW;
+  }
 
   // Staffing Earth: mostly white (each particle keeps a trace of its accent),
   // the shell a little dimmer than the planet, dimmed behind the content.

@@ -721,6 +721,22 @@ set for the ring/wave weight in light; the stars' shader sets it to 0), and
 no right-hand fade in light. The dark
 theme keeps the ring stream.
 
+**Services: the 3D particle torus (2026-10-05).** Replaces the light wave
+field, after the owner's reference video/PDF. `servicesTorus` (used by
+`ringStream` when `uLight`) snaps the particles to a 150 × 34 lattice on a
+torus (96 × 22 on phones), R 5.2 / r 1.55 with smooth sinusoidal radius
+waves (controlled, not noise), turning slowly about three axes; the new
+`uSvc` uniform (scroll progress through Services, measured in JourneyScene,
+eased in ParticleSystem) adds a little turn, tilt, swell and drift. The
+fragment shader lights each sprite as a small sphere (`vSphere`: soft key
+from the upper left, ambient, a small highlight, darker limb) in the hero
+orb's oranges (brand #FF7E2E, core #FA9E4C, deep #F97316, chosen per lattice
+point so it reads as one orange object); perspective makes near spheres
+larger. Light Services uses `LightServices` (services in the left half) so
+the torus sits in the open right half and never crosses the text; phones
+show it centred in the particle band. Reduced motion slows the idle turn to
+the engine's reduced-motion factor; scroll response remains.
+
 **Current direction (2026-10-03): the particle journey in blue on white.**
 The team liked the dark theme's particles and wanted them in the light
 theme. `app/(light)/light/page.tsx` now renders the shared `Home` exactly as

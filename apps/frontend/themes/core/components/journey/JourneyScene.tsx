@@ -101,6 +101,7 @@ export default function JourneyScene() {
     protect: [0, 0, 0.001, 0.001],
     protectFloor: HERO_FIELD.protectFloor.wide,
     protect2: [0, 0, 0.001, 0.001],
+    svc: 0,
     protect3: [0, 0, 0.001, 0.001],
     protect4: [0, 0, 0.001, 0.001],
     torusScale: 1,
@@ -292,6 +293,11 @@ export default function JourneyScene() {
           (c.width / vw) * 1.02,
           (c.height / vh) * 1.02,
         ];
+      }
+      const servicesSection = servicesContent?.closest("section");
+      if (servicesSection) {
+        const r = servicesSection.getBoundingClientRect();
+        L.svc = Math.min(Math.max((vh - r.top) / (r.height + vh), 0), 1);
       }
       if (servicesContent) {
         const c = servicesContent.getBoundingClientRect();

@@ -4,8 +4,8 @@ import { SectionHeader } from "@/themes/core/components/sections/SectionHeader";
 
 /**
  * Light design, Services: the heading and every service panel in the left
- * half; the right half is left open for the blue tube, which stands there as
- * a tall twisting column while Services is on screen (RibbonLayer).
+ * half; the right half is left open for the 3D particle torus (the particle
+ * layer's light-theme Services form), so the object never crosses the text.
  */
 export function LightServices() {
   return (

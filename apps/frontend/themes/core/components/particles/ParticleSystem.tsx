@@ -71,6 +71,8 @@ export interface LayoutState {
   protectFloor: number;
   /** Services content box in NDC; particles behind it dim on the ring stream. */
   protect2: [number, number, number, number];
+  /** Scroll progress through Services: 0 = its top reaches the screen bottom, 1 = its bottom leaves the top. */
+  svc?: number;
   /** Staffing content box in NDC; Earth particles behind it dim. */
   protect3: [number, number, number, number];
   /** Extra display scale for the Staffing Earth (larger on desktop). */
@@ -150,6 +152,7 @@ export interface MorphUniforms {
   uFlowFrom: THREE.IUniform<number>;
   uFlowTo: THREE.IUniform<number>;
   uProtect2: THREE.IUniform<THREE.Vector4>;
+  uSvc: THREE.IUniform<number>;
   uProtect3: THREE.IUniform<THREE.Vector4>;
   uEarthScale: THREE.IUniform<number>;
   uProtect4: THREE.IUniform<THREE.Vector4>;
@@ -252,6 +255,7 @@ export function ParticleSystem({
       uFlowFrom: { value: 0 },
       uFlowTo: { value: 0 },
       uProtect2: { value: new THREE.Vector4(0, 0, 0.001, 0.001) },
+      uSvc: { value: 0 },
       uProtect3: { value: new THREE.Vector4(0, 0, 0.001, 0.001) },
       uEarthScale: { value: 1 },
       uProtect4: { value: new THREE.Vector4(0, 0, 0.001, 0.001) },
@@ -351,6 +355,8 @@ export function ParticleSystem({
     const tt = u.uProgress.value;
     s0.anchor = (fromKind >= 2 ? 1 - tt : 0) + (toKind >= 2 ? tt : 0);
     u.uProtect2.value.set(...L.protect2);
+    // Eased, so scroll steps never jerk the Services object.
+    u.uSvc.value += ((L.svc ?? 0) - u.uSvc.value) * (1 - Math.pow(0.9, Math.min(rawDelta, 1 / 20) * 60));
     u.uProtect3.value.set(...L.protect3);
     u.uEarthScale.value = L.earthScale;
     u.uProtect4.value.set(...L.protect4);

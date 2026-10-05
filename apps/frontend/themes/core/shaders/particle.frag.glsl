@@ -8,7 +8,7 @@ uniform float uLight;
 
 varying vec3 vColor;
 varying float vAlpha;
-varying float vWhite; // light theme: 1 = a white dot
+varying float vSphere; // light theme: 1 = a lit sphere (Services torus)
 
 vec3 toLinear(vec3 c) { return pow(c, vec3(2.2)); }
 
@@ -38,13 +38,20 @@ void main() {
     vec3 ink = blueness > 0.5 ? sunset : warm;
     if (sat < 0.25) ink = orange;
     float a = clamp(pow(m, 0.3) * 2.6, 0.0, 1.0);
-    // White dots (Services): drawn as white pearls so they read on the peach page.
-    if (vWhite > 0.5) {
-      // A white pearl: bright centre, a soft warm shadow ring as its edge.
-      vec3 rim = toLinear(vec3(0.9, 0.6, 0.45));
-      vec3 pearl = mix(vec3(1.0), rim, smoothstep(0.26, 0.44, d));
-      float pa = 1.0 - smoothstep(0.44, 0.5, d);
-      gl_FragColor = vec4(pearl, pa * clamp(vAlpha * 1.6, 0.0, 1.0));
+    // Spheres (Services torus): each sprite shaded as a small sphere in its
+    // own orange, soft key light from the upper left, gentle ambient, a small
+    // highlight and a darker limb, so the torus has depth between particles.
+    if (vSphere > 0.5) {
+      vec2 pc = (gl_PointCoord - 0.5) * 2.0;
+      float rr = dot(pc, pc);
+      vec3 n = vec3(pc.x, -pc.y, sqrt(max(0.0, 1.0 - rr)));
+      vec3 L = normalize(vec3(-0.45, 0.6, 0.66));
+      float diff = max(dot(n, L), 0.0);
+      float spec = pow(max(dot(reflect(-L, n), vec3(0.0, 0.0, 1.0)), 0.0), 24.0);
+      vec3 base = vColor;
+      vec3 sph = base * (0.42 + 0.7 * diff) + vec3(1.0, 0.95, 0.88) * spec * 0.45;
+      float edge = 1.0 - smoothstep(0.86, 1.0, rr);
+      gl_FragColor = vec4(sph, edge * clamp(vAlpha * 1.5, 0.0, 1.0));
       return;
     }
     gl_FragColor = vec4(ink, a * (1.0 - smoothstep(0.34, 0.5, d)) * clamp(vAlpha * 1.4, 0.0, 1.0));
