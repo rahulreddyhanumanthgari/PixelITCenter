@@ -19,8 +19,15 @@ attribute float aTraveler; // 0 = ambient; 1, 2 = the rare travellers
 
 varying vec3 vColor;
 varying float vAlpha;
+varying float vRand;   // light theme: per-particle hash (colour pick, material variation)
+varying float vBlur;   // light theme: depth-of-field blur, 0 = in focus
+varying float vFar;    // light theme: -1 foreground ... 0 focus ... 1 background
 
 void main() {
+  // Background layer: always soft, softer with distance.
+  vRand = fract(aRandom * 97.31);
+  vBlur = 0.6 + aDepth * 1.0;
+  vFar = 1.0;
   vec3 pos = position;
   float phase = aRandom * 6.2831;
   float nearness = 1.0 - aDepth;

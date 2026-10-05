@@ -55,6 +55,9 @@ attribute vec3 aStageCenter;    // solar system: the role's coordinates
 
 varying vec3 vColor;
 varying float vAlpha;
+varying float vRand;   // light theme: per-particle hash (colour pick, material variation)
+varying float vBlur;   // light theme: depth-of-field blur, 0 = in focus
+varying float vFar;    // light theme: -1 foreground ... 0 focus ... 1 background
 
 // Timing of one transition, in uProgress units. Departures all finish before
 // arrivals start, leaving a short moment where everything is a floating field.
@@ -776,7 +779,16 @@ void main() {
              * mix(1.0, galaxySize, galaxyW);
   // Light theme: solid beads without glow need a little more size to read.
   size *= mix(1.0, 1.25, uLight);
-  gl_PointSize = clamp(size * uPixelRatio / depth, 1.0, 28.0 * uPixelRatio);
+  // Light theme: depth of field in three layers. Near the focal depth
+  // particles are sharp; farther back they grow a soft halo (the sprite gets
+  // bigger, the sphere inside stays its size) and fade; in front they stay
+  // sharp and a touch larger.
+  float dz = depth - uFocusDepth;
+  vFar = uLight * clamp(dz * 0.3, -1.0, 1.0);
+  vBlur = uLight * clamp(abs(dz) * 0.5 - 0.2, 0.0, 1.6) * (dz > 0.0 ? 1.0 : 0.35);
+  vRand = fract(aRandom * 97.31 + aDelay * 13.7);
+  size *= 1.0 + vBlur * 0.9;
+  gl_PointSize = clamp(size * uPixelRatio / depth, 1.0, mix(28.0, 40.0, uLight) * uPixelRatio);
 
   // Near particles brighter, far ones dimmer; a soft twinkle on top. Spread
   // out, the field has far fewer overlapping points than a form, so it gets a

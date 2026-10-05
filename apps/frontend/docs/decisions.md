@@ -685,12 +685,19 @@ and deleted, along with every earlier light experiment.
   `ParticleSystem` and `StarField` (`uLight`, normal blending instead of
   additive), turns bloom off and adds `LightSky`.
 - **Particles** (`particle.frag.glsl`, light branch): each particle keeps its
-  dark-theme role colour and maps it to a strong palette: orange / red-orange
-  (primary) -> #F26419 / #D9480F, blue (secondary) -> teal #0E9F9A, deep
-  blue -> navy #12233F, cream highlights -> gold #F2B705, white / pale
-  points -> navy. Brightness becomes opacity (so the dark theme's depth
-  fades and text protection carry over); each dot is shaded as a small lit
-  bead (highlight upper left, darker limb), no glow; 1.25x size.
+  dark-theme role and picks, by its own hash, from weighted colour families
+  (hierarchy, not an even mix): warm role -> ~50% cream (#F4F1EA / #E8E5DD /
+  #D9D7D0), ~42% orange (#F97316 / #FF8A2A / #F59E0B), ~8% gold; cream
+  highlights -> gold (#FBBF24 / #F4C430); blue role -> ~50% cream, ~42% cyan
+  (#42C6C3 / #36BFC3 / #5BC8C5), ~8% charcoal; deep blue -> soft grey,
+  cream, ~25% charcoal (#1F2937 / #111827); white dust -> faint grey/cream.
+  Each is a lit sphere (key light upper left, darker limb) with per-particle
+  brightness and gloss variation. Depth of field (`vBlur`, `vFar` from the
+  vertex shader, focal depth = `uFocusDepth`): background particles get a
+  soft halo, less saturation and opacity; foreground stays sharp and a touch
+  more saturated; the star field is the soft background layer. Brightness
+  still becomes opacity, so the dark theme's depth and text dimming carry
+  over; no glow.
 - **Environment** (`LightSky`): white to #F8FAFC, a faint warm light upper
   left, a cool shade lower right, barely-there charcoal dust.
 - **CSS** (`themes/light/light.css`): charcoal text, Oswald condensed
