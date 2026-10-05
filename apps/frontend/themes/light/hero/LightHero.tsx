@@ -1,5 +1,6 @@
 import { ArrowRight } from "lucide-react";
 import { hero, site, staffing } from "@/content/site";
+import { HeroExit } from "./HeroExit";
 
 // Plain text from content/site.ts heading markup (`*word*`, ` | `, `**`).
 const plain = (text: string) => text.replace(/\*/g, "").replace(/\s*\|\s*/g, " ");
@@ -18,7 +19,7 @@ export function LightHero() {
   return (
     <section id="top" data-hero aria-labelledby="hero-title" className="relative flex min-h-[100svh] flex-col justify-end">
       <div className="mx-auto w-full max-w-7xl px-6 pb-16 pt-[58svh] lg:px-8 lg:pb-14 lg:pt-40">
-        <div className="flex flex-col gap-12 lg:flex-row lg:items-end lg:justify-between">
+        <div data-hero-exit className="flex flex-col gap-12 lg:flex-row lg:items-end lg:justify-between">
           <div data-hero-content className="max-w-2xl">
             <p data-reveal="0" className="light-hero-label">
               {site.name}
@@ -52,6 +53,7 @@ export function LightHero() {
           </div>
         </div>
       </div>
+      <HeroExit />
     </section>
   );
 }

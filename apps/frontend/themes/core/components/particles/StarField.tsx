@@ -19,8 +19,6 @@ export interface Atmosphere {
   /** Gravity centre in world units (focal plane). */
   gravityX: number;
   gravityY: number;
-  /** 0 = the landing hero … 1 = the story (the hero → story handoff). */
-  heroBlend?: number;
 }
 
 interface StarFieldProps {

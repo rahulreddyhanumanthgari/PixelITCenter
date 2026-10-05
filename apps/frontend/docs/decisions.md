@@ -690,6 +690,23 @@ puts its links in a frosted pill with dividers, the current one dark.
 (Earlier light heroes, a centred sun ball, a sunrise and a solar eclipse,
 were tried and dropped.)
 
+**Hero → next section: the orange takeover (2026-10-05).** After the owner's
+scroll-transition reference (a green takeover, recoloured to the orb's
+orange). Scroll-driven, not timed: hero progress p = scrolled / one screen,
+eased per frame in `LightSky` (it reads `[data-hero]` and `#services`).
+p 0–0.25 the orb's glow swells and its core brightens; from 0.15 a soft-
+fronted radial field grows from the orb's centre (radius eases out to 1.15 ×
+the screen diagonal by 0.95) until it covers the viewport, built from the
+orb's own colours (core #FA9E4C, brand #FF7E2E, deep #F97316, pale #FCDBC2)
+with a hot moving front, slow volumetric noise, pale light from above, grain
+and motes streaming outward, so it reads as energy from the orb, not a flat
+wipe. The orb, stage and halo fade out across p 0.45–0.9. `HeroExit` (GSAP
+ScrollTrigger, scrub) lifts the hero text 140 px and fades it over the
+hero's first 75%. The field holds behind the client strip and dissolves as
+Services rises (its top from 35% to −10% of the screen). Reduced motion: the
+field still follows scroll but appears without the expanding front or
+drifting motes, and the text only fades.
+
 **Current direction (2026-10-03): the particle journey in blue on white.**
 The team liked the dark theme's particles and wanted them in the light
 theme. `app/(light)/light/page.tsx` now renders the shared `Home` exactly as
