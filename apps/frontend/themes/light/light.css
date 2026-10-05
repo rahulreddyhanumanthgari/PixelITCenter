@@ -1,21 +1,21 @@
 /* ---------------------------------------------------------------------------
-   Light design: the dark site's exact page and particle journey with a light
-   material layer (2026-10-05): a white environment, dark charcoal text, tall
-   condensed headings, soft shadows. The particle engine draws the same
-   objects as strong orange / teal / gold / navy dots (particle.frag.glsl,
-   LightSky). Everything structural is shared in themes/core. Loaded only by
-   app/(light).
+   Light design, per the Light Pixel Master Specification: a white / light
+   cool-grey foundation, navy text, tall condensed headings, the locked
+   palette (navy, orange, cyan, white, cool grey). The particle engine draws
+   the journey as voxel pixels (particle.vert/frag.glsl, LightSky).
+   Everything structural is shared in themes/core. Loaded only by app/(light).
    ------------------------------------------------------------------------ */
 
 :root {
   color-scheme: light;
 
-  /* Particle palette (= the light material in particle.frag.glsl):
-     primary orange, secondary teal, gold accent, navy structure. */
-  --pi-orange: #f26419;
-  --pi-teal: #0e9f9a;
-  --pi-gold: #f2b705;
-  --pi-navy: #12233f;
+  /* Locked palette (Light Pixel Master Specification): navy, vivid orange,
+     bright cyan, white, restrained cool grey (= lpal in particle.vert.glsl). */
+  --pi-orange: #f97316;
+  --pi-teal: #0ea5e9;
+  --pi-blue: #1d4ed8;
+  --pi-navy: #0f172a;
+  --pi-grey: #cbd5e1;
 
   --brand-blue: var(--pi-teal);
   --brand-orange: var(--pi-orange);
@@ -50,8 +50,8 @@
   --text-secondary: #334155;
   --text-muted: #64748b;
   --text-strong: #020617;
-  --accent-orange: #c2410c;
-  --accent-blue: #0f766e;
+  --accent-orange: #ea580c;
+  --accent-blue: #0284c7;
 
   /* Cards: white tiles lifted by a soft shadow. */
   --card-bg: #ffffff;
@@ -114,4 +114,34 @@
   text-shadow:
     0 0 24px rgb(255 255 255 / 0.95),
     0 0 8px rgb(255 255 255 / 0.9);
+}
+
+/* Buttons (spec references: a navy pill and an outline pill). */
+.light-btn {
+  display: inline-flex;
+  height: 3rem;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0 1.5rem;
+  border-radius: 9999px;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  transition:
+    background-color 200ms ease,
+    border-color 200ms ease;
+}
+.light-btn--dark {
+  background: #0f172a;
+  color: #ffffff;
+}
+.light-btn--dark:hover {
+  background: #1e293b;
+}
+.light-btn--ghost {
+  border: 1px solid rgb(15 23 42 / 0.2);
+  background: rgb(255 255 255 / 0.75);
+  color: #0f172a;
+}
+.light-btn--ghost:hover {
+  border-color: #0f172a;
 }

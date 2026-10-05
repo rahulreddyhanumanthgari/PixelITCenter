@@ -181,6 +181,7 @@ export default function JourneyScene() {
     const processContent = document.querySelector<HTMLElement>("[data-process-content]");
     const galaxyAnchor = document.querySelector<HTMLElement>("[data-galaxy-anchor]");
     const galaxyOutro = document.querySelector<HTMLElement>("[data-galaxy-outro]");
+    const careersEl = document.querySelector<HTMLElement>("#careers");
     const galaxyRegion = document.querySelector<HTMLElement>("[data-galaxy-region]");
     // The particle layer stays on through the galaxy area (About → Contact);
     // after that the opaque footer covers it.
@@ -222,7 +223,9 @@ export default function JourneyScene() {
       // diameter is off-screen, whatever the window width.
       if (L.sides) {
         const earthPx = (2 * EARTH_VIEW.radius * EARTH_VIEW.scale * L.to.scale) / wpp;
-        const xWorld = (vw - (0.5 - EARTH_VIEW.hiddenRight) * earthPx - vw / 2) * wpp;
+        // Light theme (spec 8): roughly half of the globe tucked outside the viewport.
+        const hidden = lightRef.current ? 0.5 : EARTH_VIEW.hiddenRight;
+        const xWorld = (vw - (0.5 - hidden) * earthPx - vw / 2) * wpp;
         const byForm = [...STORY_SIDES];
         byForm[EARTH_VIEW.index] = (xWorld - L.sides.left) / (L.sides.right - L.sides.left);
         L.sides = { ...L.sides, byForm };
@@ -234,6 +237,16 @@ export default function JourneyScene() {
       L.from.x = 0;
       L.from.y = 0;
       L.from.scale = voidPx * wpp;
+      // Light theme (spec 6): strong left typography, a large right-side
+      // pixel formation; on phones it stays centred above the text.
+      if (lightRef.current && vw >= 1024) {
+        L.from.x = vw * 0.24 * wpp;
+        L.from.scale = Math.min(vw * 0.17, vh * 0.27) * wpp;
+      } else if (lightRef.current) {
+        // Phones/tablets: above the text, clear of it.
+        L.from.y = vh * 0.24 * wpp;
+        L.from.scale = Math.min(vw * 0.24, vh * 0.13) * wpp;
+      }
       L.protectFloor = vw < 768 ? HERO_FIELD.protectFloor.narrow : HERO_FIELD.protectFloor.wide;
       // About's galaxy: centred on its pinned anchor, rim past the screen.
       if (galaxyAnchor) {
@@ -252,6 +265,10 @@ export default function JourneyScene() {
       }
       // Ending: the empty stretch after Contact scrubs the collapse, from its
       // top entering the screen (0) to the galaxy's release (1).
+      if (careersEl) {
+        const c = careersEl.getBoundingClientRect();
+        L.careers = 1 - smoothstep(0.25, 0.8, Math.abs(c.top + c.height / 2 - vh / 2) / vh);
+      }
       if (galaxyOutro) {
         const o = galaxyOutro.getBoundingClientRect();
         L.galaxyCollapse = Math.min(Math.max((vh - o.top) / Math.max(o.height, 1), 0), 1);
@@ -349,7 +366,8 @@ export default function JourneyScene() {
     >
       {light && <LightSky pixelRatio={dpr} reducedMotion={reducedMotion} />}
       <StarField
-        count={tier.starCount}
+        // Light theme: only a sparse scatter of background pixels.
+        count={Math.round(tier.starCount * (light ? 0.07 : 1))}
         pixelRatio={dpr}
         reducedMotion={reducedMotion}
         pointer={pointer}

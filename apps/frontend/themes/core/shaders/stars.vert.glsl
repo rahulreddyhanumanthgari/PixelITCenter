@@ -2,6 +2,7 @@
 // main particles. Shares particle.frag.glsl with the main system.
 
 uniform float uTime;
+uniform float uLight;
 uniform float uSize;
 uniform float uPixelRatio;
 uniform float uMotion;     // 1 = full motion, small under reduced motion
@@ -19,6 +20,7 @@ attribute float aTraveler; // 0 = ambient; 1, 2 = the rare travellers
 
 varying vec3 vColor;
 varying float vAlpha;
+varying vec3 vInk;
 varying float vRand;   // light theme: per-particle hash (colour pick, material variation)
 varying float vBlur;   // light theme: depth-of-field blur, 0 = in focus
 varying float vFar;    // light theme: -1 foreground ... 0 focus ... 1 background
@@ -70,7 +72,7 @@ void main() {
 
   vec4 mvPosition = modelViewMatrix * vec4(pos, 1.0);
   gl_Position = projectionMatrix * mvPosition;
-  gl_PointSize = max(uSize * aScale * (1.0 + travel * 1.2) * uPixelRatio / -mvPosition.z, 1.0);
+  gl_PointSize = max(uSize * aScale * (1.0 + travel * 1.2) * uPixelRatio / -mvPosition.z * (1.0 + uLight * 3.0), 1.0);
 
   // Far = dimmer. The field lifts a little while the main object is
   // scattered, so the space reads through the transition.
@@ -78,6 +80,10 @@ void main() {
   float twinkle = 0.7 + 0.3 * sin(uTime * (0.3 + aRandom * 0.8) + phase * 7.0) * uMotion;
   vColor = aColor * depthDim * twinkle * (1.0 + uField * 0.7);
   vAlpha = 1.0;
+  // Light theme: background pixels in the palette, mostly white/grey.
+  float sh = fract(aRandom * 41.7);
+  vInk = sh < 0.4 ? vec3(0.796, 0.835, 0.882) : sh < 0.6 ? vec3(0.973, 0.98, 0.988)
+       : sh < 0.75 ? vec3(0.976, 0.451, 0.086) : sh < 0.9 ? vec3(0.055, 0.647, 0.914) : vec3(0.114, 0.306, 0.847);
   if (aTraveler > 0.5) {
     vColor = vec3(0.95, 0.96, 1.0) * travel * 0.9 * uMotion;
     vAlpha = travel;

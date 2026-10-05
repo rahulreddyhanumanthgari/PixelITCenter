@@ -90,6 +90,8 @@ export interface LayoutState {
   galaxy: { x: number; y: number; scale: number; presence: number; horizon: number } | null;
   /** Galaxy ending after Contact: 0 = galaxy … 1 = collapsed into its core and gone. */
   galaxyCollapse: number;
+  /** Light theme: how present Careers is (0..1); About's ribbon re-forms as its stream. */
+  careers?: number;
 }
 
 interface ParticleSystemProps {
@@ -157,6 +159,7 @@ export interface MorphUniforms {
   uSolarPhone: THREE.IUniform<number>;
   uProtect5: THREE.IUniform<THREE.Vector4>;
   uCollapse: THREE.IUniform<number>;
+  uCareers: THREE.IUniform<number>;
   uLight: THREE.IUniform<number>;
   uSunOffset: THREE.IUniform<number>;
   uProtect: THREE.IUniform<THREE.Vector4>;
@@ -259,6 +262,7 @@ export function ParticleSystem({
       uSolarPhone: { value: 0 },
       uProtect5: { value: new THREE.Vector4(0, 0, 0.001, 0.001) },
       uCollapse: { value: 0 },
+      uCareers: { value: 0 },
       uLight: { value: 0 },
       uSunOffset: { value: 0 },
       uProtect: { value: new THREE.Vector4(0, 0, 0.001, 0.001) },
@@ -360,6 +364,7 @@ export function ParticleSystem({
     // Eased like the morph, so fast scrolling still plays the collapse smoothly.
     s0.collapse += (L.galaxyCollapse - s0.collapse) * k;
     u.uCollapse.value = s0.collapse;
+    u.uCareers.value += ((L.careers ?? 0) - u.uCareers.value) * k;
     u.uProtect.value.set(...L.protect);
     u.uProtectFloor.value = L.protectFloor;
 

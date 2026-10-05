@@ -671,39 +671,46 @@ rejected; this is their replacement.
 - **Background.** Opaque, so the galaxy's sun rests on the footer's top
   edge, with faint blue and orange glows at the bottom.
 
-## Light theme: the dark site, light materials (2026-10-05)
+## Light theme: Light Pixel Master Specification (2026-10-05)
 
-Rule from the owner: **the dark site defines the objects, animation, scroll
-behaviour and composition; the reference video defines only how it looks.**
-A bead rocket/satellite version invented from the reference was rejected
-and deleted, along with every earlier light experiment.
+The owner's "Pixel IT Center Light Pixel Master Specification" PDF is the
+single source of truth for the light theme. It keeps the dark site's page,
+content, particle journey, scroll story and morphs (GSAP ScrollTrigger),
+and changes the light theme's material, palette and, where the spec names
+one, the formation. The dark theme is unchanged.
 
-- **Page** (`app/(light)/light/page.tsx`): the shared `Home`, exactly as the
-  dark design renders it (same hero, sections, particle journey).
-- **Material switch**: `app/(light)` sets `data-theme="light"`;
-  `themes/core/lib/theme.ts` reads it; JourneyScene passes `light` to
-  `ParticleSystem` and `StarField` (`uLight`, normal blending instead of
-  additive), turns bloom off and adds `LightSky`.
-- **Particles** (`particle.frag.glsl`, light branch): each particle keeps its
-  dark-theme role and picks, by its own hash, from weighted colour families
-  (hierarchy, not an even mix): warm role -> ~50% cream (#F4F1EA / #E8E5DD /
-  #D9D7D0), ~42% orange (#F97316 / #FF8A2A / #F59E0B), ~8% gold; cream
-  highlights -> gold (#FBBF24 / #F4C430); blue role -> ~50% cream, ~42% cyan
-  (#42C6C3 / #36BFC3 / #5BC8C5), ~8% charcoal; deep blue -> soft grey,
-  cream, ~25% charcoal (#1F2937 / #111827); white dust -> faint grey/cream.
-  Each is a lit sphere (key light upper left, darker limb) with per-particle
-  brightness and gloss variation. Depth of field (`vBlur`, `vFar` from the
-  vertex shader, focal depth = `uFocusDepth`): background particles get a
-  soft halo, less saturation and opacity; foreground stays sharp and a touch
-  more saturated; the star field is the soft background layer. Brightness
-  still becomes opacity, so the dark theme's depth and text dimming carry
-  over; no glow.
-- **Environment** (`LightSky`): white to #F8FAFC, a faint warm light upper
-  left, a cool shade lower right, barely-there charcoal dust.
-- **CSS** (`themes/light/light.css`): charcoal text, Oswald condensed
-  headings (the owner kept this typography), accents #C2410C / #0F766E,
-  white cards with a hairline and soft shadow, a white glow behind section
-  headings.
+- **Switch**: `app/(light)` sets `data-theme="light"`; `themes/core/lib/theme.ts`
+  reads it; JourneyScene passes `light` to `ParticleSystem` / `StarField`
+  (`uLight`, normal blending), turns bloom off and adds `LightSky` (white
+  environment).
+- **Material (spec 2)**: every particle is a small voxel pixel, drawn as an
+  isometric cube (lit top, mid left face, darker right face) in
+  `particle.frag.glsl`; one consistent small size (2.1x the dark point);
+  0.6% are large out-of-focus cubes as rare depth accents; depth of field
+  softens far pixels; the star field is a sparse scatter (7%) of soft
+  background pixels.
+- **Locked palette (spec 1)**: `lpal` in `particle.vert.glsl` (= `--pi-*` in
+  `light.css`): orange #F97316 / #FB923C, white #F8FAFC, cyan #0EA5E9, blue
+  #1D4ED8, navy #0F172A, cool grey #CBD5E1. Each form picks palette indices
+  (`vInk`); bands (`lband`): orange, white, cyan, blue, navy.
+- **Formations (light only, in `particle.vert.glsl`)**:
+  - Hero (6): the hero field on the right (desktop; `L.from` in
+    JourneyScene), above the text on phones; `LightHero` puts the headline
+    on the left.
+  - Services (7): `lightRing`, a true hollow ring with an open centre and
+    spiral bands, on the right; `LightServices` puts the content on the left.
+  - Staffing (8): the Earth only (the dotted shell joins the ocean), about
+    half tucked past the right edge; ocean blue/cyan/navy, land orange/white.
+  - Why (9): `lightTerrain`, a voxel lattice seen from above with a
+    recessed square (white walls, cyan/blue floor) right of the content and
+    orange/white/cyan/blue bands round it.
+  - How We Work (10): `lightPath`, one continuous pixel path through the
+    four stations (the solar system's knots); orange behind the progress
+    front, blue/cyan ahead; stations light up as reached.
+  - About (11) / Careers (12): `lightRibbon`, an S ribbon of pixels on the
+    right, re-forming into a sweeping orange/blue stream while Careers is on
+    screen (`uCareers`, measured in JourneyScene); the footer ending still
+    gathers it into the setting sun.
 
 ## Content
 
