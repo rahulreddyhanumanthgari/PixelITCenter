@@ -729,10 +729,10 @@ waves (controlled, not noise), turning slowly about three axes; the new
 `uSvc` uniform (scroll progress through Services, measured in JourneyScene,
 eased in ParticleSystem) adds a little turn, tilt, swell and drift. The
 fragment shader lights each sprite as a small sphere (`vSphere`: soft key
-from the upper left, ambient, a small highlight, darker limb) in the hero
-orb's oranges (brand #FF7E2E, core #FA9E4C, deep #F97316, chosen per lattice
-point so it reads as one orange object); perspective makes near spheres
-larger. Light Services uses `LightServices` (services in the left half) so
+from the upper left, a warm grey shadow side, a small highlight) in white
+(owner's choice after an orange first version; three barely different whites
+per lattice point), so the shading carries the form on the peach page, like
+the reference; perspective makes near spheres larger. Light Services uses `LightServices` (services in the left half) so
 the torus sits in the open right half and never crosses the text; phones
 show it centred in the particle band. Reduced motion slows the idle turn to
 the engine's reduced-motion factor; scroll response remains.

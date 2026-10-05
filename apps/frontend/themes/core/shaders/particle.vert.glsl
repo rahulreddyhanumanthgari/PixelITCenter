@@ -912,12 +912,12 @@ void main() {
     vec3 ringOut = hue * bright * rightFade * protect2 * arcVis;
     vColor = mix(vColor, ringOut, ringW);
   }
-  // Light theme: the Services torus is drawn as lit spheres in the hero orb's
-  // oranges (core #FA9E4C, brand #FF7E2E, deep #F97316), chosen per lattice
-  // point, so the object reads as one orange form with gentle variation.
+  // Light theme: the Services torus is drawn as lit white spheres (owner's
+  // choice), in three barely different whites chosen per lattice point, so
+  // the shading carries the form.
   if (uLight > 0.5 && ringW > 0.001) {
     float lv = ringFrom > 0.0 ? laneA : laneB;
-    vec3 c = lv < 0.45 ? vec3(1.0, 0.494, 0.18) : lv < 0.8 ? vec3(0.98, 0.62, 0.3) : vec3(0.976, 0.451, 0.086);
+    vec3 c = lv < 0.45 ? vec3(1.0) : lv < 0.8 ? vec3(0.985, 0.975, 0.965) : vec3(0.965, 0.955, 0.95);
     vColor = mix(vColor, pow(c, vec3(2.2)), ringW);
     vSphere = ringW;
   }
