@@ -179,12 +179,12 @@ vec3 heroField(out float visible, out float glow, out float grow, out float lane
       q = dir * 0.5 * (0.985 + 0.03 * h4);
       lane = 0.04 + 0.12 * h5;
       glow = 1.15;
-      grow = 0.62;
+      grow = 0.42;
     } else if (h6 < 0.95) {
       q = dir * 0.5 * pow(h4, 0.4);
       lane = 0.02 + 0.06 * h5;
       glow = 0.8;
-      grow = 0.5;
+      grow = 0.38;
     } else {
       q = dir * 0.5 * (1.15 + 0.5 * h4);
       lane = 0.12;
@@ -196,10 +196,13 @@ vec3 heroField(out float visible, out float glow, out float grow, out float lane
     vec3 V = vec3(0.0, 0.731, 0.682);
     vec3 Y = cross(V, vec3(1.0, 0.0, 0.0));
     float front = dot(normalize(q + vec3(1e-4)), V);
-    // Soft and see-through: dense at the edge, airy in the middle (where the
-    // white core glow shows through), fainter on the far side.
-    float edge = 1.0 - abs(front);
-    visible = (0.18 + 0.5 * edge * edge) * mix(0.55, 1.0, smoothstep(-0.6, 0.6, front));
+    // A fine shimmer over the frosted ball (drawn by LightSky): strongest
+    // where the orange core shows (the front, a little low), almost gone at
+    // the white edge.
+    float core = smoothstep(0.1, 0.95, front) * (1.0 - 0.35 * smoothstep(0.0, 0.5, q.y));
+    visible = 0.02 + 0.3 * core;
+    // Nothing outside the ball: its edge stays crisp.
+    if (length(q) > 0.5) visible = 0.0;
     return q + Y * 0.025 * sin(t * 0.5);
   }
 

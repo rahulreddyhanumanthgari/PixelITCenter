@@ -46,8 +46,8 @@ export const STORY_FLIGHT = { swell: 1.6 } as const;
  * screen centre, in px (dx right, dy down).
  */
 export function orbView(vw: number, vh: number): { r: number; dx: number; dy: number } {
-  if (vw < 1024) return { r: Math.min(0.3 * vw, 0.16 * vh), dx: 0, dy: -0.17 * vh };
-  return { r: Math.min(0.12 * vw, 0.2 * vh), dx: 0, dy: -0.08 * vh };
+  if (vw < 1024) return { r: Math.min(0.32 * vw, 0.17 * vh), dx: 0, dy: -0.17 * vh };
+  return { r: Math.min(0.14 * vw, 0.25 * vh), dx: 0, dy: -0.03 * vh };
 }
 
 export const HERO_FIELD = {

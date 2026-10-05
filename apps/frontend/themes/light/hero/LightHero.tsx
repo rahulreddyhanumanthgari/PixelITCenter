@@ -1,48 +1,54 @@
 import { ArrowRight } from "lucide-react";
-import { hero } from "@/content/site";
-import { buttonVariants } from "@/themes/core/components/ui/button";
-import { RichText } from "@/themes/core/components/ui/rich-text";
-import { cn } from "@/lib/utils";
+import { hero, site, staffing } from "@/content/site";
+
+// Plain text from content/site.ts heading markup (`*word*`, ` | `, `**`).
+const plain = (text: string) => text.replace(/\*/g, "").replace(/\s*\|\s*/g, " ");
+
+// The four service words under the right-hand statement.
+const TAGS = ["AI", "Cloud", "Cybersecurity", "IT Staffing"];
 
 /**
- * Light hero, after the owner's reference: a glowing particle orb floating in
- * the centre (drawn by the page-wide particle layer and LightSky), the
- * headline and description at the bottom left, the CTAs at the bottom right.
- * Phones: everything stacks under the orb.
+ * Light hero, after the owner's reference: a frosted glowing orb on a stage
+ * in the centre (drawn by the page-wide particle layer and LightSky). Bottom
+ * left: a small spaced label, the headline in a medium-weight sans, the
+ * description and one black pill CTA. Bottom right: a short statement, a
+ * hairline and four service words. Phones: everything stacks under the orb.
  */
 export function LightHero() {
   return (
     <section id="top" data-hero aria-labelledby="hero-title" className="relative flex min-h-[100svh] flex-col justify-end">
-      <div className="mx-auto w-full max-w-7xl px-6 pb-24 pt-[56svh] lg:px-8 lg:pb-20 lg:pt-40">
-        <div className="flex flex-col gap-10 lg:flex-row lg:items-end lg:justify-between">
+      <div className="mx-auto w-full max-w-7xl px-6 pb-16 pt-[58svh] lg:px-8 lg:pb-14 lg:pt-40">
+        <div className="flex flex-col gap-12 lg:flex-row lg:items-end lg:justify-between">
           <div data-hero-content className="max-w-2xl">
-            <h1 id="hero-title" className="light-hero-heading">
-              <span data-reveal="0" className="block">
-                {hero.kicker[0]} <span className="highlight">&amp;</span> {hero.kicker[1]}
+            <p data-reveal="0" className="light-hero-label">
+              {site.name}
+            </p>
+            <h1 id="hero-title" data-reveal="1" className="light-hero-heading mt-4">
+              <span className="block">
+                {hero.kicker[0]} &amp; {hero.kicker[1]}
               </span>
-              <span data-reveal="1" className="block">
+              <span className="block">
                 {hero.statement[0]} {hero.statement[1]}
               </span>
             </h1>
-            <p data-reveal="2" className="light-hero-copy mt-5">
-              <RichText text={hero.description} strongClassName="font-medium" />
+            <p data-reveal="2" className="light-hero-copy mt-4">
+              {plain(hero.description)}
             </p>
+            <a data-reveal="3" href={hero.primaryCta.href} className="light-hero-cta mt-8">
+              {hero.primaryCta.label}
+              <ArrowRight className="size-4" aria-hidden="true" />
+            </a>
           </div>
 
-          <div data-reveal="3" className="flex flex-wrap items-center gap-3 lg:justify-end">
-            <a href={hero.primaryCta.href} className={cn(buttonVariants(), "h-11 rounded-full px-6 text-sm font-medium")}>
-              {hero.primaryCta.label}
-              <ArrowRight data-icon="inline-end" />
-            </a>
-            <a
-              href={hero.secondaryCta.href}
-              className={cn(
-                buttonVariants({ variant: "outline" }),
-                "h-11 rounded-full border-foreground/15 bg-white/60 px-5 text-sm font-medium",
-              )}
-            >
-              {hero.secondaryCta.label}
-            </a>
+          <div data-reveal="3" className="w-full max-w-[24rem]">
+            <p className="light-hero-statement">{plain(staffing.title)}.</p>
+            <ul className="light-hero-tags" aria-label="What we do">
+              {TAGS.map((tag) => (
+                <li key={tag}>
+                  <a href="#services">{tag}</a>
+                </li>
+              ))}
+            </ul>
           </div>
         </div>
       </div>

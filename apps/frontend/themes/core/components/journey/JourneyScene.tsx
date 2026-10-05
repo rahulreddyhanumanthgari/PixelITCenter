@@ -361,7 +361,7 @@ export default function JourneyScene() {
       {light && <LightSky pixelRatio={dpr} reducedMotion={reducedMotion} atmosphere={atmosphere} />}
       <StarField
         // Fewer loose background points on white, where they read as noise.
-        count={Math.round(tier.starCount * (light ? 0.35 : 1))}
+        count={Math.round(tier.starCount * (light ? 0.08 : 1))}
         pixelRatio={dpr}
         reducedMotion={reducedMotion}
         pointer={pointer}

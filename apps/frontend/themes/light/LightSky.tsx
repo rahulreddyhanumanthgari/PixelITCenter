@@ -55,23 +55,48 @@ void main() {
   vec2 px = gl_FragCoord.xy / uPixelRatio;
   float H = uResolution.y;
 
-  // Soft studio backdrop: warm off-white, a touch lighter at the top.
-  vec3 col = mix(vec3(0.925, 0.918, 0.906), vec3(0.965, 0.961, 0.953), uv.y);
+  // Cool grey studio backdrop (after the owner's reference): light at the
+  // top, a soft lavender-grey toward the sides and a darker band at the very
+  // bottom where the stage's shadow falls.
+  vec3 col = mix(vec3(0.902, 0.906, 0.925), vec3(0.945, 0.949, 0.961), smoothstep(0.0, 0.85, uv.y));
+  float side = smoothstep(0.25, 0.5, abs(uv.x - 0.5));
+  col = mix(col, vec3(0.86, 0.865, 0.89), side * 0.35);
 
   vec2 dv = gl_FragCoord.xy - uSun;
   float d = length(dv);
   float R = max(uSunR, 1.0);
+  float r1 = d / R;
 
-  // The orb's light: a wide peach bloom and a bright white-gold core glow.
-  float bloom = exp(-d / (R * 1.1));
-  col = mix(col, vec3(1.0, 0.84, 0.72), bloom * 0.6 * uSunDisc);
-  float core = exp(-d / (R * 0.6));
-  col = mix(col, vec3(1.0, 0.985, 0.95), core * 0.95 * uSunDisc);
+  // Warm light around the orb, and a soft white halo hugging it.
+  col = mix(col, vec3(0.99, 0.9, 0.82), exp(-max(d - R, 0.0) / (R * 0.9)) * 0.45 * uSunDisc);
+  col = mix(col, vec3(1.0, 0.985, 0.97), exp(-max(d - R, 0.0) / (R * 0.12)) * 0.7 * uSunDisc);
 
-  // Its soft shadow on the floor below.
-  vec2 sd = (gl_FragCoord.xy - (uSun - vec2(0.0, R * 1.55))) / vec2(R * 0.95, R * 0.11);
-  float shadow = exp(-dot(sd, sd));
-  col = mix(col, vec3(0.78, 0.76, 0.74), shadow * 0.45 * uSunDisc);
+  // The stage: a flat pale ellipse under the orb, its rim catching the light,
+  // and the shadow falling below it.
+  vec2 stageC = uSun - vec2(0.0, R * 1.32);
+  vec2 se = (gl_FragCoord.xy - stageC) / vec2(R * 1.65, R * 0.13);
+  float stage = 1.0 - smoothstep(0.85, 1.0, length(se));
+  col = mix(col, vec3(0.965, 0.965, 0.975), stage * 0.75 * uSunDisc);
+  float rim = exp(-abs(length(se) - 0.92) * 9.0) * step(0.0, se.y);
+  col = mix(col, vec3(1.0), rim * 0.35 * uSunDisc);
+  vec2 sh = (gl_FragCoord.xy - (stageC - vec2(0.0, R * 0.05))) / vec2(R * 1.15, R * 0.07);
+  col = mix(col, vec3(0.62, 0.63, 0.68), exp(-dot(sh, sh)) * 0.45 * uSunDisc);
+  vec2 fl = (gl_FragCoord.xy - (stageC - vec2(0.0, R * 0.55))) / vec2(R * 2.0, R * 0.5);
+  col = mix(col, vec3(0.7, 0.71, 0.76), exp(-dot(fl, fl)) * 0.35 * uSunDisc);
+
+  // The orb: frosted glass glowing from inside. A warm orange core a little
+  // below centre, peach toward the edge, a bright soft white rim, fine grain.
+  if (r1 < 1.02) {
+    vec2 n = dv / R;
+    float rc = length(n - vec2(0.0, -0.15)) / 1.0;
+    vec3 orb = mix(vec3(0.98, 0.62, 0.3), vec3(0.99, 0.86, 0.76), smoothstep(0.0, 0.75, rc));
+    orb = mix(orb, vec3(1.0, 0.975, 0.96), smoothstep(0.72, 0.99, r1));
+    // A crisp frosted rim.
+    orb = mix(orb, vec3(1.0), smoothstep(0.94, 0.995, r1) * 0.8);
+    float grain = hash(floor(gl_FragCoord.xy)) - 0.5;
+    orb += grain * 0.035;
+    col = mix(col, orb, (1.0 - smoothstep(0.995, 1.005, r1)) * uSunDisc);
+  }
 
   gl_FragColor = vec4(toLinear(col), 1.0);
 }

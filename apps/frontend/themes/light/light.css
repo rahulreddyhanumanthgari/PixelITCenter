@@ -14,7 +14,7 @@
   --brand-white: #f2f6ff;
 
   /* Surfaces: white and light atmospheric (#FFFFFF, #F8FAFC, #F3F8FE). */
-  --background: #f3f1ee; /* soft warm off-white */
+  --background: #eceef2; /* cool light grey (owner's reference) */
   --surface: #ffffff;
   --surface-2: #f3f8fe;
   --foreground: #0b1b33;
@@ -76,29 +76,10 @@
     radial-gradient(80% 70% at 50% 30%, #ffffff 0%, #f8fafc 55%, #eef4fd 100%);
 }
 
-.light-hero-copy {
-  max-width: 30rem;
-  font-size: 0.9375rem;
-  line-height: 1.6;
-  color: var(--text-secondary);
-}
-.light-hero-copy strong {
-  color: #d9480f;
-}
 
-/* Hero headline (after the owner's reference): bold sans, title case, large,
-   dark, bottom left. */
-.light-hero-heading {
-  font-family: var(--font-display);
-  font-size: clamp(2.25rem, 1.4rem + 2.8vw, 3.5rem);
-  font-weight: 700;
-  line-height: 1.04;
-  letter-spacing: -0.03em;
-  color: var(--text-primary);
-}
-.light-hero-heading .highlight {
-  color: var(--accent-orange);
-}
+
+
+
 
 /* ---------------------------------------------------------------------------
    Cards: clean white tiles, a thin edge, a whisper of shadow and one short
@@ -156,7 +137,94 @@
   color: var(--text-primary);
 }
 
-/* Hero: the bold phrase in the readable deep sunset orange. */
-#top p strong {
-  color: var(--accent-orange);
+
+
+/* ---------------------------------------------------------------------------
+   Light hero (after the owner's reference): a small spaced label, a large
+   medium-weight headline, grey copy, one black pill CTA; on the right a short
+   statement, a hairline and four service words.
+   ------------------------------------------------------------------------ */
+.light-hero-label {
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: #8a8d97;
+}
+.light-hero-heading {
+  font-family: var(--font-sans);
+  font-size: clamp(2.25rem, 1.2rem + 3vw, 3.75rem);
+  font-weight: 500;
+  line-height: 1.02;
+  letter-spacing: -0.035em;
+  color: #0d0f14;
+}
+.light-hero-copy {
+  max-width: 32rem;
+  font-size: clamp(1rem, 0.95rem + 0.2vw, 1.125rem);
+  line-height: 1.45;
+  color: #5d616c;
+}
+.light-hero-cta {
+  display: inline-flex;
+  height: 3rem;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0 1.6rem;
+  border-radius: 9999px;
+  background: #0d0f14;
+  color: #ffffff;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  transition: background-color 200ms ease;
+}
+.light-hero-cta:hover {
+  background: #2a2d36;
+}
+.light-hero-statement {
+  font-family: var(--font-sans);
+  font-size: clamp(1.25rem, 1.1rem + 0.5vw, 1.5rem);
+  font-weight: 400;
+  line-height: 1.22;
+  letter-spacing: -0.015em;
+  color: #0d0f14;
+}
+.light-hero-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 2rem;
+  margin-top: 1.25rem;
+  padding-top: 1.1rem;
+  border-top: 1px solid rgb(13 15 20 / 0.14);
+  font-size: 1rem;
+  color: #6b6f7a;
+}
+.light-hero-tags a:hover {
+  color: #0d0f14;
+}
+
+/* Header (light): the links sit in a frosted pill, the current one dark. */
+header nav[aria-label="Main"] ul {
+  gap: 0;
+  padding: 0.3rem;
+  border: 1px solid rgb(13 15 20 / 0.12);
+  border-radius: 9999px;
+  background: rgb(255 255 255 / 0.35);
+  backdrop-filter: blur(10px);
+}
+header nav[aria-label="Main"] li + li {
+  border-left: 1px solid rgb(13 15 20 / 0.08);
+}
+header nav[aria-label="Main"] a {
+  display: block;
+  padding: 0.35rem 1rem;
+  font-size: 0.875rem;
+  color: #6b6f7a;
+}
+header nav[aria-label="Main"] a[aria-current="true"] {
+  color: #0d0f14;
+  font-weight: 500;
+}
+header nav[aria-label="Main"] a span {
+  display: none;
 }

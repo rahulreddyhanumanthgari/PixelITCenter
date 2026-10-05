@@ -673,20 +673,22 @@ rejected; this is their replacement.
 
 ## Light theme (bright, premium)
 
-**Light hero: the glowing orb (2026-10-05).** After the owner's reference
-(working one section at a time, hero first): a soft warm off-white studio
-backdrop (#F3F1EE); a glowing particle orb floating in the centre
-(`orbView` in journey-config: radius min(0.12 vw, 0.2 vh), a little above
-centre; phones larger and higher); the headline "Technology & Talent /
-Built for What's Next" in bold title case with the description at the
-bottom left, the CTAs at the bottom right (`themes/light/hero/LightHero.tsx`).
-`heroField`'s light branch makes the particles a slowly turning, gently
-bobbing sphere: most on the surface, a few inside, a thin haze; fine dots,
-see-through, dense at the edge and airy in the middle, fainter at the back.
-`LightSky` lights it from behind (a wide peach bloom, a white-gold core
-glow) and puts a soft shadow on the floor below. As the story begins the orb
-rises away and its glow fades. (Earlier light heroes, a centred sun ball, a
-sunrise and a solar eclipse, were tried and dropped.)
+**Light hero: the glowing orb (2026-10-05).** Built to match the owner's
+reference landing page (hero first, one section at a time). Cool light-grey
+studio backdrop (#ECEEF2) with lavender-grey sides; in the centre a frosted
+glass orb glowing from inside (`LightSky`: orange core a little low, peach
+toward a crisp white rim, fine grain, a white halo and warm light round it)
+standing over a pale stage ellipse with its shadow and a darker floor band;
+`orbView` sizes it (radius min(0.14 vw, 0.25 vh)). The hero particles
+(`heroField` light branch) are a fine orange shimmer inside the ball, strongest
+over the core, none outside it; light mode keeps only 8% of the background
+stars. Text (`LightHero`): bottom left a spaced "PIXEL IT CENTER" label, the
+headline in Inter 500 (not bold, not uppercase), grey description and one
+black pill CTA; bottom right the Staffing line "One partner for the work and
+the people behind it.", a hairline and four service words. The light header
+puts its links in a frosted pill with dividers, the current one dark.
+(Earlier light heroes, a centred sun ball, a sunrise and a solar eclipse,
+were tried and dropped.)
 
 **Current direction (2026-10-03): the particle journey in blue on white.**
 The team liked the dark theme's particles and wanted them in the light
