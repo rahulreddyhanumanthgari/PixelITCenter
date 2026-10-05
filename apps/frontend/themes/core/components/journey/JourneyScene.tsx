@@ -7,13 +7,11 @@ import { gsap } from "@/themes/core/lib/gsap";
 import { ParticleCanvas } from "@/themes/core/components/particles/ParticleCanvas";
 import { ParticleSystem, type LayoutState } from "@/themes/core/components/particles/ParticleSystem";
 import { StarField, type Atmosphere } from "@/themes/core/components/particles/StarField";
-import { LightSky } from "@/themes/light/LightSky";
 import { useDeviceTier, usePointer, useReducedMotion } from "@/themes/core/hooks/device";
 import type { PointerState, ProgressState } from "@/themes/core/components/particles/types";
 import { PALETTE } from "@/themes/core/lib/particles/palette";
 import { smoothstep } from "@/themes/core/lib/particles/random";
 import { processProgress } from "@/themes/core/lib/processProgress";
-import { useTheme } from "@/themes/core/lib/theme";
 import {
   HERO_LOOK,
   JOURNEY_BLOOM,
@@ -23,7 +21,6 @@ import {
   EARTH_VIEW,
   GALAXY_VIEW,
   HERO_FIELD,
-  orbView,
   STORY_FLIGHT,
   STORY_HANDOFF,
   STORY_LOOK,
@@ -84,13 +81,6 @@ export default function JourneyScene() {
   const tierName = useDeviceTier();
   const reducedMotion = useReducedMotion();
   const tier = getJourneyTier(tierName);
-  // Light theme: a bright atmosphere (LightSky), no bloom, particles drawn
-  // as ink dots in the light palette.
-  const light = useTheme() === "light";
-  const lightRef = useRef(light);
-  useEffect(() => {
-    lightRef.current = light;
-  }, [light]);
   const dpr = Math.min(window.devicePixelRatio || 1, tier.maxDpr);
   const [active, setActive] = useState(true);
 
@@ -101,7 +91,6 @@ export default function JourneyScene() {
     protect: [0, 0, 0.001, 0.001],
     protectFloor: HERO_FIELD.protectFloor.wide,
     protect2: [0, 0, 0.001, 0.001],
-    svc: 0,
     protect3: [0, 0, 0.001, 0.001],
     protect4: [0, 0, 0.001, 0.001],
     torusScale: 1,
@@ -119,7 +108,7 @@ export default function JourneyScene() {
   const onBlend = useCallback(
     (blend: number, field: number) => {
       const effect = bloom.current;
-      if (effect) effect.intensity = lightRef.current ? 0 : tier.bloom.hero + (tier.bloom.story - tier.bloom.hero) * blend;
+      if (effect) effect.intensity = tier.bloom.hero + (tier.bloom.story - tier.bloom.hero) * blend;
       atmosphere.current.field = field;
     },
     [tier],
@@ -236,15 +225,6 @@ export default function JourneyScene() {
       L.from.x = 0;
       L.from.y = 0;
       L.from.scale = voidPx * wpp;
-      // Light theme: the hero is a glowing particle orb. The particles centre
-      // on it, and 1 local unit = twice its radius (the shader's sphere has
-      // radius 0.5).
-      if (lightRef.current) {
-        const o = orbView(vw, vh);
-        L.from.x = o.dx * wpp;
-        L.from.y = -o.dy * wpp;
-        L.from.scale = o.r * 2 * wpp;
-      }
       L.protectFloor = vw < 768 ? HERO_FIELD.protectFloor.narrow : HERO_FIELD.protectFloor.wide;
       // About's galaxy: centred on its pinned anchor, rim past the screen.
       if (galaxyAnchor) {
@@ -293,11 +273,6 @@ export default function JourneyScene() {
           (c.width / vw) * 1.02,
           (c.height / vh) * 1.02,
         ];
-      }
-      const servicesSection = servicesContent?.closest("section");
-      if (servicesSection) {
-        const r = servicesSection.getBoundingClientRect();
-        L.svc = Math.min(Math.max((vh - r.top) / (r.height + vh), 0), 1);
       }
       if (servicesContent) {
         const c = servicesContent.getBoundingClientRect();
@@ -358,20 +333,17 @@ export default function JourneyScene() {
       settings={{
         cameraFov: JOURNEY_CAMERA.fov,
         cameraZ: JOURNEY_CAMERA.z,
-        background: light ? PALETTE.backgroundLight : PALETTE.background,
+        background: PALETTE.background,
         dpr,
         bloom: { intensity: tier.bloom.hero, ...JOURNEY_BLOOM },
       }}
     >
-      {light && <LightSky pixelRatio={dpr} reducedMotion={reducedMotion} />}
       <StarField
-        // Fewer loose background points on white, where they read as noise.
-        count={Math.round(tier.starCount * (light ? 0.08 : 1))}
+        count={tier.starCount}
         pixelRatio={dpr}
         reducedMotion={reducedMotion}
         pointer={pointer}
         atmosphere={atmosphere}
-        light={light}
       />
       <CameraRig
         pointer={pointer}
@@ -379,11 +351,9 @@ export default function JourneyScene() {
         strength={reducedMotion ? 0 : tierName === "mobile" ? 0.5 : 1}
       />
       <ParticleSystem
-        key={`${tierName}-${light}`}
+        key={tierName}
         forms={JOURNEY_FORMS}
-        // Light theme: more particles, so each shape reads as a dense, solid
-        // form on white instead of a scattered spray.
-        count={Math.round(tier.particleCount * (light ? 1.6 : 1))}
+        count={tier.particleCount}
         look={HERO_LOOK}
         lookTo={STORY_LOOK}
         handoffAt={STORY_HANDOFF}
@@ -397,7 +367,6 @@ export default function JourneyScene() {
         onBlend={onBlend}
         onGravity={onGravity}
         stage={stage}
-        light={light}
       />
     </ParticleCanvas>
   );

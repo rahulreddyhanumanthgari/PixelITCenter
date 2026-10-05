@@ -8,7 +8,6 @@ import fragmentShader from "@/themes/core/shaders/particle.frag.glsl";
 import { createStarGeometry } from "@/themes/core/lib/particles/stars";
 import { JOURNEY_STARS, HERO_LOOK } from "@/themes/core/components/journey/journey-config";
 import type { PointerState } from "./types";
-import { applyTheme } from "./ParticleSystem";
 
 /** Shared scene mood, written each frame by the main system's callback. */
 export interface Atmosphere {
@@ -27,8 +26,6 @@ interface StarFieldProps {
   reducedMotion: boolean;
   pointer: RefObject<PointerState>;
   atmosphere: RefObject<Atmosphere>;
-  /** Light theme: stars drawn as faint ink dots. */
-  light?: boolean;
 }
 
 /**
@@ -36,7 +33,7 @@ interface StarFieldProps {
  * behind the main particles. One THREE.Points, all motion on the GPU; the
  * CPU only eases three uniforms per frame.
  */
-export function StarField({ count, pixelRatio, reducedMotion, pointer, atmosphere, light = false }: StarFieldProps) {
+export function StarField({ count, pixelRatio, reducedMotion, pointer, atmosphere }: StarFieldProps) {
   const geometry = useMemo(() => createStarGeometry(count), [count]);
 
   const material = useMemo(
@@ -52,7 +49,6 @@ export function StarField({ count, pixelRatio, reducedMotion, pointer, atmospher
           uGravity: { value: 0 },
           uGravityCenter: { value: new THREE.Vector2() },
           uSwirl: { value: 0 },
-          uLight: { value: 0 },
         },
         vertexShader,
         fragmentShader,
@@ -81,7 +77,6 @@ export function StarField({ count, pixelRatio, reducedMotion, pointer, atmospher
     if (!u) return;
     const delta = Math.min(rawDelta, 1 / 20);
     u.uTime.value += delta;
-    if (pointsRef.current) applyTheme(pointsRef.current, u.uLight, light);
     // Heavily damped so the space never reacts sharply.
     const k = 1 - Math.pow(0.97, delta * 60);
     const p = pointer.current;

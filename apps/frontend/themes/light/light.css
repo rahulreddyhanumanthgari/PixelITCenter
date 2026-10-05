@@ -1,230 +1,178 @@
 /* ---------------------------------------------------------------------------
-   Light design (Light Theme reference-animation handoff): the Pixel IT site
-   on a white atmosphere with one large blue object (themes/light/ribbon).
-   These are its colours; everything else is shared in themes/core. Loaded
-   only by app/(light).
+   Light design, rebuilt from the owner's reference video (2026-10-05): a
+   clean white environment, dark charcoal text, tall condensed headings, soft
+   shadows; the 3D interest comes from the bead scene behind the page
+   (themes/light/beads). Everything structural is shared in themes/core.
+   Loaded only by app/(light).
    ------------------------------------------------------------------------ */
 
 :root {
   color-scheme: light;
 
-  /* Brand: controlled orange energy, technology blue. */
-  --brand-blue: #f59e0b; /* sun gold */
-  --brand-orange: #ff7e2e; /* sun orange */
-  --brand-white: #f2f6ff;
+  /* Bead palette (the reference's): orange, yellow, teal, charcoal. */
+  --bead-orange: #f2802b;
+  --bead-yellow: #f7c740;
+  --bead-teal: #5cbdab;
+  --bead-charcoal: #33383f;
 
-  /* Surfaces: white and light atmospheric (#FFFFFF, #F8FAFC, #F3F8FE). */
-  --background: #fff1e5; /* warm peach: the page from Services down (the hero is drawn by LightSky) */
+  --brand-blue: var(--bead-teal);
+  --brand-orange: var(--bead-orange);
+  --brand-white: #ffffff;
+
+  /* Surfaces: white, very light grey. */
+  --background: #ffffff;
   --surface: #ffffff;
-  --surface-2: #f3f8fe;
-  --foreground: #0b1b33;
-  --muted: #eef3f9;
+  --surface-2: #f8fafc;
+  --foreground: #0f172a;
+  --muted: #f1f5f9;
   --muted-foreground: #64748b;
-  --border: rgb(11 27 51 / 0.1);
-  --input: rgb(11 27 51 / 0.16);
-  --ring: #d9480f;
+  --border: rgb(15 23 42 / 0.09);
+  --input: rgb(15 23 42 / 0.16);
+  --ring: #c2410c;
 
   /* shadcn roles */
   --card: var(--surface);
   --card-foreground: var(--foreground);
-  --popover: var(--surface-2);
+  --popover: var(--surface);
   --popover-foreground: var(--foreground);
-  --primary: #0b1b33;
+  --primary: #0f172a;
   --primary-foreground: #ffffff;
   --secondary: var(--surface-2);
   --secondary-foreground: var(--foreground);
-  --accent: var(--brand-orange);
+  --accent: var(--bead-orange);
   --accent-foreground: #ffffff;
-  --destructive: #ff5a5f;
+  --destructive: #e5484d;
 
-  /* Text: navy primary, slate supporting copy. */
-  --text-primary: #0b1b33;
+  /* Text: charcoal; accents darkened from the bead colours for contrast. */
+  --text-primary: #0f172a;
   --text-secondary: #334155;
   --text-muted: #64748b;
-  --text-strong: #06101f;
-  /* Accent words, labels, numbers and card accents follow the theme: blue
-     (the token keeps its shared name; orange stays only on brand marks). */
-  --accent-orange: #d9480f; /* deep sunset orange: readable on cream */
-  --accent-blue: #b45309;
+  --text-strong: #020617;
+  --accent-orange: #c2410c;
+  --accent-blue: #0f766e;
 
-  /* Cards (Light Theme pack §7): editorial panels, minimal border, nearly
-     no outline, no glassmorphism. */
+  /* Cards: white tiles lifted by a soft shadow. */
   --card-bg: #ffffff;
   --card-bg-hover: #ffffff;
-  --card-edge: rgb(11 27 51 / 0.08);
-  --card-radius: 6px;
-  --card-accent: #f59e0b;
+  --card-edge: rgb(15 23 42 / 0.07);
+  --card-radius: 10px;
+  --card-accent: var(--bead-orange);
   --panel-body: #64748b;
 
-  /* One-offs */
-  --hero-kicker: #1e2d47;
-  --hero-statement: #0b1b33;
-  --icon-node: #0b1b33;
+  /* One-offs used by shared sections. */
+  --hero-kicker: #0f172a;
+  --hero-statement: #0f172a;
+  --icon-node: #0f172a;
   --footer-label: #475569;
-  --footer-wordmark: rgb(11 27 51 / 0.05);
-  --footer-wordmark-stroke: rgb(11 27 51 / 0.08);
-  --footer-dust: #f59e0b;
-  --galaxy-text-primary: #0b1b33;
+  --footer-wordmark: rgb(15 23 42 / 0.05);
+  --footer-wordmark-stroke: rgb(15 23 42 / 0.09);
+  --footer-dust: var(--bead-teal);
+  --galaxy-text-primary: #0f172a;
   --galaxy-text-secondary: #1e293b;
   --galaxy-text-muted: #475569;
 }
 
-/* The atmosphere behind the page: white, cooling to a faint blue at the
-   edges. The blue object is drawn over it (RibbonLayer). */
+/* The environment behind the beads: white, a faint warm light from the
+   upper left and a cool shade toward the lower right. */
 .light-atmosphere {
   background:
-    radial-gradient(80% 70% at 50% 30%, #ffffff 0%, #f8fafc 55%, #eef4fd 100%);
+    radial-gradient(70% 60% at 20% 10%, rgb(255 247 237 / 0.9), transparent 70%),
+    radial-gradient(60% 60% at 90% 95%, rgb(226 232 240 / 0.7), transparent 70%),
+    #ffffff;
 }
 
-
-
-
-
-
-/* ---------------------------------------------------------------------------
-   Cards: clean white tiles, a thin edge, a whisper of shadow and one short
-   blue accent line. No glass, no glow.
-   ------------------------------------------------------------------------ */
-.card {
-  border: 1px solid var(--card-edge);
-  /* Sunlight from the upper left: a warm highlight on top, a soft amber
-     shadow falling down and to the right. */
-  box-shadow:
-    inset 0 1px 0 rgb(255 255 255 / 0.9),
-    0 1px 2px rgb(146 64 14 / 0.06),
-    14px 22px 40px -22px rgb(180 83 9 / 0.28);
-}
-.card::before {
-  display: none;
-}
-.card--panel[data-accent="blue"] .panel-line {
-  background: linear-gradient(90deg, #d9480f, #f59e0b);
-}
-
-/* About: the vision as an editorial pull quote, and the highlights as
-   square tiles (like the reference's client tiles). */
-.light-about-vision blockquote {
-  padding-left: 1.25rem;
-  border-left: 2px solid #f59e0b;
-  font-family: var(--font-display);
-  font-size: clamp(1.25rem, 1.1rem + 0.5vw, 1.5rem);
-  font-weight: 600;
-  line-height: 1.35;
-  color: var(--text-primary);
-}
-.light-tile {
-  display: flex;
-  min-height: 8.5rem;
-  flex-direction: column;
-  justify-content: space-between;
-  padding: 1.25rem;
-  border: 1px solid var(--card-edge);
-  border-radius: var(--card-radius);
-  background: #ffffff;
-  box-shadow: 14px 22px 40px -24px rgb(180 83 9 / 0.26);
-}
-@media (min-width: 640px) {
-  .light-tile {
-    aspect-ratio: 1;
-    min-height: 0;
-  }
-}
-.light-tile-value {
-  font-family: var(--font-display);
-  font-size: clamp(1.125rem, 1rem + 0.4vw, 1.375rem);
+/* ---- Typography: tall, condensed, bold (after the reference) ------------ */
+.light-display,
+.type-display-lg {
+  font-family: var(--font-condensed), var(--font-display), sans-serif;
   font-weight: 700;
-  line-height: 1.2;
+  text-transform: uppercase;
+  letter-spacing: -0.005em;
   color: var(--text-primary);
 }
-
-
-
-/* ---------------------------------------------------------------------------
-   Light hero (after the owner's reference): a small spaced label, a large
-   medium-weight headline, grey copy, one black pill CTA; on the right a short
-   statement, a hairline and four service words.
-   ------------------------------------------------------------------------ */
-.light-hero-label {
-  font-size: 0.6875rem;
-  font-weight: 500;
-  letter-spacing: 0.32em;
-  text-transform: uppercase;
-  color: #8a8d97;
+.light-display {
+  font-size: clamp(3.25rem, 1.6rem + 6.4vw, 7rem);
+  line-height: 0.92;
 }
-.light-hero-heading {
-  font-family: var(--font-sans);
-  font-size: clamp(2.25rem, 1.2rem + 3vw, 3.75rem);
-  font-weight: 500;
-  line-height: 1.02;
-  letter-spacing: -0.035em;
-  color: #0d0f14;
+.type-display-lg {
+  font-size: clamp(2.5rem, 1.6rem + 3.6vw, 4.75rem);
+  line-height: 0.95;
 }
-.light-hero-copy {
-  max-width: 32rem;
-  font-size: clamp(1rem, 0.95rem + 0.2vw, 1.125rem);
-  line-height: 1.45;
-  color: #5d616c;
+.light-amp {
+  color: var(--accent-orange);
 }
-.light-hero-cta {
+.light-lead {
+  max-width: 34rem;
+  font-size: clamp(1rem, 0.95rem + 0.25vw, 1.15rem);
+  line-height: 1.6;
+  color: var(--text-secondary);
+}
+.light-btn {
   display: inline-flex;
   height: 3rem;
   align-items: center;
   gap: 0.6rem;
-  padding: 0 1.6rem;
+  padding: 0 1.5rem;
   border-radius: 9999px;
-  background: #0d0f14;
-  color: #ffffff;
   font-size: 0.9375rem;
   font-weight: 500;
-  transition: background-color 200ms ease;
+  transition:
+    background-color 200ms ease,
+    border-color 200ms ease;
 }
-.light-hero-cta:hover {
-  background: #2a2d36;
+.light-btn--dark {
+  background: #0f172a;
+  color: #ffffff;
 }
-.light-hero-statement {
-  font-family: var(--font-sans);
-  font-size: clamp(1.25rem, 1.1rem + 0.5vw, 1.5rem);
-  font-weight: 400;
-  line-height: 1.22;
-  letter-spacing: -0.015em;
-  color: #0d0f14;
+.light-btn--dark:hover {
+  background: #1e293b;
 }
-.light-hero-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem 2rem;
-  margin-top: 1.25rem;
-  padding-top: 1.1rem;
-  border-top: 1px solid rgb(13 15 20 / 0.14);
-  font-size: 1rem;
-  color: #6b6f7a;
+.light-btn--ghost {
+  border: 1px solid rgb(15 23 42 / 0.18);
+  background: rgb(255 255 255 / 0.7);
+  color: #0f172a;
 }
-.light-hero-tags a:hover {
-  color: #0d0f14;
+.light-btn--ghost:hover {
+  border-color: #0f172a;
 }
 
-/* Header (light): the links sit in a frosted pill, the current one dark. */
-header nav[aria-label="Main"] ul {
-  gap: 0;
-  padding: 0.3rem;
-  border: 1px solid rgb(13 15 20 / 0.12);
-  border-radius: 9999px;
-  background: rgb(255 255 255 / 0.35);
-  backdrop-filter: blur(10px);
+/* ---- Cards: white, a hairline and a soft lifted shadow ------------------- */
+.card {
+  border: 1px solid var(--card-edge);
+  box-shadow:
+    0 1px 2px rgb(15 23 42 / 0.04),
+    0 20px 40px -24px rgb(15 23 42 / 0.22);
 }
-header nav[aria-label="Main"] li + li {
-  border-left: 1px solid rgb(13 15 20 / 0.08);
-}
-header nav[aria-label="Main"] a {
-  display: block;
-  padding: 0.35rem 1rem;
-  font-size: 0.875rem;
-  color: #6b6f7a;
-}
-header nav[aria-label="Main"] a[aria-current="true"] {
-  color: #0d0f14;
-  font-weight: 500;
-}
-header nav[aria-label="Main"] a span {
+.card::before {
   display: none;
+}
+
+/* Section text sits over the scene: a soft white veil behind each section
+   header keeps it crisp when beads pass behind. */
+[data-story-section] h2,
+#about h2,
+#careers h2,
+#contact h2 {
+  text-shadow:
+    0 0 24px rgb(255 255 255 / 0.95),
+    0 0 8px rgb(255 255 255 / 0.9);
+}
+
+/* How we work: its pinned step panel sits on a soft white veil so passing
+   beads never cut through the step text. */
+[data-process-content] {
+  position: relative;
+}
+[data-process-content]::before {
+  content: "";
+  position: absolute;
+  inset: -2rem 0;
+  z-index: -1;
+  background: radial-gradient(closest-side, rgb(255 255 255 / 0.9) 55%, rgb(255 255 255 / 0.55) 80%, transparent);
+  pointer-events: none;
+}
+@media (min-width: 1024px) {
+  [data-process-content]::before {
+    inset: -3rem -5rem;
+  }
 }

@@ -71,8 +71,6 @@ export interface LayoutState {
   protectFloor: number;
   /** Services content box in NDC; particles behind it dim on the ring stream. */
   protect2: [number, number, number, number];
-  /** Scroll progress through Services: 0 = its top reaches the screen bottom, 1 = its bottom leaves the top. */
-  svc?: number;
   /** Staffing content box in NDC; Earth particles behind it dim. */
   protect3: [number, number, number, number];
   /** Extra display scale for the Staffing Earth (larger on desktop). */
@@ -127,8 +125,6 @@ interface ParticleSystemProps {
    * active … N = all steps done. Written by the section's scroll triggers.
    */
   stage?: RefObject<ProgressState>;
-  /** Light theme: points drawn as ink dots (normal blending) instead of light. */
-  light?: boolean;
 }
 
 export interface MorphUniforms {
@@ -152,7 +148,6 @@ export interface MorphUniforms {
   uFlowFrom: THREE.IUniform<number>;
   uFlowTo: THREE.IUniform<number>;
   uProtect2: THREE.IUniform<THREE.Vector4>;
-  uSvc: THREE.IUniform<number>;
   uProtect3: THREE.IUniform<THREE.Vector4>;
   uEarthScale: THREE.IUniform<number>;
   uProtect4: THREE.IUniform<THREE.Vector4>;
@@ -160,7 +155,6 @@ export interface MorphUniforms {
   uSolarPhone: THREE.IUniform<number>;
   uProtect5: THREE.IUniform<THREE.Vector4>;
   uCollapse: THREE.IUniform<number>;
-  uLight: THREE.IUniform<number>;
   uSunOffset: THREE.IUniform<number>;
   uProtect: THREE.IUniform<THREE.Vector4>;
   uProtectFloor: THREE.IUniform<number>;
@@ -169,17 +163,6 @@ export interface MorphUniforms {
 /** Anywhere far from the particles, so the pointer push is off. */
 const MOUSE_PARKED = new THREE.Vector3(100, 100, 100);
 const TAU = Math.PI * 2;
-
-/** Light theme: normal blending + ink colours; dark: additive light. */
-export function applyTheme(points: THREE.Points, uLight: THREE.IUniform<number>, light: boolean) {
-  uLight.value = light ? 1 : 0;
-  const m = points.material as THREE.Material;
-  const blending = light ? THREE.NormalBlending : THREE.AdditiveBlending;
-  if (m.blending !== blending) {
-    m.blending = blending;
-    m.needsUpdate = true;
-  }
-}
 
 function uniformsOf(points: THREE.Points): MorphUniforms {
   return (points.material as THREE.ShaderMaterial).uniforms as MorphUniforms;
@@ -214,7 +197,6 @@ export function ParticleSystem({
   onBlend,
   onGravity,
   stage,
-  light = false,
 }: ParticleSystemProps) {
   const rootRef = useRef<THREE.Group>(null);
   const tiltRef = useRef<THREE.Group>(null);
@@ -255,7 +237,6 @@ export function ParticleSystem({
       uFlowFrom: { value: 0 },
       uFlowTo: { value: 0 },
       uProtect2: { value: new THREE.Vector4(0, 0, 0.001, 0.001) },
-      uSvc: { value: 0 },
       uProtect3: { value: new THREE.Vector4(0, 0, 0.001, 0.001) },
       uEarthScale: { value: 1 },
       uProtect4: { value: new THREE.Vector4(0, 0, 0.001, 0.001) },
@@ -263,7 +244,6 @@ export function ParticleSystem({
       uSolarPhone: { value: 0 },
       uProtect5: { value: new THREE.Vector4(0, 0, 0.001, 0.001) },
       uCollapse: { value: 0 },
-      uLight: { value: 0 },
       uSunOffset: { value: 0 },
       uProtect: { value: new THREE.Vector4(0, 0, 0.001, 0.001) },
       uProtectFloor: { value: 1 },
@@ -329,7 +309,6 @@ export function ParticleSystem({
     const delta = Math.min(rawDelta, 1 / 20);
     const u = uniformsOf(points);
     u.uTime.value += delta;
-    applyTheme(points, u.uLight, light);
     const time = u.uTime.value;
     const k = dampFactor(look.damping, delta);
 
@@ -355,8 +334,6 @@ export function ParticleSystem({
     const tt = u.uProgress.value;
     s0.anchor = (fromKind >= 2 ? 1 - tt : 0) + (toKind >= 2 ? tt : 0);
     u.uProtect2.value.set(...L.protect2);
-    // Eased, so scroll steps never jerk the Services object.
-    u.uSvc.value += ((L.svc ?? 0) - u.uSvc.value) * (1 - Math.pow(0.9, Math.min(rawDelta, 1 / 20) * 60));
     u.uProtect3.value.set(...L.protect3);
     u.uEarthScale.value = L.earthScale;
     u.uProtect4.value.set(...L.protect4);

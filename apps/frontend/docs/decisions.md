@@ -671,182 +671,40 @@ rejected; this is their replacement.
 - **Background.** Opaque, so the galaxy's sun rests on the footer's top
   edge, with faint blue and orange glows at the bottom.
 
-## Light theme (bright, premium)
+## Light theme: the bead world (rebuilt 2026-10-05)
 
-**Light hero: the glowing orb (2026-10-05).** Built to match the owner's
-reference landing page (hero first, one section at a time). Cool light-grey
-studio backdrop (#ECEEF2) with lavender-grey sides; in the centre a frosted
-glass orb glowing from inside (`LightSky`: orange core a little low, peach
-toward a crisp white rim, fine grain, a white halo and warm light round it)
-standing over a pale stage ellipse with its shadow and a darker floor band;
-`orbView` sizes it (radius min(0.14 vw, 0.25 vh)). The hero particles
-(`heroField` light branch) are a fine orange shimmer inside the ball, strongest
-over the core, none outside it; light mode keeps only 8% of the background
-stars. Text (`LightHero`): bottom left a spaced "PIXEL IT CENTER" label, the
-headline in Inter 500 (not bold, not uppercase), grey description and one
-black pill CTA; bottom right the Staffing line "One partner for the work and
-the people behind it.", a hairline and four service words. The light header
-puts its links in a frosted pill with dividers, the current one dark.
-(Earlier light heroes, a centred sun ball, a sunrise and a solar eclipse,
-were tried and dropped.)
+The owner had the previous light theme removed completely (code deleted, not
+switched off) and rebuilt from a reference video (supplied as 7 PDF frames;
+the video itself was not available, so motion follows the frames). All
+earlier light experiments (particle journey in light colours, sun/eclipse/
+orb heroes, ribbon tube, torus, wave field, peach page) are gone; the shared
+particle engine is dark-only again (no `uLight`, `LightSky` or `useTheme`).
 
-**Hero → next section: the orange takeover (2026-10-05).** After the owner's
-scroll-transition reference (a green takeover, recoloured to the orb's
-orange). Scroll-driven, not timed: hero progress p = scrolled / one screen,
-eased per frame in `LightSky` (it reads `[data-hero]` and `#services`).
-p 0–0.25 the orb's glow swells and its core brightens; from 0.15 a soft-
-fronted radial field grows from the orb's centre (radius eases out to 1.15 ×
-the screen diagonal by 0.95) until it covers the viewport, built from the
-orb's own colours (core #FA9E4C, brand #FF7E2E, deep #F97316, pale #FCDBC2)
-with a hot moving front, slow volumetric noise, pale light from above, grain
-and motes streaming outward, so it reads as energy from the orb, not a flat
-wipe. The orb, stage and halo fade out across p 0.45–0.9. `HeroExit` (GSAP
-ScrollTrigger, scrub) lifts the hero text 140 px and fades it over the
-hero's first 75%. The field holds behind the client strip and dissolves as
-Services rises (its top from 35% to −10% of the screen). Reduced motion: the
-field still follows scroll but appears without the expanding front or
-drifting motes, and the text only fades.
-
-**Services and the page colour (2026-10-05).** From Services down the light
-page is warm peach #FFF1E5 (`--background`; `LightSky` blends its studio
-grey into a peach gradient as Services rises, so the orange takeover
-dissolves into it). The light theme's Services form is a particle wave
-field instead of the ring stream (`waveField`, used by `ringStream` when
-`uLight`): a 300 × 120 grid of particles, 44 × 16 units, three overlapping
-travelling sine waves, tilted 0.95 rad so it is seen from above and fills
-the width behind the cards; crests warmer, far rows and side edges faded;
-dots 2.6×, drawn white (owner's request) as white pearls: a bright
-white centre with a soft warm rim so they read on the peach page (`vWhite`,
-set for the ring/wave weight in light; the stars' shader sets it to 0), and
-no right-hand fade in light. The dark
-theme keeps the ring stream.
-
-**Services: the 3D particle torus (2026-10-05).** Replaces the light wave
-field, after the owner's reference video/PDF. `servicesTorus` (used by
-`ringStream` when `uLight`) snaps the particles to a 150 × 34 lattice on a
-torus (96 × 22 on phones), R 5.2 / r 1.55 with smooth sinusoidal radius
-waves (controlled, not noise), turning slowly about three axes; the new
-`uSvc` uniform (scroll progress through Services, measured in JourneyScene,
-eased in ParticleSystem) adds a little turn, tilt, swell and drift. The
-fragment shader lights each sprite as a small sphere (`vSphere`: soft key
-from the upper left, a warm grey shadow side, a small highlight) in white
-(owner's choice after an orange first version; three barely different whites
-per lattice point), so the shading carries the form on the peach page, like
-the reference; perspective makes near spheres larger. Light Services uses `LightServices` (services in the left half) so
-the torus sits in the open right half and never crosses the text; phones
-show it centred in the particle band. Reduced motion slows the idle turn to
-the engine's reduced-motion factor; scroll response remains.
-
-**Current direction (2026-10-03): the particle journey in blue on white.**
-The team liked the dark theme's particles and wanted them in the light
-theme. `app/(light)/light/page.tsx` now renders the shared `Home` exactly as
-the dark design does (same sections, same layout, same particle journey);
-`data-theme="light"` switches the particle engine to its light mode
-(`LightSky` white atmosphere, no bloom, normal blending). In that mode
-`particle.frag.glsl` draws every particle in the sun's palette (owner's
-choice, 2026-10-03): each shape's hot core → sun yellow #FFDF22, its
-red-orange band → orange #FF7E2E, its blues → sunset red #FF6352 (the sun's
-#FFFFFF / #FFFBE0 are left out, invisible on white). Each dot takes exactly
-one colour (blends turned muddy), drawn solid with a firm edge. Light mode
-also draws 1.6× the particles, 1.55× larger, with 0.35× the loose background
-stars, so shapes read as dense forms on white. Earlier light palettes (all
-blue; navy + orange; yellow + electric blue + dark blue) came first. The previous light version, one blue square tube
-morphing through the page (`themes/light/ribbon`, `LightHero`,
-`LightServices`, `LightAbout`), is kept in the repo but not rendered; its
-history is below.
-
-### Earlier light version: the blue square tube (not rendered)
-
-
-**Current direction (2026-10-02): one blue object.** The owner supplied a
-reference animation (a dark site where one ribbed tube travels the whole
-page) and the "Light Theme reference-animation & Claude Code handoff" PDF:
-keep all Pixel IT content and sections, copy the animation language only,
-on a white/light atmosphere with a large BLUE object. Earlier light
-experiments (dawn-lake hero with a white shell sculpture, Services icon
-orbit, white relief globe, off-white #F4EFEC page) were removed for it.
-
-- **The object** (`themes/light/ribbon/`, passed to `Home` as `backdrop`;
-  `particles={false}` so the dark journey never mounts). `RibbonLayer` is a
-  fixed full-screen layer (the white atmosphere, `.light-atmosphere`) with
-  `RibbonScene`: one InstancedMesh of 180 thin blue rounded-square slats
-  (110 on phones; square like the reference, drawn 1.25× the tube radius
-  (`SLAT`), one flat side always facing
-  the viewer so the tube reads as a square duct, not round discs),
-  one draw call, a refined light blue range (#2f6fe6 … #7fb3fa), glossy
-  clearcoat, local `Lightformer` reflections (no network), neutral tone
-  mapping.
-- **Forms** (`forms.ts`): each section holds the tube in a shape. Hero: a
-  large arch under the headline. Services: a tall twisting column on the
-  right (the services fill the left half). Staffing: a ring taller than the
-  screen, so its two sides frame the content. Why: a spine down the left.
-  How we work: the tube runs horizontally across the screen, set back in depth, weaving
-  behind the heading and all four steps (a soft veil behind the pinned step
-  content keeps the text readable), then flows on into About. About: a tall column on the right that bows and twists through
-  depth (the reference's agency scene), the statement left-aligned on the
-  left (`themes/light/about/LightAbout.tsx`). Careers: a curving column on the left, clear of the centred text.
-  What clients say: one slim, gentle curve dipping just under the client
-  cards and rising at both sides (the owner found an infinity loop too busy). Contact: a
-  vortex: 2.3 turns tightening and receding into the glass core sphere at
-  its centre (`EYE_CORE`), every turn meeting the core; formed only as
-  Contact arrives. Slat size is consistent across sections (about 0.085 H
-  after How We Work) and slat thickness is held to 0.004–0.008 H everywhere,
-  so no section looks heavier. The footer wordmark uses the shared rule that
-  fits the full PIXEL IT CENTER on screen.
-  Portrait screens move shapes to the edges; large shapes crop naturally.
-- **Scroll** (`readStage`): the stage runs 0…6 across the section anchors.
-  A form holds while its section fills the screen; across each section edge
-  (±0.35 of the viewport) every fin glides from its place in one form to its
-  place in the next, eased, with a swell toward the camera mid-way. Fins
-  slide slowly along the tube and spin constantly about the tube's own axis
-  (0.45 rad/s, faster while scrolling; the phase steps 3π along the tube so
-  the turn ripples down it, as in the reference); the object leans a little
-  with the pointer.
-  Fin thickness follows each form's length so spacing stays even. Reduced
-  motion stops the slide, the spin and the lean; the morph still follows scroll.
-- **Hero** (`LightHero`): the approved headline, the description under it
-  and the CTAs, centred at the top; the arch below, low enough to clear them
-  (centre −0.86 H on wide screens, −0.66 H on phones); a scroll cue bottom
-  left.
-- **Readability**: the cards are near-solid white; Contact (inside the eye)
-  has a soft page-colour veil behind its text (`#contact::before`).
-- **Typography & colour (light only)**: the site's simple bold sans
-  (Space Grotesk, uppercase headings), as the owner preferred over a trial
-  serif; the highlighted word is plain blue. `--accent-orange` is set to
-  #2563EB in light, so eyebrows, numbers and accent lines follow the blue
-  theme (orange stays on brand marks).
-- **Cards (light only)**: white, 1px hairline edge, 6px radius, a whisper of
-  shadow, one short blue accent line; About's highlights are square tiles.
-- **Palette**: `--background` #F8FAFC (atmosphere #FFFFFF → #EEF4FD), navy
-  text #0B1B33, slate #64748B, orange #FF6B1A kept as the restrained accent.
-
-The notes below describe how the particles were drawn in light mode, for
-when they return.
-- **Palette.**
-
-  | Role | Colour |
-  |---|---|
-  | Background | `#F8FAFC` |
-  | Primary text | `#0B1B33` |
-  | Secondary text | `#64748B` |
-  | Accent | `#FF6B1A` |
-  | Technology blue | `#1677FF` |
-
-  Cards are near-white and translucent, with navy hairlines.
-- **Sky** (`LightSky`):
-  - a white → `#F3F8FE` gradient, cooler at the rim;
-  - soft blue and faint warm light drifting slowly;
-  - fine navy / blue dust.
-- **Particles.** `particle.frag.glsl` (`uLight`) draws each point as a
-  coloured dot with normal blending, and bloom is off. The light palette:
-  - orange → `#FF6B1A`, red-orange → deep orange;
-  - blue → `#1677FF` / electric blue, deep blue → deep navy;
-  - whites → soft steel blue.
-
-  Brightness becomes opacity, so text-protect dimming makes particles
-  fainter behind text in both themes. Dots are 1.3× larger.
-- **Black hole speed.** The disc rotates about 30% slower (`omega` 0.38,
-  was 0.55), with slower infall and streams.
+- **Page** (`app/(light)/light/page.tsx`): the shared `Home` with
+  `LightHero`, `particles={false}` and `backdrop={<BeadLayer />}`.
+- **Environment** (`themes/light/light.css`): white #FFFFFF / #F8FAFC,
+  charcoal text #0F172A, a faint warm light upper left and cool shade lower
+  right; headings in Oswald (tall, condensed, bold, uppercase, after the
+  reference); accents darkened from the bead colours for contrast (#C2410C,
+  #0F766E); white cards with a hairline and a soft lifted shadow.
+- **Bead scene** (`themes/light/beads/`): one `THREE.Points` draw call
+  (4200 beads desktop, 2800 tablet, 1800 phone), each shaded as a small lit
+  sphere in the reference palette (orange, yellow, teal, charcoal, cream),
+  sorted back-to-front each frame, with a cheap depth of field (beads off
+  the focal plane grow and soften). Forms (`forms.ts`): a bead rocket, a
+  satellite with wireframe panels, a floating cloud through depth (a third
+  of the beads visible, the text column kept clear), and a settled drift.
+  Sequence: hero rocket (right) → Services cloud → Staffing satellite
+  (right) → Why cloud → How we work satellite (left) → About rocket (left)
+  → Contact drift. Scroll picks the stage per section; across each edge
+  (±0.25 viewport) every bead flies from its place in one form to the next,
+  staggered and scattered through space. Objects bob or turn slowly, the
+  camera pushes in through each transition and leans with the pointer, and
+  objects cast a soft shadow on the page.
+- **Readability**: section headings get a white glow; How We Work's pinned
+  step panel sits on a soft white veil.
+- **Reduced motion**: no idle drift, turn, push-in or pointer lean; morphs
+  still follow scroll with a gentler scatter.
 
 ## Content
 

@@ -1,12 +1,13 @@
 import Home from "@/themes/core/Home";
 import { LightHero } from "@/themes/light/hero/LightHero";
-import { LightServices } from "@/themes/light/services/LightServices";
+import { BeadLayer } from "@/themes/light/beads/BeadLayer";
 
-// The light design: the same site and particle journey as the dark design,
-// lit by the sun (data-theme="light" in app/(light)/layout.tsx switches the
-// particle engine to its light mode). Its hero is a solar eclipse, with the
-// headline on the left (LightHero). Visitors who chose it get this at "/"
-// through the rewrite in next.config.ts; /light also works directly.
+// The light design, rebuilt from the owner's reference video: every section
+// and all copy of the shared site, on a white environment, with one
+// continuous bead scene behind the page (a rocket that bursts into a cloud
+// and re-forms as a satellite, section by section). The dark particle
+// journey is off here. Visitors who chose it get this at "/" through the
+// rewrite in next.config.ts; /light also works directly.
 export default function Page() {
-  return <Home hero={<LightHero />} services={<LightServices />} />;
+  return <Home hero={<LightHero />} particles={false} backdrop={<BeadLayer />} />;
 }

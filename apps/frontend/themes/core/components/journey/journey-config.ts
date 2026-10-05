@@ -40,16 +40,6 @@ export const STORY_FLIGHT = { swell: 1.6 } as const;
  * width so phones still show the disc. The accretion disc runs to twice
  * that, and streams/outer space far past the viewport edges.
  */
-/**
- * Light theme hero: a glowing particle orb floating in the centre (after the
- * owner's reference). Returns its radius and its centre's offset from the
- * screen centre, in px (dx right, dy down).
- */
-export function orbView(vw: number, vh: number): { r: number; dx: number; dy: number } {
-  if (vw < 1024) return { r: Math.min(0.32 * vw, 0.17 * vh), dx: 0, dy: -0.17 * vh };
-  return { r: Math.min(0.14 * vw, 0.25 * vh), dx: 0, dy: -0.03 * vh };
-}
-
 export const HERO_FIELD = {
   // A wide calm centre, so the ring frames the hero content rather than
   // running behind it.

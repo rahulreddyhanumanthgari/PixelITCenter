@@ -1,59 +1,44 @@
 import { ArrowRight } from "lucide-react";
-import { hero, site, staffing } from "@/content/site";
-import { HeroExit } from "./HeroExit";
-
-// Plain text from content/site.ts heading markup (`*word*`, ` | `, `**`).
-const plain = (text: string) => text.replace(/\*/g, "").replace(/\s*\|\s*/g, " ");
-
-// The four service words under the right-hand statement.
-const TAGS = ["AI", "Cloud", "Cybersecurity", "IT Staffing"];
+import { hero } from "@/content/site";
+import { RichText } from "@/themes/core/components/ui/rich-text";
 
 /**
- * Light hero, after the owner's reference: a frosted glowing orb on a stage
- * in the centre (drawn by the page-wide particle layer and LightSky). Bottom
- * left: a small spaced label, the headline in a medium-weight sans, the
- * description and one black pill CTA. Bottom right: a short statement, a
- * hairline and four service words. Phones: everything stacks under the orb.
+ * Light hero, after the reference video: a tall condensed headline stacked
+ * on the left, the copy and CTAs under it; the bead rocket (BeadLayer) holds
+ * the right. Phones: the rocket sits above, the text below. Same entrance
+ * choreography as the shared hero (data-reveal).
  */
 export function LightHero() {
   return (
-    <section id="top" data-hero aria-labelledby="hero-title" className="relative flex min-h-[100svh] flex-col justify-end">
-      <div className="mx-auto w-full max-w-7xl px-6 pb-16 pt-[58svh] lg:px-8 lg:pb-14 lg:pt-40">
-        <div data-hero-exit className="flex flex-col gap-12 lg:flex-row lg:items-end lg:justify-between">
-          <div data-hero-content className="max-w-2xl">
-            <p data-reveal="0" className="light-hero-label">
-              {site.name}
-            </p>
-            <h1 id="hero-title" data-reveal="1" className="light-hero-heading mt-4">
-              <span className="block">
-                {hero.kicker[0]} &amp; {hero.kicker[1]}
-              </span>
-              <span className="block">
-                {hero.statement[0]} {hero.statement[1]}
-              </span>
-            </h1>
-            <p data-reveal="2" className="light-hero-copy mt-4">
-              {plain(hero.description)}
-            </p>
-            <a data-reveal="3" href={hero.primaryCta.href} className="light-hero-cta mt-8">
+    <section id="top" data-hero aria-labelledby="hero-title" className="relative flex min-h-[100svh] items-end lg:items-center">
+      <div className="mx-auto w-full max-w-7xl px-6 pb-16 pt-[46svh] lg:px-8 lg:pb-0 lg:pt-24">
+        <div data-hero-content className="max-w-[40rem]">
+          <h1 id="hero-title" className="light-display">
+            <span data-reveal="0" className="block">
+              {hero.kicker[0]}{" "}
+              <span className="light-amp">&amp;</span> {hero.kicker[1]}
+            </span>
+            <span data-reveal="1" className="block">
+              {hero.statement[0]}
+            </span>
+            <span data-reveal="1" className="block">
+              {hero.statement[1]}
+            </span>
+          </h1>
+          <p data-reveal="2" className="light-lead mt-7">
+            <RichText text={hero.description} strongClassName="font-semibold text-[var(--text-primary)]" />
+          </p>
+          <div data-reveal="3" className="mt-9 flex flex-wrap items-center gap-3">
+            <a href={hero.primaryCta.href} className="light-btn light-btn--dark">
               {hero.primaryCta.label}
               <ArrowRight className="size-4" aria-hidden="true" />
             </a>
-          </div>
-
-          <div data-reveal="3" className="w-full max-w-[24rem]">
-            <p className="light-hero-statement">{plain(staffing.title)}.</p>
-            <ul className="light-hero-tags" aria-label="What we do">
-              {TAGS.map((tag) => (
-                <li key={tag}>
-                  <a href="#services">{tag}</a>
-                </li>
-              ))}
-            </ul>
+            <a href={hero.secondaryCta.href} className="light-btn light-btn--ghost">
+              {hero.secondaryCta.label}
+            </a>
           </div>
         </div>
       </div>
-      <HeroExit />
     </section>
   );
 }
