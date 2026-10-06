@@ -53,9 +53,14 @@ uniform float uPxPerUnit;   // device px per world unit at distance 1
 uniform float uRootScale;   // the system's world scale (local -> world)
 uniform float uVoxelPx;     // the one base cube size, device px at the focal depth
 varying vec3 vNormal;
+varying float vHero;        // 1 = a traced landing-page cube, pre-shaded per face
 #else
 #define PPOS position
 #endif
+// Light hero: the vortex traced from the landing-page reference (lightVortex.ts).
+attribute vec3 aHeroColor;   // the cube's sRGB colour
+attribute vec3 aHeroShape;   // width (local units), height / width, 1 = floating accent
+uniform float uVortex;       // 1 when the traced vortex is the hero form
 
 attribute vec3 aTarget;
 attribute vec3 aColor;
@@ -875,7 +880,7 @@ void main() {
   float heroGlow = 1.0;
   float heroGrow = 1.0;
   float heroLane = 0.7;
-  if (uHeroField > 0.5) A = heroField(heroVisible, heroGlow, heroGrow, heroLane);
+  if (uHeroField > 0.5) A = uVortex > 0.5 ? PPOS : heroField(heroVisible, heroGlow, heroGrow, heroLane);
 
   // --- per-particle timing ------------------------------------------------
   // Delays blend pure randomness with a coarse noise field, so neighbouring
@@ -1202,6 +1207,7 @@ void main() {
     // Spiral arms of bands round the vortex (Reference 01).
     float hang = atan(A.z, A.x) / 6.2831853;
     if (heroW > 0.5) vInk = lpal(lband(fract(heroLane * 1.1 + hang * 2.0 + 0.5), fract(aRandom * 29.3)));
+    if (uVortex > 0.5 && heroW > 0.5) vInk = aHeroColor;
   }
 
 
@@ -1218,7 +1224,8 @@ void main() {
   // left, phone text below the formation.
   vec2 heroNdc = gl_Position.xy / gl_Position.w;
   float heroMask = mix(smoothstep(-0.2, 0.08, heroNdc.x), smoothstep(-0.12, 0.08, heroNdc.y), uSolarPhone);
-  cubeVis *= mix(1.0, heroMask * (1.0 - smoothstep(0.8, 0.92, heroNdc.y)), heroW);
+  // (The traced vortex is placed clear of the desktop text already.)
+  cubeVis *= mix(1.0, heroMask * (1.0 - smoothstep(0.8, 0.92, heroNdc.y)), heroW * (1.0 - uVortex * (1.0 - uSolarPhone)));
   // About and Careers: their copy is centred, so the frame (Reference 06)
   // and the Careers stream keep to the sides — the outer half of the screen
   // on desktop, thin walls at the edges on phones, where the text is full
@@ -1230,9 +1237,32 @@ void main() {
   float accent = fract(aRandom * 911.3) < 0.0035 ? 3.0 : 1.0;
   float worldSize = uVoxelPx * uFocusDepth / max(uPxPerUnit, 1.0) * accent;
   float localSize = worldSize / max(uRootScale, 1e-4) * smoothstep(0.05, 0.45, cubeVis);
-  vec4 mvCube = modelViewMatrix * vec4(pos + position * localSize, 1.0);
+  // Traced vortex (landing-page reference): every cube at its traced place,
+  // still, at its traced size; body cubes are upright pillars. All are seen
+  // slightly from above like the reference: a light top, a mid left face
+  // and a darker right face (shaded here, per face).
+  float hw = heroW * uVortex;
+  vec3 corner = position;
+  vec3 nrm = normal;
+  vHero = step(0.5, hw);
+  if (hw > 0.001) {
+    pos = mix(pos, A, hw);
+    float visH = uSolarPhone > 0.5 ? smoothstep(0.05, 0.45, cubeVis) : 1.0;
+    localSize = mix(localSize, aHeroShape.x * visH, hw);
+    corner.y *= mix(1.0, aHeroShape.y, hw);
+    // Turned a little to the left, so the wide face is the lit left one.
+    float yaw = -(aHeroShape.z > 0.5 ? 0.62 : 0.3) + (fract(aRandom * 7.13) - 0.5) * 0.5;
+    corner = rotX(rotY(corner, yaw * hw), 0.42 * hw);
+    nrm = rotX(rotY(nrm, yaw * hw), 0.42 * hw);
+    float shade = nrm.y > 0.5 ? 1.12 : (nrm.x < 0.0 ? 1.0 : 0.8);
+    // Body pillars: bright tops, feet in shadow, so the packed body reads
+    // with the reference's dark gaps between pillars. Floating cubes stay flat.
+    if (aHeroShape.z < 0.5) shade *= mix(0.5, 1.06, position.y + 0.5);
+    vInk = mix(vInk, aHeroColor * shade, hw);
+  }
+  vec4 mvCube = modelViewMatrix * vec4(pos + corner * localSize, 1.0);
   gl_Position = projectionMatrix * mvCube;
-  vNormal = normalize(normalMatrix * normal);
+  vNormal = normalize(normalMatrix * nrm);
 #endif
 }
 

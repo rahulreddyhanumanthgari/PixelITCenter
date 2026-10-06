@@ -526,3 +526,8 @@
     transform: translateX(calc(-50% - 0.5rem));
   }
 }
+
+/* Logo: the dark design shows the original; light.css swaps in its own. */
+.logo-light {
+  display: none;
+}

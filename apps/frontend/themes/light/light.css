@@ -170,3 +170,252 @@
     margin-left: 0;
   }
 }
+
+/* ---- Logo: the recoloured mark (orange / navy / cyan) ------------------- */
+.logo-dark {
+  display: none;
+}
+.logo-light {
+  display: block;
+}
+
+/* ---- Hero: the landing-page reference, as it is -------------------------
+   Desktop: every block at the reference's coordinates, in reference pixels
+   (--u = 100vw / 1672; the reference is 1672 x 941). The traced vortex is
+   drawn by the particle engine at the same scale (JourneyScene). */
+.light-hero {
+  --u: calc(100vw / 1672);
+  position: relative;
+}
+.light-hero__title {
+  margin: 0;
+}
+.light-hero__kicker,
+.light-hero__line {
+  display: block;
+}
+.light-hero__kicker {
+  font-family: var(--font-inter), sans-serif;
+  font-weight: 500;
+  text-transform: uppercase;
+  color: #1e2840;
+}
+.light-hero__line {
+  font-family: var(--font-hero), var(--font-condensed), sans-serif;
+  font-weight: 900;
+  text-transform: uppercase;
+  line-height: 1;
+  color: #041327;
+  white-space: nowrap;
+}
+.light-hero__orange {
+  color: #fc650d;
+}
+.light-hero__cyan {
+  color: #0cb1df;
+}
+.light-hero__desc {
+  font-family: var(--font-inter), sans-serif;
+  font-weight: 400;
+  color: #283149;
+  margin: 0;
+}
+.light-hero__strong {
+  font-weight: 650;
+  color: #041327;
+}
+.light-hero__ctas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.light-hero__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  font-family: var(--font-inter), sans-serif;
+  font-weight: 500;
+  white-space: nowrap;
+  transition:
+    background-color 0.2s,
+    border-color 0.2s;
+}
+.light-hero__btn--dark {
+  background: #021327;
+  color: #ffffff;
+}
+.light-hero__btn--dark:hover {
+  background: #0b2440;
+}
+.light-hero__btn--ghost {
+  border: 1.5px solid #8f98a8;
+  color: #041327;
+}
+.light-hero__btn--ghost:hover {
+  border-color: #041327;
+}
+.light-hero__bokeh {
+  display: none;
+}
+
+@media (min-width: 1024px) {
+  .light-hero {
+    height: max(100svh, calc(941 * var(--u)));
+  }
+  .light-hero__copy {
+    position: absolute;
+    left: calc(89 * var(--u));
+    top: 0;
+    width: calc(700 * var(--u));
+    height: 100%;
+  }
+  .light-hero__kicker {
+    position: absolute;
+    top: calc(194 * var(--u));
+    font-size: calc(13.75 * var(--u));
+    line-height: 1;
+    letter-spacing: 0.54em;
+  }
+  .light-hero__line {
+    position: absolute;
+    font-size: calc(161 * var(--u));
+    transform-origin: left center;
+  }
+  .light-hero__line--1 {
+    top: calc(199 * var(--u));
+    font-size: calc(165 * var(--u));
+    letter-spacing: -0.015em;
+    transform: translateX(calc(-5 * var(--u))) scaleX(0.975);
+  }
+  .light-hero__line--2 {
+    top: calc(323 * var(--u));
+    font-size: calc(162 * var(--u));
+    letter-spacing: -0.02em;
+    transform: translateX(calc(-3 * var(--u))) scaleX(0.898);
+  }
+  .light-hero__desc {
+    position: absolute;
+    top: calc(477 * var(--u));
+    max-width: calc(512 * var(--u));
+    font-size: calc(21 * var(--u));
+    line-height: calc(27 * var(--u));
+  }
+  .light-hero__ctas {
+    position: absolute;
+    top: calc(603 * var(--u));
+    gap: calc(20 * var(--u));
+  }
+  .light-hero__btn {
+    font-size: calc(16 * var(--u));
+  }
+  .light-hero__btn--dark {
+    width: calc(233 * var(--u));
+    height: calc(55 * var(--u));
+    gap: calc(12 * var(--u));
+  }
+  .light-hero__btn--ghost {
+    width: calc(200 * var(--u));
+    height: calc(56 * var(--u));
+  }
+  .light-hero__arrow {
+    width: calc(28 * var(--u));
+    height: calc(28 * var(--u));
+  }
+  /* The reference's out-of-focus foreground cubes. */
+  .light-hero__bokeh {
+    display: block;
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+  }
+  .light-hero__bokeh-cube {
+    position: absolute;
+    left: calc((var(--x) - var(--s) / 2) * var(--u));
+    top: calc((var(--y) - var(--s) / 2) * var(--u));
+    width: calc(var(--s) * var(--u));
+    height: calc(var(--s) * var(--u));
+    filter: blur(calc(var(--blur) * var(--u)));
+  }
+
+  /* Header, at the reference's coordinates. */
+  .site-header__bar {
+    --u: calc(100vw / 1672);
+    position: relative;
+    max-width: none;
+    height: calc(82 * var(--u));
+    padding-left: calc(89 * var(--u));
+    padding-right: calc(83 * var(--u));
+  }
+  .site-header__bar .logo-light {
+    height: calc(63 * var(--u));
+  }
+  .site-header__nav {
+    position: absolute;
+    left: calc(480 * var(--u));
+    top: 50%;
+    transform: translateY(-50%);
+  }
+  .site-header__nav ul {
+    gap: calc(54.5 * var(--u));
+  }
+  .site-header__nav a {
+    font-size: calc(15 * var(--u));
+    font-weight: 500;
+    color: #2e3a55;
+  }
+  .site-header__nav a[aria-current="true"] {
+    color: #041327;
+    font-weight: 600;
+  }
+  .site-header__nav a > span {
+    width: calc(10 * var(--u));
+    height: calc(10 * var(--u));
+    bottom: calc(-19 * var(--u));
+  }
+  .site-header__portal {
+    width: calc(148 * var(--u));
+    height: calc(47 * var(--u));
+    font-size: calc(15.3 * var(--u));
+    font-weight: 500;
+    color: #041327;
+    border: 1.5px solid #4a5468;
+  }
+}
+
+/* Phones / tablets: the vortex above (JourneyScene), the text below. */
+@media (max-width: 1023px) {
+  .light-hero__copy {
+    padding: calc(64px + min(99vw, 48.5svh) + 12px) 24px 48px;
+  }
+  .light-hero__kicker {
+    font-size: 11px;
+    letter-spacing: 0.42em;
+    margin-bottom: 14px;
+  }
+  .light-hero__line {
+    font-size: clamp(54px, 19vw, 96px);
+    letter-spacing: -0.015em;
+    line-height: 0.76;
+  }
+  .light-hero__desc {
+    margin-top: 20px;
+    font-size: 16px;
+    line-height: 1.5;
+    max-width: 32rem;
+  }
+  .light-hero__ctas {
+    margin-top: 24px;
+  }
+  .light-hero__btn {
+    height: 48px;
+    padding: 0 22px;
+    gap: 10px;
+    font-size: 15px;
+  }
+  .light-hero__arrow {
+    width: 22px;
+    height: 22px;
+  }
+}

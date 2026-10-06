@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Oswald } from "next/font/google";
+import { Oswald, Sofia_Sans_Extra_Condensed } from "next/font/google";
 import { DesignSwitch } from "@/components/DesignSwitch";
 import { siteMetadata } from "@/lib/metadata";
 import { fontVariables } from "@/themes/core/fonts";
@@ -11,7 +11,17 @@ import "@/themes/light/light.css";
 // lib/design.ts for how a design is chosen.
 
 // Tall condensed display face for headings (after the reference video).
-const condensed = Oswald({ variable: "--font-condensed", subsets: ["latin"], weight: ["600", "700"] });
+const condensed = Oswald({
+  variable: "--font-condensed",
+  subsets: ["latin"],
+  weight: ["600", "700"],
+});
+// The landing-page reference's hero headline: heavy, tightly set condensed caps.
+const heroFace = Sofia_Sans_Extra_Condensed({
+  variable: "--font-hero",
+  subsets: ["latin"],
+  weight: ["900"],
+});
 
 export const metadata: Metadata = siteMetadata;
 
@@ -20,9 +30,15 @@ export const viewport: Viewport = {
   colorScheme: "light",
 };
 
-export default function LightLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+export default function LightLayout({
+  children,
+}: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" data-theme="light" className={`${fontVariables} ${condensed.variable} h-full antialiased`}>
+    <html
+      lang="en"
+      data-theme="light"
+      className={`${fontVariables} ${condensed.variable} ${heroFace.variable} h-full antialiased`}
+    >
       <body className="min-h-full flex flex-col">
         {children}
         <DesignSwitch current="light" />

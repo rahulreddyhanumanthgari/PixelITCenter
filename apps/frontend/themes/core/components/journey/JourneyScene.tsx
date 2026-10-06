@@ -1,19 +1,43 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState, type RefObject } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type RefObject,
+} from "react";
 import { useFrame } from "@react-three/fiber";
 import type { BloomEffect } from "postprocessing";
 import { gsap } from "@/themes/core/lib/gsap";
 import { ParticleCanvas } from "@/themes/core/components/particles/ParticleCanvas";
-import { ParticleSystem, type LayoutState } from "@/themes/core/components/particles/ParticleSystem";
-import { StarField, type Atmosphere } from "@/themes/core/components/particles/StarField";
+import {
+  ParticleSystem,
+  type LayoutState,
+} from "@/themes/core/components/particles/ParticleSystem";
+import {
+  StarField,
+  type Atmosphere,
+} from "@/themes/core/components/particles/StarField";
 import { LightSky } from "@/themes/core/components/particles/LightSky";
-import { useDeviceTier, usePointer, useReducedMotion } from "@/themes/core/hooks/device";
-import type { PointerState, ProgressState } from "@/themes/core/components/particles/types";
+import {
+  useDeviceTier,
+  usePointer,
+  useReducedMotion,
+} from "@/themes/core/hooks/device";
+import type {
+  PointerState,
+  ProgressState,
+} from "@/themes/core/components/particles/types";
 import { PALETTE } from "@/themes/core/lib/particles/palette";
 import { smoothstep } from "@/themes/core/lib/particles/random";
 import { processProgress } from "@/themes/core/lib/processProgress";
 import { useTheme } from "@/themes/core/lib/theme";
+import {
+  loadLightVortex,
+  VORTEX_REF,
+  type VortexData,
+} from "@/themes/core/lib/particles/forms/lightVortex";
 import {
   HERO_LOOK,
   JOURNEY_BLOOM,
@@ -34,7 +58,8 @@ import {
 
 /** World units per CSS pixel at the focal plane, for the full-screen camera. */
 function worldPerPx(): number {
-  const visibleHeight = 2 * JOURNEY_CAMERA.z * Math.tan(((JOURNEY_CAMERA.fov / 2) * Math.PI) / 180);
+  const visibleHeight =
+    2 * JOURNEY_CAMERA.z * Math.tan(((JOURNEY_CAMERA.fov / 2) * Math.PI) / 180);
   return visibleHeight / window.innerHeight;
 }
 
@@ -48,19 +73,26 @@ const isColumnLayout = () => window.matchMedia("(min-width: 1024px)").matches;
 function CameraRig({
   pointer,
   atmosphere,
-  strength,
+  strength: baseStrength,
+  still,
 }: {
   pointer: RefObject<PointerState>;
   atmosphere: RefObject<Atmosphere>;
   strength: number;
+  /** 0..1: how fully the camera holds still (the light theme's traced hero). */
+  still?: () => number;
 }) {
   useFrame((state, rawDelta) => {
     const cam = state.camera;
-    const k = 1 - Math.pow(1 - CAMERA_MOTION.damping, Math.min(rawDelta, 1 / 20) * 60);
+    const k =
+      1 - Math.pow(1 - CAMERA_MOTION.damping, Math.min(rawDelta, 1 / 20) * 60);
+    const strength = baseStrength * (1 - (still?.() ?? 0));
     const p = pointer.current;
     const tx = (p.active ? p.x : 0) * CAMERA_MOTION.pointerX * strength;
     const ty = (p.active ? p.y : 0) * CAMERA_MOTION.pointerY * strength;
-    const tz = JOURNEY_CAMERA.z + atmosphere.current.field * CAMERA_MOTION.fieldPullBack * strength;
+    const tz =
+      JOURNEY_CAMERA.z +
+      atmosphere.current.field * CAMERA_MOTION.fieldPullBack * strength;
     cam.position.x += (tx - cam.position.x) * k;
     cam.position.y += (ty - cam.position.y) * k;
     cam.position.z += (tz - cam.position.z) * k;
@@ -90,6 +122,36 @@ export default function JourneyScene() {
   useEffect(() => {
     lightRef.current = light;
   }, [light]);
+  // Light theme: the hero is the vortex traced from the landing-page
+  // reference (public/light/hero-vortex.bin). The particles wait for it, so
+  // they mount once; if it fails to load, the shared hero field is used.
+  const [vortex, setVortex] = useState<VortexData | null>(null);
+  const [vortexTried, setVortexTried] = useState(false);
+  const vortexRef = useRef<VortexData | null>(null);
+  useEffect(() => {
+    if (!light) return;
+    let live = true;
+    loadLightVortex()
+      .then((d) => {
+        if (!live) return;
+        vortexRef.current = d;
+        setVortex(d);
+      })
+      .catch(() => {})
+      .finally(() => live && setVortexTried(true));
+    return () => {
+      live = false;
+    };
+  }, [light]);
+  const vortexOn = useCallback(
+    () => lightRef.current && vortexRef.current !== null,
+    [],
+  );
+  const cameraStill = useCallback(
+    () =>
+      vortexOn() ? 1 - Math.min(Math.max(progress.current.value, 0), 1) : 0,
+    [vortexOn],
+  );
   const dpr = Math.min(window.devicePixelRatio || 1, tier.maxDpr);
   const [active, setActive] = useState(true);
 
@@ -110,14 +172,22 @@ export default function JourneyScene() {
     earthScale: 1,
   });
   // How scattered the main particles are; drives the stars and camera.
-  const atmosphere = useRef<Atmosphere>({ field: 0, gravity: 0, gravityX: 0, gravityY: 0 });
+  const atmosphere = useRef<Atmosphere>({
+    field: 0,
+    gravity: 0,
+    gravityX: 0,
+    gravityY: 0,
+  });
 
   // Each frame: bloom eases from the hero's strength to the story's with the
   // handoff, and the scatter amount is shared with the stars and camera.
   const onBlend = useCallback(
     (blend: number, field: number) => {
       const effect = bloom.current;
-      if (effect) effect.intensity = lightRef.current ? 0 : tier.bloom.hero + (tier.bloom.story - tier.bloom.hero) * blend;
+      if (effect)
+        effect.intensity = lightRef.current
+          ? 0
+          : tier.bloom.hero + (tier.bloom.story - tier.bloom.hero) * blend;
       atmosphere.current.field = field;
     },
     [tier],
@@ -138,7 +208,9 @@ export default function JourneyScene() {
     // The story sections, then About (its galaxy is the last form).
     const about = document.querySelector<HTMLElement>("[data-about]");
     const sections = [
-      ...Array.from(story.querySelectorAll<HTMLElement>("[data-story-section]")),
+      ...Array.from(
+        story.querySelectorAll<HTMLElement>("[data-story-section]"),
+      ),
       ...(about ? [about] : []),
     ];
     const steps = JOURNEY_FORMS.slice(1).map(() => ({ v: 0 }));
@@ -146,20 +218,34 @@ export default function JourneyScene() {
     const sum = () => {
       state.value = steps.reduce((s, t) => s + t.v, 0);
     };
-    const intoStory = tierName === "mobile" ? TRANSITIONS.intoStory.mobile : TRANSITIONS.intoStory.desktop;
-    const intoAbout = isColumnLayout() ? TRANSITIONS.intoAbout.desktop : TRANSITIONS.intoAbout.mobile;
+    const intoStory =
+      tierName === "mobile"
+        ? TRANSITIONS.intoStory.mobile
+        : TRANSITIONS.intoStory.desktop;
+    const intoAbout = isColumnLayout()
+      ? TRANSITIONS.intoAbout.desktop
+      : TRANSITIONS.intoAbout.mobile;
 
     const ctx = gsap.context(() => {
       steps.forEach((step, i) => {
         // Each form assembles as the section that owns it arrives; the first
         // step is the hero field breaking out into the Services ring.
-        const span = i === 0 ? intoStory : sections[i] === about ? intoAbout : TRANSITIONS.story;
+        const span =
+          i === 0
+            ? intoStory
+            : sections[i] === about
+              ? intoAbout
+              : TRANSITIONS.story;
         const trigger = { trigger: sections[i], ...span };
         gsap.to(step, {
           v: 1,
           ease: "none",
           onUpdate: sum,
-          scrollTrigger: { ...trigger, scrub: TRANSITIONS.scrub, invalidateOnRefresh: true },
+          scrollTrigger: {
+            ...trigger,
+            scrub: TRANSITIONS.scrub,
+            invalidateOnRefresh: true,
+          },
         });
       });
     });
@@ -174,18 +260,34 @@ export default function JourneyScene() {
     const story = document.querySelector<HTMLElement>("[data-story]");
     const anchor = story?.querySelector<HTMLElement>("[data-story-anchor]");
     const layer = document.querySelector<HTMLElement>("[data-journey-layer]");
-    const heroContent = document.querySelector<HTMLElement>("[data-hero-content]");
-    const servicesContent = document.querySelector<HTMLElement>("[data-services-content]");
-    const staffingContent = document.querySelector<HTMLElement>("[data-staffing-content]");
-    const whyContent = document.querySelector<HTMLElement>("[data-why-content]");
-    const processContent = document.querySelector<HTMLElement>("[data-process-content]");
-    const galaxyAnchor = document.querySelector<HTMLElement>("[data-galaxy-anchor]");
-    const galaxyOutro = document.querySelector<HTMLElement>("[data-galaxy-outro]");
+    const heroContent = document.querySelector<HTMLElement>(
+      "[data-hero-content]",
+    );
+    const servicesContent = document.querySelector<HTMLElement>(
+      "[data-services-content]",
+    );
+    const staffingContent = document.querySelector<HTMLElement>(
+      "[data-staffing-content]",
+    );
+    const whyContent =
+      document.querySelector<HTMLElement>("[data-why-content]");
+    const processContent = document.querySelector<HTMLElement>(
+      "[data-process-content]",
+    );
+    const galaxyAnchor = document.querySelector<HTMLElement>(
+      "[data-galaxy-anchor]",
+    );
+    const galaxyOutro = document.querySelector<HTMLElement>(
+      "[data-galaxy-outro]",
+    );
     const careersEl = document.querySelector<HTMLElement>("#careers");
-    const galaxyRegion = document.querySelector<HTMLElement>("[data-galaxy-region]");
+    const galaxyRegion = document.querySelector<HTMLElement>(
+      "[data-galaxy-region]",
+    );
     // The particle layer stays on through the galaxy area (About → Contact);
     // after that the opaque footer covers it.
-    const lastLit = document.querySelector<HTMLElement>("[data-galaxy-region]") ?? story;
+    const lastLit =
+      document.querySelector<HTMLElement>("[data-galaxy-region]") ?? story;
     if (!story || !anchor || !layer || !lastLit) return;
     let frame = 0;
 
@@ -202,8 +304,15 @@ export default function JourneyScene() {
       // its left and right slots. Phones/tablets: centre of the band.
       const L = layout.current;
       const columns = isColumnLayout();
-      const xAt = (fraction: number) => (rect.left + rect.width * fraction - vw / 2) * wpp;
-      L.sides = columns ? { left: xAt(STORY_SLOTS.left), right: xAt(STORY_SLOTS.right), byForm: STORY_SIDES } : null;
+      const xAt = (fraction: number) =>
+        (rect.left + rect.width * fraction - vw / 2) * wpp;
+      L.sides = columns
+        ? {
+            left: xAt(STORY_SLOTS.left),
+            right: xAt(STORY_SLOTS.right),
+            byForm: STORY_SIDES,
+          }
+        : null;
       // Light theme: the whole globe on the right (Reference 03).
       L.earthScale = columns ? (lightRef.current ? 1.0 : EARTH_VIEW.scale) : 1;
       // The Why halo is sized to frame desktop content; in the phone band the
@@ -212,35 +321,58 @@ export default function JourneyScene() {
       // How We Work: planets around the centred content on desktop; a compact
       // wave in the phone band.
       L.solarPhone = columns ? 0 : 1;
-      L.to.x = columns ? xAt(STORY_SIDES[0] ? STORY_SLOTS.right : STORY_SLOTS.left) : xAt(0.5);
+      L.to.x = columns
+        ? xAt(STORY_SIDES[0] ? STORY_SLOTS.right : STORY_SLOTS.left)
+        : xAt(0.5);
       // Pinned position while the anchor is stuck (or still arriving); once
       // the story ends, the form scrolls away with it. The release point is
       // measured from the story's end: on desktop the anchor's negative
       // margin would otherwise keep it stuck for an extra screen.
-      const anchorTop = Math.min(rect.top, stickyTop, story.getBoundingClientRect().bottom - rect.height);
+      const anchorTop = Math.min(
+        rect.top,
+        stickyTop,
+        story.getBoundingClientRect().bottom - rect.height,
+      );
       L.to.y = -(anchorTop + rect.height / 2 - vh / 2) * wpp;
       L.to.scale = tier.storyScale * (rect.height / vh);
       // Desktop Earth: anchor it to the right edge so a fixed share of its
       // diameter is off-screen, whatever the window width.
       if (L.sides) {
-        const earthPx = (2 * EARTH_VIEW.radius * L.earthScale * L.to.scale) / wpp;
+        const earthPx =
+          (2 * EARTH_VIEW.radius * L.earthScale * L.to.scale) / wpp;
         // Light theme (spec 8): roughly half of the globe tucked outside the viewport.
         const hidden = lightRef.current ? 0.1 : EARTH_VIEW.hiddenRight;
         const xWorld = (vw - (0.5 - hidden) * earthPx - vw / 2) * wpp;
         const byForm = [...STORY_SIDES];
-        byForm[EARTH_VIEW.index] = (xWorld - L.sides.left) / (L.sides.right - L.sides.left);
+        byForm[EARTH_VIEW.index] =
+          (xWorld - L.sides.left) / (L.sides.right - L.sides.left);
         L.sides = { ...L.sides, byForm };
       }
       // Hero: the black hole is centred on the viewport; 1 local unit = the
       // void's radius in pixels (see HERO_FIELD).
       const V = HERO_FIELD.voidRadius;
-      const voidPx = Math.min(Math.max(vw * V.width, vh * V.height), vw * V.maxWidth);
+      const voidPx = Math.min(
+        Math.max(vw * V.width, vh * V.height),
+        vw * V.maxWidth,
+      );
       L.from.x = 0;
       L.from.y = 0;
       L.from.scale = voidPx * wpp;
-      // Light theme (spec 6): strong left typography, a large right-side
-      // pixel formation; on phones it stays centred above the text.
-      if (lightRef.current && vw >= 1024) {
+      // Light theme, traced vortex: exactly where the landing-page reference
+      // has it — 1 reference px = vw / 1672 (centre 1170, 470; 1 local unit
+      // = 480 px). Phones: the whole vortex across the width, above the text.
+      if (vortexOn() && vw >= 1024) {
+        const u = vw / VORTEX_REF.width;
+        L.from.x = (VORTEX_REF.cx * u - vw / 2) * wpp;
+        L.from.y = -(VORTEX_REF.cy * u - vh / 2) * wpp;
+        L.from.scale = VORTEX_REF.unit * u * wpp;
+      } else if (vortexOn()) {
+        const unitPx = Math.min(vw * 0.49, vh * 0.24);
+        const top = vw >= 640 ? 80 : 64;
+        L.from.x = 0;
+        L.from.y = -(top + 1.02 * unitPx - vh / 2) * wpp;
+        L.from.scale = unitPx * wpp;
+      } else if (lightRef.current && vw >= 1024) {
         L.from.x = vw * 0.24 * wpp;
         L.from.scale = Math.min(vw * 0.17, vh * 0.27) * wpp;
       } else if (lightRef.current) {
@@ -248,12 +380,18 @@ export default function JourneyScene() {
         L.from.y = vh * 0.24 * wpp;
         L.from.scale = Math.min(vw * 0.24, vh * 0.13) * wpp;
       }
-      L.protectFloor = vw < 768 ? HERO_FIELD.protectFloor.narrow : HERO_FIELD.protectFloor.wide;
+      L.protectFloor =
+        vw < 768
+          ? HERO_FIELD.protectFloor.narrow
+          : HERO_FIELD.protectFloor.wide;
       // About's galaxy: centred on its pinned anchor, rim past the screen.
       if (galaxyAnchor) {
         const a = galaxyAnchor.getBoundingClientRect();
         const cy = a.top + a.height / 2;
-        const reachPx = Math.max(vw * GALAXY_VIEW.reach.width, vh * GALAXY_VIEW.reach.height);
+        const reachPx = Math.max(
+          vw * GALAXY_VIEW.reach.width,
+          vh * GALAXY_VIEW.reach.height,
+        );
         L.galaxy = {
           x: (a.left + a.width / 2 - vw / 2) * wpp,
           y: -(cy - vh / 2) * wpp,
@@ -261,18 +399,25 @@ export default function JourneyScene() {
           // Gravity is strongest while About's centre is near the screen's.
           presence: 1 - smoothstep(0.45, 1.1, Math.abs(cy - vh / 2) / vh),
           // The footer's top edge (the region's end): the ending's horizon.
-          horizon: galaxyRegion ? -(galaxyRegion.getBoundingClientRect().bottom - vh / 2) * wpp : 0,
+          horizon: galaxyRegion
+            ? -(galaxyRegion.getBoundingClientRect().bottom - vh / 2) * wpp
+            : 0,
         };
       }
       // Ending: the empty stretch after Contact scrubs the collapse, from its
       // top entering the screen (0) to the galaxy's release (1).
       if (careersEl) {
         const c = careersEl.getBoundingClientRect();
-        L.careers = 1 - smoothstep(0.12, 0.32, Math.abs(c.top + c.height / 2 - vh / 2) / vh);
+        L.careers =
+          1 -
+          smoothstep(0.12, 0.32, Math.abs(c.top + c.height / 2 - vh / 2) / vh);
       }
       if (galaxyOutro) {
         const o = galaxyOutro.getBoundingClientRect();
-        L.galaxyCollapse = Math.min(Math.max((vh - o.top) / Math.max(o.height, 1), 0), 1);
+        L.galaxyCollapse = Math.min(
+          Math.max((vh - o.top) / Math.max(o.height, 1), 0),
+          1,
+        );
       }
       if (processContent) {
         const c = processContent.getBoundingClientRect();
@@ -323,7 +468,8 @@ export default function JourneyScene() {
       // Phones: once the band is stuck, the text scrolls under the band's
       // opaque background — so the canvas moves above the page and is clipped
       // to the band. Before that it stays behind the page, full screen.
-      const banded = !columns && rect.top <= stickyTop + 1 && rect.bottom > stickyTop;
+      const banded =
+        !columns && rect.top <= stickyTop + 1 && rect.bottom > stickyTop;
       // The band only turns opaque once pinned; while it scrolls into place
       // it stays see-through so the particles behind it never vanish.
       anchor.dataset.stuck = String(banded);
@@ -351,7 +497,7 @@ export default function JourneyScene() {
       layer.style.clipPath = "";
       layer.style.visibility = "";
     };
-  }, [tier, tierName]);
+  }, [tier, tierName, vortexOn, vortex]);
 
   return (
     <ParticleCanvas
@@ -381,27 +527,31 @@ export default function JourneyScene() {
         pointer={pointer}
         atmosphere={atmosphere}
         strength={reducedMotion ? 0 : tierName === "mobile" ? 0.5 : 1}
+        still={cameraStill}
       />
-      <ParticleSystem
-        key={`${tierName}-${light}`}
-        forms={JOURNEY_FORMS}
-        // Light theme: real cubes cost more per particle than points.
-        count={Math.round(tier.particleCount * (light ? 0.6 : 1))}
-        look={HERO_LOOK}
-        lookTo={STORY_LOOK}
-        handoffAt={STORY_HANDOFF}
-        flight={STORY_FLIGHT.swell}
-        layout={layout}
-        progress={progress}
-        pointer={pointer}
-        scatter={tier.scatter}
-        pixelRatio={dpr}
-        reducedMotion={reducedMotion}
-        onBlend={onBlend}
-        onGravity={onGravity}
-        stage={stage}
-        light={light}
-      />
+      {(!light || vortexTried) && (
+        <ParticleSystem
+          key={`${tierName}-${light}`}
+          forms={JOURNEY_FORMS}
+          // Light theme: real cubes cost more per particle than points.
+          count={Math.round(tier.particleCount * (light ? 0.6 : 1))}
+          look={HERO_LOOK}
+          lookTo={STORY_LOOK}
+          handoffAt={STORY_HANDOFF}
+          flight={STORY_FLIGHT.swell}
+          layout={layout}
+          progress={progress}
+          pointer={pointer}
+          scatter={tier.scatter}
+          pixelRatio={dpr}
+          reducedMotion={reducedMotion}
+          onBlend={onBlend}
+          onGravity={onGravity}
+          stage={stage}
+          light={light}
+          heroVortex={light ? vortex : null}
+        />
+      )}
     </ParticleCanvas>
   );
 }

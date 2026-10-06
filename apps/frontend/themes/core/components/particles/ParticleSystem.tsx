@@ -12,7 +12,15 @@ import {
   stageDataFor,
   type FormName,
 } from "@/themes/core/lib/particles/generateTarget";
-import { MorphController, createMorphGeometry, resolveFormPosition } from "./MorphController";
+import {
+  buildLightVortexForm,
+  type VortexData,
+} from "@/themes/core/lib/particles/forms/lightVortex";
+import {
+  MorphController,
+  createMorphGeometry,
+  resolveFormPosition,
+} from "./MorphController";
 import type { PointerState, ProgressState } from "./types";
 
 /** How a particle system looks and moves. Every number is tunable. */
@@ -87,7 +95,13 @@ export interface LayoutState {
    * About's galaxy (the last form): world centre and scale, and how centred
    * About is on screen (0..1, for the star field's gravity). Null = none.
    */
-  galaxy: { x: number; y: number; scale: number; presence: number; horizon: number } | null;
+  galaxy: {
+    x: number;
+    y: number;
+    scale: number;
+    presence: number;
+    horizon: number;
+  } | null;
   /** Galaxy ending after Contact: 0 = galaxy … 1 = collapsed into its core and gone. */
   galaxyCollapse: number;
   /** Light theme: how present Careers is (0..1); About's ribbon re-forms as its stream. */
@@ -129,6 +143,8 @@ interface ParticleSystemProps {
   stage?: RefObject<ProgressState>;
   /** Light theme: points drawn as ink dots (normal blending) instead of light. */
   light?: boolean;
+  /** Light theme: the traced landing-page vortex, used as the hero form. */
+  heroVortex?: VortexData | null;
 }
 
 export interface MorphUniforms {
@@ -164,6 +180,7 @@ export interface MorphUniforms {
   uRootScale: THREE.IUniform<number>;
   uVoxelPx: THREE.IUniform<number>;
   uLight: THREE.IUniform<number>;
+  uVortex: THREE.IUniform<number>;
   uSunOffset: THREE.IUniform<number>;
   uProtect: THREE.IUniform<THREE.Vector4>;
   uProtectFloor: THREE.IUniform<number>;
@@ -174,7 +191,11 @@ const MOUSE_PARKED = new THREE.Vector3(100, 100, 100);
 const TAU = Math.PI * 2;
 
 /** Light theme: normal blending + ink colours; dark: additive light. */
-export function applyTheme(points: THREE.Object3D, uLight: THREE.IUniform<number>, light: boolean) {
+export function applyTheme(
+  points: THREE.Object3D,
+  uLight: THREE.IUniform<number>,
+  light: boolean,
+) {
   uLight.value = light ? 1 : 0;
   const m = (points as THREE.Points).material as THREE.Material;
   if (m.transparent === false) return; // the light cubes are opaque
@@ -186,7 +207,8 @@ export function applyTheme(points: THREE.Object3D, uLight: THREE.IUniform<number
 }
 
 function uniformsOf(points: THREE.Object3D): MorphUniforms {
-  return ((points as THREE.Points).material as THREE.ShaderMaterial).uniforms as MorphUniforms;
+  return ((points as THREE.Points).material as THREE.ShaderMaterial)
+    .uniforms as MorphUniforms;
 }
 
 /** Frame-rate independent version of "close `damping` of the gap per frame". */
@@ -219,6 +241,7 @@ export function ParticleSystem({
   onGravity,
   stage,
   light = false,
+  heroVortex = null,
 }: ParticleSystemProps) {
   const rootRef = useRef<THREE.Group>(null);
   const tiltRef = useRef<THREE.Group>(null);
@@ -228,15 +251,42 @@ export function ParticleSystem({
 
   // Every form is sampled once per mount with the same particle count.
   const { geometry, forms, stagedForm } = useMemo(() => {
-    const forms = formNames.map((name, i) => generateForm(name, count, 101 + i * 7919));
-    const colors = look.colors === "monochrome" ? monochromeColors(count) : colorsForSequence(formNames[0], forms[0]);
+    const forms = formNames.map((name, i) =>
+      generateForm(name, count, 101 + i * 7919),
+    );
+    const colors =
+      look.colors === "monochrome"
+        ? monochromeColors(count)
+        : colorsForSequence(formNames[0], forms[0]);
+    // Light theme: the hero is the traced vortex, each cube with its own
+    // colour and shape (aHeroColor, aHeroShape); zero elsewhere.
+    const vortex =
+      light && heroVortex && formNames[0] === "heroField"
+        ? buildLightVortexForm(heroVortex, count)
+        : null;
+    if (vortex) forms[0] = vortex.positions;
     const staged = stageDataFor(formNames, forms);
+    const geometry = createMorphGeometry(forms, colors, staged?.data);
+    geometry.setAttribute(
+      "aHeroColor",
+      new THREE.BufferAttribute(
+        vortex?.color ?? new Float32Array(count * 3),
+        3,
+      ),
+    );
+    geometry.setAttribute(
+      "aHeroShape",
+      new THREE.BufferAttribute(
+        vortex?.shape ?? new Float32Array(count * 3),
+        3,
+      ),
+    );
     return {
-      geometry: createMorphGeometry(forms, colors, staged?.data),
+      geometry,
       forms,
       stagedForm: staged?.index ?? -1,
     };
-  }, [formNames, count, look.colors]);
+  }, [formNames, count, look.colors, light, heroVortex]);
 
   const material = useMemo(() => {
     const uniforms: MorphUniforms = {
@@ -264,6 +314,7 @@ export function ParticleSystem({
       uProtect4: { value: new THREE.Vector4(0, 0, 0.001, 0.001) },
       uTorusScale: { value: 1 },
       uSolarPhone: { value: 0 },
+      uVortex: { value: 0 },
       uProtect5: { value: new THREE.Vector4(0, 0, 0.001, 0.001) },
       uCollapse: { value: 0 },
       uCareers: { value: 0 },
@@ -298,8 +349,12 @@ export function ParticleSystem({
     g.setAttribute("normal", box.getAttribute("normal"));
     for (const [name, attr] of Object.entries(geometry.attributes)) {
       const a = attr as THREE.BufferAttribute;
-      const inst = new THREE.InstancedBufferAttribute(a.array as Float32Array, a.itemSize);
-      if (name === "position" || name === "aTarget") inst.setUsage(THREE.DynamicDrawUsage);
+      const inst = new THREE.InstancedBufferAttribute(
+        a.array as Float32Array,
+        a.itemSize,
+      );
+      if (name === "position" || name === "aTarget")
+        inst.setUsage(THREE.DynamicDrawUsage);
       g.setAttribute(name === "position" ? "aPos" : name, inst);
     }
     g.instanceCount = count;
@@ -325,7 +380,11 @@ export function ParticleSystem({
   // Plain object held in a ref: the controller mutates geometry attributes.
   const controllerRef = useRef<MorphController | null>(null);
   useEffect(() => {
-    controllerRef.current = new MorphController(geometry, forms, resolveFormPosition);
+    controllerRef.current = new MorphController(
+      geometry,
+      forms,
+      resolveFormPosition,
+    );
     return () => {
       controllerRef.current = null;
     };
@@ -384,23 +443,48 @@ export function ParticleSystem({
     // Eased again on top of GSAP's scrub so fast wheel flicks stay smooth.
     // (Starts at -1 so a page loaded mid-scroll snaps straight into place.)
     const target = progress.current.value;
-    s0.smoothProgress = s0.smoothProgress < 0 ? target : s0.smoothProgress + (target - s0.smoothProgress) * k;
+    s0.smoothProgress =
+      s0.smoothProgress < 0
+        ? target
+        : s0.smoothProgress + (target - s0.smoothProgress) * k;
     u.uProgress.value = controller.update(s0.smoothProgress);
     // Light cubes: reached through the scene object (never the memo).
     const voxMesh = light ? (points as THREE.Mesh) : null;
-    if (voxMesh && (controller.fromIndex !== s0.voxFrom || controller.toIndex !== s0.voxTo)) {
+    if (
+      voxMesh &&
+      (controller.fromIndex !== s0.voxFrom || controller.toIndex !== s0.voxTo)
+    ) {
       s0.voxFrom = controller.fromIndex;
       s0.voxTo = controller.toIndex;
       voxMesh.geometry.getAttribute("aPos").needsUpdate = true;
       voxMesh.geometry.getAttribute("aTarget").needsUpdate = true;
     }
     // The hero gravity field is live while it is the form being left/held.
-    u.uHeroField.value = formNames[0] === "heroField" && controller.fromIndex === 0 ? 1 : 0;
+    u.uHeroField.value =
+      formNames[0] === "heroField" && controller.fromIndex === 0 ? 1 : 0;
+    // Light theme: the traced vortex holds still and screen-aligned (no
+    // tilt, spin, wobble, parallax or pointer push) until the page leaves it.
+    const vortexOn = light && !!heroVortex && formNames[0] === "heroField";
+    u.uVortex.value = vortexOn ? 1 : 0;
+    const hold =
+      vortexOn && u.uHeroField.value > 0
+        ? 1 - Math.min(Math.max(s0.smoothProgress, 0), 1)
+        : 0;
     // Flowing torus (Why): live whether it is being left or arrived at.
     // Live flowing forms: 1 = torus (Why), 2 = ring stream (Services).
     // 3 = Earth (Staffing), 4 = solar system (How We Work), 5 = galaxy (About).
     const liveKind = (name: FormName | undefined) =>
-      name === "torusFlow" ? 1 : name === "ringStream" ? 2 : name === "earth" ? 3 : name === "solarSystem" ? 4 : name === "galaxy" ? 5 : 0;
+      name === "torusFlow"
+        ? 1
+        : name === "ringStream"
+          ? 2
+          : name === "earth"
+            ? 3
+            : name === "solarSystem"
+              ? 4
+              : name === "galaxy"
+                ? 5
+                : 0;
     const fromKind = liveKind(formNames[controller.fromIndex]);
     const toKind = liveKind(formNames[controller.toIndex]);
     u.uFlowFrom.value = fromKind;
@@ -426,7 +510,10 @@ export function ParticleSystem({
     // --- stepped form: step progress, eased like the morph ----------------
     if (stagedForm >= 0) {
       const targetStage = stage?.current.value ?? 0;
-      s0.smoothStage = s0.smoothStage < 0 ? targetStage : s0.smoothStage + (targetStage - s0.smoothStage) * k;
+      s0.smoothStage =
+        s0.smoothStage < 0
+          ? targetStage
+          : s0.smoothStage + (targetStage - s0.smoothStage) * k;
       u.uStage.value = s0.smoothStage;
     }
 
@@ -443,7 +530,11 @@ export function ParticleSystem({
       const s = Math.max(s0.smoothProgress - (handoffAt + 1), 0);
       const i = Math.min(Math.floor(s), L.sides.byForm.length - 1);
       const j = Math.min(i + 1, L.sides.byForm.length - 1);
-      const side = mix(L.sides.byForm[i] ?? 1, L.sides.byForm[j] ?? 1, smooth(Math.min(s - i, 1)));
+      const side = mix(
+        L.sides.byForm[i] ?? 1,
+        L.sides.byForm[j] ?? 1,
+        smooth(Math.min(s - i, 1)),
+      );
       toX = mix(L.sides.left, L.sides.right, side);
     }
     const rf = reducedMotion ? 0.2 : 1;
@@ -453,44 +544,66 @@ export function ParticleSystem({
     u.uNoiseScale.value = mix(look.noiseScale, lookTo.noiseScale, b);
     u.uCurve.value = mix(look.curve, lookTo.curve, b) * rf;
     u.uMouseRadius.value = mix(look.mouseRadius, lookTo.mouseRadius, b);
-    u.uMouseInfluence.value = reducedMotion ? 0 : mix(look.mouseInfluence, lookTo.mouseInfluence, b);
+    u.uMouseInfluence.value = reducedMotion
+      ? 0
+      : mix(look.mouseInfluence, lookTo.mouseInfluence, b) * (1 - hold);
 
     // --- pointer: eased tilt/parallax, never mapped 1:1 -------------------
     const p = pointer.current;
     s0.smoothNdc.x += ((p.active ? p.x : 0) - s0.smoothNdc.x) * k;
     s0.smoothNdc.y += ((p.active ? p.y : 0) - s0.smoothNdc.y) * k;
-    const tiltAmount = mix(look.mouseTilt, lookTo.mouseTilt, b) * (reducedMotion ? 0.25 : 1);
+    const tiltAmount =
+      mix(look.mouseTilt, lookTo.mouseTilt, b) *
+      (reducedMotion ? 0.25 : 1) *
+      (1 - hold);
     tilt.rotation.set(
-      mix(look.baseTilt[0], lookTo.baseTilt[0], b) - s0.smoothNdc.y * tiltAmount,
-      mix(look.baseTilt[1], lookTo.baseTilt[1], b) + s0.smoothNdc.x * tiltAmount,
-      mix(look.baseTilt[2], lookTo.baseTilt[2], b),
+      (mix(look.baseTilt[0], lookTo.baseTilt[0], b) -
+        s0.smoothNdc.y * tiltAmount) *
+        (1 - hold),
+      (mix(look.baseTilt[1], lookTo.baseTilt[1], b) +
+        s0.smoothNdc.x * tiltAmount) *
+        (1 - hold),
+      mix(look.baseTilt[2], lookTo.baseTilt[2], b) * (1 - hold),
     );
-    const parallax = mix(look.mouseParallax, lookTo.mouseParallax, b) * motion;
+    const parallax =
+      mix(look.mouseParallax, lookTo.mouseParallax, b) * motion * (1 - hold);
     // About's galaxy: during its transition the system glides from the story
     // placement to About's centre and size, then follows About.
     const G = L.galaxy;
     const galaxyAt = formNames.indexOf("galaxy");
-    const gw = G && galaxyAt > 0 ? smooth(Math.min(Math.max(s0.smoothProgress - (galaxyAt - 1), 0), 1)) : 0;
+    const gw =
+      G && galaxyAt > 0
+        ? smooth(Math.min(Math.max(s0.smoothProgress - (galaxyAt - 1), 0), 1))
+        : 0;
     root.position.set(
       mix(mix(L.from.x, toX, b), G?.x ?? 0, gw) + s0.smoothNdc.x * parallax,
-      mix(mix(L.from.y, L.to.y, b), G?.y ?? 0, gw) + s0.smoothNdc.y * parallax * 0.7,
+      mix(mix(L.from.y, L.to.y, b), G?.y ?? 0, gw) +
+        s0.smoothNdc.y * parallax * 0.7,
       0,
     );
     // Story-to-story transitions (not the handoff, not the galaxy): the
     // scattered field swells out and gathers back in, like the two that
     // change size. sin() is 0 at both ends, so formed shapes keep their size.
     const at = Math.floor(s0.smoothProgress);
-    const between = at > handoffAt && at + 1 !== galaxyAt && at + 1 < formNames.length;
-    const swell = between ? 1 + (flight - 1) * Math.sin(Math.PI * (s0.smoothProgress - at)) : 1;
-    root.scale.setScalar(mix(mix(L.from.scale, L.to.scale, b), G?.scale ?? 1, gw) * swell);
+    const between =
+      at > handoffAt && at + 1 !== galaxyAt && at + 1 < formNames.length;
+    const swell = between
+      ? 1 + (flight - 1) * Math.sin(Math.PI * (s0.smoothProgress - at))
+      : 1;
+    root.scale.setScalar(
+      mix(mix(L.from.scale, L.to.scale, b), G?.scale ?? 1, gw) * swell,
+    );
     onGravity?.(G ? gw * G.presence : 0, G?.x ?? 0, G?.y ?? 0);
     // The ending's sun rests on the footer's top edge: its offset from the
     // galaxy centre, in the particles' own units.
-    u.uSunOffset.value = G ? (G.horizon - root.position.y) / Math.max(root.scale.x, 1e-3) : 0;
+    u.uSunOffset.value = G
+      ? (G.horizon - root.position.y) / Math.max(root.scale.x, 1e-3)
+      : 0;
     if (voxMesh) {
       const cam = state.camera as THREE.PerspectiveCamera;
       const hpx = state.size.height * pixelRatio;
-      u.uPxPerUnit.value = hpx / (2 * Math.tan(((cam.fov ?? 40) * Math.PI) / 360));
+      u.uPxPerUnit.value =
+        hpx / (2 * Math.tan(((cam.fov ?? 40) * Math.PI) / 360));
       u.uRootScale.value = root.scale.x;
       // The one base cube size: ~0.65% of the screen height at the focal depth.
       u.uVoxelPx.value = hpx * 0.0065;
@@ -500,17 +613,33 @@ export function ParticleSystem({
     // A "spin" look turns continuously; as it hands over to a "sway" look the
     // spin slows and settles on the nearest full turn (so the next forms face
     // front), and the sway fades in.
-    const spinOf = (lk: ParticleLook) => (lk.rotation.mode === "spin" ? lk.rotation.speed : 0);
+    const spinOf = (lk: ParticleLook) =>
+      lk.rotation.mode === "spin" ? lk.rotation.speed : 0;
     const spinSpeed = mix(spinOf(look), spinOf(lookTo), b);
-    s0.spin += delta * spinSpeed * motion;
-    const settle = (look.rotation.mode === "spin" ? b : 0) * (lookTo.rotation.mode === "sway" ? 1 : 0);
-    if (settle > 0) s0.spin += (Math.round(s0.spin / TAU) * TAU - s0.spin) * k * settle;
+    s0.spin += delta * spinSpeed * motion * (1 - hold);
+    const settle =
+      (look.rotation.mode === "spin" ? b : 0) *
+      (lookTo.rotation.mode === "sway" ? 1 : 0);
+    if (settle > 0)
+      s0.spin += (Math.round(s0.spin / TAU) * TAU - s0.spin) * k * settle;
     const swayOf = (lk: ParticleLook) =>
-      lk.rotation.mode === "sway" ? Math.sin(time * lk.rotation.speed) * lk.rotation.amount : 0;
+      lk.rotation.mode === "sway"
+        ? Math.sin(time * lk.rotation.speed) * lk.rotation.amount
+        : 0;
     const calm = 1 - s0.anchor;
-    const yaw = s0.spin + mix(swayOf(look), swayOf(lookTo), b) * motion * calm;
-    const wobble = mix(look.wobbleAmount, lookTo.wobbleAmount, b) * motion * calm;
-    points.rotation.set(Math.sin(time * 0.13) * wobble, yaw, Math.cos(time * 0.11) * wobble * 0.6);
+    const yaw =
+      (s0.spin + mix(swayOf(look), swayOf(lookTo), b) * motion * calm) *
+      (1 - hold);
+    const wobble =
+      mix(look.wobbleAmount, lookTo.wobbleAmount, b) *
+      motion *
+      calm *
+      (1 - hold);
+    points.rotation.set(
+      Math.sin(time * 0.13) * wobble,
+      yaw,
+      Math.cos(time * 0.11) * wobble * 0.6,
+    );
 
     // --- pointer position in the particles' own space ---------------------
     if (p.active && !reducedMotion && u.uMouseInfluence.value > 0) {
@@ -530,9 +659,19 @@ export function ParticleSystem({
     <group ref={rootRef}>
       <group ref={tiltRef}>
         {voxel ? (
-          <mesh ref={pointsRef} geometry={voxel.geometry} material={voxel.material} frustumCulled={false} />
+          <mesh
+            ref={pointsRef}
+            geometry={voxel.geometry}
+            material={voxel.material}
+            frustumCulled={false}
+          />
         ) : (
-          <points ref={pointsRef} geometry={geometry} material={material} frustumCulled={false} />
+          <points
+            ref={pointsRef}
+            geometry={geometry}
+            material={material}
+            frustumCulled={false}
+          />
         )}
       </group>
     </group>

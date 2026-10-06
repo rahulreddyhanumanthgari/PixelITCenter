@@ -20,6 +20,7 @@ vec3 toLinear(vec3 c) { return pow(c, vec3(2.2)); }
 
 #ifdef VOXEL
 varying vec3 vNormal;
+varying float vHero;   // traced landing-page cube: already shaded per face
 #endif
 
 void main() {
@@ -31,6 +32,7 @@ void main() {
   float fill = max(dot(nn, normalize(vec3(0.6, -0.2, 0.75))), 0.0);
   vec3 base = toLinear(vInk) * (0.95 + 0.1 * fract(vRand * 3.17));
   vec3 col = base * (0.5 + 0.48 * key + 0.16 * fill);
+  if (vHero > 0.5) col = toLinear(clamp(vInk, 0.0, 1.0));
   gl_FragColor = vec4(col, 1.0);
   return;
 #endif
