@@ -19,7 +19,6 @@ import {
   StarField,
   type Atmosphere,
 } from "@/themes/core/components/particles/StarField";
-import { LightSky } from "@/themes/core/components/particles/LightSky";
 import {
   useDeviceTier,
   usePointer,
@@ -32,12 +31,6 @@ import type {
 import { PALETTE } from "@/themes/core/lib/particles/palette";
 import { smoothstep } from "@/themes/core/lib/particles/random";
 import { processProgress } from "@/themes/core/lib/processProgress";
-import { useTheme } from "@/themes/core/lib/theme";
-import {
-  loadLightVortex,
-  VORTEX_REF,
-  type VortexData,
-} from "@/themes/core/lib/particles/forms/lightVortex";
 import {
   HERO_LOOK,
   JOURNEY_BLOOM,
@@ -73,20 +66,16 @@ const isColumnLayout = () => window.matchMedia("(min-width: 1024px)").matches;
 function CameraRig({
   pointer,
   atmosphere,
-  strength: baseStrength,
-  still,
+  strength,
 }: {
   pointer: RefObject<PointerState>;
   atmosphere: RefObject<Atmosphere>;
   strength: number;
-  /** 0..1: how fully the camera holds still (the light theme's traced hero). */
-  still?: () => number;
 }) {
   useFrame((state, rawDelta) => {
     const cam = state.camera;
     const k =
       1 - Math.pow(1 - CAMERA_MOTION.damping, Math.min(rawDelta, 1 / 20) * 60);
-    const strength = baseStrength * (1 - (still?.() ?? 0));
     const p = pointer.current;
     const tx = (p.active ? p.x : 0) * CAMERA_MOTION.pointerX * strength;
     const ty = (p.active ? p.y : 0) * CAMERA_MOTION.pointerY * strength;
@@ -112,46 +101,14 @@ export default function JourneyScene() {
   // How We Work step progress, written by the section's own scroll triggers.
   const stage = useRef<ProgressState>(processProgress);
   const bloom = useRef<BloomEffect>(null);
+  // Light version (<html data-theme="light">, set by app/(light)): particles
+  // as ink on white, no bloom. This scene only runs in the browser.
+  const [light] = useState(
+    () => document.documentElement.dataset.theme === "light",
+  );
   const tierName = useDeviceTier();
   const reducedMotion = useReducedMotion();
   const tier = getJourneyTier(tierName);
-  // Light theme: a bright atmosphere (LightSky), no bloom, particles drawn
-  // as ink dots in the light palette.
-  const light = useTheme() === "light";
-  const lightRef = useRef(light);
-  useEffect(() => {
-    lightRef.current = light;
-  }, [light]);
-  // Light theme: the hero is the vortex traced from the landing-page
-  // reference (public/light/hero-vortex.bin). The particles wait for it, so
-  // they mount once; if it fails to load, the shared hero field is used.
-  const [vortex, setVortex] = useState<VortexData | null>(null);
-  const [vortexTried, setVortexTried] = useState(false);
-  const vortexRef = useRef<VortexData | null>(null);
-  useEffect(() => {
-    if (!light) return;
-    let live = true;
-    loadLightVortex()
-      .then((d) => {
-        if (!live) return;
-        vortexRef.current = d;
-        setVortex(d);
-      })
-      .catch(() => {})
-      .finally(() => live && setVortexTried(true));
-    return () => {
-      live = false;
-    };
-  }, [light]);
-  const vortexOn = useCallback(
-    () => lightRef.current && vortexRef.current !== null,
-    [],
-  );
-  const cameraStill = useCallback(
-    () =>
-      vortexOn() ? 1 - Math.min(Math.max(progress.current.value, 0), 1) : 0,
-    [vortexOn],
-  );
   const dpr = Math.min(window.devicePixelRatio || 1, tier.maxDpr);
   const [active, setActive] = useState(true);
 
@@ -185,12 +142,12 @@ export default function JourneyScene() {
     (blend: number, field: number) => {
       const effect = bloom.current;
       if (effect)
-        effect.intensity = lightRef.current
+        effect.intensity = light
           ? 0
           : tier.bloom.hero + (tier.bloom.story - tier.bloom.hero) * blend;
       atmosphere.current.field = field;
     },
-    [tier],
+    [tier, light],
   );
   const onGravity = useCallback((strength: number, x: number, y: number) => {
     const A = atmosphere.current;
@@ -277,10 +234,10 @@ export default function JourneyScene() {
     const galaxyAnchor = document.querySelector<HTMLElement>(
       "[data-galaxy-anchor]",
     );
+    const contactEl = document.querySelector<HTMLElement>("#contact");
     const galaxyOutro = document.querySelector<HTMLElement>(
       "[data-galaxy-outro]",
     );
-    const careersEl = document.querySelector<HTMLElement>("#careers");
     const galaxyRegion = document.querySelector<HTMLElement>(
       "[data-galaxy-region]",
     );
@@ -313,11 +270,12 @@ export default function JourneyScene() {
             byForm: STORY_SIDES,
           }
         : null;
-      // Light theme: the whole globe on the right (Reference 03).
-      L.earthScale = columns ? (lightRef.current ? 1.0 : EARTH_VIEW.scale) : 1;
+      // Light version: the Earth a little bigger, taking more of the right.
+      L.earthScale = columns ? EARTH_VIEW.scale * (light ? 1.3 : 1) : 1;
       // The Why halo is sized to frame desktop content; in the phone band the
-      // whole ring must fit instead.
-      L.torusScale = columns ? 1 : 0.4;
+      // whole ring must fit instead. Light version: bigger, so the heading and
+      // the four reason cards sit inside its opening.
+      L.torusScale = columns ? (light ? 1.45 : 1) : 0.4;
       // How We Work: planets around the centred content on desktop; a compact
       // wave in the phone band.
       L.solarPhone = columns ? 0 : 1;
@@ -339,10 +297,9 @@ export default function JourneyScene() {
       // diameter is off-screen, whatever the window width.
       if (L.sides) {
         const earthPx =
-          (2 * EARTH_VIEW.radius * L.earthScale * L.to.scale) / wpp;
-        // Light theme (spec 8): roughly half of the globe tucked outside the viewport.
-        const hidden = lightRef.current ? 0.1 : EARTH_VIEW.hiddenRight;
-        const xWorld = (vw - (0.5 - hidden) * earthPx - vw / 2) * wpp;
+          (2 * EARTH_VIEW.radius * EARTH_VIEW.scale * L.to.scale) / wpp;
+        const xWorld =
+          (vw - (0.5 - EARTH_VIEW.hiddenRight) * earthPx - vw / 2) * wpp;
         const byForm = [...STORY_SIDES];
         byForm[EARTH_VIEW.index] =
           (xWorld - L.sides.left) / (L.sides.right - L.sides.left);
@@ -357,29 +314,9 @@ export default function JourneyScene() {
       );
       L.from.x = 0;
       L.from.y = 0;
-      L.from.scale = voidPx * wpp;
-      // Light theme, traced vortex: exactly where the landing-page reference
-      // has it — 1 reference px = vw / 1672 (centre 1170, 470; 1 local unit
-      // = 480 px). Phones: the whole vortex across the width, above the text.
-      if (vortexOn() && vw >= 1024) {
-        const u = vw / VORTEX_REF.width;
-        L.from.x = (VORTEX_REF.cx * u - vw / 2) * wpp;
-        L.from.y = -(VORTEX_REF.cy * u - vh / 2) * wpp;
-        L.from.scale = VORTEX_REF.unit * u * wpp;
-      } else if (vortexOn()) {
-        const unitPx = Math.min(vw * 0.49, vh * 0.24);
-        const top = vw >= 640 ? 80 : 64;
-        L.from.x = 0;
-        L.from.y = -(top + 1.02 * unitPx - vh / 2) * wpp;
-        L.from.scale = unitPx * wpp;
-      } else if (lightRef.current && vw >= 1024) {
-        L.from.x = vw * 0.24 * wpp;
-        L.from.scale = Math.min(vw * 0.17, vh * 0.27) * wpp;
-      } else if (lightRef.current) {
-        // Phones/tablets: above the text, clear of it.
-        L.from.y = vh * 0.24 * wpp;
-        L.from.scale = Math.min(vw * 0.24, vh * 0.13) * wpp;
-      }
+      // Light version: the vortex a little larger than dark, its outer cubes
+      // reaching toward the top corners.
+      L.from.scale = voidPx * wpp * (light ? 1.15 : 1);
       L.protectFloor =
         vw < 768
           ? HERO_FIELD.protectFloor.narrow
@@ -406,11 +343,13 @@ export default function JourneyScene() {
       }
       // Ending: the empty stretch after Contact scrubs the collapse, from its
       // top entering the screen (0) to the galaxy's release (1).
-      if (careersEl) {
-        const c = careersEl.getBoundingClientRect();
-        L.careers =
+      // How present Contact is (0..1): the light version keeps the galaxy's
+      // yellow core out from behind its heading.
+      if (contactEl) {
+        const c = contactEl.getBoundingClientRect();
+        L.contact =
           1 -
-          smoothstep(0.12, 0.32, Math.abs(c.top + c.height / 2 - vh / 2) / vh);
+          smoothstep(0.35, 0.75, Math.abs(c.top + c.height / 2 - vh / 2) / vh);
       }
       if (galaxyOutro) {
         const o = galaxyOutro.getBoundingClientRect();
@@ -497,7 +436,7 @@ export default function JourneyScene() {
       layer.style.clipPath = "";
       layer.style.visibility = "";
     };
-  }, [tier, tierName, vortexOn, vortex]);
+  }, [tier, tierName, light]);
 
   return (
     <ParticleCanvas
@@ -508,50 +447,44 @@ export default function JourneyScene() {
         cameraZ: JOURNEY_CAMERA.z,
         background: light ? PALETTE.backgroundLight : PALETTE.background,
         dpr,
-        bloom: { intensity: tier.bloom.hero, ...JOURNEY_BLOOM },
+        // No glow on white: bloom is off in the light version.
+        bloom: { intensity: light ? 0 : tier.bloom.hero, ...JOURNEY_BLOOM },
       }}
     >
-      {light && <LightSky pixelRatio={dpr} reducedMotion={reducedMotion} />}
-      {!light && (
-        <StarField
-          // Light theme: only a sparse scatter of background pixels.
-          count={Math.round(tier.starCount * (light ? 0.07 : 1))}
-          pixelRatio={dpr}
-          reducedMotion={reducedMotion}
-          pointer={pointer}
-          atmosphere={atmosphere}
-          light={light}
-        />
-      )}
+      <StarField
+        // Light version: the reference's scattered cubes round the forms.
+        count={Math.round(tier.starCount * (light ? 2.5 : 1))}
+        pixelRatio={dpr}
+        reducedMotion={reducedMotion}
+        pointer={pointer}
+        atmosphere={atmosphere}
+        light={light}
+      />
       <CameraRig
         pointer={pointer}
         atmosphere={atmosphere}
         strength={reducedMotion ? 0 : tierName === "mobile" ? 0.5 : 1}
-        still={cameraStill}
       />
-      {(!light || vortexTried) && (
-        <ParticleSystem
-          key={`${tierName}-${light}`}
-          forms={JOURNEY_FORMS}
-          // Light theme: real cubes cost more per particle than points.
-          count={Math.round(tier.particleCount * (light ? 0.6 : 1))}
-          look={HERO_LOOK}
-          lookTo={STORY_LOOK}
-          handoffAt={STORY_HANDOFF}
-          flight={STORY_FLIGHT.swell}
-          layout={layout}
-          progress={progress}
-          pointer={pointer}
-          scatter={tier.scatter}
-          pixelRatio={dpr}
-          reducedMotion={reducedMotion}
-          onBlend={onBlend}
-          onGravity={onGravity}
-          stage={stage}
-          light={light}
-          heroVortex={light ? vortex : null}
-        />
-      )}
+      <ParticleSystem
+        key={tierName}
+        forms={JOURNEY_FORMS}
+        // Light version: the reference's packed cube bodies (2x as dense).
+        count={Math.round(tier.particleCount * (light ? 2 : 1))}
+        look={HERO_LOOK}
+        lookTo={STORY_LOOK}
+        handoffAt={STORY_HANDOFF}
+        flight={STORY_FLIGHT.swell}
+        layout={layout}
+        progress={progress}
+        pointer={pointer}
+        scatter={tier.scatter}
+        pixelRatio={dpr}
+        reducedMotion={reducedMotion}
+        onBlend={onBlend}
+        onGravity={onGravity}
+        stage={stage}
+        light={light}
+      />
     </ParticleCanvas>
   );
 }

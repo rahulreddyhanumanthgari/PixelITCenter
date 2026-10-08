@@ -7,6 +7,12 @@ import { processProgress } from "@/themes/core/lib/processProgress";
 type StepState = "inactive" | "active" | "completed";
 
 const STEPS = 4;
+/**
+ * Extra scroll (in steps) after the last step is reached, with everything
+ * complete, so step 04 and its planet finish animating before the section
+ * scrolls away.
+ */
+const HOLD = 1;
 /** Timeline position (in steps) where panel k hands over to panel k+1. */
 const HANDOVER = { outLead: 0.2, inLead: 0.1, duration: 0.2, stagger: 0.05 } as const;
 
@@ -47,7 +53,7 @@ export function ProcessProgress() {
           start: "top 30%",
           end: "bottom 85%",
           scrub: 0.5,
-          onUpdate: (self) => apply(self.progress * STEPS),
+          onUpdate: (self) => apply(Math.min(self.progress * (STEPS + HOLD), STEPS)),
         },
       });
       const parts = panels.map((p) => Array.from(p.querySelectorAll<HTMLElement>("[data-panel-part]")));
@@ -65,8 +71,8 @@ export function ProcessProgress() {
           at - HANDOVER.inLead,
         );
       }
-      // Pad so the timeline spans exactly 0 → 4 steps of scroll.
-      tl.set({}, {}, STEPS);
+      // Pad so the timeline spans 0 → 4 steps of scroll plus the hold.
+      tl.set({}, {}, STEPS + HOLD);
     });
     apply(0);
     return () => {

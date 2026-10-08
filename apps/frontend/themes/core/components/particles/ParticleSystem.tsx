@@ -1,5 +1,9 @@
 "use client";
 
+import {
+  journeyClock,
+  journeyProgress,
+} from "@/themes/core/lib/journeyProgress";
 import { useEffect, useMemo, useRef, type RefObject } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
@@ -12,10 +16,6 @@ import {
   stageDataFor,
   type FormName,
 } from "@/themes/core/lib/particles/generateTarget";
-import {
-  buildLightVortexForm,
-  type VortexData,
-} from "@/themes/core/lib/particles/forms/lightVortex";
 import {
   MorphController,
   createMorphGeometry,
@@ -104,8 +104,8 @@ export interface LayoutState {
   } | null;
   /** Galaxy ending after Contact: 0 = galaxy … 1 = collapsed into its core and gone. */
   galaxyCollapse: number;
-  /** Light theme: how present Careers is (0..1); About's ribbon re-forms as its stream. */
-  careers?: number;
+  /** How present Contact is (0..1), for the light version's galaxy core. */
+  contact?: number;
 }
 
 interface ParticleSystemProps {
@@ -141,10 +141,8 @@ interface ParticleSystemProps {
    * active … N = all steps done. Written by the section's scroll triggers.
    */
   stage?: RefObject<ProgressState>;
-  /** Light theme: points drawn as ink dots (normal blending) instead of light. */
+  /** Light version: particles drawn as ink on white (normal blending). */
   light?: boolean;
-  /** Light theme: the traced landing-page vortex, used as the hero form. */
-  heroVortex?: VortexData | null;
 }
 
 export interface MorphUniforms {
@@ -164,6 +162,7 @@ export interface MorphUniforms {
   uFocusDepth: THREE.IUniform<number>;
   uMouse: THREE.IUniform<THREE.Vector3>;
   uStage: THREE.IUniform<number>;
+  uLight: THREE.IUniform<number>;
   uHeroField: THREE.IUniform<number>;
   uFlowFrom: THREE.IUniform<number>;
   uFlowTo: THREE.IUniform<number>;
@@ -175,12 +174,7 @@ export interface MorphUniforms {
   uSolarPhone: THREE.IUniform<number>;
   uProtect5: THREE.IUniform<THREE.Vector4>;
   uCollapse: THREE.IUniform<number>;
-  uCareers: THREE.IUniform<number>;
-  uPxPerUnit: THREE.IUniform<number>;
-  uRootScale: THREE.IUniform<number>;
-  uVoxelPx: THREE.IUniform<number>;
-  uLight: THREE.IUniform<number>;
-  uVortex: THREE.IUniform<number>;
+  uContact: THREE.IUniform<number>;
   uSunOffset: THREE.IUniform<number>;
   uProtect: THREE.IUniform<THREE.Vector4>;
   uProtectFloor: THREE.IUniform<number>;
@@ -190,25 +184,8 @@ export interface MorphUniforms {
 const MOUSE_PARKED = new THREE.Vector3(100, 100, 100);
 const TAU = Math.PI * 2;
 
-/** Light theme: normal blending + ink colours; dark: additive light. */
-export function applyTheme(
-  points: THREE.Object3D,
-  uLight: THREE.IUniform<number>,
-  light: boolean,
-) {
-  uLight.value = light ? 1 : 0;
-  const m = (points as THREE.Points).material as THREE.Material;
-  if (m.transparent === false) return; // the light cubes are opaque
-  const blending = light ? THREE.NormalBlending : THREE.AdditiveBlending;
-  if (m.blending !== blending) {
-    m.blending = blending;
-    m.needsUpdate = true;
-  }
-}
-
-function uniformsOf(points: THREE.Object3D): MorphUniforms {
-  return ((points as THREE.Points).material as THREE.ShaderMaterial)
-    .uniforms as MorphUniforms;
+function uniformsOf(points: THREE.Points): MorphUniforms {
+  return (points.material as THREE.ShaderMaterial).uniforms as MorphUniforms;
 }
 
 /** Frame-rate independent version of "close `damping` of the gap per frame". */
@@ -241,52 +218,34 @@ export function ParticleSystem({
   onGravity,
   stage,
   light = false,
-  heroVortex = null,
 }: ParticleSystemProps) {
   const rootRef = useRef<THREE.Group>(null);
   const tiltRef = useRef<THREE.Group>(null);
-  const pointsRef = useRef<THREE.Object3D>(null);
+  const pointsRef = useRef<THREE.Points>(null);
 
   const motion = reducedMotion ? look.reducedMotionFactor : 1;
 
   // Every form is sampled once per mount with the same particle count.
   const { geometry, forms, stagedForm } = useMemo(() => {
+    // Light version: the Earth with a solid sea of cubes.
     const forms = formNames.map((name, i) =>
-      generateForm(name, count, 101 + i * 7919),
+      generateForm(
+        light && name === "earth" ? "earthLight" : name,
+        count,
+        101 + i * 7919,
+      ),
     );
     const colors =
       look.colors === "monochrome"
         ? monochromeColors(count)
         : colorsForSequence(formNames[0], forms[0]);
-    // Light theme: the hero is the traced vortex, each cube with its own
-    // colour and shape (aHeroColor, aHeroShape); zero elsewhere.
-    const vortex =
-      light && heroVortex && formNames[0] === "heroField"
-        ? buildLightVortexForm(heroVortex, count)
-        : null;
-    if (vortex) forms[0] = vortex.positions;
     const staged = stageDataFor(formNames, forms);
-    const geometry = createMorphGeometry(forms, colors, staged?.data);
-    geometry.setAttribute(
-      "aHeroColor",
-      new THREE.BufferAttribute(
-        vortex?.color ?? new Float32Array(count * 3),
-        3,
-      ),
-    );
-    geometry.setAttribute(
-      "aHeroShape",
-      new THREE.BufferAttribute(
-        vortex?.shape ?? new Float32Array(count * 3),
-        3,
-      ),
-    );
     return {
-      geometry,
+      geometry: createMorphGeometry(forms, colors, staged?.data),
       forms,
       stagedForm: staged?.index ?? -1,
     };
-  }, [formNames, count, look.colors, light, heroVortex]);
+  }, [formNames, count, look.colors, light]);
 
   const material = useMemo(() => {
     const uniforms: MorphUniforms = {
@@ -305,6 +264,7 @@ export function ParticleSystem({
       uFocusDepth: { value: look.cameraZ },
       uMouse: { value: MOUSE_PARKED.clone() },
       uStage: { value: 0 },
+      uLight: { value: light ? 1 : 0 },
       uHeroField: { value: 0 },
       uFlowFrom: { value: 0 },
       uFlowTo: { value: 0 },
@@ -314,15 +274,9 @@ export function ParticleSystem({
       uProtect4: { value: new THREE.Vector4(0, 0, 0.001, 0.001) },
       uTorusScale: { value: 1 },
       uSolarPhone: { value: 0 },
-      uVortex: { value: 0 },
       uProtect5: { value: new THREE.Vector4(0, 0, 0.001, 0.001) },
       uCollapse: { value: 0 },
-      uCareers: { value: 0 },
-      // Light cubes only (VOXEL): screen scale, system scale, base cube size.
-      uPxPerUnit: { value: 1000 },
-      uRootScale: { value: 1 },
-      uVoxelPx: { value: 6 },
-      uLight: { value: 0 },
+      uContact: { value: 0 },
       uSunOffset: { value: 0 },
       uProtect: { value: new THREE.Vector4(0, 0, 0.001, 0.001) },
       uProtectFloor: { value: 1 },
@@ -333,49 +287,10 @@ export function ParticleSystem({
       fragmentShader,
       transparent: true,
       depthWrite: false,
-      blending: THREE.AdditiveBlending,
+      // Light on black adds up; ink on white is laid over (light version).
+      blending: light ? THREE.NormalBlending : THREE.AdditiveBlending,
     });
-  }, [look]);
-
-  // Light theme: the same particles drawn as real instanced cubes
-  // (Correction Specification). Instanced attributes share the point
-  // geometry's arrays, so the morph controller's updates reach both.
-  const voxel = useMemo(() => {
-    if (!light) return null;
-    const box = new THREE.BoxGeometry(1, 1, 1);
-    const g = new THREE.InstancedBufferGeometry();
-    g.index = box.index;
-    g.setAttribute("position", box.getAttribute("position"));
-    g.setAttribute("normal", box.getAttribute("normal"));
-    for (const [name, attr] of Object.entries(geometry.attributes)) {
-      const a = attr as THREE.BufferAttribute;
-      const inst = new THREE.InstancedBufferAttribute(
-        a.array as Float32Array,
-        a.itemSize,
-      );
-      if (name === "position" || name === "aTarget")
-        inst.setUsage(THREE.DynamicDrawUsage);
-      g.setAttribute(name === "position" ? "aPos" : name, inst);
-    }
-    g.instanceCount = count;
-    const mat = new THREE.ShaderMaterial({
-      uniforms: material.uniforms,
-      defines: { VOXEL: "" },
-      vertexShader,
-      fragmentShader,
-      transparent: false,
-      depthWrite: true,
-      depthTest: true,
-    });
-    return { geometry: g, material: mat };
-  }, [light, geometry, material, count]);
-  useEffect(
-    () => () => {
-      voxel?.geometry.dispose();
-      voxel?.material.dispose();
-    },
-    [voxel],
-  );
+  }, [look, light]);
 
   // Plain object held in a ref: the controller mutates geometry attributes.
   const controllerRef = useRef<MorphController | null>(null);
@@ -398,9 +313,8 @@ export function ParticleSystem({
     const u = uniformsOf(points);
     u.uPixelRatio.value = pixelRatio;
     u.uMotion.value = motion;
-    // Light cubes travel on tighter paths (no cloud over the page).
-    u.uScatter.value = scatter * (reducedMotion ? 0.35 : 1) * (light ? 0.4 : 1);
-  }, [pixelRatio, motion, scatter, reducedMotion, light]);
+    u.uScatter.value = scatter * (reducedMotion ? 0.35 : 1);
+  }, [pixelRatio, motion, scatter, reducedMotion]);
 
   useEffect(() => () => geometry.dispose(), [geometry]);
   useEffect(() => () => material.dispose(), [material]);
@@ -418,8 +332,6 @@ export function ParticleSystem({
     spin: 0,
     anchor: 0,
     collapse: 0,
-    voxFrom: -1,
-    voxTo: -1,
   });
 
   useFrame((state, rawDelta) => {
@@ -435,7 +347,6 @@ export function ParticleSystem({
     const delta = Math.min(rawDelta, 1 / 20);
     const u = uniformsOf(points);
     u.uTime.value += delta;
-    applyTheme(points, u.uLight, light);
     const time = u.uTime.value;
     const k = dampFactor(look.damping, delta);
 
@@ -448,28 +359,12 @@ export function ParticleSystem({
         ? target
         : s0.smoothProgress + (target - s0.smoothProgress) * k;
     u.uProgress.value = controller.update(s0.smoothProgress);
-    // Light cubes: reached through the scene object (never the memo).
-    const voxMesh = light ? (points as THREE.Mesh) : null;
-    if (
-      voxMesh &&
-      (controller.fromIndex !== s0.voxFrom || controller.toIndex !== s0.voxTo)
-    ) {
-      s0.voxFrom = controller.fromIndex;
-      s0.voxTo = controller.toIndex;
-      voxMesh.geometry.getAttribute("aPos").needsUpdate = true;
-      voxMesh.geometry.getAttribute("aTarget").needsUpdate = true;
-    }
+    // Shared with the page: where the particles are, as drawn.
+    journeyProgress.value = s0.smoothProgress;
+    journeyClock.at = performance.now();
     // The hero gravity field is live while it is the form being left/held.
     u.uHeroField.value =
       formNames[0] === "heroField" && controller.fromIndex === 0 ? 1 : 0;
-    // Light theme: the traced vortex holds still and screen-aligned (no
-    // tilt, spin, wobble, parallax or pointer push) until the page leaves it.
-    const vortexOn = light && !!heroVortex && formNames[0] === "heroField";
-    u.uVortex.value = vortexOn ? 1 : 0;
-    const hold =
-      vortexOn && u.uHeroField.value > 0
-        ? 1 - Math.min(Math.max(s0.smoothProgress, 0), 1)
-        : 0;
     // Flowing torus (Why): live whether it is being left or arrived at.
     // Live flowing forms: 1 = torus (Why), 2 = ring stream (Services).
     // 3 = Earth (Staffing), 4 = solar system (How We Work), 5 = galaxy (About).
@@ -503,7 +398,7 @@ export function ParticleSystem({
     // Eased like the morph, so fast scrolling still plays the collapse smoothly.
     s0.collapse += (L.galaxyCollapse - s0.collapse) * k;
     u.uCollapse.value = s0.collapse;
-    u.uCareers.value += ((L.careers ?? 0) - u.uCareers.value) * k;
+    u.uContact.value += ((L.contact ?? 0) - u.uContact.value) * k;
     u.uProtect.value.set(...L.protect);
     u.uProtectFloor.value = L.protectFloor;
 
@@ -546,27 +441,22 @@ export function ParticleSystem({
     u.uMouseRadius.value = mix(look.mouseRadius, lookTo.mouseRadius, b);
     u.uMouseInfluence.value = reducedMotion
       ? 0
-      : mix(look.mouseInfluence, lookTo.mouseInfluence, b) * (1 - hold);
+      : mix(look.mouseInfluence, lookTo.mouseInfluence, b);
 
     // --- pointer: eased tilt/parallax, never mapped 1:1 -------------------
     const p = pointer.current;
     s0.smoothNdc.x += ((p.active ? p.x : 0) - s0.smoothNdc.x) * k;
     s0.smoothNdc.y += ((p.active ? p.y : 0) - s0.smoothNdc.y) * k;
     const tiltAmount =
-      mix(look.mouseTilt, lookTo.mouseTilt, b) *
-      (reducedMotion ? 0.25 : 1) *
-      (1 - hold);
+      mix(look.mouseTilt, lookTo.mouseTilt, b) * (reducedMotion ? 0.25 : 1);
     tilt.rotation.set(
-      (mix(look.baseTilt[0], lookTo.baseTilt[0], b) -
-        s0.smoothNdc.y * tiltAmount) *
-        (1 - hold),
-      (mix(look.baseTilt[1], lookTo.baseTilt[1], b) +
-        s0.smoothNdc.x * tiltAmount) *
-        (1 - hold),
-      mix(look.baseTilt[2], lookTo.baseTilt[2], b) * (1 - hold),
+      mix(look.baseTilt[0], lookTo.baseTilt[0], b) -
+        s0.smoothNdc.y * tiltAmount,
+      mix(look.baseTilt[1], lookTo.baseTilt[1], b) +
+        s0.smoothNdc.x * tiltAmount,
+      mix(look.baseTilt[2], lookTo.baseTilt[2], b),
     );
-    const parallax =
-      mix(look.mouseParallax, lookTo.mouseParallax, b) * motion * (1 - hold);
+    const parallax = mix(look.mouseParallax, lookTo.mouseParallax, b) * motion;
     // About's galaxy: during its transition the system glides from the story
     // placement to About's centre and size, then follows About.
     const G = L.galaxy;
@@ -599,15 +489,6 @@ export function ParticleSystem({
     u.uSunOffset.value = G
       ? (G.horizon - root.position.y) / Math.max(root.scale.x, 1e-3)
       : 0;
-    if (voxMesh) {
-      const cam = state.camera as THREE.PerspectiveCamera;
-      const hpx = state.size.height * pixelRatio;
-      u.uPxPerUnit.value =
-        hpx / (2 * Math.tan(((cam.fov ?? 40) * Math.PI) / 360));
-      u.uRootScale.value = root.scale.x;
-      // The one base cube size: ~0.65% of the screen height at the focal depth.
-      u.uVoxelPx.value = hpx * 0.0065;
-    }
 
     // --- rotation ---------------------------------------------------------
     // A "spin" look turns continuously; as it hands over to a "sway" look the
@@ -616,7 +497,7 @@ export function ParticleSystem({
     const spinOf = (lk: ParticleLook) =>
       lk.rotation.mode === "spin" ? lk.rotation.speed : 0;
     const spinSpeed = mix(spinOf(look), spinOf(lookTo), b);
-    s0.spin += delta * spinSpeed * motion * (1 - hold);
+    s0.spin += delta * spinSpeed * motion;
     const settle =
       (look.rotation.mode === "spin" ? b : 0) *
       (lookTo.rotation.mode === "sway" ? 1 : 0);
@@ -627,14 +508,9 @@ export function ParticleSystem({
         ? Math.sin(time * lk.rotation.speed) * lk.rotation.amount
         : 0;
     const calm = 1 - s0.anchor;
-    const yaw =
-      (s0.spin + mix(swayOf(look), swayOf(lookTo), b) * motion * calm) *
-      (1 - hold);
+    const yaw = s0.spin + mix(swayOf(look), swayOf(lookTo), b) * motion * calm;
     const wobble =
-      mix(look.wobbleAmount, lookTo.wobbleAmount, b) *
-      motion *
-      calm *
-      (1 - hold);
+      mix(look.wobbleAmount, lookTo.wobbleAmount, b) * motion * calm;
     points.rotation.set(
       Math.sin(time * 0.13) * wobble,
       yaw,
@@ -658,21 +534,12 @@ export function ParticleSystem({
   return (
     <group ref={rootRef}>
       <group ref={tiltRef}>
-        {voxel ? (
-          <mesh
-            ref={pointsRef}
-            geometry={voxel.geometry}
-            material={voxel.material}
-            frustumCulled={false}
-          />
-        ) : (
-          <points
-            ref={pointsRef}
-            geometry={geometry}
-            material={material}
-            frustumCulled={false}
-          />
-        )}
+        <points
+          ref={pointsRef}
+          geometry={geometry}
+          material={material}
+          frustumCulled={false}
+        />
       </group>
     </group>
   );

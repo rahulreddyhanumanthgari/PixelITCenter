@@ -18,7 +18,7 @@ removed once that brief arrived.
 
 - **Folders.** `themes/core/` is the shared site (everything described
   below). `themes/dark/` holds the dark colours; `themes/light/` holds the
-  daylight colours and `LightSky`. A section that needs a light-only
+  light colours. A section that needs a light-only
   treatment adds its component or styles under `themes/light/`.
 - **Separate root layouts.** `app/(dark)/layout.tsx` and
   `app/(light)/layout.tsx` each load `core.css` plus their own colours, and
@@ -671,57 +671,22 @@ rejected; this is their replacement.
 - **Background.** Opaque, so the galaxy's sun rests on the footer's top
   edge, with faint blue and orange glows at the bottom.
 
-## Light theme: Correction Specification (2026-10-05)
+## Light version (2026-10-06)
 
-The owner's "Pixel IT Center Correction Spec — Reference Images" PDF is the
-source of truth for the light theme. It replaces the earlier Light Pixel
-Master Specification. It keeps the dark site's page, content, particle
-journey, scroll story and morphs (GSAP ScrollTrigger), and changes the light
-theme's material, palette and per-section formations, matched to six
-reference images. The dark theme is unchanged.
+The earlier light-theme experiments (traced reference images, voxel cubes,
+per-section formations) were all removed at the owner's request. The light
+version is now simply the dark site in light colours:
 
-- **Switch**: `app/(light)` sets `data-theme="light"`; `themes/core/lib/theme.ts`
-  reads it; JourneyScene passes `light` to `ParticleSystem` (`uLight`), turns
-  bloom off, drops the star field, uses 60% of the particles and adds
-  `LightSky` (white environment).
-- **Real cubes**: in light, `ParticleSystem` draws the same particles as
-  instanced boxes (`#define VOXEL`: `InstancedBufferGeometry` sharing the
-  particle attributes, `position` renamed `aPos`), opaque with depth
-  testing, lit by a key and a fill light in `particle.frag.glsl`. One base
-  size in screen pixels (`uVoxelPx`); 0.35% are 3x accents. Fades shrink a
-  cube instead of making it transparent, so no blurry dots.
-- **Locked palette**: `lpal` in `particle.vert.glsl` (= `--pi-*` in
-  `light.css`): orange #F97316 / #FB923C, white #F8FAFC, cyan #0EA5E9, blue
-  #1D4ED8, navy #0F172A, cool grey #CBD5E1. No purple, pink, green, red or
-  yellow.
-- **Transitions**: formation → dispersion → re-formation; in light, scatter
-  is 40% of dark's and cubes shrink in flight, so a transition reads as a
-  stream, not a cloud over the page.
-- **Clean copy**: screen-space masks in the VOXEL block. The hero keeps the
-  left clear on desktop and the lower half clear on phones. About/Careers
-  keep to the outer half of the screen on desktop and thin edge walls on
-  phones; arrivals are masked from the moment they leave the path.
-- **Formations (Reference 01–06)**:
-  - 01 Hero: the hero field as a banded vortex on the right (above the text
-    on phones); `LightHero` left-aligned typography.
-  - 02 Services: `ringStream` (same as dark) moved right as a sweeping
-    tunnel; `LightServices` content on the left.
-  - 03 Staffing: voxel Earth on the right, front hemisphere only, ocean
-    blue/cyan/navy, land white with orange; the dotted shell becomes an
-    orbit ring.
-  - 04 Why: `lightTerrain`, voxel terrain with a recessed square on the
-    right; text on the left.
-  - 05 How We Work: `lightPath`, one continuous banded path through the
-    four stations (`LKN` knots); heading on the left.
-  - 06 About: `lightRibbon`, symmetric voxel walls framing the centred
-    content; re-forms as the Careers stream (`uCareers`); the footer ending
-    still gathers it into the setting sun.
-- **Layout**: on desktop, Staffing, Why and How We Work text is left-aligned
-  at 44% width (`light.css`), leaving the right side to the formation.
-- **Performance**: instanced cubes cost more than points; about 46 fps vs
-  60 fps for dark on an Intel UHD 630 at 1440x900. Headless Chrome
-  (SwiftShader) runs at ~1 fps, so morphs there look slow-motion: test on
-  the GPU (`--use-angle=d3d11`).
+- `themes/light/light.css` holds the same tokens as `themes/dark/dark.css`
+  in light values; `app/(light)` loads it and sets `data-theme="light"`.
+- The particle journey is unchanged in shape and motion. JourneyScene reads
+  `data-theme`; in light it turns bloom off, uses `PALETTE.backgroundLight`
+  and passes `light` to ParticleSystem and StarField, which switch to
+  normal blending. `particle.frag.glsl` (uLight) draws each particle as a
+  crisp ink dot in its own hue, faint ones given more body, white and cream
+  ones as navy.
+- The Dark / Light switch (`components/DesignSwitch.tsx`, cookie +
+  rewrite of `/` to `/light`) chooses between them.
 
 ## Content
 

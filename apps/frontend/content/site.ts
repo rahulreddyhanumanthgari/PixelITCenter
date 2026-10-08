@@ -66,6 +66,8 @@ export const clientProof = {
     { name: "PRA Health Sciences", src: "/clients/pra-health-sciences.png" },
     { name: "Arthrex", src: "/clients/arthrex.png" },
     { name: "Cisco", src: "/clients/cisco.png" },
+    { name: "Apex.AI", src: "/clients/apex-ai.png" },
+    { name: "Trek", src: "/clients/trek-logo.png" },
   ],
 } as const;
 

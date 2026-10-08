@@ -21,6 +21,7 @@ export type FormName =
   | "sculpture"
   | "ringStream"
   | "earth"
+  | "earthLight"
   | "torusFlow"
   | "solarSystem"
   | "galaxy";
@@ -91,6 +92,8 @@ export const FORMS: Record<FormName, FormDefinition> = {
   ringStream: { generate: generateRingStreamParticles },
   // Live form: the shader spins the Earth and its shell (earthSpin).
   earth: { generate: generateEarthParticles },
+  // The light version's Earth: a solid sea of cubes (see generateEarthParticles).
+  earthLight: { generate: (count, rand) => generateEarthParticles(count, rand, true) },
   // Live flowing form: the shader moves these particles (torusFlow).
   torusFlow: { generate: generateTorusFlowParticles },
   // Live form: the shader places planets, rings and trails (solarSystem).

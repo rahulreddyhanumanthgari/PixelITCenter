@@ -4,7 +4,7 @@ import { site } from "@/content/site";
 import "@/themes/core/core.css";
 import "@/themes/dark/dark.css";
 
-// Shown for any URL that matches no route. Each design has its own root
+// Shown for any URL that matches no route. Each version has its own root
 // layout, so this page brings its own <html> (see next.config.ts).
 
 export const metadata: Metadata = {

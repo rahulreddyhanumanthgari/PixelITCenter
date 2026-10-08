@@ -8,7 +8,6 @@ import fragmentShader from "@/themes/core/shaders/particle.frag.glsl";
 import { createStarGeometry } from "@/themes/core/lib/particles/stars";
 import { JOURNEY_STARS, HERO_LOOK } from "@/themes/core/components/journey/journey-config";
 import type { PointerState } from "./types";
-import { applyTheme } from "./ParticleSystem";
 
 /** Shared scene mood, written each frame by the main system's callback. */
 export interface Atmosphere {
@@ -27,7 +26,7 @@ interface StarFieldProps {
   reducedMotion: boolean;
   pointer: RefObject<PointerState>;
   atmosphere: RefObject<Atmosphere>;
-  /** Light theme: stars drawn as faint ink dots. */
+  /** Light version: stars drawn as faint ink on white (normal blending). */
   light?: boolean;
 }
 
@@ -52,15 +51,15 @@ export function StarField({ count, pixelRatio, reducedMotion, pointer, atmospher
           uGravity: { value: 0 },
           uGravityCenter: { value: new THREE.Vector2() },
           uSwirl: { value: 0 },
-          uLight: { value: 0 },
+          uLight: { value: light ? 1 : 0 },
         },
         vertexShader,
         fragmentShader,
         transparent: true,
         depthWrite: false,
-        blending: THREE.AdditiveBlending,
+        blending: light ? THREE.NormalBlending : THREE.AdditiveBlending,
       }),
-    [],
+    [light],
   );
 
   const pointsRef = useRef<THREE.Points>(null);
@@ -81,7 +80,6 @@ export function StarField({ count, pixelRatio, reducedMotion, pointer, atmospher
     if (!u) return;
     const delta = Math.min(rawDelta, 1 / 20);
     u.uTime.value += delta;
-    if (pointsRef.current) applyTheme(pointsRef.current, u.uLight, light);
     // Heavily damped so the space never reacts sharply.
     const k = 1 - Math.pow(0.97, delta * 60);
     const p = pointer.current;

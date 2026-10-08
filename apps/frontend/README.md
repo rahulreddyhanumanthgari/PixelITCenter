@@ -27,18 +27,18 @@ Don't run `npm run dev` and `npm run build` at the same time: they share
 
 ## Two designs, one switch
 
-The homepage comes in two designs while the team picks one: the same Pixel IT
-particle site, in the dark or in daylight (the light one follows the "Light
-Theme Live Team Recreation Pack"). The site itself is shared; each design's
-folder holds only what is its own:
+The homepage comes in two versions: the same Pixel IT particle site, in dark
+or in light colours. The site itself is shared; each version's folder holds
+only its colours:
 
 | Design | Folder | Route | What the folder holds |
 |---|---|---|---|
 | Dark | `themes/dark/` | `app/(dark)` → `/` | `dark.css`: the dark colours |
-| Light | `themes/light/` | `app/(light)` → `/light` | `light.css` (daylight colours), `LightSky.tsx` (the bright sky behind the particles) |
+| Light | `themes/light/` | `app/(light)` → `/light` | `light.css`: the light colours |
 
 Each root layout sets `<html data-theme="dark|light">`; the particle scene
-reads it to draw glowing points (dark) or ink dots without glow (light).
+reads it to draw glowing points with bloom (dark) or ink dots on white
+without glow (light).
 
 A floating **Design: Dark / Light** control (`components/DesignSwitch.tsx`)
 saves the choice in a cookie; `next.config.ts` then serves the chosen design
@@ -48,7 +48,7 @@ at `/`. Both stay statically prerendered. Hide the control with
 **When a design is chosen:** delete the other `themes/` folder and its
 `app/(…)` route group, `components/DesignSwitch.tsx`, `lib/design.ts` and the
 rewrite in `next.config.ts`; remove the other branch where the particle code
-checks `useTheme()`. If light wins, move `app/(light)/light/page.tsx` up to
+checks `light` (JourneyScene, ParticleSystem, StarField, particle.frag.glsl). If light wins, move `app/(light)/light/page.tsx` up to
 `app/(light)/page.tsx` so it is served at `/`.
 
 ## Folders
@@ -61,10 +61,10 @@ app/
 themes/
   core/         the site both designs share: Home.tsx, core.css (type, cards,
                 footer), fonts.ts, components/ (hero, journey, particles, story,
-                layout, sections, ui), lib/ (particle forms, gsap, theme),
+                layout, sections, ui), lib/ (particle forms, gsap),
                 hooks/, shaders/
   dark/         dark-only: dark.css
-  light/        light-only: light.css, LightSky.tsx
+  light/        light-only: light.css
 components/     shared: DesignSwitch
 content/        ALL site copy (site.ts): edit text here, not in components
 lib/            shared: design switch, metadata, utils

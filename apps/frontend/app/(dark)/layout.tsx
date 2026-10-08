@@ -5,9 +5,9 @@ import { fontVariables } from "@/themes/core/fonts";
 import "@/themes/core/core.css";
 import "@/themes/dark/dark.css";
 
-// Root layout for the dark design: the shared particle site (themes/core)
-// in the dark colours (themes/dark). app/(light) is the daylight version;
-// see lib/design.ts for how one is chosen.
+// Root layout for the dark version: the site (themes/core) in the dark
+// colours (themes/dark). app/(light) is the light version; see lib/design.ts
+// for how one is chosen.
 
 export const metadata: Metadata = siteMetadata;
 

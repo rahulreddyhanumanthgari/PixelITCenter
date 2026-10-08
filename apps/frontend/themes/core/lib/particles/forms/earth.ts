@@ -23,7 +23,7 @@ export const EARTH = {
 const TAU = Math.PI * 2;
 
 /** Decodes the run-length mask into one byte per cell (1 = land). */
-export function decodeMask(): Uint8Array {
+function decodeMask(): Uint8Array {
   const { width, height, rows } = LAND_MASK;
   const grid = new Uint8Array(width * height);
   rows.split("|").forEach((row, y) => {
@@ -64,15 +64,27 @@ function cellSampler(cells: number[], width: number, height: number, rand: Rand)
   };
 }
 
-export function generateEarthParticles(count: number, rand: Rand): Float32Array {
+/**
+ * Light version's shares: a solid sea of cubes (ocean only over sea cells,
+ * not under the land), no haze and no outer shell (the shader hides the few
+ * rounding leftovers).
+ */
+const LIGHT_SHARES = { land: 0.47, coast: 0.07, ocean: 0.46, haze: 0 } as const;
+
+export function generateEarthParticles(count: number, rand: Rand, light = false): Float32Array {
+  const shares = light ? LIGHT_SHARES : EARTH.shares;
   const { width: W, height: H } = LAND_MASK;
   const grid = decodeMask();
   const land: number[] = [];
   const coast: number[] = [];
+  const sea: number[] = [];
   for (let y = 0; y < H; y++) {
     for (let x = 0; x < W; x++) {
       const i = y * W + x;
-      if (!grid[i]) continue;
+      if (!grid[i]) {
+        sea.push(i);
+        continue;
+      }
       land.push(i);
       const n = (dx: number, dy: number) => grid[Math.min(H - 1, Math.max(0, y + dy)) * W + ((x + dx + W) % W)];
       if (!n(1, 0) || !n(-1, 0) || !n(0, 1) || !n(0, -1)) coast.push(i);
@@ -80,6 +92,7 @@ export function generateEarthParticles(count: number, rand: Rand): Float32Array 
   }
   const sampleLand = cellSampler(land, W, H, rand);
   const sampleCoast = cellSampler(coast, W, H, rand);
+  const sampleSea = cellSampler(sea, W, H, rand);
 
   const out = new Float32Array(count * 3);
   let w = 0;
@@ -94,19 +107,19 @@ export function generateEarthParticles(count: number, rand: Rand): Float32Array 
   const n = (share: number) => Math.floor(count * share);
   const R = EARTH.radius;
 
-  for (let i = 0, m = n(EARTH.shares.land); i < m; i++) {
+  for (let i = 0, m = n(shares.land); i < m; i++) {
     const [lat, lon] = sampleLand();
     put(lat, lon, R * (1 + (rand() - 0.5) * 0.004));
   }
-  for (let i = 0, m = n(EARTH.shares.coast); i < m; i++) {
+  for (let i = 0, m = n(shares.coast); i < m; i++) {
     const [lat, lon] = sampleCoast();
     put(lat, lon, R * 1.008);
   }
-  for (let i = 0, m = n(EARTH.shares.ocean); i < m; i++) {
-    const [lat, lon] = randomLatLon();
+  for (let i = 0, m = n(shares.ocean); i < m; i++) {
+    const [lat, lon] = light ? sampleSea() : randomLatLon();
     put(lat, lon, R * 0.99);
   }
-  for (let i = 0, m = n(EARTH.shares.haze); i < m; i++) {
+  for (let i = 0, m = n(shares.haze); i < m; i++) {
     const [lat, lon] = randomLatLon();
     put(lat, lon, R * (1.02 + Math.pow(rand(), 2) * 0.16));
   }

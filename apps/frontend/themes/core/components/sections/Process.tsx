@@ -16,7 +16,7 @@ export function Process() {
     <section data-story-section aria-labelledby="process-title" className={storySectionClass("center")}>
       <ProcessProgress />
 
-      <div data-process-track className="relative h-[240svh] lg:h-[220vh]">
+      <div data-process-track className="relative h-[300svh] lg:h-[275vh]">
         {/* Pinned: the heading, the step index and the active step stay in
             place together while the steps are scrolled. */}
         <div

@@ -6,14 +6,14 @@ const nextConfig: NextConfig = {
   // never clash with a running `npm run dev`, which uses .next.
   distDir: process.env.NEXT_DIST_DIR || ".next",
   experimental: {
-    // Each design has its own root layout (app/(dark), app/(light)), so the
-    // 404 page can't borrow one: app/global-not-found.tsx is used instead.
+    // Each version has its own root layout (app/(dark), app/(light)), so
+    // the 404 page can't borrow one: app/global-not-found.tsx is used instead.
     globalNotFound: true,
   },
   async rewrites() {
     return {
-      // The design switch: "/" serves the light design when the visitor chose
-      // it (lib/design.ts). Both pages stay statically prerendered.
+      // The Dark / Light switch: "/" serves the light version when the
+      // visitor chose it (lib/design.ts). Both pages stay prerendered.
       beforeFiles: [
         {
           source: "/",

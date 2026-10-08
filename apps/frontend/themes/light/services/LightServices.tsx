@@ -1,36 +1,75 @@
 import { services } from "@/content/site";
-import { ServiceCard } from "@/themes/core/components/ui/service-card";
 import { SectionHeader } from "@/themes/core/components/sections/SectionHeader";
+import { storySectionClass } from "@/themes/core/components/sections/story-section";
+import { cn } from "@/lib/utils";
+import { CARD_COLOR, ServiceIcon, type IconName } from "./ServiceIcon";
 
 /**
- * Light design, Services (Light Pixel Master Specification §7): the heading
- * and every service panel in the left half; the right half is left open for
- * the hollow pixel ring (the particle journey's light Services form), so the
- * formation never crosses the text.
+ * Light version of Services, content toward the right (the particle ring
+ * holds the left): the same content as the dark one, as tiles after the
+ * owner's card reference — a pale tinted tile with a flat icon, the title and
+ * a short description under it.
+ * Styles: .light-svc in light.css.
  */
+const ICONS: Record<string, IconName> = {
+  AI: "spark",
+  "Cloud (AWS, Azure, GCP)": "cloud",
+  Cybersecurity: "shield",
+  "Big Data Analytics": "bars",
+  DevOps: "loop",
+  "QA Automation": "check",
+  "Networking Solutions": "nodes",
+  "IT Staffing": "people",
+  "Contract Staffing": "clock",
+  "Professional Services": "briefcase",
+  "Project Management": "layers",
+  "Business Analysis": "pie",
+  "Specialized Technology Talent": "diamond",
+};
+
 export function LightServices() {
   return (
-    <section id="services" data-story-section aria-labelledby="services-title" className="scroll-mt-20 py-20 sm:py-24 lg:py-28">
-      <div className="lg:w-1/2">
-        <SectionHeader id="services-title" eyebrow={services.eyebrow} title={services.title} className="mx-0 text-left" />
+    <section
+      id="services"
+      data-story-section
+      aria-labelledby="services-title"
+      className={cn(storySectionClass("left"), "lg:-mr-16 lg:w-[44%]")}
+    >
+      <div data-services-content>
+        <SectionHeader
+          id="services-title"
+          eyebrow={services.eyebrow}
+          title={services.title}
+          className="mx-0 text-left"
+        />
 
-        <div data-services-content className="mt-12 grid gap-12">
-          {services.groups.map((group, gi) => (
+        <div className="mt-12 grid gap-14">
+          {services.groups.map((group) => (
             <div key={group.name}>
-              <div data-reveal="3" className="flex items-center gap-3 border-b border-border pb-4">
-                <span
-                  aria-hidden="true"
-                  className={gi === 0 ? "size-2 rounded-full bg-brand-blue" : "size-2 rounded-full bg-brand-orange"}
-                />
+              <div data-reveal="3">
                 <h3 className="type-heading">{group.name}</h3>
+                <p className="type-body mt-2">{group.summary}</p>
               </div>
-              <p data-reveal="4" className="type-body mt-4">
-                {group.summary}
-              </p>
-              <ul className="mt-8 grid gap-x-8 gap-y-10 sm:grid-cols-2">
-                {group.items.map((item, i) => (
-                  <ServiceCard key={item.title} index={i + 1} title={item.title} description={item.body} label={item.label} />
-                ))}
+              <ul className="mt-6 grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3">
+                {group.items.map((item) => {
+                  return (
+                    <li
+                      key={item.title}
+                      data-card
+                      className="light-svc"
+                      style={{ "--svc": CARD_COLOR } as React.CSSProperties}
+                    >
+                      <div className="light-svc__tile">
+                        <ServiceIcon
+                          name={ICONS[item.title] ?? "spark"}
+                          color={CARD_COLOR}
+                        />
+                      </div>
+                      <h4 className="light-svc__title">{item.title}</h4>
+                      <p className="light-svc__body">{item.body}</p>
+                    </li>
+                  );
+                })}
               </ul>
             </div>
           ))}

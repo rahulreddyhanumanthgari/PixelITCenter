@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------------
-   Dark design: the colours. Everything else (type, cards, footer, the
-   particle journey) is shared in themes/core. Loaded only by app/(dark).
+   The dark version's colours. Everything else (type, cards, footer, the
+   particle journey) is in themes/core. Loaded by app/(dark).
    ------------------------------------------------------------------------ */
 
 :root {

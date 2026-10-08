@@ -13,40 +13,33 @@ import { Careers } from "@/themes/core/components/sections/Careers";
 import { Testimonials } from "@/themes/core/components/sections/Testimonials";
 import { ContactCta } from "@/themes/core/components/sections/ContactCta";
 
-// Homepage flow from the modernization plan (section 04). Both designs render
-// it; a design can swap in its own hero, Services, Staffing and About, and turn the particle
-// journey off (the light design has no particles for now).
+// Homepage flow from the modernization plan (section 04). The light version
+// swaps in its own Services, Staffing and Why sections
+// (themes/light).
 export default function HomePage({
-  hero = <Hero />,
   services = <Services />,
   staffing = <Staffing />,
-  about = <About />,
-  particles = true,
-  backdrop,
+  why = <WhyUs />,
 }: {
-  hero?: React.ReactNode;
   services?: React.ReactNode;
   staffing?: React.ReactNode;
-  about?: React.ReactNode;
-  particles?: boolean;
-  /** Drawn behind the page instead of the particle journey (the light design's object). */
-  backdrop?: React.ReactNode;
+  why?: React.ReactNode;
 }) {
   return (
     <>
       <Header />
       {/* One particle system for the whole journey, fixed behind the page. */}
-      {particles ? <JourneyLayer /> : backdrop}
+      <JourneyLayer />
       {/* Content sits above the particle layer (z-10). The hero, client strip
           and story are transparent so the particles show through, and so is
           the galaxy area after it (About → Contact). */}
       <main className="relative z-10 flex-1">
-        {hero}
+        <Hero />
         <ClientProof />
-        <ParticleStory anchor={particles}>
+        <ParticleStory>
           {services}
           {staffing}
-          <WhyUs />
+          {why}
           <Process />
         </ParticleStory>
         {/* About, Careers, Proof Points and Contact share one background: the
@@ -59,13 +52,13 @@ export default function HomePage({
             aria-hidden="true"
             className="pointer-events-none sticky top-0 -mb-[100svh] h-[100svh]"
           />
-          {about}
+          <About />
           <Careers />
           <Testimonials />
           <ContactCta />
           {/* The ending: space where the galaxy collapses into a small sun
               that settles on the footer's top edge, half hidden by it. */}
-          {particles && <div data-galaxy-outro aria-hidden="true" className="h-[20svh]" />}
+          <div data-galaxy-outro aria-hidden="true" className="h-[20svh]" />
         </div>
       </main>
       {/* Opaque, so the galaxy never shows through the footer. */}
