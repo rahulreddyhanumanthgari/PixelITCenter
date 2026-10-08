@@ -28,20 +28,13 @@ uniform vec3 uMouse;            // pointer, in the particles' local space
 uniform float uStage;           // How We Work progress: 0 = Discover active … 4 = all done
 uniform float uFlowFrom;        // live form being left: 0 none, 1 torus (Why), 2 ring stream (Services), 3 Earth, 4 solar system, 5 galaxy (About)
 uniform float uFlowTo;          // live form being arrived at (same codes)
-uniform vec4 uProtect2;         // Services content box in NDC (dims the ring stream behind text)
-uniform vec4 uProtect3;         // Staffing content box in NDC (dims the Earth behind text)
 uniform float uEarthScale;      // extra display scale for the Staffing Earth
-uniform vec4 uProtect4;         // Why content box in NDC (dims the torus behind text)
 uniform float uTorusScale;      // Why torus display scale (smaller in the phone band)
 uniform float uSolarPhone;      // 1 = solar system in its compact phone-band layout
-uniform vec4 uProtect5;         // How We Work step content box in NDC (dims particles behind text)
 uniform float uContact;         // light: how present Contact is (hides the galaxy core behind it)
 uniform float uCollapse;        // galaxy ending: 0 = galaxy … 1 = a sun on the footer's edge
 uniform float uSunOffset;       // local y from the galaxy centre down to the footer's top edge
 uniform float uHeroField;       // 1 while the current "from" form is the hero gravity field
-uniform vec4 uProtect;          // hero text box in NDC: centre xy, half-size zw
-uniform float uProtectFloor;    // brightness left for particles behind the hero text
-uniform float uLight;           // 1 in the light version (lightInk below)
 
 attribute vec3 aTarget;
 attribute vec3 aColor;
@@ -400,11 +393,11 @@ const vec3 SOLAR_BODY_B[4] = vec3[4](S_ORANGE, S_CREAM, S_RED, S_DEEP);
 const vec3 SOLAR_RING[4] = vec3[4](S_BLUE, S_CREAM, S_ORANGE, S_ORANGE);
 const vec3 SOLAR_ATMO[4] = vec3[4](S_CREAM, S_BLUE, S_ORANGE, S_BLUE);
 
-// Light version: the bottom of the U opened wider (planets 02 and 03 pushed
-// out toward the edges, same sizes), so the steps in the middle have room.
+// The bottom of the U opened wider (planets 02 and 03 pushed out toward the
+// edges, same sizes), so the steps in the middle have room.
 vec4 solarDesk(int k) {
   vec4 c = SOLAR_DESK[k];
-  if (uLight > 0.5 && (k == 1 || k == 2)) {
+  if (k == 1 || k == 2) {
     c.x *= 1.42;
     c.y -= 0.25;
   }
@@ -423,10 +416,10 @@ vec4 solarKnot(int i, out vec3 m) {
     return vec4(mix(vec3(6.8, 3.9, -0.5), vec3(3.9, 0.85, -0.3), uSolarPhone), 0.0);
   }
   m = mix(SOLAR_TAN_DESK[i - 1], SOLAR_TAN_PHONE[i - 1], uSolarPhone);
-  // Light version: the trail leaves 02 heading down and reaches 03 from
+  // The trail leaves 02 heading down and reaches 03 from
   // below, so the stretch between them sags into a deep U under the step
   // text instead of crossing it.
-  if (uLight > 0.5 && uSolarPhone < 0.5) {
+  if (uSolarPhone < 0.5) {
     if (i == 2) m = vec3(3.4, -4.6, 0.2);
     if (i == 3) m = vec3(3.4, 4.6, -0.2);
   }
@@ -566,8 +559,6 @@ const float GALAXY_CORE = 0.34;
 const float GALAXY_WIND = 2.7;    // arm winding: radians per e-fold of radius
 const float GALAXY_SPIN = 0.045;  // pattern rotation (rad/s)
 const vec2 GALAXY_TILT = vec2(1.38, 0.16);  // x: π/2 would be exactly face-on
-const float GALAXY_DIM = 0.55;       // overall brightness behind the text sections
-const float GALAXY_CORE_DIM = 0.2;   // the dense core and inner arms, dimmed more
 
 float galaxyHash(float k) {
   return fract(sin(aRandom * 127.1 + aDelay * 311.7 + aScatterDistance * 17.3 + k * 74.7) * 43758.5453);
@@ -641,20 +632,11 @@ vec3 galaxy(out vec3 col, out float sizeK) {
     c = aRandom > 0.8 ? S_CREAM : mix(S_BLUE, S_DEEP, aRandom);
     level = 0.35;
   }
-  // The galaxy sits behind four text sections, so it is dimmed evenly
-  // (the dense core most) while the text over it is brightened — they
-  // separate by contrast, not by dark patches. The ending sun below keeps
-  // its full glow: the dimming lifts only as it reaches the footer's edge.
-  // Dimmer toward the centre, where the text sits.
-  float sitBack = kind >= 0.7 && kind < 0.82 ? GALAXY_CORE_DIM : mix(GALAXY_CORE_DIM, GALAXY_DIM, smoothstep(0.05, 0.4, rn));
-  // Light version: no dimming (on white it only washed the colours out);
-  // the outer arms and the field at full strength, out to the rim.
-  if (uLight > 0.5) {
-    sitBack = 1.0;
-    level = max(level, 1.0);
-    galaxyCore = (kind >= 0.7 && kind < 0.82) || r < GALAXY_CORE * 1.3 ? 1.0 : 0.0;
-  }
-  col = c * level * vis * mix(sitBack, 1.0, smoothstep(0.75, 1.0, uCollapse));
+  // No dimming: the outer arms and the field at full strength, out to the
+  // rim (see-through instead, set in main).
+  level = max(level, 1.0);
+  galaxyCore = (kind >= 0.7 && kind < 0.82) || r < GALAXY_CORE * 1.3 ? 1.0 : 0.0;
+  col = c * level * vis;
 
   // Ending (uCollapse, after Contact): the arms wind tighter and everything
   // is pulled into a small sun (cream centre, orange edge). Brightness and
@@ -838,9 +820,9 @@ void main() {
   float earthNear = step(2.5, uFlowFrom) * step(uFlowFrom, 3.5) * (1.0 - eOut)
                   + step(2.5, uFlowTo) * step(uFlowTo, 3.5) * eIn;
   float earthFace = step(2.5, uFlowFrom) * step(uFlowFrom, 3.5) * (1.0 - eOut) > 0.0 ? faceA : faceB;
-  // Light version: ocean cubes a little larger, so the sea reads solid.
+  // Ocean cubes a little larger, so the sea reads solid.
   vec3 earthPos = step(2.5, uFlowFrom) * step(uFlowFrom, 3.5) * (1.0 - eOut) > 0.0 ? position : aTarget;
-  float oceanLight = earthNear * uLight * (1.0 - step(EARTH_R * 0.994, length(earthPos)));
+  float oceanLight = earthNear * (1.0 - step(EARTH_R * 0.994, length(earthPos)));
   // Why halo (torus): particles 50% larger.
   float torusNear = step(0.5, uFlowFrom) * step(uFlowFrom, 1.5) * (1.0 - eOut)
                   + step(0.5, uFlowTo) * step(uFlowTo, 1.5) * eIn;
@@ -854,12 +836,12 @@ void main() {
              * mix(1.0, 1.5, torusNear)
              * mix(1.0, solarSize, solarW)
              * mix(1.0, galaxySize, galaxyW);
-  // Light version: the sprite holds one voxel cube (particle.frag.glsl),
+  // The sprite holds one voxel cube (particle.frag.glsl),
   // sized like the owner's reference: body cubes 2.2x the dark point, and
   // like the reference a few larger cubes — 4% at 2x, 1% at 3.5x.
   float rk = fract(aRandom * 97.13);
   float cubeScale = 2.2 * (rk < 0.01 ? 3.5 : rk < 0.05 ? 2.0 : 1.0);
-  gl_PointSize = clamp(size * uPixelRatio / depth * mix(1.0, cubeScale, uLight), 1.0, 64.0 * uPixelRatio);
+  gl_PointSize = clamp(size * uPixelRatio / depth * cubeScale, 1.0, 64.0 * uPixelRatio);
 
   // Near particles brighter, far ones dimmer; a soft twinkle on top. Spread
   // out, the field has far fewer overlapping points than a form, so it gets a
@@ -881,12 +863,7 @@ void main() {
     vec3 th = ringColor(tFrom > 0.0 ? bandA : bandB);
     if (fract(aRandom * 13.0) > 0.97) th = vec3(1.0, 0.86, 0.66);
     th /= max(max(th.r, th.g), max(th.b, 1e-3));
-    // Keep the opening calm around the centred content.
-    vec2 nd4 = gl_Position.xy / gl_Position.w;
-    vec2 d4 = abs(nd4 - uProtect4.xy) / max(uProtect4.zw, vec2(1e-3));
-    float box4 = pow(pow(d4.x, 4.0) + pow(d4.y, 4.0), 0.25);
-    float protect4 = mix(mix(0.35, 1.0, smoothstep(0.85, 1.15, box4)), 1.0, uLight); // light: no fade behind text
-    vColor = mix(vColor, th * 0.95 * protect4, torusW);
+    vColor = mix(vColor, th * 0.95, torusW);
   }
 
   // Services ring stream: lane colours (fixed per particle, so they travel
@@ -910,10 +887,7 @@ void main() {
     float bright = 1.25;
     vec2 nd = gl_Position.xy / gl_Position.w;
     float rightFade = 1.0 - smoothstep(-0.05, 0.5, nd.x);
-    vec2 d2 = abs(nd - uProtect2.xy) / max(uProtect2.zw, vec2(1e-3));
-    float box2 = pow(pow(d2.x, 4.0) + pow(d2.y, 4.0), 0.25);
-    float protect2 = mix(mix(0.45, 1.0, smoothstep(0.85, 1.15, box2)), 1.0, uLight); // light: no fade behind text
-    vec3 ringOut = hue * bright * rightFade * protect2 * arcVis;
+    vec3 ringOut = hue * bright * rightFade * arcVis;
     vColor = mix(vColor, ringOut, ringW);
   }
 
@@ -965,21 +939,13 @@ void main() {
     if (fract(aRandom * 13.0) > 0.97) ec = vec3(1.0, 0.86, 0.66);  // cream highlights
     ec /= max(max(ec.r, ec.g), max(ec.b, 1e-3));
     ec *= 1.25 * side;
-    vec2 nd3 = gl_Position.xy / gl_Position.w;
-    vec2 d3 = abs(nd3 - uProtect3.xy) / max(uProtect3.zw, vec2(1e-3));
-    float box3 = pow(pow(d3.x, 4.0) + pow(d3.y, 4.0), 0.25);
-    float protect3 = mix(mix(0.4, 1.0, smoothstep(0.85, 1.15, box3)), 1.0, uLight); // light: no fade behind text
-    vColor = mix(vColor, ec * mix(1.0, 0.75, shell) * protect3, earthW);
+    vColor = mix(vColor, ec * mix(1.0, 0.75, shell), earthW);
   }
 
   // How We Work solar system: its own colours (see solarSystem), a soft
   // twinkle, dimmed behind the centred step content.
   if (solarW > 0.001) {
-    vec2 nd5 = gl_Position.xy / gl_Position.w;
-    vec2 d5 = abs(nd5 - uProtect5.xy) / max(uProtect5.zw, vec2(1e-3));
-    float box5 = pow(pow(d5.x, 4.0) + pow(d5.y, 4.0), 0.25);
-    float protect5 = mix(mix(0.3, 1.0, smoothstep(0.85, 1.15, box5)), 1.0, uLight); // light: no fade behind text
-    vColor = mix(vColor, solarCol * twinkle * protect5, solarW);
+    vColor = mix(vColor, solarCol * twinkle, solarW);
   }
 
   // About galaxy: its own colours (see galaxy) and a soft twinkle. No dark
@@ -989,11 +955,6 @@ void main() {
     vColor = mix(vColor, galaxyCol * twinkle, galaxyW);
   }
 
-  // Hero: keep the centred text calm — particles projected behind it dim.
-  vec2 ndc = gl_Position.xy / gl_Position.w;
-  vec2 dp = abs(ndc - uProtect.xy) / max(uProtect.zw, vec2(1e-3));
-  float box = pow(pow(dp.x, 4.0) + pow(dp.y, 4.0), 0.25);
-  float protect = mix(mix(uProtectFloor, 1.0, smoothstep(0.85, 1.2, box)), 1.0, uLight); // light: no fade behind text
   // Same palette and brightness rules as the other forms (see the Services
   // block): ringColor bands as pure hues, brightness from the glow but
   // capped at 1.25 so tone mapping never washes it white; a few cream
@@ -1005,44 +966,43 @@ void main() {
   heroHue /= max(max(heroHue.r, heroHue.g), max(heroHue.b, 1e-3));
   // Same brightness ceiling as the Services ring and the Earth (1.25).
   float heroBright = min(0.3 + 0.4 * heroGlow, 1.25);
-  vColor = mix(vColor, heroHue * heroBright * twinkle * heroVisible * protect, heroW);
+  vColor = mix(vColor, heroHue * heroBright * twinkle * heroVisible, heroW);
   vAlpha *= mix(1.0, heroVisible, heroW);
-  if (uLight > 0.5) {
-    vAlpha *= max(max(vColor.r, vColor.g), vColor.b);
-    vColor = lightInk(vColor, fract(aRandom * 53.13));
-    // The About galaxy's core: bright yellow #FFD400.
-    if (galaxyW > 0.5 && galaxyCore > 0.5 && uCollapse < 0.3) vColor = pow(vec3(1.0, 0.831, 0.0), vec3(2.2));
-    // The ending: everything the yellow core pulls in becomes the yellow sun
-    // above the footer.
-    if (galaxyW > 0.5) vColor = mix(vColor, pow(vec3(1.0, 0.831, 0.0), vec3(2.2)), smoothstep(0.3, 0.7, uCollapse));
-    // The galaxy sits behind four text sections: drawn see-through so the
-    // text reads (the closing sun returns to full strength).
-    vOpacity = mix(1.0, 0.45, galaxyW * (1.0 - smoothstep(0.6, 0.9, uCollapse)));
-    // The yellow core stays out from behind the Contact heading and while it
-    // is pulled down; it shows again only as the half sun on the footer edge.
-    float sunAt = smoothstep(0.75, 0.95, uCollapse);
-    float coreHide = max(uContact, smoothstep(0.05, 0.3, uCollapse)) * (1.0 - sunAt);
-    vOpacity *= mix(1.0, 0.0, galaxyW * coreHide * max(galaxyCore, step(0.05, uCollapse)));
-    // Hero vortex (light): four layers from the centre out — bright orange
-    // (~10%), fruit orange (~30%), cream (~30%), light blue (~30%), by the
-    // particle's place in the field (heroLane, 0 inside -> 1 outside).
-    if (heroW > 0.5) {
-      float hl = heroLane + (fract(aRandom * 71.7) - 0.5) * 0.04;
-      vec3 hInk = hl < HERO_L1 ? vec3(0.992, 0.349, 0.004)
-                : hl < HERO_L2 ? vec3(0.992, 0.533, 0.016)
-                : hl < HERO_L3 ? vec3(0.976, 0.847, 0.749)
-                : vec3(0.008, 0.733, 0.886);
-      vColor = pow(hInk, vec3(2.2));
-    }
-    if (earthW > 0.5) {
-      if (earthInk.r < 0.0) vAlpha = 0.0;
-      else vColor = pow(earthInk, vec3(2.2));
-    }
-    // Performance: the galaxy fills the whole screen, so its cubes are drawn
-    // a little smaller; and cubes that end up invisible (faded out, hidden
-    // core, behind the fade threshold in particle.frag.glsl) are not drawn
-    // at all instead of being drawn fully transparent.
-    gl_PointSize *= mix(1.0, 0.8, galaxyW * (1.0 - step(0.6, uCollapse)));
-    if (vAlpha < 0.3 || vOpacity < 0.02) gl_PointSize = 0.0;
+  // Ink colours from the light palette; brightness becomes opacity.
+  vAlpha *= max(max(vColor.r, vColor.g), vColor.b);
+  vColor = lightInk(vColor, fract(aRandom * 53.13));
+  // The About galaxy's core: bright yellow #FFD400.
+  if (galaxyW > 0.5 && galaxyCore > 0.5 && uCollapse < 0.3) vColor = pow(vec3(1.0, 0.831, 0.0), vec3(2.2));
+  // The ending: everything the yellow core pulls in becomes the yellow sun
+  // above the footer.
+  if (galaxyW > 0.5) vColor = mix(vColor, pow(vec3(1.0, 0.831, 0.0), vec3(2.2)), smoothstep(0.3, 0.7, uCollapse));
+  // The galaxy sits behind four text sections: drawn see-through so the
+  // text reads (the closing sun returns to full strength).
+  vOpacity = mix(1.0, 0.45, galaxyW * (1.0 - smoothstep(0.6, 0.9, uCollapse)));
+  // The yellow core stays out from behind the Contact heading and while it
+  // is pulled down; it shows again only as the half sun on the footer edge.
+  float sunAt = smoothstep(0.75, 0.95, uCollapse);
+  float coreHide = max(uContact, smoothstep(0.05, 0.3, uCollapse)) * (1.0 - sunAt);
+  vOpacity *= mix(1.0, 0.0, galaxyW * coreHide * max(galaxyCore, step(0.05, uCollapse)));
+  // Hero vortex (light): four layers from the centre out — bright orange
+  // (~10%), fruit orange (~30%), cream (~30%), light blue (~30%), by the
+  // particle's place in the field (heroLane, 0 inside -> 1 outside).
+  if (heroW > 0.5) {
+    float hl = heroLane + (fract(aRandom * 71.7) - 0.5) * 0.04;
+    vec3 hInk = hl < HERO_L1 ? vec3(0.992, 0.349, 0.004)
+              : hl < HERO_L2 ? vec3(0.992, 0.533, 0.016)
+              : hl < HERO_L3 ? vec3(0.976, 0.847, 0.749)
+              : vec3(0.008, 0.733, 0.886);
+    vColor = pow(hInk, vec3(2.2));
   }
+  if (earthW > 0.5) {
+    if (earthInk.r < 0.0) vAlpha = 0.0;
+    else vColor = pow(earthInk, vec3(2.2));
+  }
+  // Performance: the galaxy fills the whole screen, so its cubes are drawn
+  // a little smaller; and cubes that end up invisible (faded out, hidden
+  // core, behind the fade threshold in particle.frag.glsl) are not drawn
+  // at all instead of being drawn fully transparent.
+  gl_PointSize *= mix(1.0, 0.8, galaxyW * (1.0 - step(0.6, uCollapse)));
+  if (vAlpha < 0.3 || vOpacity < 0.02) gl_PointSize = 0.0;
 }

@@ -7,9 +7,8 @@ export const PALETTE = {
   offWhite: "#e5e7eb",
   blue: "#3b7cff",
   deepBlue: "#1f4fd6",
-  background: "#05060a",
-  /** Light version background (= --background in themes/light/light.css). */
-  backgroundLight: "#f8fafc",
+  /** Page background (= --background in themes/light/light.css). */
+  background: "#f8fafc",
 } as const;
 
 /** THREE.Color converts hex to linear space, which is what the shader outputs. */
@@ -22,7 +21,12 @@ export const PALETTE_LINEAR = {
   deepBlue: new THREE.Color(PALETTE.deepBlue),
 };
 
-export function pushColor(out: Float32Array, i: number, c: THREE.Color, brightness: number): void {
+export function pushColor(
+  out: Float32Array,
+  i: number,
+  c: THREE.Color,
+  brightness: number,
+): void {
   out[i * 3] = c.r * brightness;
   out[i * 3 + 1] = c.g * brightness;
   out[i * 3 + 2] = c.b * brightness;

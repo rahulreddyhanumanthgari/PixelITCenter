@@ -101,11 +101,6 @@ export default function JourneyScene() {
   // How We Work step progress, written by the section's own scroll triggers.
   const stage = useRef<ProgressState>(processProgress);
   const bloom = useRef<BloomEffect>(null);
-  // Light version (<html data-theme="light">, set by app/(light)): particles
-  // as ink on white, no bloom. This scene only runs in the browser.
-  const [light] = useState(
-    () => document.documentElement.dataset.theme === "light",
-  );
   const tierName = useDeviceTier();
   const reducedMotion = useReducedMotion();
   const tier = getJourneyTier(tierName);
@@ -116,14 +111,8 @@ export default function JourneyScene() {
     from: { x: 0, y: 0, scale: 1 },
     to: { x: 0, y: 0, scale: tier.storyScale },
     sides: null,
-    protect: [0, 0, 0.001, 0.001],
-    protectFloor: HERO_FIELD.protectFloor.wide,
-    protect2: [0, 0, 0.001, 0.001],
-    protect3: [0, 0, 0.001, 0.001],
-    protect4: [0, 0, 0.001, 0.001],
     torusScale: 1,
     solarPhone: 0,
-    protect5: [0, 0, 0.001, 0.001],
     galaxy: null,
     galaxyCollapse: 0,
     earthScale: 1,
@@ -138,17 +127,12 @@ export default function JourneyScene() {
 
   // Each frame: bloom eases from the hero's strength to the story's with the
   // handoff, and the scatter amount is shared with the stars and camera.
-  const onBlend = useCallback(
-    (blend: number, field: number) => {
-      const effect = bloom.current;
-      if (effect)
-        effect.intensity = light
-          ? 0
-          : tier.bloom.hero + (tier.bloom.story - tier.bloom.hero) * blend;
-      atmosphere.current.field = field;
-    },
-    [tier, light],
-  );
+  const onBlend = useCallback((blend: number, field: number) => {
+    const effect = bloom.current;
+    // No glow on white: bloom stays off.
+    if (effect) effect.intensity = 0;
+    atmosphere.current.field = field;
+  }, []);
   const onGravity = useCallback((strength: number, x: number, y: number) => {
     const A = atmosphere.current;
     A.gravity = strength;
@@ -217,20 +201,6 @@ export default function JourneyScene() {
     const story = document.querySelector<HTMLElement>("[data-story]");
     const anchor = story?.querySelector<HTMLElement>("[data-story-anchor]");
     const layer = document.querySelector<HTMLElement>("[data-journey-layer]");
-    const heroContent = document.querySelector<HTMLElement>(
-      "[data-hero-content]",
-    );
-    const servicesContent = document.querySelector<HTMLElement>(
-      "[data-services-content]",
-    );
-    const staffingContent = document.querySelector<HTMLElement>(
-      "[data-staffing-content]",
-    );
-    const whyContent =
-      document.querySelector<HTMLElement>("[data-why-content]");
-    const processContent = document.querySelector<HTMLElement>(
-      "[data-process-content]",
-    );
     const galaxyAnchor = document.querySelector<HTMLElement>(
       "[data-galaxy-anchor]",
     );
@@ -270,12 +240,12 @@ export default function JourneyScene() {
             byForm: STORY_SIDES,
           }
         : null;
-      // Light version: the Earth a little bigger, taking more of the right.
-      L.earthScale = columns ? EARTH_VIEW.scale * (light ? 1.3 : 1) : 1;
+      // The Earth a little bigger, taking more of the right.
+      L.earthScale = columns ? EARTH_VIEW.scale * 1.3 : 1;
       // The Why halo is sized to frame desktop content; in the phone band the
-      // whole ring must fit instead. Light version: bigger, so the heading and
+      // whole ring must fit instead. Bigger, so the heading and
       // the four reason cards sit inside its opening.
-      L.torusScale = columns ? (light ? 1.45 : 1) : 0.4;
+      L.torusScale = columns ? 1.45 : 0.4;
       // How We Work: planets around the centred content on desktop; a compact
       // wave in the phone band.
       L.solarPhone = columns ? 0 : 1;
@@ -314,13 +284,9 @@ export default function JourneyScene() {
       );
       L.from.x = 0;
       L.from.y = 0;
-      // Light version: the vortex a little larger than dark, its outer cubes
-      // reaching toward the top corners.
-      L.from.scale = voidPx * wpp * (light ? 1.15 : 1);
-      L.protectFloor =
-        vw < 768
-          ? HERO_FIELD.protectFloor.narrow
-          : HERO_FIELD.protectFloor.wide;
+      // The vortex a little larger, its outer cubes reaching toward the top
+      // corners.
+      L.from.scale = voidPx * wpp * 1.15;
       // About's galaxy: centred on its pinned anchor, rim past the screen.
       if (galaxyAnchor) {
         const a = galaxyAnchor.getBoundingClientRect();
@@ -343,7 +309,7 @@ export default function JourneyScene() {
       }
       // Ending: the empty stretch after Contact scrubs the collapse, from its
       // top entering the screen (0) to the galaxy's release (1).
-      // How present Contact is (0..1): the light version keeps the galaxy's
+      // How present Contact is (0..1): keeps the galaxy's
       // yellow core out from behind its heading.
       if (contactEl) {
         const c = contactEl.getBoundingClientRect();
@@ -357,51 +323,6 @@ export default function JourneyScene() {
           Math.max((vh - o.top) / Math.max(o.height, 1), 0),
           1,
         );
-      }
-      if (processContent) {
-        const c = processContent.getBoundingClientRect();
-        L.protect5 = [
-          ((c.left + c.width / 2) / vw) * 2 - 1,
-          -(((c.top + c.height / 2) / vh) * 2 - 1),
-          (c.width / vw) * 1.02,
-          (c.height / vh) * 1.02,
-        ];
-      }
-      if (whyContent) {
-        const c = whyContent.getBoundingClientRect();
-        L.protect4 = [
-          ((c.left + c.width / 2) / vw) * 2 - 1,
-          -(((c.top + c.height / 2) / vh) * 2 - 1),
-          (c.width / vw) * 1.02,
-          (c.height / vh) * 1.02,
-        ];
-      }
-      if (staffingContent) {
-        const c = staffingContent.getBoundingClientRect();
-        L.protect3 = [
-          ((c.left + c.width / 2) / vw) * 2 - 1,
-          -(((c.top + c.height / 2) / vh) * 2 - 1),
-          (c.width / vw) * 1.02,
-          (c.height / vh) * 1.02,
-        ];
-      }
-      if (servicesContent) {
-        const c = servicesContent.getBoundingClientRect();
-        L.protect2 = [
-          ((c.left + c.width / 2) / vw) * 2 - 1,
-          -(((c.top + c.height / 2) / vh) * 2 - 1),
-          (c.width / vw) * 1.02,
-          (c.height / vh) * 1.02,
-        ];
-      }
-      if (heroContent) {
-        const c = heroContent.getBoundingClientRect();
-        L.protect = [
-          ((c.left + c.width / 2) / vw) * 2 - 1,
-          -(((c.top + c.height / 2) / vh) * 2 - 1),
-          (c.width / vw) * 1.04,
-          (c.height / vh) * 1.04,
-        ];
       }
 
       // Phones: once the band is stuck, the text scrolls under the band's
@@ -436,7 +357,7 @@ export default function JourneyScene() {
       layer.style.clipPath = "";
       layer.style.visibility = "";
     };
-  }, [tier, tierName, light]);
+  }, [tier, tierName]);
 
   return (
     <ParticleCanvas
@@ -445,20 +366,19 @@ export default function JourneyScene() {
       settings={{
         cameraFov: JOURNEY_CAMERA.fov,
         cameraZ: JOURNEY_CAMERA.z,
-        background: light ? PALETTE.backgroundLight : PALETTE.background,
+        background: PALETTE.background,
         dpr,
-        // No glow on white: bloom is off in the light version.
-        bloom: { intensity: light ? 0 : tier.bloom.hero, ...JOURNEY_BLOOM },
+        // No glow on white: bloom is off.
+        bloom: { intensity: 0, ...JOURNEY_BLOOM },
       }}
     >
       <StarField
-        // Light version: the reference's scattered cubes round the forms.
-        count={Math.round(tier.starCount * (light ? 2.5 : 1))}
+        // The reference's scattered cubes round the forms.
+        count={Math.round(tier.starCount * 2.5)}
         pixelRatio={dpr}
         reducedMotion={reducedMotion}
         pointer={pointer}
         atmosphere={atmosphere}
-        light={light}
       />
       <CameraRig
         pointer={pointer}
@@ -468,8 +388,8 @@ export default function JourneyScene() {
       <ParticleSystem
         key={tierName}
         forms={JOURNEY_FORMS}
-        // Light version: the reference's packed cube bodies (2x as dense).
-        count={Math.round(tier.particleCount * (light ? 2 : 1))}
+        // The reference's packed cube bodies (2x as dense).
+        count={Math.round(tier.particleCount * 2)}
         look={HERO_LOOK}
         lookTo={STORY_LOOK}
         handoffAt={STORY_HANDOFF}
@@ -483,7 +403,6 @@ export default function JourneyScene() {
         onBlend={onBlend}
         onGravity={onGravity}
         stage={stage}
-        light={light}
       />
     </ParticleCanvas>
   );

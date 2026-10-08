@@ -36,14 +36,13 @@ const MOVE = { eyebrow: 10, block: 16 } as const;
 
 export function StoryChoreography() {
   useEffect(() => {
-    // Light version: cards (data-card) enter with the card entrance instead
+    // Cards (data-card) enter with the card entrance instead
     // (themes/light/cards/CardEntrance.tsx).
-    const light = document.documentElement.dataset.theme === "light";
     const els = Array.from(
       document.querySelectorAll<HTMLElement>(
         "[data-hero] [data-reveal], [data-story] [data-reveal], [data-galaxy-region] [data-reveal], [data-footer] [data-reveal]",
       ),
-    ).filter((el) => !(light && el.hasAttribute("data-card")));
+    ).filter((el) => !el.hasAttribute("data-card"));
     if (els.length === 0) return;
     const mm = gsap.matchMedia();
 

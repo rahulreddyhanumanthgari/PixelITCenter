@@ -4,27 +4,17 @@ import { ParticleStory } from "@/themes/core/components/story/ParticleStory";
 import { Header } from "@/themes/core/components/layout/Header";
 import { Footer } from "@/themes/core/components/layout/Footer";
 import { ClientProof } from "@/themes/core/components/sections/ClientProof";
-import { Services } from "@/themes/core/components/sections/Services";
-import { Staffing } from "@/themes/core/components/sections/Staffing";
-import { WhyUs } from "@/themes/core/components/sections/WhyUs";
 import { Process } from "@/themes/core/components/sections/Process";
 import { About } from "@/themes/core/components/sections/About";
 import { Careers } from "@/themes/core/components/sections/Careers";
 import { Testimonials } from "@/themes/core/components/sections/Testimonials";
 import { ContactCta } from "@/themes/core/components/sections/ContactCta";
+import { LightServices } from "@/themes/light/services/LightServices";
+import { LightStaffing } from "@/themes/light/staffing/LightStaffing";
+import { LightWhy } from "@/themes/light/why/LightWhy";
 
-// Homepage flow from the modernization plan (section 04). The light version
-// swaps in its own Services, Staffing and Why sections
-// (themes/light).
-export default function HomePage({
-  services = <Services />,
-  staffing = <Staffing />,
-  why = <WhyUs />,
-}: {
-  services?: React.ReactNode;
-  staffing?: React.ReactNode;
-  why?: React.ReactNode;
-}) {
+// Homepage flow from the modernization plan (section 04).
+export default function HomePage() {
   return (
     <>
       <Header />
@@ -37,9 +27,9 @@ export default function HomePage({
         <Hero />
         <ClientProof />
         <ParticleStory>
-          {services}
-          {staffing}
-          {why}
+          <LightServices />
+          <LightStaffing />
+          <LightWhy />
           <Process />
         </ParticleStory>
         {/* About, Careers, Proof Points and Contact share one background: the

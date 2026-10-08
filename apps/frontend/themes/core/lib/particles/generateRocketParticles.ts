@@ -32,14 +32,24 @@ function noseGeometry(): THREE.BufferGeometry {
   for (let k = 0; k <= steps; k++) {
     const s = k / steps;
     const r = BODY.radiusTop * Math.pow(Math.cos((s * Math.PI) / 2), 0.75);
-    pts.push(new THREE.Vector2(Math.max(r, 0.0001), BODY.top + NOSE.height * s));
+    pts.push(
+      new THREE.Vector2(Math.max(r, 0.0001), BODY.top + NOSE.height * s),
+    );
   }
   return new THREE.LatheGeometry(pts, 64);
 }
 
 function windowGeometry(): THREE.BufferGeometry {
   // A shallow dome plus a rim, on the front (+Z) of the body.
-  const dome = new THREE.SphereGeometry(WINDOW.radius, 32, 16, 0, Math.PI * 2, 0, Math.PI / 2);
+  const dome = new THREE.SphereGeometry(
+    WINDOW.radius,
+    32,
+    16,
+    0,
+    Math.PI * 2,
+    0,
+    Math.PI / 2,
+  );
   dome.rotateX(Math.PI / 2);
   dome.scale(1, 1, 0.45);
   const rim = new THREE.TorusGeometry(WINDOW.radius + 0.03, 0.028, 8, 48);
@@ -60,16 +70,24 @@ function finGeometry(angle: number): THREE.BufferGeometry {
   shape.lineTo(FIN_OUTER - BODY.radiusBottom, -1.45);
   shape.lineTo(0, -1.2);
   shape.closePath();
-  const fin = new THREE.ExtrudeGeometry(shape, { depth: 0.05, bevelEnabled: false });
+  const fin = new THREE.ExtrudeGeometry(shape, {
+    depth: 0.05,
+    bevelEnabled: false,
+  });
   fin.translate(BODY.radiusBottom - 0.02, 0, -0.025);
   fin.rotateY(angle);
   return fin;
 }
 
 /** Joins two non-indexed position-only geometries. */
-function mergeTwo(a: THREE.BufferGeometry, b: THREE.BufferGeometry): THREE.BufferGeometry {
-  const pa = (a.index ? a.toNonIndexed() : a).getAttribute("position").array as Float32Array;
-  const pb = (b.index ? b.toNonIndexed() : b).getAttribute("position").array as Float32Array;
+function mergeTwo(
+  a: THREE.BufferGeometry,
+  b: THREE.BufferGeometry,
+): THREE.BufferGeometry {
+  const pa = (a.index ? a.toNonIndexed() : a).getAttribute("position")
+    .array as Float32Array;
+  const pb = (b.index ? b.toNonIndexed() : b).getAttribute("position")
+    .array as Float32Array;
   const merged = new Float32Array(pa.length + pb.length);
   merged.set(pa, 0);
   merged.set(pb, pa.length);
@@ -82,7 +100,10 @@ function mergeTwo(a: THREE.BufferGeometry, b: THREE.BufferGeometry): THREE.Buffe
  * A recognisable 3D rocket made only of points: ogive nose, cylindrical body,
  * porthole, four swept fins, engine nozzle and an exhaust plume.
  */
-export function generateRocketParticles(count: number, seed = 11): Float32Array {
+export function generateRocketParticles(
+  count: number,
+  seed = 11,
+): Float32Array {
   const rand = mulberry32(seed);
   const out = new Float32Array(count * 3);
 
@@ -94,7 +115,9 @@ export function generateRocketParticles(count: number, seed = 11): Float32Array 
     nozzle: Math.floor(count * SHARES.nozzle),
     plume: 0,
   };
-  counts.plume = count - (counts.body + counts.nose + counts.window + counts.fins + counts.nozzle);
+  counts.plume =
+    count -
+    (counts.body + counts.nose + counts.window + counts.fins + counts.nozzle);
 
   let offset = 0;
   const sample = (geometry: THREE.BufferGeometry, n: number) => {
@@ -154,7 +177,10 @@ export function generateRocketParticles(count: number, seed = 11): Float32Array 
  * porthole, warm orange body with a white-lit side, blue fins, glowing plume.
  * Classification is by position, so it works on any ordering of the points.
  */
-export function colorRocketParticles(positions: Float32Array, seed = 5): Float32Array {
+export function colorRocketParticles(
+  positions: Float32Array,
+  seed = 5,
+): Float32Array {
   const rand = mulberry32(seed);
   const count = positions.length / 3;
   const colors = new Float32Array(count * 3);
@@ -173,16 +199,23 @@ export function colorRocketParticles(positions: Float32Array, seed = 5): Float32
     if (y < NOZZLE_BOTTOM - 0.01) {
       // Plume: white-gold near the nozzle cooling to orange at the tail.
       const hot = 1 - smoothstep(0, PLUME.length, NOZZLE_BOTTOM - y);
-      c.copy(orange).lerp(gold, 0.3 + hot * 0.5).lerp(white, hot * hot * 0.55);
+      c.copy(orange)
+        .lerp(gold, 0.3 + hot * 0.5)
+        .lerp(white, hot * hot * 0.55);
       brightness = 0.9 + hot * 0.9;
     } else if (y < BODY.bottom) {
       c.copy(orange).lerp(deepBlue, 0.25 * rand());
       brightness = 0.8;
     } else if (radius > BODY.radiusBottom + 0.05) {
       // Fins: cool blues, a little brighter towards the tips.
-      c.copy(blue).lerp(deepBlue, rand() * 0.6).lerp(white, rand() < 0.08 ? 0.6 : 0);
+      c.copy(blue)
+        .lerp(deepBlue, rand() * 0.6)
+        .lerp(white, rand() < 0.08 ? 0.6 : 0);
       brightness = 0.8 + smoothstep(BODY.radiusBottom, FIN_OUTER, radius) * 0.4;
-    } else if (Math.hypot(x, y - WINDOW.y) < WINDOW.radius + 0.07 && z > windowZ * 0.6) {
+    } else if (
+      Math.hypot(x, y - WINDOW.y) < WINDOW.radius + 0.07 &&
+      z > windowZ * 0.6
+    ) {
       c.copy(white).lerp(blue, rand() * 0.25);
       brightness = 1.5;
     } else if (y > BODY.top) {
@@ -198,7 +231,8 @@ export function colorRocketParticles(positions: Float32Array, seed = 5): Float32
     }
 
     const sparkle = rand();
-    brightness *= sparkle > 0.97 ? 1.7 : sparkle < 0.22 ? 0.5 : 0.8 + rand() * 0.3;
+    brightness *=
+      sparkle > 0.97 ? 1.7 : sparkle < 0.22 ? 0.5 : 0.8 + rand() * 0.3;
     pushColor(colors, i, c, brightness);
   }
   return colors;

@@ -20,10 +20,11 @@ earlier).
 - **One root layout.** `app/layout.tsx` loads `core.css` + `light.css` and
   sets `<html data-theme="light">`; the 404 page is a normal
   `app/not-found.tsx`.
-- **Engine.** The particle code still contains its original dark branches
-  behind the `light` flag (JourneyScene, ParticleSystem, StarField, shaders);
-  with `data-theme="light"` always set they never run. They can be deleted
-  in a later cleanup.
+- **Engine.** Light only (2026-10-08 cleanup): the dark branches, the
+  `light` flag / `uLight` uniform, the fade-behind-text factors (always 1 in
+  light) and the dark Services / Staffing / Why sections were removed, with a
+  frozen-clock before/after screenshot comparison of every section (desktop
+  and phone) showing no visible change. Bloom is still mounted at intensity 0.
 
 ## Page rendering
 

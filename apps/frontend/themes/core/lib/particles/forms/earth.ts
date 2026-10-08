@@ -17,7 +17,6 @@ export const EARTH = {
   shell: 2.35,
   /** Radius separating Earth (+ haze) from the shell. */
   split: 2.1,
-  shares: { land: 0.54, coast: 0.17, ocean: 0.08, haze: 0.05 }, // remainder: shell
 } as const;
 
 const TAU = Math.PI * 2;
@@ -40,11 +39,17 @@ function decodeMask(): Uint8Array {
 }
 
 /** Cell lists weighted by true area (cos latitude), for fast sampling. */
-function cellSampler(cells: number[], width: number, height: number, rand: Rand) {
+function cellSampler(
+  cells: number[],
+  width: number,
+  height: number,
+  rand: Rand,
+) {
   const cum = new Float32Array(cells.length);
   let total = 0;
   cells.forEach((c, i) => {
-    const lat = Math.PI / 2 - ((Math.floor(c / width) + 0.5) / height) * Math.PI;
+    const lat =
+      Math.PI / 2 - ((Math.floor(c / width) + 0.5) / height) * Math.PI;
     total += Math.cos(lat);
     cum[i] = total;
   });
@@ -58,21 +63,25 @@ function cellSampler(cells: number[], width: number, height: number, rand: Rand)
       else hi = mid;
     }
     const c = cells[lo];
-    const lon = ((c % width) + rand()) / width * TAU - Math.PI;
-    const lat = Math.PI / 2 - ((Math.floor(c / width) + rand()) / height) * Math.PI;
+    const lon = (((c % width) + rand()) / width) * TAU - Math.PI;
+    const lat =
+      Math.PI / 2 - ((Math.floor(c / width) + rand()) / height) * Math.PI;
     return [lat, lon] as const;
   };
 }
 
 /**
- * Light version's shares: a solid sea of cubes (ocean only over sea cells,
- * not under the land), no haze and no outer shell (the shader hides the few
- * rounding leftovers).
+ * Shares: a solid sea of cubes (ocean only over sea cells, not under the
+ * land), no haze and no outer shell (the shader hides the few rounding
+ * leftovers).
  */
-const LIGHT_SHARES = { land: 0.47, coast: 0.07, ocean: 0.46, haze: 0 } as const;
+const SHARES = { land: 0.47, coast: 0.07, ocean: 0.46, haze: 0 } as const;
 
-export function generateEarthParticles(count: number, rand: Rand, light = false): Float32Array {
-  const shares = light ? LIGHT_SHARES : EARTH.shares;
+export function generateEarthParticles(
+  count: number,
+  rand: Rand,
+): Float32Array {
+  const shares = SHARES;
   const { width: W, height: H } = LAND_MASK;
   const grid = decodeMask();
   const land: number[] = [];
@@ -86,7 +95,8 @@ export function generateEarthParticles(count: number, rand: Rand, light = false)
         continue;
       }
       land.push(i);
-      const n = (dx: number, dy: number) => grid[Math.min(H - 1, Math.max(0, y + dy)) * W + ((x + dx + W) % W)];
+      const n = (dx: number, dy: number) =>
+        grid[Math.min(H - 1, Math.max(0, y + dy)) * W + ((x + dx + W) % W)];
       if (!n(1, 0) || !n(-1, 0) || !n(0, 1) || !n(0, -1)) coast.push(i);
     }
   }
@@ -103,7 +113,8 @@ export function generateEarthParticles(count: number, rand: Rand, light = false)
     out[w * 3 + 2] = -Math.sin(lon) * c * r;
     w++;
   };
-  const randomLatLon = () => [Math.asin(rand() * 2 - 1), rand() * TAU - Math.PI] as const;
+  const randomLatLon = () =>
+    [Math.asin(rand() * 2 - 1), rand() * TAU - Math.PI] as const;
   const n = (share: number) => Math.floor(count * share);
   const R = EARTH.radius;
 
@@ -116,7 +127,7 @@ export function generateEarthParticles(count: number, rand: Rand, light = false)
     put(lat, lon, R * 1.008);
   }
   for (let i = 0, m = n(shares.ocean); i < m; i++) {
-    const [lat, lon] = light ? sampleSea() : randomLatLon();
+    const [lat, lon] = sampleSea();
     put(lat, lon, R * 0.99);
   }
   for (let i = 0, m = n(shares.haze); i < m; i++) {
@@ -132,10 +143,19 @@ export function generateEarthParticles(count: number, rand: Rand, light = false)
     const row = Math.floor(rand() * rows);
     const lat = -Math.PI / 2 + ((row + 0.5) / rows) * Math.PI;
     const slots = Math.max(6, Math.round(perRow * Math.cos(lat)));
-    const lon = (Math.floor(rand() * slots) / slots) * TAU - Math.PI + (row % 2) * (Math.PI / slots);
-    const gap = Math.sin(lon * 2 + lat * 3 + 1.2) * Math.cos(lon * 1.3 - lat * 2.1) > 0.45;
+    const lon =
+      (Math.floor(rand() * slots) / slots) * TAU -
+      Math.PI +
+      (row % 2) * (Math.PI / slots);
+    const gap =
+      Math.sin(lon * 2 + lat * 3 + 1.2) * Math.cos(lon * 1.3 - lat * 2.1) >
+      0.45;
     if (gap && rand() < 0.9) continue;
-    put(lat + (rand() - 0.5) * 0.004, lon, EARTH.shell * (1 + (rand() - 0.5) * 0.01));
+    put(
+      lat + (rand() - 0.5) * 0.004,
+      lon,
+      EARTH.shell * (1 + (rand() - 0.5) * 0.01),
+    );
   }
   return out;
 }

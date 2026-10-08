@@ -25,7 +25,13 @@ const DUST = Array.from({ length: 110 }, (_, i) => {
   };
 });
 
-function FooterLink({ href, children }: { href: string; children: React.ReactNode }) {
+function FooterLink({
+  href,
+  children,
+}: {
+  href: string;
+  children: React.ReactNode;
+}) {
   const external = href.startsWith("http");
   return (
     <a
@@ -72,11 +78,20 @@ export function Footer() {
             <div>
               <h2 className="footer-label">Contact</h2>
               <address className="mt-6 space-y-3.5 not-italic">
-                <a href={`mailto:${site.contact.email}`} className="footer-email block">
+                <a
+                  href={`mailto:${site.contact.email}`}
+                  className="footer-email block"
+                >
                   {site.contact.email}
                 </a>
-                <FooterLink href={`tel:${site.contact.phone.replace(/[^+\d]/g, "")}`}>{site.contact.phone}</FooterLink>
-                <span className="type-body-sm block max-w-[16rem]">{site.contact.location}</span>
+                <FooterLink
+                  href={`tel:${site.contact.phone.replace(/[^+\d]/g, "")}`}
+                >
+                  {site.contact.phone}
+                </FooterLink>
+                <span className="type-body-sm block max-w-[16rem]">
+                  {site.contact.location}
+                </span>
               </address>
             </div>
           </div>
@@ -115,12 +130,16 @@ export function Footer() {
       <Container className="relative z-10">
         <div className="flex flex-col gap-4 border-t border-border py-7 text-xs text-[var(--text-muted)] sm:flex-row sm:items-center sm:justify-between">
           <p>
-            © {new Date().getFullYear()} {site.name} Corporation. All rights reserved.
+            © {new Date().getFullYear()} {site.name} Corporation. All rights
+            reserved.
           </p>
           <ul className="flex gap-6">
             {footer.legal.map((link) => (
               <li key={link.label}>
-                <a href={link.href} className="transition-colors duration-300 hover:text-[var(--text-primary)]">
+                <a
+                  href={link.href}
+                  className="transition-colors duration-300 hover:text-[var(--text-primary)]"
+                >
                   {link.label}
                 </a>
               </li>

@@ -12,15 +12,22 @@ export function NavLinks() {
 
   useEffect(() => {
     const targets = nav
-      .map((item) => ({ href: item.href, el: document.querySelector<HTMLElement>(item.href) }))
-      .filter((t): t is { href: (typeof nav)[number]["href"]; el: HTMLElement } => t.el !== null);
+      .map((item) => ({
+        href: item.href,
+        el: document.querySelector<HTMLElement>(item.href),
+      }))
+      .filter(
+        (t): t is { href: (typeof nav)[number]["href"]; el: HTMLElement } =>
+          t.el !== null,
+      );
     let frame = 0;
     const update = () => {
       frame = 0;
       // The last section whose top has passed 40% of the screen.
       const line = window.innerHeight * 0.4;
       let current: string = nav[0].href;
-      for (const t of targets) if (t.el.getBoundingClientRect().top <= line) current = t.href;
+      for (const t of targets)
+        if (t.el.getBoundingClientRect().top <= line) current = t.href;
       setActive(current);
     };
     const schedule = () => {

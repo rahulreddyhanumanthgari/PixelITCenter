@@ -61,7 +61,11 @@ export function geometryEdgesToParticlePositions(
     for (let e = 0; e < 3; e++) {
       const a = t * 9 + e * 3;
       const b = t * 9 + ((e + 1) % 3) * 3;
-      total += Math.hypot(pos[b] - pos[a], pos[b + 1] - pos[a + 1], pos[b + 2] - pos[a + 2]);
+      total += Math.hypot(
+        pos[b] - pos[a],
+        pos[b + 1] - pos[a + 1],
+        pos[b + 2] - pos[a + 2],
+      );
       cumulative[t * 3 + e] = total;
     }
   }
@@ -90,7 +94,9 @@ export function geometryEdgesToParticlePositions(
 }
 
 /** Joins position-only copies of several geometries into one. */
-export function mergePositionGeometries(parts: THREE.BufferGeometry[]): THREE.BufferGeometry {
+export function mergePositionGeometries(
+  parts: THREE.BufferGeometry[],
+): THREE.BufferGeometry {
   const arrays = parts.map((p) => {
     const g = p.index ? p.toNonIndexed() : p;
     return g.getAttribute("position").array as Float32Array;
@@ -113,7 +119,9 @@ export function transformPositions(
   scale = 1,
 ): Float32Array {
   const m = new THREE.Matrix4()
-    .makeRotationFromEuler(new THREE.Euler(rotation[0], rotation[1], rotation[2]))
+    .makeRotationFromEuler(
+      new THREE.Euler(rotation[0], rotation[1], rotation[2]),
+    )
     .multiply(new THREE.Matrix4().makeScale(scale, scale, scale));
   const v = new THREE.Vector3();
   for (let i = 0; i < positions.length; i += 3) {

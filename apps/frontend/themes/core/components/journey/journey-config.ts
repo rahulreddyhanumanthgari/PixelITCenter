@@ -44,8 +44,6 @@ export const HERO_FIELD = {
   // A wide calm centre, so the ring frames the hero content rather than
   // running behind it.
   voidRadius: { width: 0.27, height: 0.38, maxWidth: 0.7 },
-  /** Brightness left for particles behind the hero text (wide / narrow screens). */
-  protectFloor: { wide: 0.5, narrow: 0.28 },
 } as const;
 
 /**
@@ -65,7 +63,12 @@ export const STORY_SIDES: readonly number[] = [0, 0.75, 0.5, 0.5, 0.5];
  * `radius` must match EARTH.radius (forms/earth.ts); `index` is its position
  * in STORY_SIDES.
  */
-export const EARTH_VIEW = { index: 1, radius: 1.65, scale: 1.45, hiddenRight: 0.25 } as const;
+export const EARTH_VIEW = {
+  index: 1,
+  radius: 1.65,
+  scale: 1.45,
+  hiddenRight: 0.25,
+} as const;
 
 /**
  * About's galaxy (the last form): pinned behind About, Proof Points and
@@ -82,24 +85,34 @@ export const GALAXY_VIEW = {
 export const STORY_SLOTS = { left: 0.24, right: 0.76 } as const;
 
 /** Subtle camera: pointer drift and a small pull-back while particles scatter. */
-export const CAMERA_MOTION = { pointerX: 0.14, pointerY: 0.09, fieldPullBack: 0.35, damping: 0.03 } as const;
+export const CAMERA_MOTION = {
+  pointerX: 0.14,
+  pointerY: 0.09,
+  fieldPullBack: 0.35,
+  damping: 0.03,
+} as const;
 
 /**
  * Scroll windows for each transition (ScrollTrigger syntax): each runs while
  * the section that owns the *next* form scrolls into view.
  */
 export const TRANSITIONS = {
-  intoStory: { desktop: { start: "top 96%", end: "top 18%" }, mobile: { start: "top 100%", end: "top 50%" } },
+  intoStory: {
+    desktop: { start: "top 96%", end: "top 18%" },
+    mobile: { start: "top 100%", end: "top 50%" },
+  },
   story: { start: "top 96%", end: "top 14%" },
   // How We Work → About's galaxy, run by About's own scroll. Phones wait
   // until the pinned particle band has released.
-  intoAbout: { desktop: { start: "top 96%", end: "top 14%" }, mobile: { start: "top 42%", end: "top -25%" } },
+  intoAbout: {
+    desktop: { start: "top 96%", end: "top 14%" },
+    mobile: { start: "top 42%", end: "top -25%" },
+  },
   scrub: 0.8,
 } as const;
 
 /** Colours for every form come from the rocket (orange / blue / white). */
 const SHARED = {
-  colors: "form" as const,
   noiseScale: 1.4,
   damping: 0.06,
   reducedMotionFactor: 0.15,
@@ -114,7 +127,7 @@ const SHARED = {
 export const HERO_LOOK: ParticleLook = {
   ...SHARED,
   particleSize: 16,
-  rotation: { mode: "sway", speed: 0.08, amount: 0.04 },
+  rotation: { speed: 0.08, amount: 0.04 },
   wobbleAmount: 0.02,
   baseTilt: [0.82, 0, 0.1],
   formNoise: 0.02,
@@ -134,7 +147,7 @@ export const HERO_LOOK: ParticleLook = {
 export const STORY_LOOK: ParticleLook = {
   ...SHARED,
   particleSize: 10,
-  rotation: { mode: "sway", speed: 0.16, amount: 0.32 },
+  rotation: { speed: 0.16, amount: 0.32 },
   wobbleAmount: 0.05,
   baseTilt: [0, 0, 0],
   formNoise: 0.012,

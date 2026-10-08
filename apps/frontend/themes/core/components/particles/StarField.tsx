@@ -6,7 +6,10 @@ import * as THREE from "three";
 import vertexShader from "@/themes/core/shaders/stars.vert.glsl";
 import fragmentShader from "@/themes/core/shaders/particle.frag.glsl";
 import { createStarGeometry } from "@/themes/core/lib/particles/stars";
-import { JOURNEY_STARS, HERO_LOOK } from "@/themes/core/components/journey/journey-config";
+import {
+  JOURNEY_STARS,
+  HERO_LOOK,
+} from "@/themes/core/components/journey/journey-config";
 import type { PointerState } from "./types";
 
 /** Shared scene mood, written each frame by the main system's callback. */
@@ -26,8 +29,6 @@ interface StarFieldProps {
   reducedMotion: boolean;
   pointer: RefObject<PointerState>;
   atmosphere: RefObject<Atmosphere>;
-  /** Light version: stars drawn as faint ink on white (normal blending). */
-  light?: boolean;
 }
 
 /**
@@ -35,7 +36,13 @@ interface StarFieldProps {
  * behind the main particles. One THREE.Points, all motion on the GPU; the
  * CPU only eases three uniforms per frame.
  */
-export function StarField({ count, pixelRatio, reducedMotion, pointer, atmosphere, light = false }: StarFieldProps) {
+export function StarField({
+  count,
+  pixelRatio,
+  reducedMotion,
+  pointer,
+  atmosphere,
+}: StarFieldProps) {
   const geometry = useMemo(() => createStarGeometry(count), [count]);
 
   const material = useMemo(
@@ -51,19 +58,19 @@ export function StarField({ count, pixelRatio, reducedMotion, pointer, atmospher
           uGravity: { value: 0 },
           uGravityCenter: { value: new THREE.Vector2() },
           uSwirl: { value: 0 },
-          uLight: { value: light ? 1 : 0 },
         },
         vertexShader,
         fragmentShader,
         transparent: true,
         depthWrite: false,
-        blending: light ? THREE.NormalBlending : THREE.AdditiveBlending,
+        blending: THREE.NormalBlending,
       }),
-    [light],
+    [],
   );
 
   const pointsRef = useRef<THREE.Points>(null);
-  const uniforms = () => (pointsRef.current?.material as THREE.ShaderMaterial | undefined)?.uniforms;
+  const uniforms = () =>
+    (pointsRef.current?.material as THREE.ShaderMaterial | undefined)?.uniforms;
 
   useEffect(() => {
     const u = uniforms();
@@ -95,5 +102,12 @@ export function StarField({ count, pixelRatio, reducedMotion, pointer, atmospher
     u.uSwirl.value += delta * u.uGravity.value * (reducedMotion ? 0.15 : 1);
   });
 
-  return <points ref={pointsRef} geometry={geometry} material={material} frustumCulled={false} />;
+  return (
+    <points
+      ref={pointsRef}
+      geometry={geometry}
+      material={material}
+      frustumCulled={false}
+    />
+  );
 }

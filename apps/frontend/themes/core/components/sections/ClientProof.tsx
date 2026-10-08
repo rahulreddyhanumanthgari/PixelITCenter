@@ -4,12 +4,12 @@ import { LogoMarquee } from "./LogoMarquee";
 
 export function ClientProof() {
   return (
-    <section aria-labelledby="clients-title" className="border-y border-border bg-surface/60 py-12">
+    <section
+      aria-labelledby="clients-title"
+      className="border-y border-border bg-surface/60 py-12"
+    >
       <Container>
-        <h2
-          id="clients-title"
-          className="type-label text-center"
-        >
+        <h2 id="clients-title" className="type-label text-center">
           {clientProof.title}
         </h2>
       </Container>

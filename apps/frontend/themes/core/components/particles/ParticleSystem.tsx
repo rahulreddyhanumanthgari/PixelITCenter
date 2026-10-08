@@ -12,7 +12,6 @@ import fragmentShader from "@/themes/core/shaders/particle.frag.glsl";
 import {
   colorsForSequence,
   generateForm,
-  monochromeColors,
   stageDataFor,
   type FormName,
 } from "@/themes/core/lib/particles/generateTarget";
@@ -27,10 +26,8 @@ import type { PointerState, ProgressState } from "./types";
 export interface ParticleLook {
   /** Point size in pixels for a particle 1 world unit from the camera. */
   particleSize: number;
-  /** "form" = colours from the first form; "monochrome" = white/off-white. */
-  colors: "form" | "monochrome";
-  /** "spin" turns continuously; "sway" rocks gently so forms stay front-on. */
-  rotation: { mode: "spin" | "sway"; speed: number; amount: number };
+  /** A gentle sway (radians, per second) so forms stay front-on. */
+  rotation: { speed: number; amount: number };
   wobbleAmount: number;
   /** Resting tilt of the whole system, radians. */
   baseTilt: readonly [number, number, number];
@@ -71,26 +68,12 @@ export interface LayoutState {
    * Null = always `to.x`.
    */
   sides: { left: number; right: number; byForm: readonly number[] } | null;
-  /**
-   * Hero text box in NDC (centre x/y, half-size x/y); particles behind it are
-   * dimmed to `protectFloor` while the hero field is showing.
-   */
-  protect: [number, number, number, number];
-  protectFloor: number;
-  /** Services content box in NDC; particles behind it dim on the ring stream. */
-  protect2: [number, number, number, number];
-  /** Staffing content box in NDC; Earth particles behind it dim. */
-  protect3: [number, number, number, number];
   /** Extra display scale for the Staffing Earth (larger on desktop). */
   earthScale: number;
-  /** Why content box in NDC; torus particles behind it dim. */
-  protect4: [number, number, number, number];
   /** Why torus display scale: 1 on desktop, smaller to fit the phone band. */
   torusScale: number;
   /** 1 = the How We Work solar system uses its compact phone-band layout. */
   solarPhone: number;
-  /** How We Work step content box in NDC; solar particles behind it dim. */
-  protect5: [number, number, number, number];
   /**
    * About's galaxy (the last form): world centre and scale, and how centred
    * About is on screen (0..1, for the star field's gravity). Null = none.
@@ -104,7 +87,7 @@ export interface LayoutState {
   } | null;
   /** Galaxy ending after Contact: 0 = galaxy … 1 = collapsed into its core and gone. */
   galaxyCollapse: number;
-  /** How present Contact is (0..1), for the light version's galaxy core. */
+  /** How present Contact is (0..1), for the galaxy's core. */
   contact?: number;
 }
 
@@ -141,8 +124,6 @@ interface ParticleSystemProps {
    * active … N = all steps done. Written by the section's scroll triggers.
    */
   stage?: RefObject<ProgressState>;
-  /** Light version: particles drawn as ink on white (normal blending). */
-  light?: boolean;
 }
 
 export interface MorphUniforms {
@@ -162,27 +143,19 @@ export interface MorphUniforms {
   uFocusDepth: THREE.IUniform<number>;
   uMouse: THREE.IUniform<THREE.Vector3>;
   uStage: THREE.IUniform<number>;
-  uLight: THREE.IUniform<number>;
   uHeroField: THREE.IUniform<number>;
   uFlowFrom: THREE.IUniform<number>;
   uFlowTo: THREE.IUniform<number>;
-  uProtect2: THREE.IUniform<THREE.Vector4>;
-  uProtect3: THREE.IUniform<THREE.Vector4>;
   uEarthScale: THREE.IUniform<number>;
-  uProtect4: THREE.IUniform<THREE.Vector4>;
   uTorusScale: THREE.IUniform<number>;
   uSolarPhone: THREE.IUniform<number>;
-  uProtect5: THREE.IUniform<THREE.Vector4>;
   uCollapse: THREE.IUniform<number>;
   uContact: THREE.IUniform<number>;
   uSunOffset: THREE.IUniform<number>;
-  uProtect: THREE.IUniform<THREE.Vector4>;
-  uProtectFloor: THREE.IUniform<number>;
 }
 
 /** Anywhere far from the particles, so the pointer push is off. */
 const MOUSE_PARKED = new THREE.Vector3(100, 100, 100);
-const TAU = Math.PI * 2;
 
 function uniformsOf(points: THREE.Points): MorphUniforms {
   return (points.material as THREE.ShaderMaterial).uniforms as MorphUniforms;
@@ -217,7 +190,6 @@ export function ParticleSystem({
   onBlend,
   onGravity,
   stage,
-  light = false,
 }: ParticleSystemProps) {
   const rootRef = useRef<THREE.Group>(null);
   const tiltRef = useRef<THREE.Group>(null);
@@ -227,25 +199,17 @@ export function ParticleSystem({
 
   // Every form is sampled once per mount with the same particle count.
   const { geometry, forms, stagedForm } = useMemo(() => {
-    // Light version: the Earth with a solid sea of cubes.
     const forms = formNames.map((name, i) =>
-      generateForm(
-        light && name === "earth" ? "earthLight" : name,
-        count,
-        101 + i * 7919,
-      ),
+      generateForm(name, count, 101 + i * 7919),
     );
-    const colors =
-      look.colors === "monochrome"
-        ? monochromeColors(count)
-        : colorsForSequence(formNames[0], forms[0]);
+    const colors = colorsForSequence(formNames[0], forms[0]);
     const staged = stageDataFor(formNames, forms);
     return {
       geometry: createMorphGeometry(forms, colors, staged?.data),
       forms,
       stagedForm: staged?.index ?? -1,
     };
-  }, [formNames, count, look.colors, light]);
+  }, [formNames, count]);
 
   const material = useMemo(() => {
     const uniforms: MorphUniforms = {
@@ -264,22 +228,15 @@ export function ParticleSystem({
       uFocusDepth: { value: look.cameraZ },
       uMouse: { value: MOUSE_PARKED.clone() },
       uStage: { value: 0 },
-      uLight: { value: light ? 1 : 0 },
       uHeroField: { value: 0 },
       uFlowFrom: { value: 0 },
       uFlowTo: { value: 0 },
-      uProtect2: { value: new THREE.Vector4(0, 0, 0.001, 0.001) },
-      uProtect3: { value: new THREE.Vector4(0, 0, 0.001, 0.001) },
       uEarthScale: { value: 1 },
-      uProtect4: { value: new THREE.Vector4(0, 0, 0.001, 0.001) },
       uTorusScale: { value: 1 },
       uSolarPhone: { value: 0 },
-      uProtect5: { value: new THREE.Vector4(0, 0, 0.001, 0.001) },
       uCollapse: { value: 0 },
       uContact: { value: 0 },
       uSunOffset: { value: 0 },
-      uProtect: { value: new THREE.Vector4(0, 0, 0.001, 0.001) },
-      uProtectFloor: { value: 1 },
     };
     return new THREE.ShaderMaterial({
       uniforms,
@@ -287,10 +244,10 @@ export function ParticleSystem({
       fragmentShader,
       transparent: true,
       depthWrite: false,
-      // Light on black adds up; ink on white is laid over (light version).
-      blending: light ? THREE.NormalBlending : THREE.AdditiveBlending,
+      // Ink on white: laid over, not added up.
+      blending: THREE.NormalBlending,
     });
-  }, [look, light]);
+  }, [look]);
 
   // Plain object held in a ref: the controller mutates geometry attributes.
   const controllerRef = useRef<MorphController | null>(null);
@@ -329,7 +286,6 @@ export function ParticleSystem({
     center: new THREE.Vector3(),
     smoothProgress: -1,
     smoothStage: -1,
-    spin: 0,
     anchor: 0,
     collapse: 0,
   });
@@ -388,19 +344,13 @@ export function ParticleSystem({
     // anchored (no sway/wobble) while it is on screen.
     const tt = u.uProgress.value;
     s0.anchor = (fromKind >= 2 ? 1 - tt : 0) + (toKind >= 2 ? tt : 0);
-    u.uProtect2.value.set(...L.protect2);
-    u.uProtect3.value.set(...L.protect3);
     u.uEarthScale.value = L.earthScale;
-    u.uProtect4.value.set(...L.protect4);
     u.uTorusScale.value = L.torusScale;
     u.uSolarPhone.value = L.solarPhone;
-    u.uProtect5.value.set(...L.protect5);
     // Eased like the morph, so fast scrolling still plays the collapse smoothly.
     s0.collapse += (L.galaxyCollapse - s0.collapse) * k;
     u.uCollapse.value = s0.collapse;
     u.uContact.value += ((L.contact ?? 0) - u.uContact.value) * k;
-    u.uProtect.value.set(...L.protect);
-    u.uProtectFloor.value = L.protectFloor;
 
     // --- stepped form: step progress, eased like the morph ----------------
     if (stagedForm >= 0) {
@@ -490,25 +440,11 @@ export function ParticleSystem({
       ? (G.horizon - root.position.y) / Math.max(root.scale.x, 1e-3)
       : 0;
 
-    // --- rotation ---------------------------------------------------------
-    // A "spin" look turns continuously; as it hands over to a "sway" look the
-    // spin slows and settles on the nearest full turn (so the next forms face
-    // front), and the sway fades in.
-    const spinOf = (lk: ParticleLook) =>
-      lk.rotation.mode === "spin" ? lk.rotation.speed : 0;
-    const spinSpeed = mix(spinOf(look), spinOf(lookTo), b);
-    s0.spin += delta * spinSpeed * motion;
-    const settle =
-      (look.rotation.mode === "spin" ? b : 0) *
-      (lookTo.rotation.mode === "sway" ? 1 : 0);
-    if (settle > 0)
-      s0.spin += (Math.round(s0.spin / TAU) * TAU - s0.spin) * k * settle;
+    // --- rotation: a gentle sway, so forms stay front-on ------------------
     const swayOf = (lk: ParticleLook) =>
-      lk.rotation.mode === "sway"
-        ? Math.sin(time * lk.rotation.speed) * lk.rotation.amount
-        : 0;
+      Math.sin(time * lk.rotation.speed) * lk.rotation.amount;
     const calm = 1 - s0.anchor;
-    const yaw = s0.spin + mix(swayOf(look), swayOf(lookTo), b) * motion * calm;
+    const yaw = mix(swayOf(look), swayOf(lookTo), b) * motion * calm;
     const wobble =
       mix(look.wobbleAmount, lookTo.wobbleAmount, b) * motion * calm;
     points.rotation.set(

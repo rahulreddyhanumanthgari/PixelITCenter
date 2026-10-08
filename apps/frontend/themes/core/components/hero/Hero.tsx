@@ -23,7 +23,10 @@ export function Hero() {
       className="relative flex min-h-[100svh] items-center justify-center overflow-hidden"
     >
       <div className="mx-auto w-full max-w-7xl px-6 pb-16 pt-40 lg:px-8">
-        <div data-hero-content className="mx-auto flex max-w-4xl flex-col items-center text-center">
+        <div
+          data-hero-content
+          className="mx-auto flex max-w-4xl flex-col items-center text-center"
+        >
           <h1 id="hero-title" className="hero-title">
             {/* Positioning line: two lines on phones, one from sm up. */}
             <span data-reveal="0" className="hero-kicker block">
@@ -41,12 +44,27 @@ export function Hero() {
             </span>
           </h1>
 
-          <p data-reveal="2" className="type-body mx-auto mt-8 max-w-[36rem] text-center text-balance md:max-w-[46rem]">
-            <RichText text={hero.description} strongClassName="font-medium whitespace-nowrap text-brand-orange" />
+          <p
+            data-reveal="2"
+            className="type-body mx-auto mt-8 max-w-[36rem] text-center text-balance md:max-w-[46rem]"
+          >
+            <RichText
+              text={hero.description}
+              strongClassName="font-medium whitespace-nowrap text-brand-orange"
+            />
           </p>
 
-          <div data-reveal="3" className="mt-12 flex flex-wrap items-center justify-center gap-3">
-            <a href={hero.primaryCta.href} className={cn(buttonVariants(), "h-11 rounded-full px-6 text-sm font-medium")}>
+          <div
+            data-reveal="3"
+            className="mt-12 flex flex-wrap items-center justify-center gap-3"
+          >
+            <a
+              href={hero.primaryCta.href}
+              className={cn(
+                buttonVariants(),
+                "h-11 rounded-full px-6 text-sm font-medium",
+              )}
+            >
               {hero.primaryCta.label}
               <ArrowRight data-icon="inline-end" />
             </a>

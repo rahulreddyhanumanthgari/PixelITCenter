@@ -1,8 +1,5 @@
 @import "tailwindcss";
-@import "tw-animate-css";
 @import "shadcn/tailwind.css";
-
-@custom-variant dark (&:is(.dark *));
 
 /* ---------------------------------------------------------------------------
    Pixel IT Center: the site's structure (type, cards, footer). The colours
@@ -51,7 +48,6 @@
   --radius: 0.75rem;
 
   /* Typography — scale (fluid, so tablets and phones get their own sizes). */
-  --text-display-xl: clamp(2.5rem, 1.1rem + 6vw, 5.25rem);
   --text-display-lg: clamp(2rem, 1.3rem + 2.9vw, 3.5rem);
   --text-heading: clamp(1.1875rem, 1.05rem + 0.45vw, 1.4375rem);
   --text-subheading: 1.0625rem;
@@ -97,16 +93,6 @@
    (Inter). Use these classes instead of one-off heading styles.
    ------------------------------------------------------------------------ */
 @layer components {
-  /* Level 1 — hero. */
-  .type-display-xl {
-    font-family: var(--font-display);
-    font-size: var(--text-display-xl);
-    font-weight: 700;
-    line-height: 0.95;
-    letter-spacing: -0.025em;
-    text-transform: uppercase;
-    color: var(--text-primary);
-  }
   /* Hero headline. Two levels: a smaller positioning line and the primary
      statement. White does the work; orange is only the "&". No shadow or
      glow: the particle ring frames the text from outside instead. */
@@ -218,7 +204,7 @@
      top and a fading hairline down the left, plus one short orange accent
      line. The title is the identifier; whitespace does the separating.
      Hover is restrained: slightly lighter surface, brighter title, longer
-     accent. Variants: `.card--panel` (service panels), [data-active]. */
+     accent. State: [data-active]. */
   .card {
     position: relative;
     padding: var(--card-padding-y) var(--card-padding-x);
@@ -285,89 +271,10 @@
     opacity: 1;
   }
 
-  /* Service panel: number → title → partial accent line → narrow
-     description → small label bottom right. Its accent is the line under
-     the title, so the top-edge accent is not drawn. */
-  .card--panel {
-    --card-padding-x: clamp(1.25rem, 1rem + 1vw, 1.75rem);
-    --card-padding-y: clamp(1.5rem, 1.2rem + 1vw, 2rem);
-    display: flex;
-    flex-direction: column;
-  }
-  .card--panel::after {
-    display: none;
-  }
-  .panel-index {
-    font-family: var(--font-display);
-    font-size: clamp(2rem, 1.6rem + 1.2vw, 2.75rem);
-    font-weight: 500;
-    line-height: 1;
-    letter-spacing: -0.04em;
-    font-variant-numeric: tabular-nums;
-    color: var(--accent-orange);
-    opacity: 0.85;
-  }
-  .panel-title {
-    margin-top: 1.25rem;
-    font-family: var(--font-display);
-    font-size: clamp(1.375rem, 1.15rem + 0.8vw, 1.875rem);
-    font-weight: 600;
-    line-height: 1.12;
-    letter-spacing: -0.02em;
-    color: var(--text-primary);
-    text-wrap: balance;
-  }
-  .panel-line {
-    display: block;
-    width: 38%;
-    height: 1px;
-    margin-top: 1.25rem;
-    background: var(--accent-orange);
-    opacity: 0.8;
-    transition:
-      width var(--card-transition),
-      opacity var(--card-transition);
-  }
-  .card--panel[data-accent="blue"] .panel-line {
-    background: linear-gradient(90deg, var(--accent-orange), var(--accent-blue));
-  }
-  .panel-body {
-    max-width: 34ch;
-    margin-top: 1.25rem;
-    font-size: var(--text-small);
-    line-height: 1.6;
-    color: var(--panel-body);
-    text-wrap: pretty;
-  }
-  .panel-label {
-    align-self: flex-end;
-    margin-top: auto;
-    padding-top: 1.5rem;
-    font-size: 0.6875rem;
-    font-weight: 500;
-    line-height: 1;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: var(--text-muted);
-    opacity: 0.75;
-    transition: opacity var(--card-transition);
-  }
-  @media (hover: hover) {
-    .card--panel:hover .panel-line {
-      width: 52%;
-      opacity: 1;
-    }
-    .card--panel:hover .panel-label {
-      opacity: 1;
-    }
-  }
-
   @media (prefers-reduced-motion: reduce) {
     .card,
     .card::after,
-    .card-title,
-    .panel-line,
-    .panel-label {
+    .card-title {
       transition: none;
     }
   }

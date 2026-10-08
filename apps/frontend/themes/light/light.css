@@ -80,12 +80,10 @@
 
 /* Headings: hero, section titles, step numbers. */
 .hero-title,
-.type-display-xl,
 .type-display-lg,
 .card-index {
   font-family: var(--font-headline), var(--font-display), sans-serif;
 }
-.type-display-xl,
 .type-display-lg {
   font-weight: 900;
   line-height: 0.92;
@@ -97,7 +95,6 @@
   font-size: clamp(2.75rem, 1.6rem + 4.2vw, 5rem);
 }
 .type-display-lg .highlight,
-.type-display-xl .highlight,
 .hero-title .highlight {
   color: var(--headline-orange);
 }

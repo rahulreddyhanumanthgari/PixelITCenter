@@ -27,7 +27,15 @@ export const SOLAR = {
     [3.95, 1.55, -0.3, 0.5],
   ],
   /** Ring bands per planet, in planet radii. Deliver (2) has two, with a gap. */
-  rings: [[[1.45, 2.0]], [[1.55, 1.75]], [[1.35, 1.75], [1.9, 2.35]], [[1.5, 1.85]]],
+  rings: [
+    [[1.45, 2.0]],
+    [[1.55, 1.75]],
+    [
+      [1.35, 1.75],
+      [1.9, 2.35],
+    ],
+    [[1.5, 1.85]],
+  ],
   /** Where the trail enters and leaves the screen (desktop, approximate). */
   lead: { in: [-6.8, 3.9, -0.5], out: [6.8, 3.9, -0.5] },
   shares: { bodies: 0.45, rings: 0.17, atmospheres: 0.09, trails: 0.22 }, // remainder: dust
@@ -55,11 +63,23 @@ function pick(w: readonly number[], r: number): number {
   return w.length - 1;
 }
 
-export function generateSolarSystemParticles(count: number, rand: Rand): Float32Array {
+export function generateSolarSystemParticles(
+  count: number,
+  rand: Rand,
+): Float32Array {
   const out = new Float32Array(count * 3);
   const params = new Float32Array(count * 5);
   let w = 0;
-  const put = (x: number, y: number, z: number, stage: number, role: number, a: number, b: number, c: number) => {
+  const put = (
+    x: number,
+    y: number,
+    z: number,
+    stage: number,
+    role: number,
+    a: number,
+    b: number,
+    c: number,
+  ) => {
     out[w * 3] = x;
     out[w * 3 + 1] = y;
     out[w * 3 + 2] = z;
@@ -77,7 +97,13 @@ export function generateSolarSystemParticles(count: number, rand: Rand): Float32
   // Shares by planet: bodies and atmospheres by surface area, rings by width.
   const area = weights(SOLAR.planets.map((p) => p[3] * p[3]));
   const ringShare = weights([0.28, 0.14, 0.38, 0.2]);
-  const planetAt = (k: number, lx: number, ly: number, lz: number, role: number) => {
+  const planetAt = (
+    k: number,
+    lx: number,
+    ly: number,
+    lz: number,
+    role: number,
+  ) => {
     const [cx, cy, cz, r] = SOLAR.planets[k];
     put(cx + lx * r, cy + ly * r, cz + lz * r, k, role, lx, ly, lz);
   };
@@ -111,12 +137,19 @@ export function generateSolarSystemParticles(count: number, rand: Rand): Float32
   }
 
   // Trails: braided strands (plus a soft haze) along each path segment.
-  const knots = [SOLAR.lead.in, ...SOLAR.planets.map((p) => [p[0], p[1], p[2]]), SOLAR.lead.out];
+  const knots = [
+    SOLAR.lead.in,
+    ...SOLAR.planets.map((p) => [p[0], p[1], p[2]]),
+    SOLAR.lead.out,
+  ];
   const segShare = weights(SOLAR.segments);
   for (let i = 0, m = n(SOLAR.shares.trails); i < m; i++) {
     const j = pick(segShare, rand());
     const t = 0.002 + rand() * 0.996;
-    const strand = rand() < 0.7 ? (Math.floor(rand() * 5) - 2) * 0.5 + gauss() * 0.08 : gauss() * 1.4;
+    const strand =
+      rand() < 0.7
+        ? (Math.floor(rand() * 5) - 2) * 0.5 + gauss() * 0.08
+        : gauss() * 1.4;
     const [a, b] = [knots[j], knots[j + 1]];
     put(
       a[0] + (b[0] - a[0]) * t,
@@ -143,7 +176,8 @@ export function generateSolarSystemParticles(count: number, rand: Rand): Float32
   return out;
 }
 
-const keyOf = (a: Float32Array, i: number) => `${a[i * 3]},${a[i * 3 + 1]},${a[i * 3 + 2]}`;
+const keyOf = (a: Float32Array, i: number) =>
+  `${a[i * 3]},${a[i * 3 + 1]},${a[i * 3 + 2]}`;
 
 /**
  * The per-particle `[stage, role, a, b, c]` parameters (see above) for the
@@ -158,7 +192,8 @@ export function annotateSolarSystem(positions: Float32Array): Float32Array {
   for (let i = 0; i < count; i++) index.set(keyOf(stash.positions, i), i);
   for (let i = 0; i < count; i++) {
     const j = index.get(keyOf(positions, i));
-    if (j !== undefined) out.set(stash.params.subarray(j * 5, j * 5 + 5), i * 5);
+    if (j !== undefined)
+      out.set(stash.params.subarray(j * 5, j * 5 + 5), i * 5);
   }
   return out;
 }

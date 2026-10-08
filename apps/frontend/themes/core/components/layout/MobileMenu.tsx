@@ -32,7 +32,10 @@ export function MobileMenu() {
       </button>
 
       {open && (
-        <div id="mobile-nav" className="fixed inset-0 z-40 bg-background/97 px-6 pt-24 backdrop-blur">
+        <div
+          id="mobile-nav"
+          className="fixed inset-0 z-40 bg-background/97 px-6 pt-24 backdrop-blur"
+        >
           <nav aria-label="Mobile">
             <ul className="flex flex-col gap-1">
               {nav.map((item) => (

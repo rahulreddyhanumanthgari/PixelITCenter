@@ -10,7 +10,6 @@ uniform float uField;      // 0..1, how scattered the main particles are right n
 uniform float uGravity;    // 0..1, About Us gravity well strength
 uniform vec2 uGravityCenter;
 uniform float uSwirl;      // accumulated swirl time (advances only under gravity)
-uniform float uLight;      // 1 in the light version: stars in the reference's slate / ice / cyan
 
 attribute vec3 aColor;
 attribute float aRandom;
@@ -67,7 +66,7 @@ void main() {
   vec4 mvPosition = modelViewMatrix * vec4(pos, 1.0);
   gl_Position = projectionMatrix * mvPosition;
   // Light version: sprite sized for its voxel cube (particle.frag.glsl).
-  gl_PointSize = max(uSize * aScale * (1.0 + travel * 1.2) * uPixelRatio / -mvPosition.z * mix(1.0, 1.8, uLight), 1.0);
+  gl_PointSize = max(uSize * aScale * (1.0 + travel * 1.2) * uPixelRatio / -mvPosition.z * 1.8, 1.0);
 
   // Far = dimmer. The field lifts a little while the main object is
   // scattered, so the space reads through the transition.
@@ -79,12 +78,10 @@ void main() {
     vColor = vec3(0.95, 0.96, 1.0) * travel * 0.9 * uMotion;
     vAlpha = travel;
   }
-  if (uLight > 0.5) {
-    float r = fract(aRandom * 53.13);
-    vec3 ink = r < 0.4 ? vec3(0.427, 0.553, 0.631) : r < 0.7 ? vec3(0.769, 0.871, 0.910) : r < 0.85 ? vec3(0.008, 0.733, 0.886) : vec3(0.992, 0.533, 0.016);
-    // Faint on black; in light they are the reference's scattered solid
-    // cubes, so lift them clear of the fade cut-off in particle.frag.glsl.
-    vAlpha = clamp(vAlpha * max(max(vColor.r, vColor.g), vColor.b) * 4.0, 0.0, 1.0);
-    vColor = pow(ink, vec3(2.2)); // sRGB palette -> linear (see lightInk)
-  }
+  // Ink colours (slate / ice / cyan / orange); the brightness, lifted clear
+  // of the fade cut-off in particle.frag.glsl, becomes opacity.
+  float r = fract(aRandom * 53.13);
+  vec3 ink = r < 0.4 ? vec3(0.427, 0.553, 0.631) : r < 0.7 ? vec3(0.769, 0.871, 0.910) : r < 0.85 ? vec3(0.008, 0.733, 0.886) : vec3(0.992, 0.533, 0.016);
+  vAlpha = clamp(vAlpha * max(max(vColor.r, vColor.g), vColor.b) * 4.0, 0.0, 1.0);
+  vColor = pow(ink, vec3(2.2)); // sRGB palette -> linear (see lightInk)
 }
