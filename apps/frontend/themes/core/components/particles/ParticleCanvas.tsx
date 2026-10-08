@@ -33,27 +33,13 @@ export function ParticleCanvas(props: ParticleCanvasProps) {
   return supported ? <ParticleCanvasInner {...props} /> : null;
 }
 
-function ParticleCanvasInner({
-  settings,
-  children,
-  active,
-  bloomRef,
-}: ParticleCanvasProps) {
+function ParticleCanvasInner({ settings, children, active, bloomRef }: ParticleCanvasProps) {
   return (
     <Canvas
       dpr={settings.dpr}
       frameloop={active ? "always" : "never"}
-      camera={{
-        fov: settings.cameraFov,
-        position: [0, 0, settings.cameraZ],
-        near: 0.1,
-        far: 60,
-      }}
-      gl={{
-        antialias: false,
-        alpha: false,
-        powerPreference: "high-performance",
-      }}
+      camera={{ fov: settings.cameraFov, position: [0, 0, settings.cameraZ], near: 0.1, far: 60 }}
+      gl={{ antialias: false, alpha: false, powerPreference: "high-performance" }}
       fallback={null}
       style={{ pointerEvents: "none" }}
       aria-hidden="true"

@@ -1,11 +1,5 @@
 /** Renders copy where **double-asterisk** segments are emphasised. */
-export function RichText({
-  text,
-  strongClassName,
-}: {
-  text: string;
-  strongClassName?: string;
-}) {
+export function RichText({ text, strongClassName }: { text: string; strongClassName?: string }) {
   const parts = text.split(/(\*\*[^*]+\*\*)/g);
   return (
     <>

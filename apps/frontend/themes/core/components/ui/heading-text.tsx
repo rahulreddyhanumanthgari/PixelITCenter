@@ -19,21 +19,15 @@ export function HeadingText({ text }: { text: string }) {
           {line.split(/(\*[^*]+\*)/g).map((part, pi) => {
             if (!part) return null;
             const highlighted = part.startsWith("*") && part.endsWith("*");
-            const words = (highlighted ? part.slice(1, -1) : part).split(
-              /(\s+)/,
-            );
+            const words = (highlighted ? part.slice(1, -1) : part).split(/(\s+)/);
             return words.map((w, wi) =>
               /^\s+$/.test(w) || w === "" ? (
-                w ? (
-                  " "
-                ) : null
+                w ? " " : null
               ) : (
                 <span
                   key={`${pi}-${wi}`}
                   data-word
-                  className={
-                    highlighted ? "highlight inline-block" : "inline-block"
-                  }
+                  className={highlighted ? "highlight inline-block" : "inline-block"}
                 >
                   {w}
                 </span>

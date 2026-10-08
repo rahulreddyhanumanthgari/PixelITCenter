@@ -4,10 +4,7 @@ import dynamic from "next/dynamic";
 import { SceneErrorBoundary } from "@/themes/core/components/particles/SceneErrorBoundary";
 
 // three.js stays out of the server render; all page text is SSR as normal.
-const JourneyScene = dynamic(() => import("./JourneyScene"), {
-  ssr: false,
-  loading: () => null,
-});
+const JourneyScene = dynamic(() => import("./JourneyScene"), { ssr: false, loading: () => null });
 
 /**
  * Fixed, full-screen layer behind the page that holds the one particle
@@ -17,11 +14,7 @@ const JourneyScene = dynamic(() => import("./JourneyScene"), {
  */
 export function JourneyLayer() {
   return (
-    <div
-      data-journey-layer
-      aria-hidden="true"
-      className="pointer-events-none fixed inset-0 z-0"
-    >
+    <div data-journey-layer aria-hidden="true" className="pointer-events-none fixed inset-0 z-0">
       <SceneErrorBoundary>
         <JourneyScene />
       </SceneErrorBoundary>

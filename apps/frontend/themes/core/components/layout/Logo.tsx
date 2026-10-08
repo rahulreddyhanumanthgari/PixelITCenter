@@ -12,11 +12,7 @@ interface LogoProps {
 }
 
 /** The Pixel IT Center logo, taken from the current pixelitcenter.com. */
-export function Logo({
-  className,
-  priority = false,
-  alt = site.name,
-}: LogoProps) {
+export function Logo({ className, priority = false, alt = site.name }: LogoProps) {
   return (
     <Image
       src={logo}

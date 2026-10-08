@@ -77,13 +77,7 @@ export function LogoMarquee({ logos }: { logos: readonly Logo[] }) {
   );
 }
 
-function LogoList({
-  logos,
-  decorative = false,
-}: {
-  logos: readonly Logo[];
-  decorative?: boolean;
-}) {
+function LogoList({ logos, decorative = false }: { logos: readonly Logo[]; decorative?: boolean }) {
   return (
     <ul
       aria-hidden={decorative || undefined}

@@ -11,11 +11,7 @@ import { Container, SectionHeader } from "./SectionHeader";
  */
 export function Careers() {
   return (
-    <section
-      id="careers"
-      aria-labelledby="careers-title"
-      className="scroll-mt-20 border-t border-border py-24 sm:py-32"
-    >
+    <section id="careers" aria-labelledby="careers-title" className="scroll-mt-20 border-t border-border py-24 sm:py-32">
       <Container>
         <div className="mx-auto max-w-3xl text-center">
           <SectionHeader
@@ -28,10 +24,7 @@ export function Careers() {
           <div data-reveal="3" className="mt-9 flex justify-center">
             <a
               href={careers.cta.href}
-              className={cn(
-                buttonVariants({ variant: "outline" }),
-                "careers-cta h-12 rounded-full border-foreground/20 bg-transparent px-6 text-sm",
-              )}
+              className={cn(buttonVariants({ variant: "outline" }), "careers-cta h-12 rounded-full border-foreground/20 bg-transparent px-6 text-sm")}
             >
               {careers.cta.label}
               <ArrowRight data-icon="inline-end" />

@@ -19,10 +19,7 @@ const SPACE = {
  * brand tint. `aDepth` (0 near … 1 far) lets the shader dim far points and
  * give near ones more parallax.
  */
-export function createStarGeometry(
-  count: number,
-  seed = 13,
-): THREE.BufferGeometry {
+export function createStarGeometry(count: number, seed = 13): THREE.BufferGeometry {
   const rand = mulberry32(seed);
   const positions = new Float32Array(count * 3);
   const randoms = new Float32Array(count);

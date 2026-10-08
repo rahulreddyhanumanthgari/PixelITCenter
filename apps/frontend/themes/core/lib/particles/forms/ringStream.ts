@@ -19,10 +19,7 @@ export const RING_STREAM = {
   sparkShare: 0.025,
 } as const;
 
-export function generateRingStreamParticles(
-  count: number,
-  rand: Rand,
-): Float32Array {
+export function generateRingStreamParticles(count: number, rand: Rand): Float32Array {
   const { cx, inner, outer, sparkShare } = RING_STREAM;
   const out = new Float32Array(count * 3);
   const gauss = () => (rand() + rand() + rand() - 1.5) / 1.5;
@@ -37,8 +34,7 @@ export function generateRingStreamParticles(
     } else {
       // Lanes: many thin streams with uneven density (dense bands, gaps).
       const s = Math.floor(rand() * 90) / 90;
-      const bandDensity =
-        0.35 + 0.65 * Math.abs(Math.sin(s * 11.3 + 0.7) * Math.cos(s * 4.1));
+      const bandDensity = 0.35 + 0.65 * Math.abs(Math.sin(s * 11.3 + 0.7) * Math.cos(s * 4.1));
       r = inner + (outer - inner) * (rand() < bandDensity ? s : rand());
       r += gauss() * 0.012;
       y = gauss() * 0.05;

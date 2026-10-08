@@ -13,11 +13,7 @@ export function mulberry32(seed: number): () => number {
 export type Rand = () => number;
 
 /** Uniform random point on the unit sphere, written into `out` at `i * 3`. */
-export function randomUnitVector(
-  rand: Rand,
-  out: Float32Array,
-  i: number,
-): void {
+export function randomUnitVector(rand: Rand, out: Float32Array, i: number): void {
   const z = rand() * 2 - 1;
   const a = rand() * Math.PI * 2;
   const r = Math.sqrt(1 - z * z);

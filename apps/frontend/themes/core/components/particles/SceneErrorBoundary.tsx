@@ -7,10 +7,7 @@ import { Component, type ReactNode } from "react";
  * policy, context lost during setup), drop the scene and keep the page —
  * without this, the error bubbles up and Next.js replaces the whole page.
  */
-export class SceneErrorBoundary extends Component<
-  { children: ReactNode },
-  { failed: boolean }
-> {
+export class SceneErrorBoundary extends Component<{ children: ReactNode }, { failed: boolean }> {
   state = { failed: false };
 
   static getDerivedStateFromError() {

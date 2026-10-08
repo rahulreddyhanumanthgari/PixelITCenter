@@ -27,20 +27,12 @@ export function About() {
             className="mx-auto"
           />
           <p data-reveal="2" className="type-body mx-auto mt-4 italic">
-            <span className="not-italic font-medium text-[var(--text-primary)]">
-              Our vision:
-            </span>{" "}
-            {about.vision}
+            <span className="not-italic font-medium text-[var(--text-primary)]">Our vision:</span> {about.vision}
           </p>
 
           <dl className="mt-12 grid border-y border-border sm:grid-cols-3 sm:divide-x sm:divide-border">
             {about.highlights.map((h) => (
-              <div
-                key={h.label}
-                data-reveal="3"
-                data-card
-                className="border-b border-border px-4 py-5 last:border-b-0 sm:border-b-0"
-              >
+              <div key={h.label} data-reveal="3" data-card className="border-b border-border px-4 py-5 last:border-b-0 sm:border-b-0">
                 <dt className="type-label">{h.label}</dt>
                 <dd className="type-subheading mt-2">{h.value}</dd>
               </div>

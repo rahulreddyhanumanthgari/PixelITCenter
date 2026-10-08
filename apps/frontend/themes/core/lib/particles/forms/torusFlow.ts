@@ -12,17 +12,9 @@ import type { Rand } from "../random";
  *
  * Keep R in sync with TORUS_R in particle.vert.glsl.
  */
-export const TORUS_FLOW = {
-  R: 3.65,
-  r: 0.78,
-  surfaceShare: 0.9,
-  perDot: 2,
-} as const;
+export const TORUS_FLOW = { R: 3.65, r: 0.78, surfaceShare: 0.9, perDot: 2 } as const;
 
-export function generateTorusFlowParticles(
-  count: number,
-  rand: Rand,
-): Float32Array {
+export function generateTorusFlowParticles(count: number, rand: Rand): Float32Array {
   const { R, r, surfaceShare, perDot } = TORUS_FLOW;
   const out = new Float32Array(count * 3);
   // Each lattice dot is a tight cluster of a few particles, so the rows of

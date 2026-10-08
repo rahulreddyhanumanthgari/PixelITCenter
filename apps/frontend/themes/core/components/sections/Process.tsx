@@ -13,11 +13,7 @@ import { storySectionClass } from "./story-section";
  */
 export function Process() {
   return (
-    <section
-      data-story-section
-      aria-labelledby="process-title"
-      className={storySectionClass("center")}
-    >
+    <section data-story-section aria-labelledby="process-title" className={storySectionClass("center")}>
       <ProcessProgress />
 
       <div data-process-track className="relative h-[300svh] lg:h-[275vh]">
@@ -27,13 +23,7 @@ export function Process() {
           data-process-content
           className="sticky top-[calc(34svh+5rem)] mx-auto max-w-[720px] text-center lg:top-[calc(50vh-15rem)]"
         >
-          <SectionHeader
-            id="process-title"
-            eyebrow={process.eyebrow}
-            title={process.title}
-            className="mx-auto text-center"
-            revealExit={false}
-          />
+          <SectionHeader id="process-title" eyebrow={process.eyebrow} title={process.title} className="mx-auto text-center" revealExit={false} />
 
           {/* Index: all four steps, always visible. Waiting steps are muted;
               the active one has an orange number and a white title; completed
@@ -64,19 +54,11 @@ export function Process() {
               text over the planets — no card here, by design. */}
           <div className="mt-6 grid lg:mt-10">
             {process.steps.map((step, i) => (
-              <div
-                key={step.title}
-                data-process-panel
-                aria-hidden={i !== 0}
-                className="[grid-area:1/1]"
-              >
+              <div key={step.title} data-process-panel aria-hidden={i !== 0} className="[grid-area:1/1]">
                 <p data-panel-part className="card-index text-6xl sm:text-7xl">
                   {String(i + 1).padStart(2, "0")}
                 </p>
-                <h3
-                  data-panel-part
-                  className="type-display-lg mt-3 text-[clamp(1.75rem,1.35rem+1.5vw,2.5rem)]"
-                >
+                <h3 data-panel-part className="type-display-lg mt-3 text-[clamp(1.75rem,1.35rem+1.5vw,2.5rem)]">
                   {step.title}
                 </h3>
                 <p data-panel-part className="type-body mx-auto mt-4 max-w-md">

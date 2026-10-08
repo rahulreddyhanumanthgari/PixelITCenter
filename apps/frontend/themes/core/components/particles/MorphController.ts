@@ -1,8 +1,5 @@
 import * as THREE from "three";
-import {
-  mulberry32,
-  randomUnitVector,
-} from "@/themes/core/lib/particles/random";
+import { mulberry32, randomUnitVector } from "@/themes/core/lib/particles/random";
 import type { MorphState } from "./types";
 
 export type { MorphState };
@@ -16,10 +13,7 @@ export type MorphResolver = (value: number, formCount: number) => MorphState;
  * 0→1 and their values are added up, so this is a pure function of scroll —
  * scrubbing backwards retraces it exactly, and stopping midway holds midway.
  */
-export function resolveFormPosition(
-  position: number,
-  formCount: number,
-): MorphState {
+export function resolveFormPosition(position: number, formCount: number): MorphState {
   const last = formCount - 1;
   if (last <= 0) return { from: 0, to: 0, t: 0 };
   const p = Math.min(Math.max(position, 0), last);
@@ -65,10 +59,7 @@ export function createMorphGeometry(
 
   const geometry = new THREE.BufferGeometry();
   const position = new THREE.BufferAttribute(new Float32Array(forms[0]), 3);
-  const target = new THREE.BufferAttribute(
-    new Float32Array(forms[1] ?? forms[0]),
-    3,
-  );
+  const target = new THREE.BufferAttribute(new Float32Array(forms[1] ?? forms[0]), 3);
   position.setUsage(THREE.DynamicDrawUsage);
   target.setUsage(THREE.DynamicDrawUsage);
   geometry.setAttribute("position", position);
@@ -76,18 +67,9 @@ export function createMorphGeometry(
   geometry.setAttribute("aColor", new THREE.BufferAttribute(colors, 3));
   geometry.setAttribute("aRandom", new THREE.BufferAttribute(randoms, 1));
   geometry.setAttribute("aDelay", new THREE.BufferAttribute(delays, 1));
-  geometry.setAttribute(
-    "aScatterDir",
-    new THREE.BufferAttribute(scatterDirs, 3),
-  );
-  geometry.setAttribute(
-    "aScatterDistance",
-    new THREE.BufferAttribute(scatterDistances, 1),
-  );
-  geometry.setAttribute(
-    "aNoiseOffset",
-    new THREE.BufferAttribute(noiseOffsets, 3),
-  );
+  geometry.setAttribute("aScatterDir", new THREE.BufferAttribute(scatterDirs, 3));
+  geometry.setAttribute("aScatterDistance", new THREE.BufferAttribute(scatterDistances, 1));
+  geometry.setAttribute("aNoiseOffset", new THREE.BufferAttribute(noiseOffsets, 3));
   geometry.setAttribute("aScale", new THREE.BufferAttribute(scales, 1));
   const stageData = stages ?? new Float32Array(count * 5);
   const stage = new Float32Array(count * 2);
@@ -98,10 +80,7 @@ export function createMorphGeometry(
     stageCenter.set(stageData.subarray(i * 5 + 2, i * 5 + 5), i * 3);
   }
   geometry.setAttribute("aStage", new THREE.BufferAttribute(stage, 2));
-  geometry.setAttribute(
-    "aStageCenter",
-    new THREE.BufferAttribute(stageCenter, 3),
-  );
+  geometry.setAttribute("aStageCenter", new THREE.BufferAttribute(stageCenter, 3));
   return geometry;
 }
 
@@ -138,12 +117,8 @@ export class MorphController {
     if (state.from !== this.from || state.to !== this.to) {
       this.from = state.from;
       this.to = state.to;
-      const position = this.geometry.getAttribute(
-        "position",
-      ) as THREE.BufferAttribute;
-      const target = this.geometry.getAttribute(
-        "aTarget",
-      ) as THREE.BufferAttribute;
+      const position = this.geometry.getAttribute("position") as THREE.BufferAttribute;
+      const target = this.geometry.getAttribute("aTarget") as THREE.BufferAttribute;
       (position.array as Float32Array).set(this.forms[this.from]);
       (target.array as Float32Array).set(this.forms[this.to]);
       position.needsUpdate = true;
