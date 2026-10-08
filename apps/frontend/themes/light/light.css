@@ -1,8 +1,8 @@
 /* ---------------------------------------------------------------------------
-   The light version of the site: the same tokens as themes/dark/dark.css in
-   daylight colours. Everything else (type, cards, footer, the particle
-   journey) is in themes/core; the particle engine switches to its light
-   mode from <html data-theme="light">. Loaded by app/(light).
+   The site's colours and light-specific styles. Everything else (type,
+   cards, footer, the particle journey) is in themes/core; the particle
+   engine uses its light material from <html data-theme="light">. Loaded by
+   app/layout.tsx.
    ------------------------------------------------------------------------ */
 
 :root {

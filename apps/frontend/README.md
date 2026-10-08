@@ -25,49 +25,26 @@ Don't run `npm run dev` and `npm run build` at the same time: they share
 `.next/`. For a test build next to a running dev server, use
 `NEXT_DIST_DIR=.next-test npm run build`.
 
-## Two designs, one switch
+## Design
 
-The homepage comes in two versions: the same Pixel IT particle site, in dark
-or in light colours. The site itself is shared; each version's folder holds
-only its colours:
-
-| Design | Folder | Route | What the folder holds |
-|---|---|---|---|
-| Dark | `themes/dark/` | `app/(dark)` → `/` | `dark.css`: the dark colours |
-| Light | `themes/light/` | `app/(light)` → `/light` | `light.css`: the light colours |
-
-Each root layout sets `<html data-theme="dark|light">`; the particle scene
-reads it to draw glowing points with bloom (dark) or ink dots on white
-without glow (light).
-
-A floating **Design: Dark / Light** control (`components/DesignSwitch.tsx`)
-saves the choice in a cookie; `next.config.ts` then serves the chosen design
-at `/`. Both stay statically prerendered. Hide the control with
-`NEXT_PUBLIC_DESIGN_SWITCH=off`.
-
-**When a design is chosen:** delete the other `themes/` folder and its
-`app/(…)` route group, `components/DesignSwitch.tsx`, `lib/design.ts` and the
-rewrite in `next.config.ts`; remove the other branch where the particle code
-checks `light` (JourneyScene, ParticleSystem, StarField, particle.frag.glsl). If light wins, move `app/(light)/light/page.tsx` up to
-`app/(light)/page.tsx` so it is served at `/`.
+The site has one design: the Pixel IT particle site in light colours (the
+dark version was retired on 2026-10-08). `app/layout.tsx` loads
+`themes/core/core.css` (structure) and `themes/light/light.css` (colours and
+light-specific styles) and sets `<html data-theme="light">`, which the
+particle scene reads to draw solid ink-coloured cubes on white, no bloom.
 
 ## Folders
 
 ```
-app/
-  (dark)/       root layout + "/" for the dark design
-  (light)/      root layout + "/light" for the light design
-  global-not-found.tsx, sitemap.ts, robots.ts, icon.png (shared)
+app/            root layout, "/" (page.tsx), not-found, sitemap, robots, icon
 themes/
-  core/         the site both designs share: Home.tsx, core.css (type, cards,
-                footer), fonts.ts, components/ (hero, journey, particles, story,
-                layout, sections, ui), lib/ (particle forms, gsap),
-                hooks/, shaders/
-  dark/         dark-only: dark.css
-  light/        light-only: light.css
-components/     shared: DesignSwitch
+  core/         the site: Home.tsx, core.css (type, cards, footer), fonts.ts,
+                components/ (hero, journey, particles, story, layout,
+                sections, ui), lib/ (particle forms, gsap), hooks/, shaders/
+  light/        colours (light.css) and the light sections: Services,
+                Staffing, Why, card entrance
 content/        ALL site copy (site.ts): edit text here, not in components
-lib/            shared: design switch, metadata, utils
+lib/            metadata, utils
 types/          ambient type declarations (e.g. *.glsl imports)
 public/         static files: brand logo, client logos
 docs/           decisions.md: why each part works the way it does

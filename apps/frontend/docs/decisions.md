@@ -7,40 +7,23 @@ Amplify), analytics and Terraform are not set up yet — `infrastructure/` will 
 added when hosting is decided. The portal is a separate application and must not
 live in this repo (plan, section 02).
 
-## Two candidate designs
+## One design (light)
 
-The team compares two designs on the real site before choosing one: the
-particle site in the dark, and the same site in daylight (the light design
-follows the "Light Theme Live Team Recreation Pack": same cinematic
-universe, bright atmosphere, navy type, controlled orange and blue
-particles). A separate teal/editorial light design was tried first and
-removed once that brief arrived.
+The team compared a dark and a light version of the particle site; on
+2026-10-08 the light version was chosen and the dark one removed (its route
+group, `themes/dark/`, the Dark / Light switch, `lib/design.ts` and the
+cookie rewrite). It is recoverable from git history (commit `dbc37d2` and
+earlier).
 
-- **Folders.** `themes/core/` is the shared site (everything described
-  below). `themes/dark/` holds the dark colours; `themes/light/` holds the
-  light colours. A section that needs a light-only
-  treatment adds its component or styles under `themes/light/`.
-- **Separate root layouts.** `app/(dark)/layout.tsx` and
-  `app/(light)/layout.tsx` each load `core.css` plus their own colours, and
-  set `<html data-theme>` (dark also gets `.dark` for shadcn). `useTheme()`
-  (`themes/core/lib/theme.ts`) reads that attribute; it never changes during
-  a page's life. Moving between the designs is a full page load, which
-  Next.js does anyway across root layouts. With no single root layout, the
-  404 page is `app/global-not-found.tsx` (`experimental.globalNotFound`).
-- **Replaces the sun/moon toggle.** The old header toggle (localStorage +
-  a before-paint script) is gone; the Design switch is the only control.
-- **Choosing.** `DesignSwitch` writes the `pixelit-design` cookie and loads
-  `/` again (a navigation, not `reload()`, which would restore the old
-  page's scroll position). A `beforeFiles` rewrite in `next.config.ts` serves
-  `/light` at `/` when the cookie is `light`. Both pages remain static, and
-  the right design is in the first HTML, so nothing flashes. Search engines
-  never carry the cookie, so they always see the dark design at `/`; the
-  light page's canonical is `/`.
-- **Visibility.** The switch shows by default; `NEXT_PUBLIC_DESIGN_SWITCH=off`
-  hides it.
-- **Removal.** See the README ("Two designs, one switch").
-
-The light design's details are under "Light theme (bright, premium)" below.
+- **Folders.** `themes/core/` is the site (everything described below);
+  `themes/light/` holds the colours and the light-only sections.
+- **One root layout.** `app/layout.tsx` loads `core.css` + `light.css` and
+  sets `<html data-theme="light">`; the 404 page is a normal
+  `app/not-found.tsx`.
+- **Engine.** The particle code still contains its original dark branches
+  behind the `light` flag (JourneyScene, ParticleSystem, StarField, shaders);
+  with `data-theme="light"` always set they never run. They can be deleted
+  in a later cleanup.
 
 ## Page rendering
 

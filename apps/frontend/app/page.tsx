@@ -4,17 +4,11 @@ import { LightServices } from "@/themes/light/services/LightServices";
 import { LightStaffing } from "@/themes/light/staffing/LightStaffing";
 import { LightWhy } from "@/themes/light/why/LightWhy";
 
-// "/" in the light version: the same page as the dark one, with its own
-// Services, Staffing and Why sections. Visitors who chose light get it at "/"
-// through the rewrite in next.config.ts.
+// "/" — the homepage, with the light Services, Staffing and Why sections.
 export default function Page() {
   return (
     <>
-      <Home
-        services={<LightServices />}
-        staffing={<LightStaffing />}
-        why={<LightWhy />}
-      />
+      <Home services={<LightServices />} staffing={<LightStaffing />} why={<LightWhy />} />
       <CardEntrance />
     </>
   );

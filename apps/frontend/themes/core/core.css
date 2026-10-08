@@ -5,10 +5,8 @@
 @custom-variant dark (&:is(.dark *));
 
 /* ---------------------------------------------------------------------------
-   Pixel IT Center: the site's structure (type, cards, footer), shared by
-   both versions. The colours: themes/dark/dark.css (app/(dark)) and
-   themes/light/light.css (app/(light)). The dark <html> carries .dark for
-   shadcn components that use dark:.
+   Pixel IT Center: the site's structure (type, cards, footer). The colours
+   are in themes/light/light.css, loaded with this by app/layout.tsx.
    ------------------------------------------------------------------------ */
 
 @theme inline {
@@ -48,7 +46,7 @@
   --radius-2xl: calc(var(--radius) * 1.8);
 }
 
-/* Colour-free tokens. Colours: themes/dark/dark.css, themes/light/light.css. */
+/* Colour-free tokens. Colours: themes/light/light.css. */
 :root {
   --radius: 0.75rem;
 
