@@ -9,7 +9,7 @@ import { MobileMenu } from "./MobileMenu";
 export function Header() {
   return (
     <HeaderShell>
-      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:h-20 lg:px-8">
+      <div className="flex h-16 items-center justify-between px-4 sm:px-6 lg:h-20 lg:px-8">
         <a href="#top" className="rounded-md" aria-label={`${site.name} home`}>
           <Logo priority alt="" />
         </a>
