@@ -681,7 +681,8 @@ that exists, Portal Login opens `/portal` on this site:
   Set `NEXT_PUBLIC_PORTAL_URL=https://portal.pixelitcenter.com` and they all
   move to the real portal; then delete `app/portal` and
   `components/portal`.
-- The page: Sign in / Sign up tabs. Sign in: Continue with Google, email,
+- The page: a round back arrow (to the website) above one card with the
+  logo and Sign in / Sign up tabs; no site header. Sign in: Continue with Google, email,
   password, forgot password. Sign up: Sign up with Google, full name, work
   email, password (8+ characters) and confirm password. Both end in a
   slide control (`SlideToSignIn`, like the phone's slide to answer; Enter

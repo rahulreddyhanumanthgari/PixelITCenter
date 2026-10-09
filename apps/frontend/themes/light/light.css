@@ -568,8 +568,8 @@ header > div {
   }
 }
 
-/* Portal Login page (/portal): one white card on the page background, in
-   the site's ink and orange. The header reuses the floating bar above. */
+/* Portal Login page (/portal): a round back arrow, then one white card
+   (logo, tabs, form) on the page background, in the site's ink and orange. */
 .portal-page {
   background:
     radial-gradient(ellipse 60% 45% at 50% 0%, rgb(252 101 13 / 0.07), transparent 70%),
@@ -654,20 +654,21 @@ header > div {
   color: #3b4458;
 }
 .portal-back {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  height: 2.5rem;
-  padding: 0 1rem;
+  display: grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
   border-radius: 999px;
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: #2e3a55;
-  transition: background-color 0.25s ease;
+  background: #ffffff;
+  border: 1px solid rgb(4 19 39 / 0.1);
+  color: var(--headline-ink);
+  transition:
+    background-color 0.25s ease,
+    transform 0.25s ease;
 }
 .portal-back:hover {
-  color: var(--headline-ink);
-  background: rgb(4 19 39 / 0.05);
+  background: #f1f5f9;
+  transform: translateX(-2px);
 }
 .portal-google {
   display: flex;
