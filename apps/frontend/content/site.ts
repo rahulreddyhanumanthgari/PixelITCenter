@@ -27,14 +27,12 @@ export const site = {
 } as const;
 
 // The Portal Login page (/portal). Sign-in is not connected yet: the form
-// sends nothing and shows `notReady` instead.
+// and the Google button send nothing and show `notReady` instead.
 export const portal = {
-  eyebrow: "Client & team portal",
-  title: "Portal Login",
-  body: "For Pixel IT Center clients, consultants and staff.",
+  pageTitle: "Portal Login",
+  title: "Welcome back",
   notReady:
     "The portal is being set up, so sign-in isn't open yet. For access or help, email",
-  noAccount: "Accounts are created by Pixel IT Center. Need one?",
 } as const;
 
 export const nav = [

@@ -681,8 +681,12 @@ that exists, Portal Login opens `/portal` on this site:
   Set `NEXT_PUBLIC_PORTAL_URL=https://portal.pixelitcenter.com` and they all
   move to the real portal; then delete `app/portal` and
   `components/portal`.
-- The form is not connected to any sign-in service. Submitting sends
-  nothing, clears the password and says the portal is being set up.
+- The page: "Welcome back", Continue with Google, then email and
+  password with a slide-to-sign-in control (`SlideToSignIn`, like the
+  phone's slide to answer; Enter on the knob or in a field also works).
+- Nothing is connected to a sign-in service yet. Signing in or pressing
+  the Google button sends nothing, clears the password and says the portal
+  is being set up.
 - `/portal` is `noindex` and left out of the sitemap.
 - Per the plan, no portal data or workflows (timesheets, invoices,
   employees) go in this codebase; real sign-in is AWS Cognito in the

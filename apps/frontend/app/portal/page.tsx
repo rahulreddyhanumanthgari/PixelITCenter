@@ -9,7 +9,7 @@ import { PortalLoginForm } from "@/themes/core/components/portal/PortalLoginForm
 // portal.pixelitcenter.com later (see site.portalUrl).
 
 export const metadata: Metadata = {
-  title: portal.title,
+  title: portal.pageTitle,
   alternates: { canonical: "/portal" },
   robots: { index: false, follow: false },
 };
@@ -32,19 +32,9 @@ export default function PortalPage() {
       </header>
 
       <main className="portal-page flex flex-1 items-center justify-center px-4 pt-28 pb-16 sm:pt-32">
-        <div className="w-full max-w-md">
-          <div className="portal-card">
-            <p className="type-eyebrow">{portal.eyebrow}</p>
-            <h1 className="portal-title mt-3">{portal.title}</h1>
-            <p className="type-body-sm mt-3">{portal.body}</p>
-            <PortalLoginForm />
-          </div>
-          <p className="type-body-sm mt-6 text-center">
-            {portal.noAccount}{" "}
-            <Link href="/#contact" className="portal-link">
-              Contact us
-            </Link>
-          </p>
+        <div className="portal-card w-full max-w-md">
+          <h1 className="portal-title">{portal.title}</h1>
+          <PortalLoginForm />
         </div>
       </main>
     </>
