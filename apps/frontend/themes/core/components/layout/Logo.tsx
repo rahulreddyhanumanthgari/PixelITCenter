@@ -12,8 +12,9 @@ interface LogoProps {
 }
 
 /**
- * The Pixel IT Center logo: the orange dot mark beside the "PixelIT Center"
- * wordmark (side-by-side version of public/brand/pixelit-logo-stacked.webp).
+ * The Pixel IT Center logo: the dot mark and the "PixelIT Center" wordmark on
+ * one line, in brand orange. A white version for orange backgrounds is in
+ * public/brand/pixelit-logo-white.webp.
  */
 export function Logo({ className, priority = false, alt = site.name }: LogoProps) {
   return (
