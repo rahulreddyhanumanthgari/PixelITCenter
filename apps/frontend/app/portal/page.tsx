@@ -33,7 +33,7 @@ export default function PortalPage() {
 
       <main className="portal-page flex flex-1 items-center justify-center px-4 pt-28 pb-16 sm:pt-32">
         <div className="portal-card w-full max-w-md">
-          <h1 className="portal-title">{portal.title}</h1>
+          <h1 className="sr-only">{portal.pageTitle}</h1>
           <PortalLoginForm />
         </div>
       </main>

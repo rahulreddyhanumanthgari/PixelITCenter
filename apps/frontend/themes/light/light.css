@@ -586,14 +586,6 @@ header > div {
     padding: 2.5rem;
   }
 }
-.portal-title {
-  font-family: var(--font-headline);
-  font-size: 2.75rem;
-  font-weight: 900;
-  line-height: 1;
-  text-transform: uppercase;
-  color: var(--headline-ink);
-}
 .portal-label {
   display: block;
   margin-bottom: 0.5rem;
@@ -800,4 +792,37 @@ header > div {
 .slide-knob:focus-visible {
   outline: 2px solid #ffffff;
   outline-offset: -4px;
+}
+
+/* Portal: Sign in / Sign up switch at the top of the card. */
+.portal-tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.25rem;
+  padding: 0.3rem;
+  border-radius: 999px;
+  background: rgb(4 19 39 / 0.06);
+}
+.portal-tab {
+  height: 2.75rem;
+  border-radius: 999px;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: #5b6578;
+  transition:
+    background-color 0.25s ease,
+    color 0.25s ease,
+    box-shadow 0.25s ease;
+}
+.portal-tab:hover {
+  color: var(--headline-ink);
+}
+.portal-tab[aria-selected="true"] {
+  background: #ffffff;
+  color: var(--headline-ink);
+  box-shadow: 0 2px 8px -3px rgb(4 19 39 / 0.25);
+}
+.portal-tab:focus-visible {
+  outline: 2px solid var(--headline-orange);
+  outline-offset: 2px;
 }

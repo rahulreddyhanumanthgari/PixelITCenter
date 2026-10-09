@@ -6,15 +6,16 @@ import { ArrowRight, Check } from "lucide-react";
 type Props = {
   /** Called when the knob reaches the end. Return false to spring it back. */
   onComplete: () => boolean;
-  label?: string;
+  /** What the knob does, for screen readers: "Sign in" or "Sign up". */
+  action?: string;
 };
 
 /**
- * "Slide to sign in", like the phone's slide to answer: drag the orange
+ * "Slide to sign in" (or sign up), like the phone's slide to answer: drag the orange
  * knob to the right end to sign in. Let go early and it springs back.
  * Keyboard: focus the knob and press Enter or Space.
  */
-export function SlideToSignIn({ onComplete, label = "Slide to sign in" }: Props) {
+export function SlideToSignIn({ onComplete, action = "Sign in" }: Props) {
   const trackRef = useRef<HTMLDivElement>(null);
   const knobRef = useRef<HTMLDivElement>(null);
   const drag = useRef<{ startX: number; max: number } | null>(null);
@@ -53,13 +54,13 @@ export function SlideToSignIn({ onComplete, label = "Slide to sign in" }: Props)
     <div ref={trackRef} className="slide-track" data-done={done || undefined}>
       <div aria-hidden="true" className="slide-fill" style={{ width: `calc(${x}px + 3.5rem)` }} />
       <span aria-hidden="true" className="slide-label" style={{ opacity: Math.max(0, 1 - progress * 1.8) }}>
-        {label}
+        Slide to {action.toLowerCase()}
       </span>
       <div
         ref={knobRef}
         role="button"
         tabIndex={0}
-        aria-label="Sign in"
+        aria-label={action}
         className="slide-knob"
         style={{
           transform: `translateX(${x}px)`,

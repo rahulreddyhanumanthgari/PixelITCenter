@@ -30,7 +30,6 @@ export const site = {
 // and the Google button send nothing and show `notReady` instead.
 export const portal = {
   pageTitle: "Portal Login",
-  title: "Welcome back",
   notReady:
     "The portal is being set up, so sign-in isn't open yet. For access or help, email",
 } as const;

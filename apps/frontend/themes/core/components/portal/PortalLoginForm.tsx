@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import { portal, site } from "@/content/site";
 import { SlideToSignIn } from "./SlideToSignIn";
@@ -29,24 +29,116 @@ function GoogleMark() {
   );
 }
 
+type Mode = "signin" | "signup";
+
+const MODES: { id: Mode; label: string }[] = [
+  { id: "signin", label: "Sign in" },
+  { id: "signup", label: "Sign up" },
+];
+
+/** A password box with its own show / hide eye. */
+function PasswordField({
+  id,
+  label,
+  autoComplete,
+  aside,
+  hint,
+  minLength,
+  onInput,
+}: {
+  id: string;
+  label: string;
+  autoComplete: string;
+  aside?: ReactNode;
+  hint?: string;
+  minLength?: number;
+  onInput?: () => void;
+}) {
+  const [show, setShow] = useState(false);
+  return (
+    <div>
+      <div className="flex items-center justify-between">
+        <label htmlFor={id} className="portal-label">
+          {label}
+        </label>
+        {aside}
+      </div>
+      <div className="relative">
+        <input
+          id={id}
+          name={id}
+          type={show ? "text" : "password"}
+          autoComplete={autoComplete}
+          required
+          minLength={minLength}
+          onInput={onInput}
+          aria-describedby={hint ? `${id}-hint` : undefined}
+          className="portal-input pr-12"
+        />
+        <button
+          type="button"
+          onClick={() => setShow((v) => !v)}
+          aria-label={show ? `Hide ${label.toLowerCase()}` : `Show ${label.toLowerCase()}`}
+          aria-pressed={show}
+          className="portal-eye"
+        >
+          {show ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+        </button>
+      </div>
+      {hint && (
+        <p id={`${id}-hint`} className="type-body-sm mt-1.5">
+          {hint}
+        </p>
+      )}
+    </div>
+  );
+}
+
 /**
- * Google sign-in, then email and password with a slide-to-sign-in control.
+ * Sign in / Sign up tabs. Each shows its own form: a Google button, then
+ * the fields (sign up adds name and confirm password) and the slide control.
  * Not connected to any login service yet: nothing is sent anywhere; the
- * password is cleared and a note explains the portal is still being set up.
- * Wire the real sign-in (AWS Cognito, per the plan; Google through it) into
- * onSubmit and the Google button when the portal exists.
+ * passwords are cleared and a note explains the portal is still being set
+ * up. Wire the real sign-in (AWS Cognito, per the plan; Google through it)
+ * into onSubmit and the Google button when the portal exists.
  */
 export function PortalLoginForm() {
   const formRef = useRef<HTMLFormElement>(null);
-  const [showPassword, setShowPassword] = useState(false);
-  const [password, setPassword] = useState("");
+  const tabRefs = useRef<(HTMLButtonElement | null)[]>([]);
+  const [mode, setMode] = useState<Mode>("signin");
   const [notice, setNotice] = useState(false);
+  const signup = mode === "signup";
+  const action = signup ? "Sign up" : "Sign in";
+
+  const switchTo = (next: Mode) => {
+    setMode(next);
+    setNotice(false);
+  };
+
+  // Tabs pattern: Left / Right arrows move between Sign in and Sign up.
+  const onTabKey = (e: KeyboardEvent<HTMLButtonElement>, i: number) => {
+    if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
+    e.preventDefault();
+    const j = (i + (e.key === "ArrowRight" ? 1 : MODES.length - 1)) % MODES.length;
+    switchTo(MODES[j].id);
+    tabRefs.current[j]?.focus();
+  };
+
+  // Sign up: the two passwords must match.
+  const checkConfirm = () => {
+    const form = formRef.current;
+    const confirm = form?.elements.namedItem("confirm-password") as HTMLInputElement | null;
+    const password = form?.elements.namedItem("password") as HTMLInputElement | null;
+    if (!confirm || !password) return;
+    confirm.setCustomValidity(confirm.value && confirm.value !== password.value ? "Passwords don't match." : "");
+  };
 
   // From the slider: check the fields first (the browser points at what's
   // missing), then submit.
-  const trySignIn = () => {
+  const trySubmit = () => {
     const form = formRef.current;
     if (!form) return false;
+    checkConfirm();
     if (!form.checkValidity()) {
       form.reportValidity();
       return false;
@@ -56,94 +148,130 @@ export function PortalLoginForm() {
   };
 
   return (
-    <div className="mt-8">
-      <button type="button" className="portal-google" onClick={() => setNotice(true)}>
-        <GoogleMark />
-        Continue with Google
-      </button>
+    <div>
+      <div role="tablist" aria-label="Sign in or sign up" className="portal-tabs">
+        {MODES.map((m, i) => (
+          <button
+            key={m.id}
+            ref={(el) => {
+              tabRefs.current[i] = el;
+            }}
+            type="button"
+            role="tab"
+            id={`portal-tab-${m.id}`}
+            aria-selected={mode === m.id}
+            aria-controls="portal-panel"
+            tabIndex={mode === m.id ? 0 : -1}
+            onClick={() => switchTo(m.id)}
+            onKeyDown={(e) => onTabKey(e, i)}
+            className="portal-tab"
+          >
+            {m.label}
+          </button>
+        ))}
+      </div>
 
-      <p className="portal-or" aria-hidden="true">
-        or
-      </p>
-
-      <form
-        ref={formRef}
-        className="space-y-5"
-        onSubmit={(e) => {
-          e.preventDefault();
-          setPassword("");
-          setNotice(true);
-        }}
-      >
-        <div>
-          <label htmlFor="portal-email" className="portal-label">
-            Email
-          </label>
-          <input
-            id="portal-email"
-            name="email"
-            type="email"
-            autoComplete="username"
-            required
-            placeholder="you@company.com"
-            className="portal-input"
-          />
-        </div>
-
-        <div>
-          <div className="flex items-center justify-between">
-            <label htmlFor="portal-password" className="portal-label">
-              Password
-            </label>
-            <a
-              href={`mailto:${site.contact.email}?subject=Portal%20password%20reset`}
-              className="portal-link text-sm"
-            >
-              Forgot password?
-            </a>
-          </div>
-          <div className="relative">
-            <input
-              id="portal-password"
-              name="password"
-              type={showPassword ? "text" : "password"}
-              autoComplete="current-password"
-              required
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="portal-input pr-12"
-            />
-            <button
-              type="button"
-              onClick={() => setShowPassword((v) => !v)}
-              aria-label={showPassword ? "Hide password" : "Show password"}
-              aria-pressed={showPassword}
-              className="portal-eye"
-            >
-              {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
-            </button>
-          </div>
-        </div>
-
-        {/* Enter in a field still signs in (a form needs a submit button for that). */}
-        <button type="submit" className="sr-only" tabIndex={-1} aria-hidden="true">
-          Sign in
+      <div id="portal-panel" role="tabpanel" aria-labelledby={`portal-tab-${mode}`} className="mt-7">
+        <button type="button" className="portal-google" onClick={() => setNotice(true)}>
+          <GoogleMark />
+          {signup ? "Sign up with Google" : "Continue with Google"}
         </button>
-        <SlideToSignIn onComplete={trySignIn} />
 
-        {/* Always in the page, so screen readers announce the text when it appears. */}
-        <div role="status">
-          {notice && (
-            <p className="portal-notice">
-              {portal.notReady}{" "}
-              <a href={`mailto:${site.contact.email}`} className="portal-link">
-                {site.contact.email}
-              </a>
-              .
-            </p>
+        <p className="portal-or" aria-hidden="true">
+          or
+        </p>
+
+        {/* key: switching tabs starts a fresh, empty form. */}
+        <form
+          key={mode}
+          ref={formRef}
+          className="space-y-5"
+          onSubmit={(e) => {
+            e.preventDefault();
+            for (const name of ["password", "confirm-password"]) {
+              const input = e.currentTarget.elements.namedItem(name) as HTMLInputElement | null;
+              if (input) input.value = "";
+            }
+            setNotice(true);
+          }}
+        >
+          {signup && (
+            <div>
+              <label htmlFor="portal-name" className="portal-label">
+                Full name
+              </label>
+              <input id="portal-name" name="name" type="text" autoComplete="name" required className="portal-input" />
+            </div>
           )}
-        </div>
-      </form>
+
+          <div>
+            <label htmlFor="portal-email" className="portal-label">
+              {signup ? "Work email" : "Email"}
+            </label>
+            <input
+              id="portal-email"
+              name="email"
+              type="email"
+              autoComplete={signup ? "email" : "username"}
+              required
+              placeholder="you@company.com"
+              className="portal-input"
+            />
+          </div>
+
+          {signup ? (
+            <>
+              <PasswordField
+                id="password"
+                label="Password"
+                autoComplete="new-password"
+                hint="At least 8 characters."
+                minLength={8}
+                onInput={checkConfirm}
+              />
+              <PasswordField
+                id="confirm-password"
+                label="Confirm password"
+                autoComplete="new-password"
+                onInput={checkConfirm}
+              />
+            </>
+          ) : (
+            <PasswordField
+              id="password"
+              label="Password"
+              autoComplete="current-password"
+              aside={
+                <a
+                  href={`mailto:${site.contact.email}?subject=Portal%20password%20reset`}
+                  className="portal-link text-sm"
+                >
+                  Forgot password?
+                </a>
+              }
+            />
+          )}
+
+          {/* Enter in a field still submits (a form needs a submit button for that). */}
+          <button type="submit" className="sr-only" tabIndex={-1} aria-hidden="true">
+            {action}
+          </button>
+          <SlideToSignIn onComplete={trySubmit} action={action} />
+
+          {/* Always in the page, so screen readers announce the text when it appears. */}
+          <div role="status">
+            {notice && (
+              <p className="portal-notice">
+                {portal.notReady}{" "}
+                <a href={`mailto:${site.contact.email}`} className="portal-link">
+                  {site.contact.email}
+                </a>
+                .
+              </p>
+            )}
+          </div>
+        </form>
+      </div>
     </div>
   );
 }
