@@ -176,20 +176,6 @@
   font-weight: 650;
 }
 
-/* Buttons: dark navy pill and an outlined pill (the reference's pair). */
-[data-hero] [data-reveal="3"] > a {
-  height: 3rem;
-  padding: 0 1.6rem;
-  font-size: 0.9375rem;
-}
-[data-hero] [data-reveal="3"] > a + a {
-  border: 1.5px solid #8f98a8;
-  color: var(--headline-ink);
-}
-[data-hero] [data-reveal="3"] > a + a:hover {
-  border-color: var(--headline-ink);
-  background: transparent;
-}
 
 /* Navigation. */
 .type-nav {
@@ -466,8 +452,9 @@ li[data-card] > figure.card figcaption {
   }
 }
 
-/* The site's primary pill button (Careers "View open roles", header "Portal
-   Login"): navy, white text, an orange arrow chip that slides on hover. */
+/* The site's one button style (every button: hero, header and menu Portal
+   Login, Careers, Contact): navy pill, white text, an orange arrow chip that
+   slides on hover. */
 .cta-pill {
   height: 3.25rem;
   padding: 0 0.45rem 0 1.6rem;
