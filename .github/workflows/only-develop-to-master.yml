@@ -1,0 +1,19 @@
+name: Only develop into master
+
+on:
+  pull_request:
+    branches: [master]
+
+jobs:
+  check-source-branch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Block pull requests into master that do not come from develop
+        env:
+          HEAD_REF: ${{ github.head_ref }}
+        run: |
+          if [ "$HEAD_REF" != "develop" ]; then
+            echo "::error::Only the develop branch can be merged into master. This PR comes from '$HEAD_REF'. Merge it into develop first."
+            exit 1
+          fi
+          echo "Source branch is develop - OK."
