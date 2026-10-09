@@ -544,9 +544,10 @@ header :not(#mobile-nav) > a.cta-pill svg {
   padding: 0.5rem;
 }
 
-/* Floating header: the logo, links and Portal Login inside one rounded white
-   bar with a small gap from the screen edges, the same at the top of the page
-   and while scrolling. The header strip behind it stays fully transparent. */
+/* Floating header: the logo, links and Portal Login inside one small rounded
+   white bar (thin outline, no shadow or fade) with a small gap from the
+   screen edges, the same at the top of the page and while scrolling. The
+   header strip behind it stays fully transparent. */
 header,
 header.backdrop-blur-md {
   background: transparent !important;
@@ -560,8 +561,7 @@ header > div {
   padding: 0 0.4rem 0 1rem !important;
   border-radius: 999px;
   background: rgb(255 255 255 / 0.94);
-  border: 1px solid rgb(4 19 39 / 0.07);
-  box-shadow: 0 12px 32px -20px rgb(4 19 39 / 0.45);
+  border: 1px solid rgb(4 19 39 / 0.1);
 }
 @media (min-width: 1024px) {
   header > div {
