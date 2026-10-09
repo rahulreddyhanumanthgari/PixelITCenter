@@ -1,3 +1,4 @@
+import { ArrowRight } from "lucide-react";
 import { site } from "@/content/site";
 import { buttonVariants } from "@/themes/core/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -23,10 +24,11 @@ export function Header() {
             href={site.portalUrl}
             className={cn(
               buttonVariants({ variant: "outline" }),
-              "hidden h-9 rounded-full border-foreground/20 bg-transparent px-4 sm:inline-flex",
+              "cta-pill hidden rounded-full sm:inline-flex",
             )}
           >
             Portal Login
+            <ArrowRight aria-hidden="true" />
           </a>
           <MobileMenu />
         </div>
