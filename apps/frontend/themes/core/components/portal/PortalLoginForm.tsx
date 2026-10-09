@@ -134,17 +134,14 @@ export function PortalLoginForm() {
   };
 
   // From the slider: check the fields first (the browser points at what's
-  // missing), then submit.
-  const trySubmit = () => {
+  // missing); the form is submitted once the knob has arrived.
+  const validate = () => {
     const form = formRef.current;
     if (!form) return false;
     checkConfirm();
-    if (!form.checkValidity()) {
-      form.reportValidity();
-      return false;
-    }
-    form.requestSubmit();
-    return true;
+    if (form.checkValidity()) return true;
+    form.reportValidity();
+    return false;
   };
 
   return (
@@ -256,7 +253,11 @@ export function PortalLoginForm() {
           <button type="submit" className="sr-only" tabIndex={-1} aria-hidden="true">
             {action}
           </button>
-          <SlideToSignIn onComplete={trySubmit} action={action} />
+          <SlideToSignIn
+            validate={validate}
+            onComplete={() => formRef.current?.requestSubmit()}
+            action={action}
+          />
 
           {/* Always in the page, so screen readers announce the text when it appears. */}
           <div role="status">

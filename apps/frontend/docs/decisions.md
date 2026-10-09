@@ -685,8 +685,10 @@ that exists, Portal Login opens `/portal` on this site:
   logo and Sign in / Sign up tabs; no site header. Sign in: Continue with Google, email,
   password, forgot password. Sign up: Sign up with Google, full name, work
   email, password (8+ characters) and confirm password. Both end in a
-  slide control (`SlideToSignIn`, like the phone's slide to answer; Enter
-  on the knob or in a field also works).
+  slide control (`SlideToSignIn`, like the phone's slide to answer). A tap
+  (or Enter / Space) makes the knob glide over on its own; on arrival the
+  bar turns orange and the knob pops into a white tick. An unfilled form
+  makes the knob nudge instead.
 - Nothing is connected to a sign-in service yet. Signing in or pressing
   the Google button sends nothing, clears the password and says the portal
   is being set up.

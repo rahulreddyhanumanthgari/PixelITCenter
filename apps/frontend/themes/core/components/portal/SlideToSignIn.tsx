@@ -1,28 +1,42 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef, useState, type CSSProperties } from "react";
 import { ArrowRight, Check } from "lucide-react";
 
 type Props = {
-  /** Called when the knob reaches the end. Return false to spring it back. */
-  onComplete: () => boolean;
+  /** Checked before sliding through. Return false to stop (the knob nudges). */
+  validate: () => boolean;
+  /** Called once the knob has arrived at the end. */
+  onComplete: () => void;
   /** What the knob does, for screen readers: "Sign in" or "Sign up". */
   action?: string;
 };
 
+// Travel: a tap glides the whole way (slow start, smooth stop); a drag let
+// go near the end just settles; a give-up springs back with a little bounce.
+const GLIDE = { ms: 700, ease: "cubic-bezier(0.65, 0, 0.35, 1)" };
+const SETTLE = { ms: 220, ease: "cubic-bezier(0.22, 1, 0.36, 1)" };
+const SPRING_BACK = { ms: 550, ease: "cubic-bezier(0.34, 1.4, 0.64, 1)" };
+const TAP_SLOP = 6; // px a press may move and still count as a tap
+
 /**
- * "Slide to sign in" (or sign up), like the phone's slide to answer: drag the orange
- * knob to the right end to sign in. Let go early and it springs back.
- * Keyboard: focus the knob and press Enter or Space.
+ * "Slide to sign in" (or sign up), like the phone's slide to answer: drag
+ * the orange knob to the right end, or just tap it and it glides there on
+ * its own. Let go early and it springs back. If the form isn't filled in,
+ * the knob nudges and the browser points at what's missing.
+ * Keyboard: focus the knob and press Enter or Space (same as a tap).
  */
-export function SlideToSignIn({ onComplete, action = "Sign in" }: Props) {
+export function SlideToSignIn({ validate, onComplete, action = "Sign in" }: Props) {
   const trackRef = useRef<HTMLDivElement>(null);
   const knobRef = useRef<HTMLDivElement>(null);
-  const drag = useRef<{ startX: number; max: number } | null>(null);
+  const drag = useRef<{ startX: number; downX: number; max: number } | null>(null);
+  const busy = useRef(false);
   const [x, setX] = useState(0);
   const [max, setMax] = useState(1);
+  const [motion, setMotion] = useState(SPRING_BACK);
   const [dragging, setDragging] = useState(false);
   const [done, setDone] = useState(false);
+  const [nudge, setNudge] = useState(false);
 
   // How far the knob can travel: the track minus the knob and its inset.
   const measure = () => {
@@ -32,28 +46,63 @@ export function SlideToSignIn({ onComplete, action = "Sign in" }: Props) {
     return Math.max(1, track.clientWidth - knob.offsetWidth - 2 * knob.offsetLeft);
   };
 
-  const finish = () => {
-    if (!onComplete()) {
-      setX(0);
+  const reduced = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  const springBack = () => {
+    setMotion(SPRING_BACK);
+    setX(0);
+  };
+
+  const finish = (glide: boolean) => {
+    if (busy.current) return;
+    if (!validate()) {
+      springBack();
+      setNudge(true);
+      window.setTimeout(() => setNudge(false), 500);
       return;
     }
+    busy.current = true;
     const m = measure();
+    const move = reduced() ? { ms: 0, ease: "linear" } : glide ? GLIDE : SETTLE;
     setMax(m);
+    setMotion(move);
     setX(m);
-    setDone(true);
-    // Not a real sign-in yet, so return to the start once it has shown.
+    // Arrived: fill turns orange, the knob pops and shows a tick.
     window.setTimeout(() => {
-      setDone(false);
-      setX(0);
-    }, 1400);
+      setDone(true);
+      onComplete();
+      // Not a real sign-in yet, so return to the start once it has shown.
+      window.setTimeout(() => {
+        setDone(false);
+        springBack();
+        busy.current = false;
+      }, 1400);
+    }, move.ms);
   };
 
   const progress = Math.min(1, x / max);
+  const transition = dragging ? "none" : `${motion.ms}ms ${motion.ease}`;
 
   return (
-    <div ref={trackRef} className="slide-track" data-done={done || undefined}>
-      <div aria-hidden="true" className="slide-fill" style={{ width: `calc(${x}px + 3.5rem)` }} />
-      <span aria-hidden="true" className="slide-label" style={{ opacity: Math.max(0, 1 - progress * 1.8) }}>
+    <div
+      ref={trackRef}
+      className="slide-track"
+      data-done={done || undefined}
+      data-nudge={nudge || undefined}
+    >
+      <div
+        aria-hidden="true"
+        className="slide-fill"
+        style={{ width: `calc(${x}px + 3.5rem)`, transition: dragging ? "none" : `width ${transition}` }}
+      />
+      <span
+        aria-hidden="true"
+        className="slide-label"
+        style={{
+          opacity: Math.max(0, 1 - progress * 1.8),
+          transition: dragging ? "none" : `opacity ${motion.ms * 0.6}ms ease`,
+        }}
+      >
         Slide to {action.toLowerCase()}
       </span>
       <div
@@ -62,42 +111,49 @@ export function SlideToSignIn({ onComplete, action = "Sign in" }: Props) {
         tabIndex={0}
         aria-label={action}
         className="slide-knob"
-        style={{
-          transform: `translateX(${x}px)`,
-          transition: dragging ? "none" : "transform 0.35s cubic-bezier(0.22, 1, 0.36, 1)",
-        }}
+        style={
+          {
+            "--x": `${x}px`,
+            transition: dragging ? "none" : `transform ${transition}`,
+          } as CSSProperties
+        }
         onPointerDown={(e) => {
-          if (done) return;
+          if (busy.current) return;
           e.currentTarget.setPointerCapture(e.pointerId);
           const m = measure();
           setMax(m);
-          drag.current = { startX: e.clientX - x, max: m };
+          drag.current = { startX: e.clientX - x, downX: e.clientX, max: m };
           setDragging(true);
         }}
         onPointerMove={(e) => {
           if (!drag.current) return;
           setX(Math.min(drag.current.max, Math.max(0, e.clientX - drag.current.startX)));
         }}
-        onPointerUp={() => {
+        onPointerUp={(e) => {
           if (!drag.current) return;
-          const reached = x >= drag.current.max * 0.85;
+          const { downX, max: m } = drag.current;
           drag.current = null;
           setDragging(false);
-          if (reached) finish();
-          else setX(0);
+          if (Math.abs(e.clientX - downX) < TAP_SLOP) finish(true); // a tap: glide on its own
+          else if (x >= m * 0.85) finish(false);
+          else springBack();
         }}
         onPointerCancel={() => {
           drag.current = null;
           setDragging(false);
-          setX(0);
+          springBack();
         }}
         onKeyDown={(e) => {
-          if (done || (e.key !== "Enter" && e.key !== " ")) return;
+          if (e.key !== "Enter" && e.key !== " ") return;
           e.preventDefault();
-          finish();
+          finish(true);
         }}
       >
-        {done ? <Check className="size-5" aria-hidden="true" /> : <ArrowRight className="size-5" aria-hidden="true" />}
+        {done ? (
+          <Check className="slide-tick size-5" aria-hidden="true" />
+        ) : (
+          <ArrowRight className="size-5" aria-hidden="true" />
+        )}
       </div>
     </div>
   );

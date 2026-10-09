@@ -785,6 +785,7 @@ header > div {
   color: #ffffff;
   cursor: grab;
   touch-action: pan-y; /* sideways drags move the knob, not the page */
+  transform: translateX(var(--x, 0px));
   box-shadow: 0 4px 12px -4px rgb(0 0 0 / 0.4);
 }
 .slide-knob:active {
@@ -826,4 +827,61 @@ header > div {
 .portal-tab:focus-visible {
   outline: 2px solid var(--headline-orange);
   outline-offset: 2px;
+}
+
+/* Slide: arriving pops the knob and draws in the tick; a tap on an
+   unfilled form nudges the knob (try again). */
+.slide-track[data-done] .slide-knob {
+  background: #ffffff;
+  color: var(--headline-orange);
+  animation: slide-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.slide-tick {
+  animation: slide-tick-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.slide-track[data-nudge] .slide-knob {
+  animation: slide-nudge 0.5s ease;
+}
+@keyframes slide-pop {
+  0% {
+    transform: translateX(var(--x)) scale(1);
+  }
+  45% {
+    transform: translateX(var(--x)) scale(1.18);
+  }
+  100% {
+    transform: translateX(var(--x)) scale(1);
+  }
+}
+@keyframes slide-tick-in {
+  from {
+    transform: scale(0) rotate(-45deg);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1) rotate(0);
+    opacity: 1;
+  }
+}
+@keyframes slide-nudge {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  30% {
+    transform: translateX(18px);
+  }
+  55% {
+    transform: translateX(-4px);
+  }
+  78% {
+    transform: translateX(6px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .slide-track[data-done] .slide-knob,
+  .slide-tick,
+  .slide-track[data-nudge] .slide-knob {
+    animation: none;
+  }
 }
