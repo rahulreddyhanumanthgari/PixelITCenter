@@ -503,22 +503,20 @@ header.backdrop-blur-md {
   will-change: transform, opacity;
 }
 
-/* Main menu (Home … Contact): the links sit together in one soft white pill
-   bar; the current section is a navy pill with white text, hover turns the
-   text orange. Replaces the plain links with the small orange dot. */
+/* Header: one row, one layer. Menu links sit directly on the header (no
+   bar of their own); the current section is marked softly in orange, so the
+   navy Portal Login button is the only strong element. Logo, links and
+   button share one height (2.75rem) and centre line. */
 nav[aria-label="Main"] ul {
   gap: 0.25rem;
-  padding: 0.3rem;
-  border-radius: 999px;
-  background: rgb(255 255 255 / 0.88);
-  border: 1px solid rgb(4 19 39 / 0.08);
-  box-shadow: 0 10px 28px -20px rgb(4 19 39 / 0.5);
 }
 nav[aria-label="Main"] a.type-nav {
-  display: block;
-  padding: 0.5rem 1.05rem;
+  display: flex;
+  align-items: center;
+  height: 2.5rem;
+  padding: 0 1rem;
   border-radius: 999px;
-  font-size: 0.875rem;
+  font-size: 0.9rem;
   font-weight: 600;
   letter-spacing: 0;
   color: #2e3a55;
@@ -527,11 +525,12 @@ nav[aria-label="Main"] a.type-nav {
     color 0.25s ease;
 }
 nav[aria-label="Main"] a.type-nav:hover {
-  color: var(--headline-orange);
+  color: var(--headline-ink);
+  background: rgb(4 19 39 / 0.05);
 }
 nav[aria-label="Main"] a.type-nav[aria-current="true"] {
-  background: var(--headline-ink);
-  color: #ffffff;
+  color: var(--headline-orange);
+  background: rgb(252 101 13 / 0.1);
 }
 nav[aria-label="Main"] a.type-nav > span {
   display: none;
@@ -539,4 +538,20 @@ nav[aria-label="Main"] a.type-nav > span {
 nav[aria-label="Main"] a.type-nav:focus-visible {
   outline: 2px solid var(--headline-orange);
   outline-offset: 2px;
+}
+/* The header's Portal Login: the site's pill button, a size smaller so it
+   lines up with the logo and links (the phone menu keeps the full size). */
+header :not(#mobile-nav) > a.cta-pill {
+  height: 2.75rem;
+  padding: 0 0.35rem 0 1.25rem;
+  gap: 0.7rem;
+  font-size: 0.875rem;
+}
+header :not(#mobile-nav) > a.cta-pill svg {
+  padding: 0.5rem;
+}
+@media (min-width: 1024px) {
+  header a[aria-label$="home"] img {
+    height: 2.75rem;
+  }
 }
