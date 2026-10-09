@@ -489,13 +489,6 @@ li[data-card] > figure.card figcaption {
   }
 }
 
-/* Header: solid when scrolled, no backdrop blur — blurring the animating
-   particle canvas behind it every frame caused stutter. */
-header.backdrop-blur-md {
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
-  background-color: rgb(248 250 252 / 0.97) !important;
-}
 
 /* Cards animate in (CardEntrance): give each its own layer up front, so the
    pop-in doesn't stall a frame creating layers for a dozen cards at once. */
@@ -506,7 +499,7 @@ header.backdrop-blur-md {
 /* Header: one row, one layer. Menu links sit directly on the header (no
    bar of their own); the current section is marked softly in orange, so the
    navy Portal Login button is the only strong element. Logo, links and
-   button share one height (2.75rem) and centre line. */
+   button share one centre line. */
 nav[aria-label="Main"] ul {
   gap: 0.25rem;
 }
@@ -550,8 +543,34 @@ header :not(#mobile-nav) > a.cta-pill {
 header :not(#mobile-nav) > a.cta-pill svg {
   padding: 0.5rem;
 }
+
+/* Floating header: the logo, links and Portal Login inside one rounded white
+   bar with a small gap from the screen edges, the same at the top of the page
+   and while scrolling. The header strip behind it stays fully transparent. */
+header,
+header.backdrop-blur-md {
+  background: transparent !important;
+  border-color: transparent !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+header > div {
+  height: 3.5rem !important;
+  margin: 0.6rem 0.75rem 0;
+  padding: 0 0.4rem 0 1rem !important;
+  border-radius: 999px;
+  background: rgb(255 255 255 / 0.94);
+  border: 1px solid rgb(4 19 39 / 0.07);
+  box-shadow: 0 12px 32px -20px rgb(4 19 39 / 0.45);
+}
 @media (min-width: 1024px) {
+  header > div {
+    height: 4rem !important;
+    max-width: 76rem;
+    margin: 0.85rem auto 0;
+    padding: 0 0.5rem 0 1.4rem !important;
+  }
   header a[aria-label$="home"] img {
-    height: 2.75rem;
+    height: 2.4rem;
   }
 }
