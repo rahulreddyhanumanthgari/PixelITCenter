@@ -1,0 +1,517 @@
+/* ---------------------------------------------------------------------------
+   The site's colours and light-specific styles. Everything else (type,
+   cards, footer, the particle journey) is in themes/core; the particle
+   engine uses its light material from <html data-theme="light">. Loaded by
+   app/layout.tsx.
+   ------------------------------------------------------------------------ */
+
+:root {
+  color-scheme: light;
+
+  /* Brand */
+  --brand-blue: #2563eb;
+  --brand-orange: #f26a1b;
+  --brand-white: #ffffff;
+
+  /* Surfaces */
+  --background: #f8fafc;
+  --surface: #ffffff;
+  --surface-2: #f1f5f9;
+  --foreground: #0b1220;
+  --muted: #eef2f7;
+  --muted-foreground: #5b6578;
+  --border: rgb(11 18 32 / 0.1);
+  --input: rgb(11 18 32 / 0.16);
+  --ring: #2563eb;
+
+  /* shadcn roles */
+  --card: var(--surface);
+  --card-foreground: var(--foreground);
+  --popover: var(--surface);
+  --popover-foreground: var(--foreground);
+  --primary: #0b1220;
+  --primary-foreground: #ffffff;
+  --secondary: var(--surface-2);
+  --secondary-foreground: var(--foreground);
+  --accent: var(--brand-orange);
+  --accent-foreground: #ffffff;
+  --destructive: #dc2626;
+
+  /* Text. Navy is the primary text colour; orange marks section labels,
+     active states, important words and progress. */
+  --text-primary: #0b1220;
+  --text-secondary: #3b4458;
+  --text-muted: #5f697d;
+  --text-strong: #000000;
+  --accent-orange: #e85d0c;
+  --accent-blue: #1d4ed8;
+
+  /* Cards: no white panel behind the content (owner's request). */
+  --card-bg: transparent;
+  --card-bg-hover: transparent;
+  --card-edge: rgb(11 18 32 / 0.09);
+  --panel-body: rgb(59 68 88 / 0.85);
+
+  /* One-offs */
+  --hero-kicker: #1e293b;
+  --hero-statement: #0b1220;
+  --icon-node: #c2410c;
+  --footer-label: #5b6578;
+  --footer-wordmark: rgb(11 18 32 / 0.04);
+  --footer-wordmark-stroke: rgb(11 18 32 / 0.08);
+  --footer-dust: #1e293b;
+  --galaxy-text-primary: #0b1220;
+  --galaxy-text-secondary: #1e293b;
+  --galaxy-text-muted: #3b4458;
+}
+
+/* ---------------------------------------------------------------------------
+   Light typography, after the owner's landing-page reference: heavy
+   extra-condensed uppercase headings in deep navy with orange / cyan accent
+   words; small wide-spaced labels; Inter for everything you read; a dark
+   pill and an outlined pill for buttons. Same sizes and structure as the
+   dark version otherwise (themes/core/core.css).
+   ------------------------------------------------------------------------ */
+:root {
+  --headline-ink: #041327;
+  --headline-orange: #fc650d;
+  --headline-cyan: #0cb1df;
+}
+
+/* Headings: hero, section titles, step numbers. */
+.hero-title,
+.type-display-lg,
+.card-index {
+  font-family: var(--font-headline), var(--font-display), sans-serif;
+}
+.type-display-lg {
+  font-weight: 900;
+  line-height: 0.92;
+  letter-spacing: -0.005em;
+  color: var(--headline-ink);
+}
+/* Condensed, so a size up from the dark version for the same presence. */
+.type-display-lg {
+  font-size: clamp(2.75rem, 1.6rem + 4.2vw, 5rem);
+}
+.type-display-lg .highlight,
+.hero-title .highlight {
+  color: var(--headline-orange);
+}
+.type-display-lg .highlight[data-tone="blue"],
+.hero-title .highlight[data-tone="blue"] {
+  color: var(--headline-cyan);
+}
+
+/* Hero: the reference's hierarchy — a small wide-spaced positioning line,
+   then the statement big, heavy and condensed. */
+.hero-kicker {
+  /* Big again, like the statement (its own size, a step below it). */
+  font-family: var(--font-headline), var(--font-display), sans-serif;
+  font-size: clamp(2.75rem, 1.2rem + 6.5vw, min(6.75rem, 11svh));
+  font-weight: 800;
+  line-height: 0.9;
+  letter-spacing: -0.005em;
+  color: var(--headline-ink);
+  margin-bottom: 0.15em;
+}
+.hero-kicker .highlight {
+  color: var(--headline-orange);
+}
+.hero-statement {
+  font-size: clamp(3.5rem, 1.5rem + 9vw, min(9rem, 15svh));
+  font-weight: 900;
+  line-height: 0.88;
+  letter-spacing: -0.005em;
+  color: var(--headline-ink);
+}
+@media (min-width: 768px) {
+  .hero-kicker {
+    font-size: clamp(2.75rem, 5.6vw, min(6.75rem, 11svh));
+  }
+  .hero-statement {
+    font-size: clamp(3.5rem, 7vw, min(8.5rem, 14svh));
+  }
+}
+
+/* Labels above headings: navy, small, wide-spaced (as in the reference). */
+.type-eyebrow {
+  font-family: var(--font-inter), sans-serif;
+  font-size: clamp(0.75rem, 0.7rem + 0.25vw, 0.9375rem);
+  font-weight: 600;
+  letter-spacing: 0.4em;
+  color: #1e2840;
+}
+.type-label {
+  letter-spacing: 0.24em;
+  color: #475569;
+}
+
+/* Card and sub-headings: Inter, bold, tight. */
+.type-heading,
+.type-subheading {
+  font-family: var(--font-inter), sans-serif;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  color: var(--headline-ink);
+}
+.card-index {
+  font-weight: 900;
+  font-size: 1.875rem;
+  letter-spacing: 0;
+  color: var(--headline-orange);
+}
+
+/* Reading text: Inter, darker navy so it holds up over the cubes. */
+.type-body {
+  font-family: var(--font-inter), sans-serif;
+  line-height: 1.55;
+  color: #283149;
+}
+.type-body-sm {
+  color: #3b4458;
+}
+.type-body strong,
+.type-body .font-medium {
+  font-weight: 650;
+}
+
+/* Buttons: dark navy pill and an outlined pill (the reference's pair). */
+[data-hero] [data-reveal="3"] > a {
+  height: 3rem;
+  padding: 0 1.6rem;
+  font-size: 0.9375rem;
+}
+[data-hero] [data-reveal="3"] > a + a {
+  border: 1.5px solid #8f98a8;
+  color: var(--headline-ink);
+}
+[data-hero] [data-reveal="3"] > a + a:hover {
+  border-color: var(--headline-ink);
+  background: transparent;
+}
+
+/* Navigation. */
+.type-nav {
+  font-weight: 500;
+  color: #2e3a55;
+}
+
+/* ---------------------------------------------------------------------------
+   Cards (Services tiles, Staffing and Why rows): white cards with a hairline
+   edge and a soft shadow; the icon (orange + soft navy) sits on a pale grey
+   tile. Hover: the card lifts, its edge and a short top line turn orange,
+   the icon tile warms and the icon grows.
+   ------------------------------------------------------------------------ */
+.light-svc {
+  position: relative;
+  background: #ffffff;
+  border: 1px solid rgb(4 19 39 / 0.08);
+  border-radius: 1rem;
+  box-shadow:
+    0 1px 2px rgb(4 19 39 / 0.04),
+    0 12px 32px -24px rgb(4 19 39 / 0.35);
+  transition:
+    transform 0.35s cubic-bezier(0.2, 0.7, 0.2, 1),
+    box-shadow 0.35s ease,
+    border-color 0.35s ease;
+}
+/* Services tiles: the card holds the icon tile, title and text. */
+li.light-svc:not(.light-row) {
+  padding: 0.5rem 0.5rem 0.9rem;
+}
+.light-svc::before {
+  content: "";
+  position: absolute;
+  top: -1px;
+  left: 1.25rem;
+  width: 2.25rem;
+  height: 3px;
+  border-radius: 0 0 3px 3px;
+  background: var(--svc);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.35s ease;
+}
+.light-svc__tile {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 16 / 10;
+  border-radius: 0.7rem;
+  background: linear-gradient(160deg, #f6f8fb, #eef2f6);
+  transition: background 0.35s ease;
+}
+.light-svc__icon {
+  width: 34%;
+  max-width: 3.5rem;
+  transition: transform 0.35s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+.light-svc__title {
+  margin-top: 0.85rem;
+  padding: 0 0.35rem;
+  font-family: var(--font-inter), sans-serif;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+  color: var(--headline-ink);
+}
+.light-svc__body {
+  margin-top: 0.3rem;
+  padding: 0 0.35rem;
+  font-size: 0.78rem;
+  line-height: 1.45;
+  color: #5b6578;
+}
+@media (hover: hover) {
+  .light-svc:hover {
+    transform: translateY(-4px);
+    border-color: color-mix(in srgb, var(--svc) 45%, transparent);
+    box-shadow:
+      0 2px 4px rgb(4 19 39 / 0.04),
+      0 22px 40px -22px color-mix(in srgb, var(--svc) 55%, transparent);
+  }
+  .light-svc:hover::before {
+    transform: scaleX(1);
+  }
+  .light-svc:hover .light-svc__tile {
+    background: linear-gradient(
+      160deg,
+      color-mix(in srgb, var(--svc) 8%, #ffffff),
+      color-mix(in srgb, var(--svc) 14%, #ffffff)
+    );
+  }
+  .light-svc:hover .light-svc__icon {
+    transform: scale(1.12) rotate(-4deg);
+  }
+}
+
+/* Staffing rows (LightStaffing) and Why rows: the same white card, long and
+   horizontal — the icon tile on the left, the title and text beside it. */
+.light-row {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  padding: 0.75rem;
+}
+.light-row__tile {
+  flex: none;
+  width: 7.5rem;
+  aspect-ratio: 4 / 3;
+}
+.light-row__tile .light-svc__icon {
+  width: 46%;
+}
+.light-row__text {
+  min-width: 0;
+}
+.light-row__title {
+  margin-top: 0;
+  padding: 0;
+  font-size: 1.0625rem;
+}
+.light-row__body {
+  padding: 0;
+  font-size: 0.875rem;
+}
+@media (max-width: 480px) {
+  .light-row__tile {
+    width: 5.5rem;
+  }
+}
+
+/* Why reasons: the row card, compact enough for two side by side. */
+.light-row--compact {
+  gap: 0.9rem;
+  padding: 0.6rem;
+}
+.light-row--compact .light-row__tile {
+  width: 4.75rem;
+}
+.light-row--compact .light-row__title {
+  font-size: 0.9375rem;
+}
+.light-row--compact .light-row__body {
+  font-size: 0.78rem;
+}
+
+/* About -> Contact sit over the full-strength galaxy (no fade behind text in
+   light): heavier, darker type there; accent words stay orange like the rest
+   of the site (the galaxy is drawn lighter in light, see particle.frag.glsl). */
+:root {
+  --galaxy-text-primary: #041327;
+  --galaxy-text-secondary: #0b1324;
+  --galaxy-text-muted: #1e293b;
+}
+[data-galaxy-region] .type-body,
+[data-galaxy-region] .type-body-sm,
+[data-galaxy-region] blockquote,
+[data-galaxy-region] figure p {
+  color: #041327;
+  font-weight: 500;
+}
+[data-galaxy-region] .type-eyebrow,
+[data-galaxy-region] .type-label {
+  color: #041327;
+  font-weight: 700;
+}
+[data-galaxy-region] dd,
+[data-galaxy-region] figcaption,
+[data-galaxy-region] cite {
+  color: #041327;
+  font-weight: 700;
+}
+
+/* ---------------------------------------------------------------------------
+   About highlights (Focus / Approach / Based in): stat cards — white, an
+   orange dot and a wide-spaced label over the value in bold navy, a full
+   orange line along the bottom that grows on hover.
+   ------------------------------------------------------------------------ */
+[data-about] dl {
+  gap: 0.9rem;
+  border: 0;
+}
+[data-about] dl > div[data-card] {
+  position: relative;
+  overflow: hidden;
+  padding: 1.25rem 1.25rem 1.4rem;
+  background: #ffffff;
+  border: 1px solid rgb(4 19 39 / 0.08) !important;
+  border-radius: 1rem;
+  box-shadow: 0 12px 32px -24px rgb(4 19 39 / 0.35);
+  text-align: left;
+  transition:
+    transform 0.35s cubic-bezier(0.2, 0.7, 0.2, 1),
+    box-shadow 0.35s ease;
+}
+[data-about] dl > div[data-card] dt {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #5b6578;
+}
+[data-about] dl > div[data-card] dt::before {
+  content: "";
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 999px;
+  background: var(--headline-orange);
+}
+[data-about] dl > div[data-card] dd {
+  margin-top: 0.55rem;
+  font-size: 1.125rem;
+  font-weight: 800;
+  color: var(--headline-ink);
+}
+[data-about] dl > div[data-card]::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: 3px;
+  width: 30%;
+  background: var(--headline-orange);
+  transition: width 0.4s ease;
+}
+
+/* ---------------------------------------------------------------------------
+   Testimonials: quote cards — white, a large orange quote mark, the quote in
+   navy and the client's name in an orange-edged footer.
+   ------------------------------------------------------------------------ */
+li[data-card] > figure.card {
+  position: relative;
+  padding: 2.75rem 1.5rem 1.4rem;
+  background: #ffffff;
+  border: 1px solid rgb(4 19 39 / 0.08);
+  border-top: 1px solid rgb(4 19 39 / 0.08);
+  border-radius: 1.25rem;
+  box-shadow: 0 16px 40px -28px rgb(4 19 39 / 0.4);
+  transition:
+    transform 0.35s cubic-bezier(0.2, 0.7, 0.2, 1),
+    box-shadow 0.35s ease;
+}
+li[data-card] > figure.card::before {
+  content: "\201C";
+  position: absolute;
+  top: 0.35rem;
+  left: 1.25rem;
+  width: auto;
+  height: auto;
+  background: none;
+  font-family: var(--font-headline), sans-serif;
+  font-size: 4.5rem;
+  font-weight: 900;
+  line-height: 1;
+  color: var(--headline-orange);
+}
+li[data-card] > figure.card::after {
+  display: none;
+}
+li[data-card] > figure.card figcaption {
+  margin-top: 1.25rem;
+  padding-top: 0.9rem;
+  border-top: 2px solid
+    color-mix(in srgb, var(--headline-orange) 35%, transparent);
+  color: var(--headline-ink);
+}
+@media (hover: hover) {
+  [data-about] dl > div[data-card]:hover,
+  li[data-card] > figure.card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 22px 44px -24px
+      color-mix(in srgb, var(--headline-orange) 45%, transparent);
+  }
+  [data-about] dl > div[data-card]:hover::after {
+    width: 100%;
+  }
+}
+
+/* Careers "View open roles": the site's primary pill (navy, white text) with
+   an orange arrow chip that slides on hover. */
+.careers-cta {
+  height: 3.25rem;
+  padding: 0 0.45rem 0 1.6rem;
+  gap: 0.9rem;
+  background: var(--headline-ink) !important;
+  border-color: var(--headline-ink) !important;
+  color: #ffffff !important;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  box-shadow: 0 14px 30px -18px rgb(4 19 39 / 0.6);
+  transition:
+    transform 0.3s ease,
+    box-shadow 0.3s ease;
+}
+.careers-cta svg {
+  box-sizing: content-box;
+  width: 1rem;
+  height: 1rem;
+  padding: 0.65rem;
+  border-radius: 999px;
+  background: var(--headline-orange);
+  color: #ffffff;
+  transition: transform 0.3s ease;
+}
+@media (hover: hover) {
+  .careers-cta:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 18px 34px -18px rgb(252 101 13 / 0.55);
+  }
+  .careers-cta:hover svg {
+    transform: translateX(3px);
+  }
+}
+
+/* Header: solid when scrolled, no backdrop blur — blurring the animating
+   particle canvas behind it every frame caused stutter. */
+header.backdrop-blur-md {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  background-color: rgb(248 250 252 / 0.97) !important;
+}
+
+/* Cards animate in (CardEntrance): give each its own layer up front, so the
+   pop-in doesn't stall a frame creating layers for a dozen cards at once. */
+[data-card] {
+  will-change: transform, opacity;
+}

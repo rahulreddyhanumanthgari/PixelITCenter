@@ -1,0 +1,6 @@
+# Repo-wide ignores. Each app has its own .gitignore (e.g. apps/frontend/.gitignore).
+node_modules/
+.DS_Store
+*.pem
+.env*
+.vercel
