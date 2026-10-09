@@ -672,6 +672,22 @@ version is now simply the dark site in light colours:
 - The Dark / Light switch (`components/DesignSwitch.tsx`, cookie +
   rewrite of `/` to `/light`) chooses between them.
 
+## Portal Login (temporary page)
+
+The plan puts the portal on its own app at portal.pixelitcenter.com. Until
+that exists, Portal Login opens `/portal` on this site:
+
+- Every Portal Login link reads `site.portalUrl` (`content/portal-url.ts`).
+  Set `NEXT_PUBLIC_PORTAL_URL=https://portal.pixelitcenter.com` and they all
+  move to the real portal; then delete `app/portal` and
+  `components/portal`.
+- The form is not connected to any sign-in service. Submitting sends
+  nothing, clears the password and says the portal is being set up.
+- `/portal` is `noindex` and left out of the sitemap.
+- Per the plan, no portal data or workflows (timesheets, invoices,
+  employees) go in this codebase; real sign-in is AWS Cognito in the
+  portal app.
+
 ## Content
 
 **Source: the live pixelitcenter.com.** The live site's facts and wording
