@@ -687,8 +687,10 @@ that exists, Portal Login opens `/portal` on this site:
   email, password (8+ characters) and confirm password. Both end in a
   slide control (`SlideToSignIn`, like the phone's slide to answer). A tap
   (or Enter / Space) makes the knob glide over on its own; on arrival the
-  bar turns orange and the knob pops into a white tick. An unfilled form
-  makes the knob nudge instead.
+  bar turns orange and the knob pops into a white tick. If something is
+  missing or wrong, the bar flashes red on arrival, the knob slides back,
+  and the form lists each problem in words ("Email is not filled.") with a
+  red outline on those fields until they're typed in.
 - Nothing is connected to a sign-in service yet. Signing in or pressing
   the Google button sends nothing, clears the password and says the portal
   is being set up.

@@ -4,7 +4,7 @@ import { useRef, useState, type CSSProperties } from "react";
 import { ArrowRight, Check } from "lucide-react";
 
 type Props = {
-  /** Checked before sliding through. Return false to stop (the knob nudges). */
+  /** Checked when the knob arrives. Return false and it slides back. */
   validate: () => boolean;
   /** Called once the knob has arrived at the end. */
   onComplete: () => void;
@@ -16,14 +16,15 @@ type Props = {
 // go near the end just settles; a give-up springs back with a little bounce.
 const GLIDE = { ms: 700, ease: "cubic-bezier(0.65, 0, 0.35, 1)" };
 const SETTLE = { ms: 220, ease: "cubic-bezier(0.22, 1, 0.36, 1)" };
-const SPRING_BACK = { ms: 550, ease: "cubic-bezier(0.34, 1.4, 0.64, 1)" };
+const SPRING_BACK = { ms: 550, ease: "cubic-bezier(0.34, 1.12, 0.64, 1)" };
 const TAP_SLOP = 6; // px a press may move and still count as a tap
 
 /**
  * "Slide to sign in" (or sign up), like the phone's slide to answer: drag
  * the orange knob to the right end, or just tap it and it glides there on
- * its own. Let go early and it springs back. If the form isn't filled in,
- * the knob nudges and the browser points at what's missing.
+ * its own. Let go early and it springs back. If something isn't filled in,
+ * the bar flashes red on arrival and the knob slides back to the start
+ * (the form says what's missing).
  * Keyboard: focus the knob and press Enter or Space (same as a tap).
  */
 export function SlideToSignIn({ validate, onComplete, action = "Sign in" }: Props) {
@@ -36,7 +37,7 @@ export function SlideToSignIn({ validate, onComplete, action = "Sign in" }: Prop
   const [motion, setMotion] = useState(SPRING_BACK);
   const [dragging, setDragging] = useState(false);
   const [done, setDone] = useState(false);
-  const [nudge, setNudge] = useState(false);
+  const [failed, setFailed] = useState(false);
 
   // How far the knob can travel: the track minus the knob and its inset.
   const measure = () => {
@@ -55,20 +56,26 @@ export function SlideToSignIn({ validate, onComplete, action = "Sign in" }: Prop
 
   const finish = (glide: boolean) => {
     if (busy.current) return;
-    if (!validate()) {
-      springBack();
-      setNudge(true);
-      window.setTimeout(() => setNudge(false), 500);
-      return;
-    }
     busy.current = true;
     const m = measure();
     const move = reduced() ? { ms: 0, ease: "linear" } : glide ? GLIDE : SETTLE;
     setMax(m);
     setMotion(move);
     setX(m);
-    // Arrived: fill turns orange, the knob pops and shows a tick.
     window.setTimeout(() => {
+      // Something missing: flash red for a beat, then slide back.
+      if (!validate()) {
+        setFailed(true);
+        window.setTimeout(() => {
+          springBack();
+          window.setTimeout(() => {
+            setFailed(false);
+            busy.current = false;
+          }, SPRING_BACK.ms);
+        }, 300);
+        return;
+      }
+      // Arrived: fill turns orange, the knob pops and shows a tick.
       setDone(true);
       onComplete();
       // Not a real sign-in yet, so return to the start once it has shown.
@@ -88,7 +95,7 @@ export function SlideToSignIn({ validate, onComplete, action = "Sign in" }: Prop
       ref={trackRef}
       className="slide-track"
       data-done={done || undefined}
-      data-nudge={nudge || undefined}
+      data-failed={failed || undefined}
     >
       <div
         aria-hidden="true"

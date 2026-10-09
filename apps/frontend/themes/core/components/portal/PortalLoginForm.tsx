@@ -30,6 +30,7 @@ function GoogleMark() {
 }
 
 type Mode = "signin" | "signup";
+type FieldError = { id: string; text: string };
 
 const MODES: { id: Mode; label: string }[] = [
   { id: "signin", label: "Sign in" },
@@ -44,7 +45,6 @@ function PasswordField({
   aside,
   hint,
   minLength,
-  onInput,
 }: {
   id: string;
   label: string;
@@ -52,7 +52,6 @@ function PasswordField({
   aside?: ReactNode;
   hint?: string;
   minLength?: number;
-  onInput?: () => void;
 }) {
   const [show, setShow] = useState(false);
   return (
@@ -71,7 +70,6 @@ function PasswordField({
           autoComplete={autoComplete}
           required
           minLength={minLength}
-          onInput={onInput}
           aria-describedby={hint ? `${id}-hint` : undefined}
           className="portal-input pr-12"
         />
@@ -107,12 +105,14 @@ export function PortalLoginForm() {
   const tabRefs = useRef<(HTMLButtonElement | null)[]>([]);
   const [mode, setMode] = useState<Mode>("signin");
   const [notice, setNotice] = useState(false);
+  const [errors, setErrors] = useState<FieldError[]>([]);
   const signup = mode === "signup";
   const action = signup ? "Sign up" : "Sign in";
 
   const switchTo = (next: Mode) => {
     setMode(next);
     setNotice(false);
+    setErrors([]);
   };
 
   // Tabs pattern: Left / Right arrows move between Sign in and Sign up.
@@ -124,24 +124,37 @@ export function PortalLoginForm() {
     tabRefs.current[j]?.focus();
   };
 
-  // Sign up: the two passwords must match.
-  const checkConfirm = () => {
-    const form = formRef.current;
-    const confirm = form?.elements.namedItem("confirm-password") as HTMLInputElement | null;
-    const password = form?.elements.namedItem("password") as HTMLInputElement | null;
-    if (!confirm || !password) return;
-    confirm.setCustomValidity(confirm.value && confirm.value !== password.value ? "Passwords don't match." : "");
-  };
-
-  // From the slider: check the fields first (the browser points at what's
-  // missing); the form is submitted once the knob has arrived.
+  // Check every field and say in words what's wrong with each ("Email is
+  // not filled"). Wrong fields get a red outline until they're typed in.
   const validate = () => {
     const form = formRef.current;
     if (!form) return false;
-    checkConfirm();
-    if (form.checkValidity()) return true;
-    form.reportValidity();
-    return false;
+    const password = form.elements.namedItem("password") as HTMLInputElement | null;
+    const found: FieldError[] = [];
+    for (const input of Array.from(form.querySelectorAll<HTMLInputElement>("input[required]"))) {
+      const label = form.querySelector(`label[for="${input.id}"]`)?.textContent ?? input.name;
+      const value = input.value.trim();
+      let text = "";
+      if (!value) text = `${label} is not filled.`;
+      else if (input.type === "email" && input.validity.typeMismatch) text = "Enter a valid email address.";
+      else if (input.minLength > 0 && input.value.length < input.minLength)
+        text = `${label} needs at least ${input.minLength} characters.`;
+      else if (input.name === "confirm-password" && input.value !== password?.value) text = "Passwords don't match.";
+      input.toggleAttribute("aria-invalid", Boolean(text));
+      if (text) found.push({ id: input.id, text });
+    }
+    setErrors(found);
+    if (found.length) {
+      setNotice(false);
+      return false;
+    }
+    return true;
+  };
+
+  // Typing in a field clears its own error.
+  const clearError = (id: string) => {
+    document.getElementById(id)?.removeAttribute("aria-invalid");
+    setErrors((list) => list.filter((e) => e.id !== id));
   };
 
   return (
@@ -182,9 +195,12 @@ export function PortalLoginForm() {
         <form
           key={mode}
           ref={formRef}
+          noValidate
           className="space-y-5"
+          onInput={(e) => clearError((e.target as HTMLElement).id)}
           onSubmit={(e) => {
             e.preventDefault();
+            if (!validate()) return;
             for (const name of ["password", "confirm-password"]) {
               const input = e.currentTarget.elements.namedItem(name) as HTMLInputElement | null;
               if (input) input.value = "";
@@ -224,13 +240,11 @@ export function PortalLoginForm() {
                 autoComplete="new-password"
                 hint="At least 8 characters."
                 minLength={8}
-                onInput={checkConfirm}
               />
               <PasswordField
                 id="confirm-password"
                 label="Confirm password"
                 autoComplete="new-password"
-                onInput={checkConfirm}
               />
             </>
           ) : (
@@ -260,6 +274,15 @@ export function PortalLoginForm() {
           />
 
           {/* Always in the page, so screen readers announce the text when it appears. */}
+          <div role="alert">
+            {errors.length > 0 && (
+              <ul className="portal-error">
+                {errors.map((e) => (
+                  <li key={e.id}>{e.text}</li>
+                ))}
+              </ul>
+            )}
+          </div>
           <div role="status">
             {notice && (
               <p className="portal-notice">
