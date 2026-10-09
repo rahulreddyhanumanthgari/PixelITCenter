@@ -884,3 +884,6 @@ header > div {
   line-height: 1.6;
   color: #b91c1c;
 }
+.portal-error li + li {
+  margin-top: 0.45rem;
+}

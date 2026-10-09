@@ -689,7 +689,7 @@ that exists, Portal Login opens `/portal` on this site:
   (or Enter / Space) makes the knob glide over on its own; on arrival the
   bar turns orange and the knob pops into a white tick. If something is
   missing or wrong, the bar flashes red on arrival, the knob slides back,
-  and the form lists each problem in words ("Email is not filled.") with a
+  and the form lists each problem in friendly words ("Pop in your email so we can find your account.") with a
   red outline on those fields until they're typed in.
 - Nothing is connected to a sign-in service yet. Signing in or pressing
   the Google button sends nothing, clears the password and says the portal

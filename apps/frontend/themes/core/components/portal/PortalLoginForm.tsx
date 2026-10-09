@@ -32,6 +32,33 @@ function GoogleMark() {
 type Mode = "signin" | "signup";
 type FieldError = { id: string; text: string };
 
+// What the form says when a field is missing or wrong: friendly, but it
+// always names the field.
+const ERROR_TEXT = {
+  badEmail: "That email looks a little off. Check for a typo?",
+  shortPassword: "Make your password at least 8 characters. Stronger is safer.",
+  mismatch: "Your two passwords don't match yet. Give it another go.",
+};
+
+function missingText(name: string, signup: boolean) {
+  switch (name) {
+    case "name":
+      return "What should we call you? Add your full name.";
+    case "email":
+      return signup
+        ? "Add your work email so we know where to reach you."
+        : "Pop in your email so we can find your account.";
+    case "password":
+      return signup
+        ? "Pick a password to keep your account safe."
+        : "Your password is the key. We can't open the door without it.";
+    case "confirm-password":
+      return "Type your password once more, just to be sure.";
+    default:
+      return "This field is still empty.";
+  }
+}
+
 const MODES: { id: Mode; label: string }[] = [
   { id: "signin", label: "Sign in" },
   { id: "signup", label: "Sign up" },
@@ -132,14 +159,12 @@ export function PortalLoginForm() {
     const password = form.elements.namedItem("password") as HTMLInputElement | null;
     const found: FieldError[] = [];
     for (const input of Array.from(form.querySelectorAll<HTMLInputElement>("input[required]"))) {
-      const label = form.querySelector(`label[for="${input.id}"]`)?.textContent ?? input.name;
       const value = input.value.trim();
       let text = "";
-      if (!value) text = `${label} is not filled.`;
-      else if (input.type === "email" && input.validity.typeMismatch) text = "Enter a valid email address.";
-      else if (input.minLength > 0 && input.value.length < input.minLength)
-        text = `${label} needs at least ${input.minLength} characters.`;
-      else if (input.name === "confirm-password" && input.value !== password?.value) text = "Passwords don't match.";
+      if (!value) text = missingText(input.name, signup);
+      else if (input.type === "email" && input.validity.typeMismatch) text = ERROR_TEXT.badEmail;
+      else if (input.minLength > 0 && input.value.length < input.minLength) text = ERROR_TEXT.shortPassword;
+      else if (input.name === "confirm-password" && input.value !== password?.value) text = ERROR_TEXT.mismatch;
       input.toggleAttribute("aria-invalid", Boolean(text));
       if (text) found.push({ id: input.id, text });
     }
