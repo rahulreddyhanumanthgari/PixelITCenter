@@ -2,7 +2,7 @@
 
 import { useSyncExternalStore } from "react";
 import { demoDirectory, starterTasks, type AccountType, type Task } from "@/content/portal-demo";
-import { resumes, starterApplications, type AppStage } from "@/content/student-demo";
+import { resumes, starterApplications, type AppStage, type PracticeProject } from "@/content/student-demo";
 
 // DEMO sign-in. The "session" is a JSON blob in this browser's localStorage:
 // nothing is sent to a server and any password works. The real portal
@@ -42,6 +42,7 @@ export type Session = {
   applications?: Record<string, AppStage>; // job id → stage
   onboardingDone?: string[];
   defaultResume?: string;
+  addedProjects?: PracticeProject[]; // added from GitHub
 };
 
 const KEY = "pixelit-portal-demo";
@@ -237,6 +238,16 @@ export function toggleOnboarding(id: string) {
     const done = onboardingOf(s);
     return { ...s, onboardingDone: done.includes(id) ? done.filter((x) => x !== id) : [...done, id] };
   });
+}
+
+export const addedProjectsOf = (s: Session) => s.addedProjects ?? [];
+
+export function addProject(project: PracticeProject) {
+  updateSession((s) => ({ ...s, addedProjects: [project, ...addedProjectsOf(s)] }));
+}
+
+export function removeProject(id: string) {
+  updateSession((s) => ({ ...s, addedProjects: addedProjectsOf(s).filter((p) => p.id !== id) }));
 }
 
 export function setDefaultResume(id: string) {

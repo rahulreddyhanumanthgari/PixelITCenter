@@ -61,6 +61,7 @@ const TONES: Record<string, Tone> = {
   Submitted: "good",
   Reviewed: "good",
   "Needs changes": "warn",
+  "In review": "ink",
   "Expires soon": "bad",
 };
 

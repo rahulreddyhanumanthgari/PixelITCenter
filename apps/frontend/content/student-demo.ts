@@ -381,10 +381,24 @@ export const resumeChecklist: { id: string; text: string; done: boolean }[] = [
 
 // --- Practice projects (portfolio) ------------------------------------------------
 
-export const practiceProjects: { id: string; name: string; stack: string[]; status: "Reviewed" | "In progress" | "Not started"; progress: number; body: string; review?: string }[] = [
-  { id: "p1", name: "3-tier web app on AWS", stack: ["Terraform", "EC2", "RDS", "ALB"], status: "Reviewed", progress: 100, body: "A load-balanced app with a private database, built entirely in Terraform.", review: "Clean modules. Add a diagram to the README." },
-  { id: "p2", name: "CI/CD pipeline for a static site", stack: ["GitHub Actions", "S3", "CloudFront"], status: "Reviewed", progress: 100, body: "Every push tests, builds and deploys to S3 behind CloudFront.", review: "Great. This is your strongest interview story." },
-  { id: "p3", name: "Containerised API on EKS", stack: ["Docker", "Kubernetes", "EKS"], status: "In progress", progress: 40, body: "A small API in Docker, deployed to EKS with health checks and autoscaling." },
+export type PracticeProject = {
+  id: string;
+  name: string;
+  stack: string[];
+  status: "Reviewed" | "In progress" | "Not started" | "In review";
+  progress: number;
+  body: string;
+  review?: string;
+  /** "github.com/owner/repo". Demo projects' repos are made up, so they don't open. */
+  repo?: string;
+  /** Added by the student from GitHub (opens the real link). */
+  fromGithub?: boolean;
+};
+
+export const practiceProjects: PracticeProject[] = [
+  { id: "p1", repo: "github.com/manas-demo/aws-3-tier-app", name: "3-tier web app on AWS", stack: ["Terraform", "EC2", "RDS", "ALB"], status: "Reviewed", progress: 100, body: "A load-balanced app with a private database, built entirely in Terraform.", review: "Clean modules. Add a diagram to the README." },
+  { id: "p2", repo: "github.com/manas-demo/static-site-pipeline", name: "CI/CD pipeline for a static site", stack: ["GitHub Actions", "S3", "CloudFront"], status: "Reviewed", progress: 100, body: "Every push tests, builds and deploys to S3 behind CloudFront.", review: "Great. This is your strongest interview story." },
+  { id: "p3", repo: "github.com/manas-demo/eks-api", name: "Containerised API on EKS", stack: ["Docker", "Kubernetes", "EKS"], status: "In progress", progress: 40, body: "A small API in Docker, deployed to EKS with health checks and autoscaling." },
   { id: "p4", name: "Monitoring dashboard", stack: ["CloudWatch", "Grafana", "Lambda"], status: "Not started", progress: 0, body: "Alerts and dashboards for the 3-tier app. Planned next." },
 ];
 

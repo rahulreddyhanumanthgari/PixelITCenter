@@ -781,6 +781,14 @@ picks the page version (student / other). Data: `content/student-demo.ts`.
   resume it's about ("About Cloud Engineer v3", with that resume's status);
   notes filter by resume, and a card's "N feedback notes" jumps to its own.
   Data: `resumeFeedback[].resumeId`.
+- **Projects: Add from GitHub** (`GithubImport`, Manas 2026-10-11): a
+  button opens a form: repo link (checked as you type; github.com/owner/repo,
+  with or without https, .git or a sub-path), name (filled from the repo,
+  editable), what it does and tools used (optional). The project is added
+  at the top as "In review", with Open on GitHub and Remove, and kept in
+  the demo session (`addedProjects`). Every project shows its repo. Front
+  end only: nothing is fetched from GitHub. Reading the repo's description
+  and languages (or an AI summary) needs the backend.
 - **Student versions of shared pages:** dashboard (`StudentHome`),
   projects = practice projects / portfolio, messages = recruiter, placement
   lead and support, calendar (`/portal/schedule`), documents with expiry
