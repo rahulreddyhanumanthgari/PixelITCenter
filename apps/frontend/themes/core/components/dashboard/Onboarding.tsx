@@ -94,7 +94,7 @@ function OnboardingSteps({ saved }: { saved: Profile }) {
           )}
           {step === 2 && (
             <>
-              <TextField name="headline" label="Headline" placeholder="e.g. Cloud engineering trainee" profile={draft} onChange={edit} />
+              <TextField name="headline" label="Headline" placeholder="e.g. Cloud engineer, open to work" profile={draft} onChange={edit} />
               <SkillsField profile={draft} onChange={edit} />
               <TextField name="linkedin" label="LinkedIn" type="url" placeholder="https://linkedin.com/in/…" profile={draft} onChange={edit} />
             </>

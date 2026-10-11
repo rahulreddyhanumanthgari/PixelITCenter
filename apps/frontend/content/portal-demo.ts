@@ -6,7 +6,7 @@
 export type AccountType = "student" | "employee" | "client";
 
 export const accountTypes: { id: AccountType; label: string; body: string }[] = [
-  { id: "student", label: "Student", body: "I'm in a Pixel IT training program." },
+  { id: "student", label: "Student", body: "I'm looking for a job through Pixel IT Center." },
   { id: "employee", label: "Employee", body: "I work for Pixel IT Center." },
   { id: "client", label: "Client", body: "My company works with Pixel IT Center." },
 ];
@@ -22,9 +22,9 @@ export const demoDirectory: {
   accountType: AccountType;
   headline: string;
 }[] = [
-  { email: "student@pixelitcenter.com", fullName: "Manas", accountType: "student", headline: "Cloud engineering trainee" },
-  { email: "employee@pixelitcenter.com", fullName: "Ravi Patel", accountType: "employee", headline: "Senior DevOps consultant" },
-  { email: "client@pixelitcenter.com", fullName: "Emily Carter", accountType: "client", headline: "IT Director, Northwind Health" },
+  { email: "student@pixelitcenter.com", fullName: "Manas", accountType: "student", headline: "Cloud engineer, open to work" },
+  { email: "employee@pixelitcenter.com", fullName: "Rahul", accountType: "employee", headline: "Senior DevOps consultant" },
+  { email: "client@pixelitcenter.com", fullName: "Joya", accountType: "client", headline: "IT Director, Northwind Health" },
 ];
 
 export type Status = "On track" | "At risk" | "Completed" | "Starting";
@@ -49,7 +49,7 @@ export const projects: {
     progress: 68,
     body: "Move 40 on-prem services to AWS with zero downtime for patient systems.",
     due: "Dec 12",
-    team: ["Ravi Patel", "Priya Sharma", "Leo Martins"],
+    team: ["Rahul", "Mansingh", "Hari"],
   },
   {
     id: "qa-suite",
@@ -60,7 +60,7 @@ export const projects: {
     progress: 42,
     body: "Replace manual regression tests with a Playwright suite running in CI.",
     due: "Nov 3",
-    team: ["Daniel Brooks", "Manas"],
+    team: ["Hari", "Manas"],
   },
   {
     id: "gcp-data",
@@ -71,7 +71,7 @@ export const projects: {
     progress: 85,
     body: "BigQuery warehouse and dashboards for daily risk reporting.",
     due: "Oct 30",
-    team: ["Priya Sharma", "Leo Martins"],
+    team: ["Mansingh", "Hari"],
   },
   {
     id: "security-review",
@@ -82,7 +82,7 @@ export const projects: {
     progress: 12,
     body: "Risk assessment and penetration test ahead of SOC 2 audit.",
     due: "Jan 20",
-    team: ["Ravi Patel"],
+    team: ["Rahul"],
   },
   {
     id: "devops-pipeline",
@@ -93,7 +93,7 @@ export const projects: {
     progress: 100,
     body: "GitHub Actions pipeline with blue-green deploys to Azure.",
     due: "Sep 28",
-    team: ["Daniel Brooks", "Ravi Patel"],
+    team: ["Hari", "Rahul"],
   },
 ];
 
@@ -108,7 +108,7 @@ export const activity: { item: string; kind: string; status: string; updated: st
   { item: "Timesheet, week 40", kind: "Timesheet", status: "Approved", updated: "2 days ago", next: "Week 41 due Fri" },
   { item: "Invoice INV-1042", kind: "Billing", status: "Paid", updated: "Yesterday", next: "None" },
   { item: "Offer letter, Vertex Retail", kind: "Document", status: "Signed", updated: "3 days ago", next: "Onboarding Mon" },
-  { item: "AWS Solutions Architect course", kind: "Learning", status: "In progress", updated: "Today", next: "Module 5 in 2 days" },
+  { item: "Background check, Brightline Finance", kind: "Onboarding", status: "In progress", updated: "Today", next: "Results in 3 days" },
   { item: "Interview, Brightline Finance", kind: "Meeting", status: "Scheduled", updated: "1 week ago", next: "Tomorrow 14:00" },
 ];
 
@@ -119,8 +119,8 @@ export const starterTasks: Task[] = [
   { id: "t1", title: "Submit timesheet for week 41", priority: "High", done: false, due: "Today" },
   { id: "t2", title: "Review AWS migration plan", priority: "Medium", done: true, due: "Today" },
   { id: "t3", title: "Upload signed NDA", priority: "Normal", done: false, due: "Tomorrow" },
-  { id: "t4", title: "Finish Module 4 quiz", priority: "Medium", done: false, due: "Wed" },
-  { id: "t5", title: "Reply to Priya about the kickoff", priority: "Normal", done: false, due: "Thu" },
+  { id: "t4", title: "Sign the updated contractor agreement", priority: "Medium", done: false, due: "Wed" },
+  { id: "t5", title: "Reply to Mansingh about the kickoff", priority: "Normal", done: false, due: "Thu" },
 ];
 
 export type Conversation = {
@@ -133,8 +133,8 @@ export type Conversation = {
 
 export const conversations: Conversation[] = [
   {
-    id: "priya",
-    name: "Priya Sharma",
+    id: "mansingh",
+    name: "Mansingh",
     role: "Account manager",
     unread: 2,
     messages: [
@@ -143,8 +143,8 @@ export const conversations: Conversation[] = [
     ],
   },
   {
-    id: "daniel",
-    name: "Daniel Brooks",
+    id: "hari",
+    name: "Hari",
     role: "Recruiter",
     unread: 1,
     messages: [
@@ -160,13 +160,13 @@ export const conversations: Conversation[] = [
     messages: [{ from: "them", text: "Your VPN access request is approved.", time: "Thu" }],
   },
   {
-    id: "leo",
-    name: "Leo Martins",
-    role: "Trainer, AWS course",
+    id: "joya",
+    name: "Joya",
+    role: "Client, Northwind Health",
     unread: 0,
     messages: [
-      { from: "them", text: "Great work on Module 3. Module 4 opens tomorrow.", time: "Wed" },
-      { from: "me", text: "Thank you, looking forward to it!", time: "Wed" },
+      { from: "them", text: "Thanks for the migration update. Can we go through the cutover plan on Tuesday?", time: "Wed" },
+      { from: "me", text: "Yes, I'll bring the runbook.", time: "Wed" },
     ],
   },
 ];
@@ -182,24 +182,24 @@ export const events: { day: string; date: string; items: { time: string; title: 
     date: "Mon, Oct 12",
     items: [
       { time: "14:00", title: "Interview, Brightline Finance", kind: "Interview", with: "Hiring panel" },
-      { time: "15:00", title: "Call about the Vertex Retail role", kind: "Call", with: "Daniel Brooks" },
+      { time: "15:00", title: "Call about the Vertex Retail role", kind: "Call", with: "Hari" },
     ],
   },
   {
     day: "Tuesday",
     date: "Tue, Oct 13",
     items: [
-      { time: "10:00", title: "Northwind Health kickoff", kind: "Meeting", with: "Priya Sharma, Ravi Patel" },
-      { time: "16:00", title: "AWS course, Module 4 live session", kind: "Training", with: "Leo Martins" },
+      { time: "10:00", title: "Northwind Health kickoff", kind: "Meeting", with: "Mansingh, Rahul" },
+      { time: "16:00", title: "Quarterly review, Northwind Health", kind: "Meeting", with: "Joya" },
     ],
   },
 ];
 
 export const documents: { id: string; name: string; category: string; size: string; updated: string; by: string }[] = [
-  { id: "d1", name: "Offer letter, Vertex Retail.pdf", category: "Contracts", size: "182 KB", updated: "Oct 8", by: "Daniel Brooks" },
-  { id: "d2", name: "NDA, Northwind Health.pdf", category: "Contracts", size: "96 KB", updated: "Oct 6", by: "Priya Sharma" },
-  { id: "d3", name: "AWS migration plan v2.docx", category: "Projects", size: "1.4 MB", updated: "Oct 5", by: "Ravi Patel" },
-  { id: "d4", name: "Module 3 certificate.pdf", category: "Training", size: "240 KB", updated: "Oct 1", by: "Leo Martins" },
+  { id: "d1", name: "Offer letter, Vertex Retail.pdf", category: "Contracts", size: "182 KB", updated: "Oct 8", by: "Hari" },
+  { id: "d2", name: "NDA, Northwind Health.pdf", category: "Contracts", size: "96 KB", updated: "Oct 6", by: "Mansingh" },
+  { id: "d3", name: "AWS migration plan v2.docx", category: "Projects", size: "1.4 MB", updated: "Oct 5", by: "Rahul" },
+  { id: "d4", name: "Statement of work, Brightline Finance.pdf", category: "Contracts", size: "240 KB", updated: "Oct 1", by: "Mansingh" },
   { id: "d5", name: "Timesheet, week 40.xlsx", category: "Timesheets", size: "48 KB", updated: "Oct 4", by: "You" },
 ];
 
@@ -219,8 +219,8 @@ export const billingSummary = [
 export const notifications: { id: string; title: string; body: string; time: string }[] = [
   { id: "n1", title: "Kickoff moved", body: "Northwind Health kickoff is now Tue 10:00.", time: "1h" },
   { id: "n2", title: "Timesheet approved", body: "Week 40 was approved by Payroll.", time: "2d" },
-  { id: "n3", title: "New document", body: "Daniel shared the Vertex Retail offer letter.", time: "3d" },
-  { id: "n4", title: "Course update", body: "Module 4 of the AWS course opens tomorrow.", time: "4d" },
+  { id: "n3", title: "New document", body: "Hari shared the Vertex Retail offer letter.", time: "3d" },
+  { id: "n4", title: "Invoice paid", body: "INV-1042 was paid. Thank you!", time: "4d" },
 ];
 
 export const faqs: { q: string; a: string }[] = [
@@ -232,5 +232,5 @@ export const faqs: { q: string; a: string }[] = [
 
 export const tickets: { id: string; subject: string; status: "Open" | "Resolved"; updated: string }[] = [
   { id: "SUP-214", subject: "VPN access for Northwind", status: "Resolved", updated: "Thu" },
-  { id: "SUP-219", subject: "Can't open the Module 4 video", status: "Open", updated: "Today" },
+  { id: "SUP-219", subject: "Laptop for the Vertex Retail start", status: "Open", updated: "Today" },
 ];

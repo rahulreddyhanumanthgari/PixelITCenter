@@ -1,6 +1,5 @@
 import type { AccountType } from "@/content/portal-demo";
 import {
-  BookOpen,
   BriefcaseBusiness,
   CalendarDays,
   CreditCard,
@@ -50,18 +49,11 @@ export const navGroups: { label?: string; items: NavItem[] }[] = [
   },
 ];
 
-// Student corner: learn, get hired, then the account pages. Calendar and
+// Student corner: get hired, then what you show employers. Calendar and
 // Help reuse /portal/schedule and /portal/support (they show student content).
+// No learning pages: Pixel IT Center is a recruiting firm, not a course site.
 export const studentNavGroups: { label?: string; items: NavItem[] }[] = [
   { items: [{ href: "/portal/dashboard", label: "Dashboard", icon: LayoutDashboard }] },
-  {
-    label: "Learn",
-    items: [
-      { href: "/portal/learning", label: "Learning", icon: BookOpen },
-      { href: "/portal/projects", label: "Projects", icon: FolderKanban },
-      { href: "/portal/resume", label: "Resume corner", icon: FileUser },
-    ],
-  },
   {
     label: "Get hired",
     items: [
@@ -72,8 +64,10 @@ export const studentNavGroups: { label?: string; items: NavItem[] }[] = [
     ],
   },
   {
-    label: "Your account",
+    label: "Your profile",
     items: [
+      { href: "/portal/resume", label: "Resume corner", icon: FileUser },
+      { href: "/portal/projects", label: "Projects", icon: FolderKanban },
       { href: "/portal/documents", label: "Documents", icon: FileText },
       { href: "/portal/profile", label: "Profile", icon: UserRound },
     ],

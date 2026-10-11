@@ -39,7 +39,7 @@ export function SettingsPage() {
             <Toggle label="Email updates" body="Messages, documents and approvals." on={prefs.email} onChange={set("email")} />
             <Toggle label="Text messages" body="Only for meetings starting soon." on={prefs.sms} onChange={set("sms")} />
             <Toggle label="Weekly summary" body="A Monday email with your week ahead." on={prefs.weekly} onChange={set("weekly")} />
-            <Toggle label="News from Pixel IT" body="New courses, roles and services." on={prefs.product} onChange={set("product")} />
+            <Toggle label="News from Pixel IT" body="New roles, services and company news." on={prefs.product} onChange={set("product")} />
           </div>
         </section>
 

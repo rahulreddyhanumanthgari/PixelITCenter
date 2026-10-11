@@ -220,7 +220,7 @@ export function PortalLoginForm() {
           type="button"
           className="portal-google"
           // Demo: a made-up Google account, new to the portal.
-          onClick={() => setRequest({ mode, method: "google", email: "alex.morgan@gmail.com", name: "Alex Morgan" })}
+          onClick={() => setRequest({ mode, method: "google", email: "hari.demo@gmail.com", name: "Hari" })}
         >
           <GoogleMark />
           {signup ? "Sign up with Google" : "Continue with Google"}

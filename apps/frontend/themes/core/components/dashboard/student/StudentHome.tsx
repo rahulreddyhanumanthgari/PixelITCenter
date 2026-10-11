@@ -1,20 +1,23 @@
 "use client";
 
 import Link from "next/link";
-import { BookOpen, BriefcaseBusiness, CalendarDays, ChevronRight, MessageSquare, Mic, PlayCircle } from "lucide-react";
-import { announcements, appStages, course, interviews, jobs, studentStats } from "@/content/student-demo";
-import { applicationsOf, profileCompletion, useSession } from "../session";
+import { BriefcaseBusiness, CalendarDays, ChevronRight, FileText, MessageSquare, Mic, Send } from "lucide-react";
+import { announcements, appStages, jobs, resumeChecklist, resumes, studentEvents, studentStats } from "@/content/student-demo";
+import { applicationsOf, defaultResumeOf, profileCompletion, useSession } from "../session";
 import { Chip, PageHeader, ProfileRing } from "../ui";
 import { OnboardingChecklist } from "./OnboardingChecklist";
 
-const STAT_ICONS = { course: BookOpen, applications: BriefcaseBusiness, interviews: Mic, messages: MessageSquare };
+const STAT_ICONS = { jobs: BriefcaseBusiness, applications: Send, interviews: Mic, messages: MessageSquare };
+
+// The next three things on the calendar (deadlines show on the Calendar page).
+const upNext = studentEvents.flatMap((d) => d.items.map((e) => ({ ...e, date: d.date }))).filter((e) => e.kind !== "Deadline").slice(0, 3);
 
 function greeting() {
   const h = new Date().getHours();
   return h < 12 ? "Good morning" : h < 18 ? "Good afternoon" : "Good evening";
 }
 
-/** Student dashboard: profile + stats, what's next, applications, learning, news. */
+/** Student dashboard: profile + stats, what's next, applications, resume, news. */
 export function StudentHome() {
   const session = useSession();
   if (!session) return null;
@@ -23,7 +26,8 @@ export function StudentHome() {
   const apps = applicationsOf(session);
   const applied = jobs.filter((j) => apps[j.id]);
   const offer = applied.find((j) => apps[j.id] === "Offer");
-  const current = course.modules.find((m) => m.status === "In progress");
+  const resume = resumes.find((r) => r.id === defaultResumeOf(session)) ?? resumes[0];
+  const ready = resumeChecklist.filter((c) => c.done).length;
 
   return (
     <div className="space-y-8">
@@ -35,7 +39,7 @@ export function StudentHome() {
         }
         body={
           <>
-            {greeting()}, {profile.fullName.split(" ")[0] || "there"}. Learn, apply and get hired, all from here.
+            {greeting()}, {profile.fullName.split(" ")[0] || "there"}. Apply, interview and get hired, all from here.
           </>
         }
       />
@@ -56,7 +60,7 @@ export function StudentHome() {
                 <p className="mt-1.5 text-sm text-[var(--dash-muted)]">A complete profile gets you matched faster</p>
                 <p className="mt-2 flex flex-wrap gap-1.5">
                   <Chip tone="ink">Student account</Chip>
-                  {profile.program && <Chip>{profile.program}</Chip>}
+                  {profile.targetRole && <Chip>{profile.targetRole}</Chip>}
                 </p>
               </div>
             </div>
@@ -95,32 +99,24 @@ export function StudentHome() {
 
       {offer && <OnboardingChecklist company={offer.company} compact />}
 
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_22rem]">
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_22rem]">
         <div className="min-w-0 space-y-6">
-          {/* Up next: the next class and interviews */}
+          {/* Up next: interviews, mock interviews and calls */}
           <section aria-labelledby="next-heading">
             <h2 id="next-heading" className="dash-section-title">
               Up next
             </h2>
             <ul className="mt-3 grid gap-3 md:grid-cols-3">
-              <li>
-                <Link href="/portal/learning" className="dash-card dash-card-pad block h-full">
-                  <Chip tone="ink">Class</Chip>
-                  <p className="mt-3 text-sm font-semibold">{course.nextClass.title}</p>
-                  <p className="mt-1 flex items-center gap-1.5 text-xs text-[var(--dash-muted)]">
-                    <CalendarDays className="size-3.5" aria-hidden="true" /> {course.nextClass.when}
-                  </p>
-                </Link>
-              </li>
-              {interviews.map((i) => (
-                <li key={i.id}>
-                  <Link href="/portal/interviews" className="dash-card dash-card-pad block h-full">
-                    <Chip>Interview</Chip>
-                    <p className="mt-3 text-sm font-semibold">
-                      {i.company}, {i.round.toLowerCase()}
-                    </p>
+              {upNext.map((e) => (
+                <li key={e.title}>
+                  <Link
+                    href={e.kind.includes("nterview") ? "/portal/interviews" : "/portal/schedule"}
+                    className="dash-card dash-card-pad block h-full"
+                  >
+                    <Chip>{e.kind}</Chip>
+                    <p className="mt-3 text-sm font-semibold">{e.title}</p>
                     <p className="mt-1 flex items-center gap-1.5 text-xs text-[var(--dash-muted)]">
-                      <CalendarDays className="size-3.5" aria-hidden="true" /> {i.when}
+                      <CalendarDays className="size-3.5" aria-hidden="true" /> {e.date} · {e.time}
                     </p>
                   </Link>
                 </li>
@@ -165,31 +161,29 @@ export function StudentHome() {
           </section>
         </div>
 
-        <div className="space-y-6">
-          {/* Learning progress */}
-          <section aria-labelledby="learn-heading" className="dash-card dash-card-pad">
+        <div className="min-w-0 space-y-6">
+          {/* Resume: the one sent when applying */}
+          <section aria-labelledby="resume-heading" className="dash-card dash-card-pad">
             <div className="flex items-center justify-between">
-              <h2 id="learn-heading" className="dash-section-title">
-                Learning
+              <h2 id="resume-heading" className="dash-section-title">
+                Resume
               </h2>
-              <span className="text-xs font-semibold">{course.progress}%</span>
+              <span className="text-xs font-semibold">
+                {ready}/{resumeChecklist.length} ready
+              </span>
             </div>
-            <p className="mt-1 text-xs text-[var(--dash-muted)]">
-              {course.name} · {course.cohort}
-            </p>
             <div className="dash-bar mt-3">
-              <span style={{ width: `${course.progress}%` }} />
+              <span style={{ width: `${(ready / resumeChecklist.length) * 100}%` }} />
             </div>
-            {current && (
-              <Link href="/portal/learning" className="mt-4 flex items-center gap-3 rounded-xl bg-[var(--dash-side)] p-3 hover:bg-[var(--dash-hover)]">
-                <PlayCircle className="size-5 flex-none text-[var(--dash-orange)]" aria-hidden="true" />
-                <span className="min-w-0 flex-1">
-                  <span className="block text-xs text-[var(--dash-muted)]">Continue</span>
-                  <span className="block text-sm font-semibold">{current.title}</span>
-                </span>
-                <ChevronRight className="size-4 flex-none" aria-hidden="true" />
-              </Link>
-            )}
+            <Link href="/portal/resume" className="mt-4 flex items-center gap-3 rounded-xl bg-[var(--dash-side)] p-3 hover:bg-[var(--dash-hover)]">
+              <FileText className="size-5 flex-none text-[var(--dash-orange)]" aria-hidden="true" />
+              <span className="min-w-0 flex-1">
+                <span className="block text-xs text-[var(--dash-muted)]">Sent when you apply</span>
+                <span className="block text-sm leading-snug font-semibold">{resume.name}</span>
+              </span>
+              <Chip>{resume.status}</Chip>
+              <ChevronRight className="size-4 flex-none" aria-hidden="true" />
+            </Link>
           </section>
 
           {/* Announcements */}

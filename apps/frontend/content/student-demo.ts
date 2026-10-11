@@ -1,47 +1,13 @@
-// Demo data for the STUDENT corner of the portal: what a trainee sees after
-// signing in (training, resume, jobs, interviews, recruiters). DUMMY data,
+// Demo data for the STUDENT corner of the portal: what a job seeker sees
+// after signing in (resume, jobs, interviews, recruiters). DUMMY data,
 // like content/portal-demo.ts; replace with real data when the portal exists.
 
 export const studentStats = [
-  { id: "course", label: "Course progress", value: "62%", note: "Module 5 of 8" },
+  { id: "jobs", label: "Jobs for you", value: "6", note: "2 new this week" },
   { id: "applications", label: "Applications", value: "5", note: "1 offer" },
   { id: "interviews", label: "Interviews this week", value: "2", note: "Next: Mon 14:00" },
   { id: "messages", label: "Unread messages", value: "3", note: "From recruiters" },
 ] as const;
-
-// --- Learning --------------------------------------------------------------
-
-export type ModuleStatus = "Done" | "In progress" | "Locked";
-
-export const course = {
-  name: "AWS Cloud Engineering",
-  cohort: "Fall 2026",
-  trainer: "Leo Martins",
-  progress: 62,
-  nextClass: { title: "Module 5 live: VPC networking", when: "Tue, Oct 13 · 16:00", link: "Zoom" },
-  modules: [
-    { id: "m1", title: "Linux and the command line", status: "Done", lessons: 8 },
-    { id: "m2", title: "AWS core services (EC2, S3, IAM)", status: "Done", lessons: 10 },
-    { id: "m3", title: "Infrastructure as code with Terraform", status: "Done", lessons: 9 },
-    { id: "m4", title: "CI/CD with GitHub Actions", status: "Done", lessons: 7 },
-    { id: "m5", title: "Networking: VPC, subnets, load balancers", status: "In progress", lessons: 8 },
-    { id: "m6", title: "Containers: Docker and EKS", status: "Locked", lessons: 9 },
-    { id: "m7", title: "Monitoring and security", status: "Locked", lessons: 6 },
-    { id: "m8", title: "Capstone project and mock interviews", status: "Locked", lessons: 4 },
-  ] as { id: string; title: string; status: ModuleStatus; lessons: number }[],
-};
-
-export const assignments: { id: string; title: string; module: string; due: string; status: "Submitted" | "Due" | "Graded" ; grade?: string }[] = [
-  { id: "a1", title: "Build a 3-tier VPC in Terraform", module: "Module 5", due: "Oct 15", status: "Due" },
-  { id: "a2", title: "GitHub Actions pipeline to S3", module: "Module 4", due: "Oct 6", status: "Graded", grade: "A" },
-  { id: "a3", title: "IAM least-privilege policy", module: "Module 2", due: "Sep 22", status: "Graded", grade: "A-" },
-];
-
-export const recordings: { id: string; title: string; length: string; date: string }[] = [
-  { id: "r1", title: "Module 4 live: CI/CD pipelines", length: "1h 12m", date: "Oct 6" },
-  { id: "r2", title: "Q&A: Terraform state and modules", length: "48m", date: "Sep 29" },
-  { id: "r3", title: "Module 3 live: Terraform basics", length: "1h 05m", date: "Sep 22" },
-];
 
 // --- Jobs and applications --------------------------------------------------
 
@@ -89,13 +55,13 @@ export const onboardingSteps: { id: string; title: string; body: string }[] = [
 // --- Interviews -------------------------------------------------------------
 
 export const interviews: { id: string; company: string; role: string; round: string; when: string; mode: string; with: string; prep: string }[] = [
-  { id: "i1", company: "Vertex Retail", role: "DevOps Engineer", round: "Technical round", when: "Mon, Oct 12 · 14:00", mode: "Video call", with: "Hiring manager + senior engineer", prep: "Expect a live pipeline design. Revisit Module 4 and your GitHub Actions project." },
+  { id: "i1", company: "Vertex Retail", role: "DevOps Engineer", round: "Technical round", when: "Mon, Oct 12 · 14:00", mode: "Video call", with: "Hiring manager + senior engineer", prep: "Expect a live pipeline design. Go over your GitHub Actions project: it's your best example." },
   { id: "i2", company: "Northwind Health", role: "Junior SRE", round: "Recruiter screen", when: "Wed, Oct 14 · 11:00", mode: "Phone", with: "Talent partner", prep: "30 minutes on your background and availability. Keep your story to 2 minutes." },
 ];
 
-export const mockInterviews: { id: string; topic: string; date: string; trainer: string; result: "Strong" | "Good" | "Practise more"; feedback: string }[] = [
-  { id: "mi1", topic: "AWS core services", date: "Oct 2", trainer: "Leo Martins", result: "Strong", feedback: "Clear answers on IAM and S3. Add a real example from your projects." },
-  { id: "mi2", topic: "Behavioural", date: "Sep 25", trainer: "Priya Sharma", result: "Practise more", feedback: "Use the STAR format and finish with the result. Slow down a little." },
+export const mockInterviews: { id: string; topic: string; date: string; with: string; result: "Strong" | "Good" | "Practise more"; feedback: string }[] = [
+  { id: "mi1", topic: "AWS core services", date: "Oct 2", with: "Hari", result: "Strong", feedback: "Clear answers on IAM and S3. Add a real example from your projects." },
+  { id: "mi2", topic: "Behavioural", date: "Sep 25", with: "Mansingh", result: "Practise more", feedback: "Use the STAR format and finish with the result. Slow down a little." },
 ];
 
 export const questionBank: { topic: string; questions: string[] }[] = [
@@ -117,21 +83,21 @@ export const studentEvents: { day: string; date: string; items: { time: string; 
     day: "Tomorrow",
     date: "Mon, Oct 12",
     items: [
-      { time: "10:00", title: "Mock interview: DevOps", kind: "Mock interview", with: "Leo Martins" },
+      { time: "10:00", title: "Mock interview: DevOps", kind: "Mock interview", with: "Hari" },
       { time: "14:00", title: "Vertex Retail, technical round", kind: "Interview", with: "Hiring manager" },
     ],
   },
   {
     day: "Tuesday",
     date: "Tue, Oct 13",
-    items: [{ time: "16:00", title: "Module 5 live: VPC networking", kind: "Class", with: "Leo Martins" }],
+    items: [{ time: "16:00", title: "Resume review call", kind: "Call", with: "Mansingh" }],
   },
   {
     day: "Wednesday",
     date: "Wed, Oct 14",
     items: [
       { time: "11:00", title: "Northwind Health, recruiter screen", kind: "Interview", with: "Talent partner" },
-      { time: "23:59", title: "Assignment: 3-tier VPC in Terraform", kind: "Deadline", with: "Module 5" },
+      { time: "18:00", title: "Send two references to Hari", kind: "Deadline", with: "Hari" },
     ],
   },
 ];
@@ -146,8 +112,8 @@ export const studentConversations: {
   messages: { from: "them" | "me"; text: string; time: string }[];
 }[] = [
   {
-    id: "daniel",
-    name: "Daniel Brooks",
+    id: "hari",
+    name: "Hari",
     role: "Your recruiter",
     unread: 2,
     messages: [
@@ -156,8 +122,8 @@ export const studentConversations: {
     ],
   },
   {
-    id: "priya",
-    name: "Priya Sharma",
+    id: "mansingh",
+    name: "Mansingh",
     role: "Placement lead",
     unread: 1,
     messages: [
@@ -166,13 +132,13 @@ export const studentConversations: {
     ],
   },
   {
-    id: "leo",
-    name: "Leo Martins",
-    role: "Trainer, AWS course",
+    id: "support",
+    name: "Pixel IT Support",
+    role: "Help desk",
     unread: 0,
     messages: [
-      { from: "them", text: "Module 5 recording is up. Start the VPC assignment early.", time: "Wed" },
-      { from: "me", text: "Will do, thanks!", time: "Wed" },
+      { from: "them", text: "Your background-check form link is in your email.", time: "Wed" },
+      { from: "me", text: "Got it, thanks!", time: "Wed" },
     ],
   },
 ];
@@ -186,8 +152,8 @@ export const resumes: { id: string; name: string; target: string; updated: strin
 ];
 
 export const resumeFeedback: { from: string; date: string; text: string }[] = [
-  { from: "Priya Sharma", date: "Oct 9", text: "Strong summary. Put the Terraform capstone first and add numbers (e.g. 'cut deploy time from 20 to 5 minutes')." },
-  { from: "Daniel Brooks", date: "Oct 3", text: "Clients search for 'AWS', 'Terraform' and 'CI/CD'. Make sure all three are in your skills line." },
+  { from: "Mansingh", date: "Oct 9", text: "Strong summary. Put the Terraform project first and add numbers (e.g. 'cut deploy time from 20 to 5 minutes')." },
+  { from: "Hari", date: "Oct 3", text: "Clients search for 'AWS', 'Terraform' and 'CI/CD'. Make sure all three are in your skills line." },
 ];
 
 export const resumeChecklist: { id: string; text: string; done: boolean }[] = [
@@ -204,7 +170,7 @@ export const practiceProjects: { id: string; name: string; stack: string[]; stat
   { id: "p1", name: "3-tier web app on AWS", stack: ["Terraform", "EC2", "RDS", "ALB"], status: "Reviewed", progress: 100, body: "A load-balanced app with a private database, built entirely in Terraform.", review: "Clean modules. Add a diagram to the README." },
   { id: "p2", name: "CI/CD pipeline for a static site", stack: ["GitHub Actions", "S3", "CloudFront"], status: "Reviewed", progress: 100, body: "Every push tests, builds and deploys to S3 behind CloudFront.", review: "Great. This is your strongest interview story." },
   { id: "p3", name: "Containerised API on EKS", stack: ["Docker", "Kubernetes", "EKS"], status: "In progress", progress: 40, body: "A small API in Docker, deployed to EKS with health checks and autoscaling." },
-  { id: "p4", name: "Capstone: monitoring dashboard", stack: ["CloudWatch", "Grafana", "Lambda"], status: "Not started", progress: 0, body: "Alerts and dashboards for the 3-tier app. Opens with Module 8." },
+  { id: "p4", name: "Monitoring dashboard", stack: ["CloudWatch", "Grafana", "Lambda"], status: "Not started", progress: 0, body: "Alerts and dashboards for the 3-tier app. Planned next." },
 ];
 
 // --- Documents -----------------------------------------------------------------------
@@ -212,7 +178,7 @@ export const practiceProjects: { id: string; name: string; stack: string[]; stat
 export const studentDocuments: { id: string; name: string; category: string; size: string; updated: string; expires?: string; expiresSoon?: boolean }[] = [
   { id: "sd1", name: "Manas, Cloud Engineer v3.pdf", category: "Resume", size: "142 KB", updated: "Oct 9" },
   { id: "sd2", name: "AWS Cloud Practitioner certificate.pdf", category: "Certificates", size: "310 KB", updated: "Aug 30", expires: "Aug 2029" },
-  { id: "sd3", name: "Module 4 certificate.pdf", category: "Certificates", size: "240 KB", updated: "Oct 7" },
+  { id: "sd3", name: "Terraform Associate certificate.pdf", category: "Certificates", size: "240 KB", updated: "Oct 7" },
   { id: "sd4", name: "Photo ID.pdf", category: "ID", size: "520 KB", updated: "Jul 12", expires: "Dec 2026", expiresSoon: true },
   { id: "sd5", name: "Work authorization.pdf", category: "Work papers", size: "410 KB", updated: "Jul 12", expires: "Mar 2027" },
   { id: "sd6", name: "Offer letter, Brightline Finance.pdf", category: "Offers", size: "188 KB", updated: "Today" },
@@ -221,26 +187,25 @@ export const studentDocuments: { id: string; name: string; category: string; siz
 // --- Help & announcements -----------------------------------------------------------
 
 export const studentContacts: { name: string; role: string; email: string }[] = [
-  { name: "Daniel Brooks", role: "Your recruiter", email: "daniel.brooks@pixelitcenter.com" },
-  { name: "Priya Sharma", role: "Placement lead", email: "priya.sharma@pixelitcenter.com" },
-  { name: "Leo Martins", role: "Trainer", email: "leo.martins@pixelitcenter.com" },
+  { name: "Hari", role: "Your recruiter", email: "hari@pixelitcenter.com" },
+  { name: "Mansingh", role: "Placement lead", email: "mansingh@pixelitcenter.com" },
 ];
 
 export const studentFaqs: { q: string; a: string }[] = [
   { q: "How do I apply to a job?", a: "Open Jobs, pick a role and press Apply. Choose which resume to send. Your recruiter sees it straight away." },
   { q: "Can I apply to many jobs at once?", a: "Your recruiter picks the best few with you. Fewer, better-matched applications get more interviews." },
-  { q: "I missed a live class. What now?", a: "Every class is recorded. Find it under Learning → Recordings within a day." },
+  { q: "How do mock interviews work?", a: "Book one under Interviews. Hari or Mansingh plays the interviewer and sends you feedback the same day." },
   { q: "My ID is expiring. What should I do?", a: "Upload the new one under Documents before it expires so your placement isn't delayed." },
 ];
 
 export const studentNotifications: { id: string; title: string; body: string; time: string }[] = [
   { id: "sn1", title: "Offer received", body: "Brightline Finance sent you an offer. See Jobs → My applications.", time: "1h" },
   { id: "sn2", title: "Interview confirmed", body: "Vertex Retail, Mon 14:00, technical round.", time: "2h" },
-  { id: "sn3", title: "Recording ready", body: "Module 4 live: CI/CD pipelines.", time: "2d" },
+  { id: "sn3", title: "Resume reviewed", body: "Mansingh reviewed Cloud Engineer v3.", time: "2d" },
   { id: "sn4", title: "ID expires soon", body: "Your photo ID expires in December. Upload a new one.", time: "3d" },
 ];
 
 export const announcements: { id: string; title: string; body: string; date: string }[] = [
   { id: "an1", title: "New roles this week", body: "6 new cloud and DevOps openings. Check Jobs.", date: "Oct 10" },
-  { id: "an2", title: "Thanksgiving break", body: "No live classes Nov 26–27. Recordings will be posted.", date: "Oct 8" },
+  { id: "an2", title: "Thanksgiving break", body: "Office closed Nov 26–27. Recruiters reply again on Nov 30.", date: "Oct 8" },
 ];

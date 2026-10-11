@@ -13,8 +13,8 @@ export function InterviewsPage() {
 
   return (
     <div className="space-y-8">
-      <PageHeader title="Interviews" body="Get ready, practise with a trainer, then go in confident.">
-        <button type="button" className="dash-btn" data-tone="orange" onClick={() => showToast("Request sent. Leo will offer you a mock interview slot. (Demo)")}>
+      <PageHeader title="Interviews" body="Get ready, practise with your recruiter, then go in confident.">
+        <button type="button" className="dash-btn" data-tone="orange" onClick={() => showToast("Request sent. Hari will offer you a mock interview slot. (Demo)")}>
           Book a mock interview
         </button>
       </PageHeader>
@@ -71,7 +71,7 @@ export function InterviewsPage() {
                   <span>
                     <span className="block text-sm font-semibold">{m.topic}</span>
                     <span className="block text-xs text-[var(--dash-muted)]">
-                      {m.date} · with {m.trainer}
+                      {m.date} · with {m.with}
                     </span>
                   </span>
                   <Chip>{m.result}</Chip>
@@ -103,7 +103,7 @@ export function InterviewsPage() {
                   <ChevronDown className="size-4 flex-none transition group-open:rotate-180" aria-hidden="true" />
                 </summary>
                 <p className="pb-3 text-sm leading-relaxed text-[var(--dash-muted)]">
-                  Say it out loud in under two minutes, with one example from your projects. Your trainer adds model answers here.
+                  Say it out loud in under two minutes, with one example from your projects. Your recruiter adds model answers here.
                 </p>
               </details>
             ))}

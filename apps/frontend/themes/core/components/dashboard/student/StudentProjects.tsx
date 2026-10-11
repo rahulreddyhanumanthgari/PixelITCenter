@@ -4,7 +4,7 @@ import { MessageSquareQuote } from "lucide-react";
 import { practiceProjects } from "@/content/student-demo";
 import { Chip, PageHeader, useToast } from "../ui";
 
-/** Practice projects: the student's portfolio, each with a trainer review. */
+/** Practice projects: the student's portfolio, each with recruiter feedback. */
 export function StudentProjects() {
   const [toast, showToast] = useToast();
   return (
@@ -29,7 +29,7 @@ export function StudentProjects() {
               <p className="mt-4 flex gap-2 rounded-xl bg-[var(--dash-cyan-tint)] p-3 text-sm leading-relaxed text-[#23405a]">
                 <MessageSquareQuote className="mt-0.5 size-4 flex-none text-[var(--dash-cyan-ink)]" aria-hidden="true" />
                 <span>
-                  <span className="font-semibold">Trainer: </span>
+                  <span className="font-semibold">Feedback: </span>
                   {p.review}
                 </span>
               </p>
@@ -46,9 +46,9 @@ export function StudentProjects() {
                 <button
                   type="button"
                   className="dash-btn-ghost mt-4 h-9"
-                  onClick={() => showToast(p.status === "Reviewed" ? "Demo: opens the GitHub repo." : "Sent to your trainer for review. (Demo)")}
+                  onClick={() => showToast(p.status === "Reviewed" ? "Demo: opens the GitHub repo." : "Sent to Hari for feedback. (Demo)")}
                 >
-                  {p.status === "Reviewed" ? "View code" : "Ask for review"}
+                  {p.status === "Reviewed" ? "View code" : "Ask for feedback"}
                 </button>
               )}
             </div>

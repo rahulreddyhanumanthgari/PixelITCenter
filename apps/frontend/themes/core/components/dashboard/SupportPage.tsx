@@ -10,7 +10,7 @@ type Person = { name: string; role: string; email: string };
 
 /**
  * Contact details, common questions and support tickets. Students see it as
- * "Help", with their recruiter, placement lead and trainer listed first.
+ * "Help", with their recruiter and placement lead listed first.
  */
 export function SupportPage({
   title = "Support",

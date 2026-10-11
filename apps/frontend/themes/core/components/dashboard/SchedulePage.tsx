@@ -7,12 +7,10 @@ const KIND_TONE = {
   Interview: "warn",
   Call: undefined,
   Meeting: "ink",
-  Training: "good",
-  Class: "ink",
   "Mock interview": "good",
 } as const;
 
-/** The next few days: meetings, interviews, training and deadlines. */
+/** The next few days: meetings, interviews, calls and deadlines. */
 export function SchedulePage({
   title = "Schedule",
   body = "What's coming up over the next few days.",

@@ -10,7 +10,7 @@ import type { Profile } from "./session";
 
 const TYPE_ICONS = { student: GraduationCap, employee: BriefcaseBusiness, client: Building2 };
 
-export const programs = ["AWS Cloud Engineering", "DevOps Bootcamp", "Data Analytics", "QA Automation", "Cybersecurity Foundations"];
+export const targetRoles = ["Cloud Engineer", "DevOps Engineer", "Data Engineer", "QA Automation Engineer", "Security Analyst"];
 export const departments = ["Technology Services", "Talent & Staffing", "Sales", "Finance", "Operations"];
 export const industries = ["Healthcare", "Finance", "Retail", "Logistics", "Technology", "Manufacturing", "Other"];
 export const companySizes = ["1–50", "51–200", "201–1,000", "1,000–5,000", "5,000+"];
@@ -144,8 +144,8 @@ export function RoleFields({ profile, onChange }: { profile: Profile; onChange: 
   if (profile.accountType === "student")
     return (
       <div className="grid gap-4 sm:grid-cols-2">
-        <SelectField name="program" label="Training program" options={programs} profile={profile} onChange={onChange} />
-        <SelectField name="cohort" label="Cohort" options={["Spring 2026", "Summer 2026", "Fall 2026", "Winter 2027"]} profile={profile} onChange={onChange} />
+        <SelectField name="targetRole" label="Role you're looking for" options={targetRoles} profile={profile} onChange={onChange} />
+        <SelectField name="availability" label="Available to start" options={["Immediately", "In 2 weeks", "In a month", "Later"]} profile={profile} onChange={onChange} />
       </div>
     );
   if (profile.accountType === "employee")

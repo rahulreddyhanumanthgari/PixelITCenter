@@ -20,8 +20,8 @@ export type Profile = {
   skills: string[];
   accountType: AccountType | null;
   // Student
-  program: string;
-  cohort: string;
+  targetRole: string;
+  availability: string;
   // Employee
   department: string;
   employeeId: string;
@@ -56,8 +56,8 @@ const blankProfile: Profile = {
   linkedin: "",
   skills: [],
   accountType: null,
-  program: "",
-  cohort: "",
+  targetRole: "",
+  availability: "",
   department: "",
   employeeId: "",
   manager: "",
@@ -72,8 +72,8 @@ const demoDetails: Record<AccountType, Partial<Profile>> = {
     phone: "+1 (919) 555-0142",
     location: "Raleigh, NC",
     skills: ["AWS", "Linux", "Python"],
-    program: "AWS Cloud Engineering",
-    cohort: "Fall 2026",
+    targetRole: "Cloud Engineer",
+    availability: "Immediately",
   },
   employee: {
     phone: "+1 (336) 555-0177",
@@ -82,7 +82,7 @@ const demoDetails: Record<AccountType, Partial<Profile>> = {
     skills: ["DevOps", "Kubernetes", "Terraform", "AWS"],
     department: "Technology Services",
     employeeId: "PIX-0482",
-    manager: "Priya Sharma",
+    manager: "Mansingh",
   },
   client: {
     phone: "+1 (704) 555-0119",
@@ -96,7 +96,7 @@ const demoDetails: Record<AccountType, Partial<Profile>> = {
 /** Which profile fields count towards "profile complete". */
 export function profileFields(p: Profile): (keyof Profile)[] {
   const common: (keyof Profile)[] = ["fullName", "email", "phone", "location", "headline", "bio", "linkedin", "skills", "accountType"];
-  if (p.accountType === "student") return [...common, "program", "cohort"];
+  if (p.accountType === "student") return [...common, "targetRole", "availability"];
   if (p.accountType === "employee") return [...common, "department", "employeeId", "manager"];
   if (p.accountType === "client") return [...common, "company", "industry", "companySize"];
   return common;

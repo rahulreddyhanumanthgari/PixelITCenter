@@ -736,14 +736,20 @@ Student accounts get their own menu and pages; employees and clients keep
 the universal ones. `nav.ts` `navFor(type)` picks the menu; `ForType`
 picks the page version (student / other). Data: `content/student-demo.ts`.
 
-- **Menu:** Dashboard · Learn (Learning, Projects, Resume corner) · Get
-  hired (Jobs, Interviews, Calendar, Messages) · Your account (Documents,
-  Profile) · Other (Help, Settings). No Billing, no Tasks.
+- **Menu:** Dashboard · Get hired (Jobs, Interviews, Calendar, Messages) ·
+  Your profile (Resume corner, Projects, Documents, Profile) · Other (Help,
+  Settings). No Billing, no Tasks.
+- **Not a learning platform** (Manas): no courses, classes, modules,
+  recordings or trainers anywhere in the portal. A student is a job seeker
+  placed through Pixel IT; their profile asks for the role they want and
+  when they can start.
 - **No analytics** (Manas): a small firm means a few well-matched
   applications, so "My applications" is a list with a stage stepper
   (Applied → Shortlisted → Interview → Offer), not charts.
-- **New pages:** `/portal/learning` (modules, assignments, recordings,
-  next live class), `/portal/jobs` (open roles, Apply with a chosen resume,
+- **Demo people:** only Joya, Hari, Manas, Rahul and Mansingh (Manas's
+  rule). Student = Manas, employee = Rahul, client = Joya (Northwind
+  Health), recruiter = Hari, account manager / placement lead = Mansingh.
+- **New pages:** `/portal/jobs` (open roles, Apply with a chosen resume,
   My applications, onboarding checklist once there's an offer),
   `/portal/interviews` (upcoming with prep tips, mock interviews with
   feedback, practice questions), `/portal/resume` (versions, default for
@@ -751,7 +757,7 @@ picks the page version (student / other). Data: `content/student-demo.ts`.
   these see a "student corner" note.
 - **Student versions of shared pages:** dashboard (`StudentHome`),
   projects = practice projects / portfolio, messages = recruiter, placement
-  lead and trainer, calendar (`/portal/schedule`), documents with expiry
+  lead and support, calendar (`/portal/schedule`), documents with expiry
   warnings, help (`/portal/support`) with "your people".
 - Applications, onboarding steps and the default resume are kept in the
   demo session. The offer's onboarding checklist is where the live portal
