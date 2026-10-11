@@ -22,7 +22,7 @@ export const demoDirectory: {
   accountType: AccountType;
   headline: string;
 }[] = [
-  { email: "student@pixelitcenter.com", fullName: "Aisha Khan", accountType: "student", headline: "Cloud engineering trainee" },
+  { email: "student@pixelitcenter.com", fullName: "Manas", accountType: "student", headline: "Cloud engineering trainee" },
   { email: "employee@pixelitcenter.com", fullName: "Ravi Patel", accountType: "employee", headline: "Senior DevOps consultant" },
   { email: "client@pixelitcenter.com", fullName: "Emily Carter", accountType: "client", headline: "IT Director, Northwind Health" },
 ];
@@ -60,7 +60,7 @@ export const projects: {
     progress: 42,
     body: "Replace manual regression tests with a Playwright suite running in CI.",
     due: "Nov 3",
-    team: ["Daniel Brooks", "Aisha Khan"],
+    team: ["Daniel Brooks", "Manas"],
   },
   {
     id: "gcp-data",
