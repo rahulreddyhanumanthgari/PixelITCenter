@@ -2,6 +2,8 @@
 // after signing in (resume, jobs, interviews, recruiters). DUMMY data,
 // like content/portal-demo.ts; replace with real data when the portal exists.
 
+import type { CalEvent } from "./portal-demo";
+
 export const studentStats = [
   { id: "jobs", label: "Jobs for you", value: "6", note: "2 new this week" },
   { id: "applications", label: "Applications", value: "5", note: "1 offer" },
@@ -297,33 +299,19 @@ export const interviews: Interview[] = [
 
 // --- Calendar ----------------------------------------------------------------
 
-export const studentEvents: { day: string; date: string; items: { time: string; title: string; kind: string; with: string }[] }[] = [
-  {
-    day: "Today",
-    date: "Sun, Oct 11",
-    items: [{ time: "20:00", title: "Upload resume v3 for review", kind: "Deadline", with: "Resume corner" }],
-  },
-  {
-    day: "Tomorrow",
-    date: "Mon, Oct 12",
-    items: [
-      { time: "10:00", title: "Prep call for the Vertex Retail interview", kind: "Call", with: "Hari" },
-      { time: "14:00", title: "Vertex Retail, technical round", kind: "Interview", with: "Hiring manager" },
-    ],
-  },
-  {
-    day: "Tuesday",
-    date: "Tue, Oct 13",
-    items: [{ time: "16:00", title: "Resume review call", kind: "Call", with: "Mansingh" }],
-  },
-  {
-    day: "Wednesday",
-    date: "Wed, Oct 14",
-    items: [
-      { time: "11:00", title: "Northwind Health, recruiter screen", kind: "Interview", with: "Talent partner" },
-      { time: "18:00", title: "Send two references to Hari", kind: "Deadline", with: "Hari" },
-    ],
-  },
+export const studentEvents: CalEvent[] = [
+  { id: "s1", date: "2026-10-02", time: "15:00", end: "15:30", title: "Resume review", kind: "Call", with: "Mansingh" },
+  { id: "s2", date: "2026-10-07", time: "11:00", end: "11:20", title: "Vertex Retail, recruiter screen", kind: "Interview", with: "Talent partner" },
+  { id: "s3", date: "2026-10-11", time: "20:00", title: "Upload resume v3 for review", kind: "Deadline", with: "Resume corner" },
+  { id: "s4", date: "2026-10-12", time: "10:00", end: "10:30", title: "Prep call for the Vertex Retail interview", kind: "Call", with: "Hari" },
+  { id: "s5", date: "2026-10-12", time: "14:00", end: "15:00", title: "Vertex Retail, technical interview", kind: "Interview", with: "Hiring manager and a senior engineer" },
+  { id: "s6", date: "2026-10-13", time: "16:00", end: "16:30", title: "Resume review call", kind: "Call", with: "Mansingh" },
+  { id: "s7", date: "2026-10-14", time: "11:00", end: "11:30", title: "Northwind Health, recruiter screen", kind: "Interview", with: "Talent partner" },
+  { id: "s8", date: "2026-10-14", time: "18:00", title: "Send two references to Hari", kind: "Deadline", with: "Hari" },
+  { id: "s9", date: "2026-10-16", time: "17:00", title: "Accept or decline the Brightline offer", kind: "Deadline", with: "Hari" },
+  { id: "s10", date: "2026-10-20", time: "12:00", title: "Background check form due", kind: "Deadline", with: "Onboarding" },
+  { id: "s11", date: "2026-10-27", time: "14:00", end: "14:30", title: "Onboarding call, Brightline Finance", kind: "Call", with: "Mansingh" },
+  { id: "s12", date: "2026-11-02", time: "09:00", end: "17:00", title: "First day at Brightline Finance", kind: "Meeting", with: "Brightline Finance team" },
 ];
 
 // --- Recruiter chat -------------------------------------------------------------

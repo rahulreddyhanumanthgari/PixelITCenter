@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { BriefcaseBusiness, CalendarDays, ChevronRight, FileText, MessageSquare, Mic, Send } from "lucide-react";
 import { announcements, appStages, jobs, resumeChecklist, resumes, studentEvents, studentStats } from "@/content/student-demo";
+import { demoToday } from "@/content/portal-demo";
+import { shortDate } from "@/lib/dates";
 import { applicationsOf, defaultResumeOf, profileCompletion, useSession } from "../session";
 import { Chip, PageHeader, ProfileRing } from "../ui";
 import { OnboardingChecklist } from "./OnboardingChecklist";
@@ -10,7 +12,10 @@ import { OnboardingChecklist } from "./OnboardingChecklist";
 const STAT_ICONS = { jobs: BriefcaseBusiness, applications: Send, interviews: Mic, messages: MessageSquare };
 
 // The next three things on the calendar (deadlines show on the Calendar page).
-const upNext = studentEvents.flatMap((d) => d.items.map((e) => ({ ...e, date: d.date }))).filter((e) => e.kind !== "Deadline").slice(0, 3);
+const upNext = studentEvents
+  .filter((e) => e.date >= demoToday && e.kind !== "Deadline")
+  .sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time))
+  .slice(0, 3);
 
 function greeting() {
   const h = new Date().getHours();
@@ -108,7 +113,7 @@ export function StudentHome() {
             </h2>
             <ul className="mt-3 grid gap-3 md:grid-cols-3">
               {upNext.map((e) => (
-                <li key={e.title}>
+                <li key={e.id}>
                   <Link
                     href={e.kind === "Interview" ? "/portal/interviews" : "/portal/schedule"}
                     className="dash-card dash-card-pad block h-full"
@@ -116,7 +121,7 @@ export function StudentHome() {
                     <Chip>{e.kind}</Chip>
                     <p className="mt-3 text-sm font-semibold">{e.title}</p>
                     <p className="mt-1 flex items-center gap-1.5 text-xs text-[var(--dash-muted)]">
-                      <CalendarDays className="size-3.5" aria-hidden="true" /> {e.date} · {e.time}
+                      <CalendarDays className="size-3.5" aria-hidden="true" /> {shortDate(e.date)} · {e.time}
                     </p>
                   </Link>
                 </li>

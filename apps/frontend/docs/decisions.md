@@ -763,6 +763,16 @@ picks the page version (student / other). Data: `content/student-demo.ts`.
   updated soon, shared on <date>" box; after, the link with Copy and Join.
   Demo: Vertex Retail (tomorrow, link ready) and Northwind Health (in 3
   days, link pending). No mock interviews or practice questions anywhere.
+- **Calendar / Schedule** (`SchedulePage`, Manas 2026-10-11): two views,
+  remembered per browser. *Calendar*: a month grid (Sunday first, Today and
+  prev / next month); each day box lists its items (time on one line, title
+  on up to two), phones show coloured dots instead; picking a day shows it
+  in full below (beside on very wide screens). *List*: upcoming items
+  grouped by day ("Today", "Tomorrow", weekday), each with time, a colour
+  bar, title, type and who; "Show earlier" reveals past ones. Colours:
+  Interview orange, Call cyan, Meeting navy, Deadline red. Events carry a
+  real date (`CalEvent`, YYYY-MM-DD); the demo's "today" is `demoToday`
+  (Oct 11, 2026) so the data reads right. Date helpers: `lib/dates.ts`.
 - **Student versions of shared pages:** dashboard (`StudentHome`),
   projects = practice projects / portfolio, messages = recruiter, placement
   lead and support, calendar (`/portal/schedule`), documents with expiry

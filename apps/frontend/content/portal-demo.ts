@@ -171,28 +171,38 @@ export const conversations: Conversation[] = [
   },
 ];
 
-export const events: { day: string; date: string; items: { time: string; title: string; kind: string; with: string }[] }[] = [
-  {
-    day: "Today",
-    date: "Sun, Oct 11",
-    items: [{ time: "18:00", title: "Week 41 timesheet closes", kind: "Deadline", with: "Payroll" }],
-  },
-  {
-    day: "Tomorrow",
-    date: "Mon, Oct 12",
-    items: [
-      { time: "14:00", title: "Interview, Brightline Finance", kind: "Interview", with: "Hiring panel" },
-      { time: "15:00", title: "Call about the Vertex Retail role", kind: "Call", with: "Hari" },
-    ],
-  },
-  {
-    day: "Tuesday",
-    date: "Tue, Oct 13",
-    items: [
-      { time: "10:00", title: "Northwind Health kickoff", kind: "Meeting", with: "Mansingh, Rahul" },
-      { time: "16:00", title: "Quarterly review, Northwind Health", kind: "Meeting", with: "Joya" },
-    ],
-  },
+/**
+ * "Today" in the demo. The demo data is written around this date (the
+ * "Tomorrow" interview, the link shared 1 day before). The live portal uses
+ * the real date.
+ */
+export const demoToday = "2026-10-11";
+
+export type EventKind = "Interview" | "Call" | "Meeting" | "Deadline";
+
+/** One thing on the calendar. `date` is YYYY-MM-DD; times are 24-hour, ET. */
+export type CalEvent = {
+  id: string;
+  date: string;
+  time: string;
+  end?: string;
+  title: string;
+  kind: EventKind;
+  with: string;
+};
+
+export const events: CalEvent[] = [
+  { id: "e1", date: "2026-10-06", time: "11:00", end: "12:00", title: "AWS migration plan review", kind: "Meeting", with: "Rahul, Mansingh" },
+  { id: "e2", date: "2026-10-09", time: "17:00", title: "Week 40 timesheet due", kind: "Deadline", with: "Payroll" },
+  { id: "e3", date: "2026-10-11", time: "18:00", title: "Week 41 timesheet closes", kind: "Deadline", with: "Payroll" },
+  { id: "e4", date: "2026-10-12", time: "14:00", end: "15:00", title: "Interview, Brightline Finance", kind: "Interview", with: "Hiring panel" },
+  { id: "e5", date: "2026-10-12", time: "15:00", end: "15:30", title: "Call about the Vertex Retail role", kind: "Call", with: "Hari" },
+  { id: "e6", date: "2026-10-13", time: "10:00", end: "11:00", title: "Northwind Health kickoff", kind: "Meeting", with: "Mansingh, Rahul" },
+  { id: "e7", date: "2026-10-13", time: "16:00", end: "17:00", title: "Quarterly review, Northwind Health", kind: "Meeting", with: "Joya" },
+  { id: "e8", date: "2026-10-16", time: "17:00", title: "Week 42 timesheet due", kind: "Deadline", with: "Payroll" },
+  { id: "e9", date: "2026-10-20", time: "11:00", end: "11:45", title: "Sprint review, Vertex Retail", kind: "Meeting", with: "Hari" },
+  { id: "e10", date: "2026-10-23", time: "15:00", end: "15:30", title: "Check-in with your account manager", kind: "Call", with: "Mansingh" },
+  { id: "e11", date: "2026-10-30", time: "09:00", title: "GCP data platform go-live", kind: "Deadline", with: "Mansingh" },
 ];
 
 export const documents: { id: string; name: string; category: string; size: string; updated: string; by: string }[] = [
