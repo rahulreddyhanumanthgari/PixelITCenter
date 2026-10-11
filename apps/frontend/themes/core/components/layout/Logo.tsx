@@ -1,7 +1,7 @@
 import Image from "next/image";
 import { site } from "@/content/site";
 import { cn } from "@/lib/utils";
-import logo from "@/public/brand/pixel-it-center-logo.webp";
+import logo from "@/public/brand/pixelit-logo.webp";
 
 interface LogoProps {
   className?: string;
@@ -11,7 +11,11 @@ interface LogoProps {
   alt?: string;
 }
 
-/** The Pixel IT Center logo, taken from the current pixelitcenter.com. */
+/**
+ * The Pixel IT Center logo: the dot mark and the "PixelIT Center" wordmark on
+ * one line, in brand orange. A white version for orange backgrounds is in
+ * public/brand/pixelit-logo-white.webp.
+ */
 export function Logo({ className, priority = false, alt = site.name }: LogoProps) {
   return (
     <Image

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Menu, X } from "lucide-react";
+import { ArrowRight, Menu, X } from "lucide-react";
 import { nav, site } from "@/content/site";
 
 export function MobileMenu() {
@@ -50,9 +50,10 @@ export function MobileMenu() {
           </nav>
           <a
             href={site.portalUrl}
-            className="mt-8 inline-flex h-12 items-center rounded-full border border-foreground/20 px-6 text-sm font-medium"
+            className="cta-pill mt-8 inline-flex items-center rounded-full"
           >
             Portal Login
+            <ArrowRight aria-hidden="true" />
           </a>
         </div>
       )}

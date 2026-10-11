@@ -46,18 +46,16 @@ export function Hero() {
           </p>
 
           <div data-reveal="3" className="mt-12 flex flex-wrap items-center justify-center gap-3">
-            <a href={hero.primaryCta.href} className={cn(buttonVariants(), "h-11 rounded-full px-6 text-sm font-medium")}>
+            <a href={hero.primaryCta.href} className={cn(buttonVariants(), "cta-pill rounded-full")}>
               {hero.primaryCta.label}
               <ArrowRight data-icon="inline-end" />
             </a>
             <a
               href={hero.secondaryCta.href}
-              className={cn(
-                buttonVariants({ variant: "ghost" }),
-                "h-11 rounded-full px-5 text-sm font-medium text-[var(--text-secondary)] hover:bg-foreground/5 hover:text-foreground",
-              )}
+              className={cn(buttonVariants(), "cta-pill rounded-full")}
             >
               {hero.secondaryCta.label}
+              <ArrowRight data-icon="inline-end" />
             </a>
           </div>
         </div>

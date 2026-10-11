@@ -23,19 +23,17 @@ export function ContactCta() {
           <div data-reveal="3" className="mt-9 flex flex-wrap justify-center gap-3">
             <a
               href={contactCta.primary.href}
-              className={cn(buttonVariants(), "h-12 rounded-full px-6 text-sm font-semibold")}
+              className={cn(buttonVariants(), "cta-pill rounded-full")}
             >
               {contactCta.primary.label}
               <ArrowRight data-icon="inline-end" />
             </a>
             <a
               href={contactCta.secondary.href}
-              className={cn(
-                buttonVariants({ variant: "outline" }),
-                "h-12 rounded-full border-foreground/20 bg-transparent px-6 text-sm",
-              )}
+              className={cn(buttonVariants(), "cta-pill rounded-full")}
             >
               {contactCta.secondary.label}
+              <ArrowRight data-icon="inline-end" />
             </a>
           </div>
           <p className="type-body-sm mt-6">{site.contact.email}</p>

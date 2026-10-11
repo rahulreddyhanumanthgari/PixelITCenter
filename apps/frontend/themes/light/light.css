@@ -109,7 +109,7 @@
   /* Big again, like the statement (its own size, a step below it). */
   font-family: var(--font-headline), var(--font-display), sans-serif;
   font-size: clamp(2.75rem, 1.2rem + 6.5vw, min(6.75rem, 11svh));
-  font-weight: 800;
+  font-weight: 900;
   line-height: 0.9;
   letter-spacing: -0.005em;
   color: var(--headline-ink);
@@ -176,20 +176,6 @@
   font-weight: 650;
 }
 
-/* Buttons: dark navy pill and an outlined pill (the reference's pair). */
-[data-hero] [data-reveal="3"] > a {
-  height: 3rem;
-  padding: 0 1.6rem;
-  font-size: 0.9375rem;
-}
-[data-hero] [data-reveal="3"] > a + a {
-  border: 1.5px solid #8f98a8;
-  color: var(--headline-ink);
-}
-[data-hero] [data-reveal="3"] > a + a:hover {
-  border-color: var(--headline-ink);
-  background: transparent;
-}
 
 /* Navigation. */
 .type-nav {
@@ -466,9 +452,10 @@ li[data-card] > figure.card figcaption {
   }
 }
 
-/* Careers "View open roles": the site's primary pill (navy, white text) with
-   an orange arrow chip that slides on hover. */
-.careers-cta {
+/* The site's one button style (every button: hero, header and menu Portal
+   Login, Careers, Contact): navy pill, white text, an orange arrow chip that
+   slides on hover. */
+.cta-pill {
   height: 3.25rem;
   padding: 0 0.45rem 0 1.6rem;
   gap: 0.9rem;
@@ -482,7 +469,7 @@ li[data-card] > figure.card figcaption {
     transform 0.3s ease,
     box-shadow 0.3s ease;
 }
-.careers-cta svg {
+.cta-pill svg {
   box-sizing: content-box;
   width: 1rem;
   height: 1rem;
@@ -493,25 +480,410 @@ li[data-card] > figure.card figcaption {
   transition: transform 0.3s ease;
 }
 @media (hover: hover) {
-  .careers-cta:hover {
+  .cta-pill:hover {
     transform: translateY(-2px);
     box-shadow: 0 18px 34px -18px rgb(252 101 13 / 0.55);
   }
-  .careers-cta:hover svg {
+  .cta-pill:hover svg {
     transform: translateX(3px);
   }
 }
 
-/* Header: solid when scrolled, no backdrop blur — blurring the animating
-   particle canvas behind it every frame caused stutter. */
-header.backdrop-blur-md {
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
-  background-color: rgb(248 250 252 / 0.97) !important;
-}
 
 /* Cards animate in (CardEntrance): give each its own layer up front, so the
    pop-in doesn't stall a frame creating layers for a dozen cards at once. */
 [data-card] {
   will-change: transform, opacity;
+}
+
+/* Header: one row, one layer. Menu links sit directly on the header (no
+   bar of their own); the current section is marked softly in orange, so the
+   navy Portal Login button is the only strong element. Logo, links and
+   button share one centre line. */
+nav[aria-label="Main"] ul {
+  gap: 0.25rem;
+}
+nav[aria-label="Main"] a.type-nav {
+  display: flex;
+  align-items: center;
+  height: 2.5rem;
+  padding: 0 1rem;
+  border-radius: 999px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  letter-spacing: 0;
+  color: #2e3a55;
+  transition:
+    background-color 0.25s ease,
+    color 0.25s ease;
+}
+nav[aria-label="Main"] a.type-nav:hover {
+  color: var(--headline-ink);
+  background: rgb(4 19 39 / 0.05);
+}
+nav[aria-label="Main"] a.type-nav[aria-current="true"] {
+  color: var(--headline-orange);
+  background: rgb(252 101 13 / 0.1);
+}
+nav[aria-label="Main"] a.type-nav > span {
+  display: none;
+}
+nav[aria-label="Main"] a.type-nav:focus-visible {
+  outline: 2px solid var(--headline-orange);
+  outline-offset: 2px;
+}
+/* The header's Portal Login: the site's pill button, a size smaller so it
+   lines up with the logo and links (the phone menu keeps the full size). */
+header :not(#mobile-nav) > a.cta-pill {
+  height: 2.75rem;
+  padding: 0 0.35rem 0 1.25rem;
+  gap: 0.7rem;
+  font-size: 0.875rem;
+}
+header :not(#mobile-nav) > a.cta-pill svg {
+  padding: 0.5rem;
+}
+
+/* Floating header: the logo, links and Portal Login inside one small rounded
+   white bar (thin outline, no shadow or fade) with a small gap from the
+   screen edges, the same at the top of the page and while scrolling. The
+   header strip behind it stays fully transparent. */
+header > div {
+  height: 3.5rem !important;
+  margin: 0.6rem 0.75rem 0;
+  padding: 0 0.4rem 0 1rem !important;
+  border-radius: 999px;
+  background: #ffffff;
+  border: 1px solid rgb(4 19 39 / 0.1);
+}
+@media (min-width: 1024px) {
+  header > div {
+    height: 4rem !important;
+    max-width: 76rem;
+    margin: 0.85rem auto 0;
+    padding: 0 0.5rem 0 1.4rem !important;
+  }
+  header a[aria-label$="home"] img {
+    height: 2.4rem;
+  }
+}
+
+/* Portal Login page (/portal): a round back arrow, then one white card
+   (logo, tabs, form) on the page background, in the site's ink and orange. */
+.portal-page {
+  background:
+    radial-gradient(ellipse 60% 45% at 50% 0%, rgb(252 101 13 / 0.07), transparent 70%),
+    var(--background);
+}
+.portal-card {
+  padding: 2rem 1.5rem;
+  border-radius: 1.5rem;
+  background: #ffffff;
+  border: 1px solid rgb(4 19 39 / 0.1);
+}
+@media (min-width: 640px) {
+  .portal-card {
+    padding: 2.5rem;
+  }
+}
+.portal-label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--headline-ink);
+}
+.portal-input {
+  width: 100%;
+  height: 3rem;
+  padding: 0 1rem;
+  border-radius: 0.875rem;
+  border: 1px solid rgb(4 19 39 / 0.16);
+  background: #ffffff;
+  font-size: 1rem; /* 16px: phones don't zoom in on focus */
+  color: var(--headline-ink);
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+.portal-input::placeholder {
+  color: #8a93a6;
+}
+.portal-input:focus {
+  outline: none;
+  border-color: var(--headline-orange);
+  box-shadow: 0 0 0 3px rgb(252 101 13 / 0.18);
+}
+.portal-eye {
+  position: absolute;
+  top: 50%;
+  right: 0.375rem;
+  display: grid;
+  place-items: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 999px;
+  color: #5b6578;
+  transform: translateY(-50%);
+}
+.portal-eye:hover {
+  color: var(--headline-ink);
+  background: rgb(4 19 39 / 0.05);
+}
+.portal-eye:focus-visible,
+.portal-link:focus-visible,
+.portal-back:focus-visible {
+  outline: 2px solid var(--headline-orange);
+  outline-offset: 2px;
+}
+.portal-link {
+  font-weight: 600;
+  color: var(--accent-orange);
+  border-radius: 0.25rem;
+}
+.portal-link:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.portal-notice {
+  padding: 0.875rem 1rem;
+  border-radius: 0.875rem;
+  background: rgb(252 101 13 / 0.08);
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: #3b4458;
+}
+.portal-back {
+  display: grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 999px;
+  background: #ffffff;
+  border: 1px solid rgb(4 19 39 / 0.1);
+  color: var(--headline-ink);
+  transition:
+    background-color 0.25s ease,
+    transform 0.25s ease;
+}
+.portal-back:hover {
+  background: #f1f5f9;
+  transform: translateX(-2px);
+}
+.portal-google {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  width: 100%;
+  height: 3rem;
+  border-radius: 999px;
+  border: 1px solid rgb(4 19 39 / 0.16);
+  background: #ffffff;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--headline-ink);
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease;
+}
+.portal-google:hover {
+  background: #f8fafc;
+  border-color: rgb(4 19 39 / 0.26);
+}
+.portal-google:focus-visible {
+  outline: 2px solid var(--headline-orange);
+  outline-offset: 2px;
+}
+.portal-or {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin: 1.5rem 0;
+  font-size: 0.8125rem;
+  color: #8a93a6;
+}
+.portal-or::before,
+.portal-or::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: rgb(4 19 39 / 0.1);
+}
+
+/* Slide to sign in (SlideToSignIn): a navy track with an orange knob that is
+   dragged to the right end, like the phone's slide to answer. The label
+   shines left to right and fades as the knob moves over it. */
+.slide-track {
+  position: relative;
+  height: 3.5rem;
+  border-radius: 999px;
+  background: var(--headline-ink);
+  box-shadow: 0 14px 30px -18px rgb(4 19 39 / 0.6);
+  overflow: hidden;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.slide-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: 999px;
+  background: rgb(252 101 13 / 0.28);
+}
+.slide-track[data-done] .slide-fill {
+  background: var(--headline-orange);
+  transition: background-color 0.25s ease;
+}
+.slide-label {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding-left: 3rem;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  pointer-events: none;
+  color: transparent;
+  background: linear-gradient(
+    90deg,
+    rgb(255 255 255 / 0.5) 0%,
+    rgb(255 255 255 / 0.5) 40%,
+    #ffffff 50%,
+    rgb(255 255 255 / 0.5) 60%,
+    rgb(255 255 255 / 0.5) 100%
+  );
+  background-size: 250% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  animation: slide-shine 2.6s linear infinite;
+}
+@keyframes slide-shine {
+  from {
+    background-position: 100% 0;
+  }
+  to {
+    background-position: 0% 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .slide-label {
+    animation: none;
+    background: none;
+    color: rgb(255 255 255 / 0.85);
+  }
+}
+.slide-knob {
+  position: absolute;
+  top: 0.3rem;
+  left: 0.3rem;
+  display: grid;
+  place-items: center;
+  width: 2.9rem;
+  height: 2.9rem;
+  border-radius: 999px;
+  background: var(--headline-orange);
+  color: #ffffff;
+  cursor: grab;
+  touch-action: pan-y; /* sideways drags move the knob, not the page */
+  transform: translateX(var(--x, 0px));
+  box-shadow: 0 4px 12px -4px rgb(0 0 0 / 0.4);
+}
+.slide-knob:active {
+  cursor: grabbing;
+}
+.slide-knob:focus-visible {
+  outline: 2px solid #ffffff;
+  outline-offset: -4px;
+}
+
+/* Portal: Sign in / Sign up switch at the top of the card. */
+.portal-tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.25rem;
+  padding: 0.3rem;
+  border-radius: 999px;
+  background: rgb(4 19 39 / 0.06);
+}
+.portal-tab {
+  height: 2.75rem;
+  border-radius: 999px;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: #5b6578;
+  transition:
+    background-color 0.25s ease,
+    color 0.25s ease,
+    box-shadow 0.25s ease;
+}
+.portal-tab:hover {
+  color: var(--headline-ink);
+}
+.portal-tab[aria-selected="true"] {
+  background: #ffffff;
+  color: var(--headline-ink);
+  box-shadow: 0 2px 8px -3px rgb(4 19 39 / 0.25);
+}
+.portal-tab:focus-visible {
+  outline: 2px solid var(--headline-orange);
+  outline-offset: 2px;
+}
+
+/* Slide: arriving pops the knob and draws in the tick; arriving with
+   something unfilled flashes the bar red before the knob slides back. */
+.slide-track[data-done] .slide-knob {
+  background: #ffffff;
+  color: var(--headline-orange);
+  animation: slide-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.slide-tick {
+  animation: slide-tick-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.slide-track[data-failed] .slide-fill {
+  background: rgb(220 38 38 / 0.85);
+  transition: background-color 0.15s ease;
+}
+@keyframes slide-pop {
+  0% {
+    transform: translateX(var(--x)) scale(1);
+  }
+  45% {
+    transform: translateX(var(--x)) scale(1.18);
+  }
+  100% {
+    transform: translateX(var(--x)) scale(1);
+  }
+}
+@keyframes slide-tick-in {
+  from {
+    transform: scale(0) rotate(-45deg);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1) rotate(0);
+    opacity: 1;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .slide-track[data-done] .slide-knob,
+  .slide-tick {
+    animation: none;
+  }
+}
+
+/* Portal: a field that's missing or wrong, and the list saying so. */
+.portal-input[aria-invalid] {
+  border-color: #dc2626;
+  box-shadow: 0 0 0 3px rgb(220 38 38 / 0.12);
+}
+.portal-error {
+  padding: 0.875rem 1rem;
+  border-radius: 0.875rem;
+  background: rgb(220 38 38 / 0.07);
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: #b91c1c;
+}
+.portal-error li + li {
+  margin-top: 0.45rem;
 }

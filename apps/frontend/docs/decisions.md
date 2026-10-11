@@ -672,6 +672,33 @@ version is now simply the dark site in light colours:
 - The Dark / Light switch (`components/DesignSwitch.tsx`, cookie +
   rewrite of `/` to `/light`) chooses between them.
 
+## Portal Login (temporary page)
+
+The plan puts the portal on its own app at portal.pixelitcenter.com. Until
+that exists, Portal Login opens `/portal` on this site:
+
+- Every Portal Login link reads `site.portalUrl` (`content/portal-url.ts`).
+  Set `NEXT_PUBLIC_PORTAL_URL=https://portal.pixelitcenter.com` and they all
+  move to the real portal; then delete `app/portal` and
+  `components/portal`.
+- The page: a round back arrow (to the website) above one card with the
+  logo and Sign in / Sign up tabs; no site header. Sign in: Continue with Google, email,
+  password, forgot password. Sign up: Sign up with Google, full name, work
+  email, password (8+ characters) and confirm password. Both end in a
+  slide control (`SlideToSignIn`, like the phone's slide to answer). A tap
+  (or Enter / Space) makes the knob glide over on its own; on arrival the
+  bar turns orange and the knob pops into a white tick. If something is
+  missing or wrong, the bar flashes red on arrival, the knob slides back,
+  and the form lists each problem in friendly words ("Pop in your email so we can find your account.") with a
+  red outline on those fields until they're typed in.
+- Nothing is connected to a sign-in service yet. Signing in or pressing
+  the Google button sends nothing, clears the password and says the portal
+  is being set up.
+- `/portal` is `noindex` and left out of the sitemap.
+- Per the plan, no portal data or workflows (timesheets, invoices,
+  employees) go in this codebase; real sign-in is AWS Cognito in the
+  portal app.
+
 ## Content
 
 **Source: the live pixelitcenter.com.** The live site's facts and wording
