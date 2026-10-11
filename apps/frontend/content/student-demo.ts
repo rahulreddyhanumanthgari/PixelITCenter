@@ -363,9 +363,12 @@ export const resumes: { id: string; name: string; target: string; updated: strin
   { id: "cv1", name: "Manas, General v1.pdf", target: "Any role", updated: "Sep 15", status: "Draft" },
 ];
 
-export const resumeFeedback: { from: string; date: string; text: string }[] = [
-  { from: "Mansingh", date: "Oct 9", text: "Strong summary. Put the Terraform project first and add numbers (e.g. 'cut deploy time from 20 to 5 minutes')." },
-  { from: "Hari", date: "Oct 3", text: "Clients search for 'AWS', 'Terraform' and 'CI/CD'. Make sure all three are in your skills line." },
+/** Recruiter notes on a resume. `resumeId` says which resume the note is about. */
+export const resumeFeedback: { id: string; resumeId: string; from: "Hari" | "Mansingh"; role: string; date: string; text: string }[] = [
+  { id: "f1", resumeId: "cv3", from: "Hari", role: "Recruiter", date: "Oct 10", text: "Approved. This is the one I'll send to Brightline Finance and Vertex Retail." },
+  { id: "f2", resumeId: "cv3", from: "Mansingh", role: "Placement lead", date: "Oct 9", text: "Strong summary. Put the Terraform project first and add numbers (e.g. 'cut deploy time from 20 to 5 minutes')." },
+  { id: "f3", resumeId: "cv2", from: "Mansingh", role: "Placement lead", date: "Oct 4", text: "Two pages is too long for DevOps roles. Cut your older jobs to one line each." },
+  { id: "f4", resumeId: "cv2", from: "Hari", role: "Recruiter", date: "Oct 3", text: "Clients search for 'AWS', 'Terraform' and 'CI/CD'. Make sure all three are in your skills line." },
 ];
 
 export const resumeChecklist: { id: string; text: string; done: boolean }[] = [

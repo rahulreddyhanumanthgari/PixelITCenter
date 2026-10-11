@@ -773,6 +773,14 @@ picks the page version (student / other). Data: `content/student-demo.ts`.
   Interview orange, Call cyan, Meeting navy, Deadline red. Events carry a
   real date (`CalEvent`, YYYY-MM-DD); the demo's "today" is `demoToday`
   (Oct 11, 2026) so the data reads right. Date helpers: `lib/dates.ts`.
+- **Resume corner** (`ResumePage`, Manas 2026-10-11): one card per resume
+  with what it's for, when it was updated, its status in words (Reviewed:
+  ready to send · Needs changes: see the feedback · Draft: not reviewed
+  yet), its feedback count, Make default and Download. The default resume
+  (sent when applying) has an orange banner. Each recruiter note says which
+  resume it's about ("About Cloud Engineer v3", with that resume's status);
+  notes filter by resume, and a card's "N feedback notes" jumps to its own.
+  Data: `resumeFeedback[].resumeId`.
 - **Student versions of shared pages:** dashboard (`StudentHome`),
   projects = practice projects / portfolio, messages = recruiter, placement
   lead and support, calendar (`/portal/schedule`), documents with expiry
