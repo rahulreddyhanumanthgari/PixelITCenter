@@ -691,13 +691,44 @@ that exists, Portal Login opens `/portal` on this site:
   missing or wrong, the bar flashes red on arrival, the knob slides back,
   and the form lists each problem in friendly words ("Pop in your email so we can find your account.") with a
   red outline on those fields until they're typed in.
-- Nothing is connected to a sign-in service yet. Signing in or pressing
-  the Google button sends nothing, clears the password and says the portal
-  is being set up.
+- Nothing is connected to a sign-in service yet: sign-in is a demo (below).
 - `/portal` is `noindex` and left out of the sitemap.
-- Per the plan, no portal data or workflows (timesheets, invoices,
+- Per the plan, no real portal data or workflows (timesheets, invoices,
   employees) go in this codebase; real sign-in is AWS Cognito in the
-  portal app.
+  portal app. The dashboard below is a dummy-data preview only.
+
+## Portal dashboard demo (2026-10-11, branch feature/dashboard)
+
+Manas asked for a universal dashboard to show the team what the portal
+will be, before the real one is built per account type.
+
+- **The plan it previews.** Anyone signs up the same way. After sign-up
+  they complete a profile, which says whether they are a student, an
+  employee or a client. At sign-in, the email is looked up in the database
+  to find the account type, and each type gets its own dashboard
+  (employees get extra features). The sign-in page never asks for a type.
+- **Demo sign-in** (`components/dashboard/session.ts`): a JSON session in
+  localStorage; any password works; nothing is sent anywhere. The email
+  picks the type from `demoDirectory` in `content/portal-demo.ts`
+  (`student@` / `employee@` / `client@pixelitcenter.com`). Any other email
+  signs in as a new account with no type. After the slide, `SigningIn`
+  shows the steps (check email → found a *type* account → open dashboard).
+  Sign up → `/portal/onboarding` (3 steps: type, details, about you) →
+  dashboard. Google signs in a made-up new account.
+- **Pages** (`app/portal/(app)/*`, frame `DashboardShell`): Dashboard,
+  Projects, Messages, Schedule, Tasks, Documents, Billing & invoices,
+  Profile, Support, Settings. Layout follows the owner's reference image:
+  sidebar, search + messages + notifications bar, profile card with a
+  completion ring and four stat tiles, project cards, activity table,
+  today's tasks. Universal for now: everyone sees the same menu.
+- All data is dummy (`content/portal-demo.ts`). Tasks, profile and read
+  notifications are saved in the demo session; messages, uploads and
+  tickets last only until you leave the page.
+- Styles: `themes/light/dashboard.css` (site tokens; in `@layer components`
+  so Tailwind utilities win). The top bar is a `div role="banner"` because
+  light.css styles every `<header>` as the site header.
+- To make it real: replace `session.ts` with Cognito + a profile lookup,
+  and split `nav.ts` / the pages per account type.
 
 ## Content
 

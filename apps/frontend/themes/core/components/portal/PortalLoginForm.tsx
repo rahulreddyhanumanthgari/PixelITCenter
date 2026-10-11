@@ -2,7 +2,9 @@
 
 import { useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 import { Eye, EyeOff } from "lucide-react";
-import { portal, site } from "@/content/site";
+import { demoDirectory } from "@/content/portal-demo";
+import { site } from "@/content/site";
+import { SigningIn, type SignInRequest } from "./SigningIn";
 import { SlideToSignIn } from "./SlideToSignIn";
 
 /** Google's four-colour "G" mark. */
@@ -122,23 +124,23 @@ function PasswordField({
 /**
  * Sign in / Sign up tabs. Each shows its own form: a Google button, then
  * the fields (sign up adds name and confirm password) and the slide control.
- * Not connected to any login service yet: nothing is sent anywhere; the
- * passwords are cleared and a note explains the portal is still being set
- * up. Wire the real sign-in (AWS Cognito, per the plan; Google through it)
- * into onSubmit and the Google button when the portal exists.
+ * DEMO sign-in: nothing is sent anywhere. A valid form hands over to
+ * SigningIn, which finds the account type from the email (demo directory),
+ * then opens the dashboard (sign in) or the profile steps (sign up). Wire
+ * the real sign-in (AWS Cognito, per the plan; Google through it) into
+ * onSubmit and the Google button when the portal exists.
  */
 export function PortalLoginForm() {
   const formRef = useRef<HTMLFormElement>(null);
   const tabRefs = useRef<(HTMLButtonElement | null)[]>([]);
   const [mode, setMode] = useState<Mode>("signin");
-  const [notice, setNotice] = useState(false);
+  const [request, setRequest] = useState<SignInRequest | null>(null);
   const [errors, setErrors] = useState<FieldError[]>([]);
   const signup = mode === "signup";
   const action = signup ? "Sign up" : "Sign in";
 
   const switchTo = (next: Mode) => {
     setMode(next);
-    setNotice(false);
     setErrors([]);
   };
 
@@ -169,11 +171,7 @@ export function PortalLoginForm() {
       if (text) found.push({ id: input.id, text });
     }
     setErrors(found);
-    if (found.length) {
-      setNotice(false);
-      return false;
-    }
-    return true;
+    return found.length === 0;
   };
 
   // Typing in a field clears its own error.
@@ -181,6 +179,17 @@ export function PortalLoginForm() {
     document.getElementById(id)?.removeAttribute("aria-invalid");
     setErrors((list) => list.filter((e) => e.id !== id));
   };
+
+  // Demo: put a demo account's email in the box (any password works).
+  const fillEmail = (email: string) => {
+    const input = formRef.current?.elements.namedItem("email") as HTMLInputElement | null;
+    if (!input) return;
+    input.value = email;
+    clearError(input.id);
+    (formRef.current?.elements.namedItem("password") as HTMLInputElement | null)?.focus();
+  };
+
+  if (request) return <SigningIn request={request} />;
 
   return (
     <div>
@@ -207,7 +216,12 @@ export function PortalLoginForm() {
       </div>
 
       <div id="portal-panel" role="tabpanel" aria-labelledby={`portal-tab-${mode}`} className="mt-7">
-        <button type="button" className="portal-google" onClick={() => setNotice(true)}>
+        <button
+          type="button"
+          className="portal-google"
+          // Demo: a made-up Google account, new to the portal.
+          onClick={() => setRequest({ mode, method: "google", email: "alex.morgan@gmail.com", name: "Alex Morgan" })}
+        >
           <GoogleMark />
           {signup ? "Sign up with Google" : "Continue with Google"}
         </button>
@@ -226,11 +240,9 @@ export function PortalLoginForm() {
           onSubmit={(e) => {
             e.preventDefault();
             if (!validate()) return;
-            for (const name of ["password", "confirm-password"]) {
-              const input = e.currentTarget.elements.namedItem(name) as HTMLInputElement | null;
-              if (input) input.value = "";
-            }
-            setNotice(true);
+            const field = (name: string) =>
+              (e.currentTarget.elements.namedItem(name) as HTMLInputElement | null)?.value.trim() ?? "";
+            setRequest({ mode, method: "password", email: field("email"), name: field("name") });
           }}
         >
           {signup && (
@@ -294,7 +306,8 @@ export function PortalLoginForm() {
           </button>
           <SlideToSignIn
             validate={validate}
-            onComplete={() => formRef.current?.requestSubmit()}
+            // A beat so the tick shows before the card moves on.
+            onComplete={() => window.setTimeout(() => formRef.current?.requestSubmit(), 450)}
             action={action}
           />
 
@@ -308,17 +321,22 @@ export function PortalLoginForm() {
               </ul>
             )}
           </div>
-          <div role="status">
-            {notice && (
-              <p className="portal-notice">
-                {portal.notReady}{" "}
-                <a href={`mailto:${site.contact.email}`} className="portal-link">
-                  {site.contact.email}
-                </a>
+          {!signup && (
+            <div className="portal-demo-hint">
+              <p>
+                <strong>Demo:</strong> any password works. Your email decides the account type. Try{" "}
+                {demoDirectory.map((d, i) => (
+                  <span key={d.email}>
+                    {i > 0 && (i === demoDirectory.length - 1 ? " or " : ", ")}
+                    <button type="button" onClick={() => fillEmail(d.email)}>
+                      {d.email}
+                    </button>
+                  </span>
+                ))}
                 .
               </p>
-            )}
-          </div>
+            </div>
+          )}
         </form>
       </div>
     </div>

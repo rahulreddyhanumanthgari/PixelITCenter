@@ -26,12 +26,10 @@ export const site = {
   linkedin: "https://www.linkedin.com/company/pixel-it-center/",
 } as const;
 
-// The Portal Login page (/portal). Sign-in is not connected yet: the form
-// and the Google button send nothing and show `notReady` instead.
+// The Portal Login page (/portal). Sign-in is a demo for now (see
+// themes/core/components/dashboard/session.ts): nothing is sent anywhere.
 export const portal = {
   pageTitle: "Portal Login",
-  notReady:
-    "The portal is being set up, so sign-in isn't open yet. For access or help, email",
 } as const;
 
 export const nav = [
