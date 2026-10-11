@@ -9,10 +9,9 @@ import { applicationsOf, useSession, withdrawApplication } from "../session";
 import { Chip, PageHeader, useToast } from "../ui";
 import { useApply } from "./ApplyDialog";
 import { JobCard } from "./JobCard";
+import { JobFilters, matches, noFilters, type Filters } from "./JobFilters";
 import { OnboardingChecklist } from "./OnboardingChecklist";
 
-const TYPES = ["All", "Permanent", "Contract", "Part-time"] as const;
-const MODES = ["Any", "Remote", "Hybrid", "On-site"] as const;
 
 /**
  * Jobs for students: open roles to apply to, and "My applications", the
@@ -24,8 +23,7 @@ export function JobsPage() {
   const params = useSearchParams();
   const [tab, setTab] = useState<"open" | "mine">(params.get("tab") === "mine" ? "mine" : "open");
   const [query, setQuery] = useState("");
-  const [type, setType] = useState<(typeof TYPES)[number]>("All");
-  const [mode, setMode] = useState<(typeof MODES)[number]>("Any");
+  const [filters, setFilters] = useState<Filters>(noFilters);
   const [toast, showToast] = useToast();
   const apply = useApply(showToast);
   if (!session) return null;
@@ -36,8 +34,7 @@ export function JobsPage() {
   const q = query.trim().toLowerCase();
   const open = jobs.filter(
     (j) =>
-      (type === "All" || j.employment === type) &&
-      (mode === "Any" || j.workMode === mode) &&
+      matches(filters, j) &&
       (!q || [j.title, j.company, ...j.skills].some((t) => t.toLowerCase().includes(q))),
   );
 
@@ -56,7 +53,7 @@ export function JobsPage() {
 
       {tab === "open" ? (
         <>
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+          <div className="flex items-center gap-2">
             <div className="dash-search max-w-none sm:max-w-sm">
               <label htmlFor="job-search" className="sr-only">
                 Search jobs
@@ -64,29 +61,14 @@ export function JobsPage() {
               <input id="job-search" type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search role, company or skill…" />
               <Search className="pointer-events-none absolute top-1/2 right-3.5 size-4 -translate-y-1/2 text-[var(--dash-muted)]" aria-hidden="true" />
             </div>
-            <div className="dash-scroll-row -mx-4 flex gap-2 overflow-x-auto px-4 sm:mx-0 sm:px-0">
-              <div className="dash-tabs flex-none" role="group" aria-label="Job type">
-                {TYPES.map((t) => (
-                  <button key={t} type="button" className="dash-tab" aria-pressed={type === t} onClick={() => setType(t)}>
-                    {t}
-                  </button>
-                ))}
-              </div>
-              <div className="dash-tabs flex-none" role="group" aria-label="Work style">
-                {MODES.map((m) => (
-                  <button key={m} type="button" className="dash-tab" aria-pressed={mode === m} onClick={() => setMode(m)}>
-                    {m}
-                  </button>
-                ))}
-              </div>
-            </div>
+            <JobFilters value={filters} onChange={setFilters} />
           </div>
 
           <ul className="grid gap-4 md:grid-cols-2 2xl:grid-cols-3">
             {open.map((j) => (
               <JobCard key={j.id} job={j} stage={apps[j.id]} onApply={() => apply.open(j)} />
             ))}
-            {!open.length && <li className="py-10 text-center text-sm text-[var(--dash-muted)] md:col-span-2">No jobs match. Try another skill.</li>}
+            {!open.length && <li className="py-10 text-center text-sm text-[var(--dash-muted)] md:col-span-2">No jobs match. Try another skill or clear the filters.</li>}
           </ul>
         </>
       ) : (

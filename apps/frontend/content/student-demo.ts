@@ -40,6 +40,7 @@ export type Job = {
   duties: string[];
   mustHave: string[];
   niceToHave: string[];
+  /** Steps only, no people's names: "Recruiter screen", "Technical assessment"… */
   interviewSteps: string[];
   companyAbout: string;
 };
@@ -70,7 +71,7 @@ export const jobs: Job[] = [
     ],
     mustHave: ["1+ year with AWS (EC2, S3, IAM, VPC)", "Terraform in a real project", "Python or Bash scripting", "Comfortable on Linux"],
     niceToHave: ["AWS certification", "Experience in finance or other regulated work"],
-    interviewSteps: ["Call with Hari (20 min)", "Technical interview (60 min)", "Meet the team (45 min)"],
+    interviewSteps: ["Recruiter screen (20 min)", "Online technical assessment (60 min)", "Technical interview 1: AWS and Terraform (60 min)", "Technical interview 2: system design (60 min)", "Final round: team fit (45 min)"],
     companyAbout: "A mid-size financial services firm in Charlotte. Hybrid: 2 days a week in the office.",
   },
   {
@@ -98,7 +99,7 @@ export const jobs: Job[] = [
     ],
     mustHave: ["CI/CD pipelines you built or ran", "Docker", "AWS basics", "Git and pull-request workflow"],
     niceToHave: ["Kubernetes", "Experience with retail or e-commerce sites"],
-    interviewSteps: ["Call with Hari (20 min)", "Technical round: pipeline design (60 min)", "Hiring manager (30 min)"],
+    interviewSteps: ["Recruiter screen (20 min)", "Technical assessment: take-home pipeline task", "Technical interview: pipeline design (60 min)", "Final round with the hiring manager (30 min)"],
     companyAbout: "A national retailer with 400 stores and a fast-growing online shop. Fully remote team.",
   },
   {
@@ -126,7 +127,7 @@ export const jobs: Job[] = [
     ],
     mustHave: ["Linux administration", "Basic networking (DNS, HTTP, TCP)", "Scripting in Bash or Python"],
     niceToHave: ["Grafana or CloudWatch", "Healthcare or other always-on systems"],
-    interviewSteps: ["Recruiter screen (30 min)", "Technical interview (60 min)", "On-site visit and team lunch"],
+    interviewSteps: ["Recruiter screen (30 min)", "Technical assessment: Linux and networking (45 min)", "Technical interview (60 min)", "Final round: on-site visit"],
     companyAbout: "A regional healthcare network with 12 hospitals. On-site at the Raleigh tech centre.",
   },
   {
@@ -153,7 +154,7 @@ export const jobs: Job[] = [
     ],
     mustHave: ["AWS basics (IAM, VPC, EC2)", "Clear written English", "Patient with non-technical people"],
     niceToHave: ["AWS Cloud Practitioner", "Help-desk experience"],
-    interviewSteps: ["Call with Mansingh (20 min)", "Practical test: 3 sample tickets (45 min)"],
+    interviewSteps: ["Recruiter screen (20 min)", "Technical assessment: 3 sample tickets (45 min)", "Final round (30 min)"],
     companyAbout: "A freight and warehousing company moving its systems to AWS. Fully remote support team.",
   },
   {
@@ -180,7 +181,7 @@ export const jobs: Job[] = [
     ],
     mustHave: ["Terraform", "Azure or AWS", "Kubernetes basics"],
     niceToHave: ["Lab or research environments", "Ansible"],
-    interviewSteps: ["Call with Hari (20 min)", "Technical interview (60 min)"],
+    interviewSteps: ["Recruiter screen (20 min)", "Technical assessment: take-home Terraform task", "Technical interview (60 min)"],
     companyAbout: "A life-sciences research company. Hybrid: Tuesdays and Thursdays in Durham.",
   },
   {
@@ -207,7 +208,7 @@ export const jobs: Job[] = [
     ],
     mustHave: ["Jenkins or another CI tool", "Linux", "Python scripting"],
     niceToHave: ["GitHub Actions", "Large codebases"],
-    interviewSteps: ["Call with Mansingh (20 min)", "Technical interview (60 min)", "Engineering manager (30 min)"],
+    interviewSteps: ["Recruiter screen (20 min)", "Technical assessment: build-pipeline task (60 min)", "Technical interview (60 min)", "Final round with the engineering manager (30 min)"],
     companyAbout: "A software company making scheduling tools for clinics. Fully remote.",
   },
 ];

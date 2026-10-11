@@ -763,10 +763,12 @@ picks the page version (student / other). Data: `content/student-demo.ts`.
   type (Permanent / Contract / Part-time) and work style (Remote / Hybrid /
   On-site); line 2 company and place; then skills, a 2-line brief, and
   Apply at the bottom right. The rest of the card links to the job's page.
-  Filters: job type and work style.
+  One "Filter" dropdown (`JobFilters`) with two tick lists, Job type and
+  Work style; nothing ticked in a list means any.
 - **Job page** `/portal/jobs/[id]` (`JobDetail`): the full JD (about the
   role, what you'll do, must-have / nice-to-have, skills, interview
-  process, about the company), key facts (pay, term, work style, start,
+  process as steps only with no people's names, e.g. "Recruiter screen",
+  "Technical assessment", "Technical interview 1", about the company), key facts (pay, term, work style, start,
   openings), the recruiter with an "Ask" link, and an Apply bar stuck to
   the bottom right. Apply (pick a resume) is one shared popup
   (`useApply`).
