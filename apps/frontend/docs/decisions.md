@@ -15,8 +15,10 @@ group, `themes/dark/`, the Dark / Light switch, `lib/design.ts` and the
 cookie rewrite). It is recoverable from git history (commit `dbc37d2` and
 earlier).
 
-- **Folders.** `themes/core/` is the site (everything described below);
-  `themes/light/` holds the colours and the light-only sections.
+- **Folders** (reorganised 2026-10-11; the old `themes/` folder is gone):
+  `components/site/` the website, `components/portal/` the portal,
+  `animations/` everything that moves, `styles/` CSS and fonts. Map and
+  rules: the repo's root `CLAUDE.md`.
 - **One root layout.** `app/layout.tsx` loads `core.css` + `light.css` and
   sets `<html data-theme="light">`; the 404 page is a normal
   `app/not-found.tsx`.
@@ -30,10 +32,10 @@ earlier).
 
 Everything is a Server Component except:
 
-- `components/journey/*` and `components/particles/*` — WebGL needs the browser
-- `components/sections/LogoMarquee.tsx` — hover detection on the moving strip
-- `components/layout/HeaderShell.tsx` — solid header after scrolling
-- `components/layout/MobileMenu.tsx` — open/close state
+- `animations/journey/*` and `animations/particles/*` — WebGL needs the browser
+- `components/site/sections/LogoMarquee.tsx` — hover detection on the moving strip
+- `components/site/layout/HeaderShell.tsx` — solid header after scrolling
+- `components/site/layout/MobileMenu.tsx` — open/close state
 
 The homepage is statically prerendered. The hero `h1`, copy and CTAs are plain
 server-rendered HTML, so SEO does not depend on the 3D scene.
@@ -163,7 +165,7 @@ scrolls the four steps (Discover, Plan, Deliver, Support).
 
 - **Text.** `ProcessProgress` gives each step a ScrollTrigger that scrubs
   0→1 while the step passes 58% of the viewport. The sum (0 = Discover
-  active … 4 = all done) goes into the shared `lib/processProgress.ts`. Steps
+  active … 4 = all done) goes into the shared `animations/scroll/processProgressStore.ts`. Steps
   get `data-state` (`inactive` / `active` / `completed`), which drives the
   styling: dimmed, full emphasis with the accent number, or ✓. This works
   with or without WebGL.
@@ -175,8 +177,8 @@ scrolls the four steps (Discover, Plan, Deliver, Support).
 These are enhancements on top of the journey. None of them change the forms
 or the morph.
 
-- **Ambient star field** (`StarField`, `lib/particles/stars.ts`,
-  `shaders/stars.vert.glsl`). It is a second `THREE.Points` in the same
+- **Ambient star field** (`StarField`, `animations/particles/lib/stars.ts`,
+  `animations/particles/shaders/stars.vert.glsl`). It is a second `THREE.Points` in the same
   canvas: white/off-white points spread through real depth (z −2.5 … −26,
   mostly far).
   - Far points are dim; near ones are slightly larger and move more.
@@ -292,7 +294,7 @@ top of the planets, so the two merged.)
 
 The Staffing form (`earth`) is a dense particle Earth with real continents.
 
-- **Continents.** `lib/particles/landMask.ts` is a 720×360 run-length land
+- **Continents.** `animations/particles/lib/landMask.ts` is a 720×360 run-length land
   mask (12 KB). It was generated once from Natural Earth 1:50m land (the
   public-domain world-atlas package), with a scanline fill that unwraps
   rings across the date line.
@@ -461,7 +463,7 @@ centred Why content, which sits inside its opening.
 
 ### Engine
 
-**`lib/particles/`** (independent of site content)
+**`animations/particles/lib/`** (independent of site content)
 
 | File | Role |
 |---|---|
@@ -471,7 +473,7 @@ centred Why content, which sits inside its opening.
 | `generateTarget.ts` | `FORMS` registry, `alignByHeight`, colours (`colorsForSequence`, `monochromeColors`) |
 | `stars.ts`, `palette.ts`, `random.ts` | Background stars, colours, seeded PRNG |
 
-**`components/particles/`**
+**`animations/particles/`**
 
 - `ParticleSystem` — one `THREE.Points` plus shader, with look blending.
 - `ParticleCanvas` — camera and bloom.
@@ -479,7 +481,7 @@ centred Why content, which sits inside its opening.
 - `hooks.ts` — device tier, reduced motion, pointer.
 - `StarField` and `SceneErrorBoundary`.
 
-**`components/journey/`**
+**`animations/journey/`**
 
 - `journey-config.ts` — forms, looks, transitions, tiers. All tuning is here.
 - `JourneyScene`, `JourneyLayer`.
@@ -492,7 +494,7 @@ particle *i* sits at a similar height in each form. Colours are fixed per
 particle (the rocket palette's height order), so orange ends up low in every form and
 its blue nose high. The viewer can follow the material.
 
-**GPU side** (`shaders/particle.vert.glsl`). Attributes: `position` (current
+**GPU side** (`animations/particles/shaders/particle.vert.glsl`). Attributes: `position` (current
 form), `aTarget` (next form), `aColor`, `aRandom`, `aDelay`, `aScatterDir`,
 `aScatterDistance`, `aNoiseOffset`, `aScale`. JavaScript drives one number,
 `uProgress` (0..1). The shader turns it into each particle's own progress:
@@ -636,7 +638,7 @@ rejected; this is their replacement.
 
 ## Footer: the closing scene
 
-`components/layout/Footer.tsx` and the `.footer-*` styles in `globals.css`:
+`components/site/layout/Footer.tsx` and the `.footer-*` styles in `globals.css`:
 
 - **Top.** Logo and description on the left; Services, Company and Contact on
   the right, with generous space.
@@ -661,7 +663,7 @@ The earlier light-theme experiments (traced reference images, voxel cubes,
 per-section formations) were all removed at the owner's request. The light
 version is now simply the dark site in light colours:
 
-- `themes/light/light.css` holds the same tokens as `themes/dark/dark.css`
+- `themes/light/light.css` (now `styles/light.css`) holds the same tokens as `themes/dark/dark.css`
   in light values; `app/(light)` loads it and sets `data-theme="light"`.
 - The particle journey is unchanged in shape and motion. JourneyScene reads
   `data-theme`; in light it turns bloom off, uses `PALETTE.backgroundLight`
@@ -707,7 +709,7 @@ will be, before the real one is built per account type.
   employee or a client. At sign-in, the email is looked up in the database
   to find the account type, and each type gets its own dashboard
   (employees get extra features). The sign-in page never asks for a type.
-- **Demo sign-in** (`components/dashboard/session.ts`): a JSON session in
+- **Demo sign-in** (`components/portal/dashboard/session.ts`): a JSON session in
   localStorage; any password works; nothing is sent anywhere. The email
   picks the type from `demoDirectory` in `content/portal-demo.ts`
   (`student@` / `employee@` / `client@pixelitcenter.com`). Any other email
@@ -724,7 +726,7 @@ will be, before the real one is built per account type.
 - All data is dummy (`content/portal-demo.ts`). Tasks, profile and read
   notifications are saved in the demo session; messages, uploads and
   tickets last only until you leave the page.
-- Styles: `themes/light/dashboard.css` (site tokens; in `@layer components`
+- Styles: `styles/dashboard.css` (site tokens; in `@layer components`
   so Tailwind utilities win). The top bar is a `div role="banner"` because
   light.css styles every `<header>` as the site header.
 - To make it real: replace `session.ts` with Cognito + a profile lookup,

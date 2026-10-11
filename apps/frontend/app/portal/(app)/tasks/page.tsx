@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { TasksPage } from "@/themes/core/components/dashboard/TasksPage";
+import { TasksPage } from "@/components/portal/dashboard/TasksPage";
 
 export const metadata: Metadata = { title: "Tasks · Portal" };
 

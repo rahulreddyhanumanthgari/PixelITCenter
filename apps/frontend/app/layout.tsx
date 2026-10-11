@@ -1,11 +1,11 @@
 import type { Metadata, Viewport } from "next";
 import { Sofia_Sans_Extra_Condensed } from "next/font/google";
 import { siteMetadata } from "@/lib/metadata";
-import { fontVariables } from "@/themes/core/fonts";
-import "@/themes/core/core.css";
-import "@/themes/light/light.css";
+import { fontVariables } from "@/styles/fonts";
+import "@/styles/core.css";
+import "@/styles/light.css";
 
-// Root layout: the site (themes/core) in the light colours (themes/light).
+// Root layout: the site (components/site) in the light colours (styles/light.css).
 // data-theme="light" switches the particle engine to its light material.
 
 // Headings in a heavy extra-condensed face (the owner's landing-page

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import { ForType, StudentOnly } from "@/themes/core/components/dashboard/ForType";
-import { InterviewsPage } from "@/themes/core/components/dashboard/student/InterviewsPage";
+import { ForType, StudentOnly } from "@/components/portal/dashboard/ForType";
+import { InterviewsPage } from "@/components/portal/dashboard/student/InterviewsPage";
 
 export const metadata: Metadata = { title: "Interviews · Portal" };
 

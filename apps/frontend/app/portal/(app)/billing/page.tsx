@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { BillingPage } from "@/themes/core/components/dashboard/BillingPage";
+import { BillingPage } from "@/components/portal/dashboard/BillingPage";
 
 export const metadata: Metadata = { title: "Billing & invoices · Portal" };
 

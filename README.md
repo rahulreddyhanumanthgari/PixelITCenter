@@ -1,13 +1,14 @@
 # Pixel IT Center
 
 The new Pixel IT Center website, built from the
-[modernization plan](./Pixel_IT_Center_Website_Modernization_Plan.pdf).
+[modernization plan](./docs/Pixel_IT_Center_Website_Modernization_Plan.pdf).
 
 ```
 apps/
   frontend/     the public website (Next.js): see apps/frontend/README.md
 docs/
   workflow.md   branching and release workflow
+  Pixel_IT_Center_Website_Modernization_Plan.pdf   the plan
 .github/        CI (lint, type-check, build) and branch rules
 ```
 

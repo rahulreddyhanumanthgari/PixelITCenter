@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { jobs } from "@/content/student-demo";
-import { ForType, StudentOnly } from "@/themes/core/components/dashboard/ForType";
-import { JobDetail } from "@/themes/core/components/dashboard/student/JobDetail";
+import { ForType, StudentOnly } from "@/components/portal/dashboard/ForType";
+import { JobDetail } from "@/components/portal/dashboard/student/JobDetail";
 
 // One job's full JD (opened from a job card). Demo data, so every job page
 // is built ahead of time.

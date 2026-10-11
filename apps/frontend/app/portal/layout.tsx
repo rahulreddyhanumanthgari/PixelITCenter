@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import "@/themes/light/dashboard.css";
+import "@/styles/dashboard.css";
 
 // The portal (/portal and everything under it): kept out of search engines.
 export const metadata: Metadata = {

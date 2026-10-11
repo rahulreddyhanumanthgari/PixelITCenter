@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { ProfilePage } from "@/themes/core/components/dashboard/ProfilePage";
+import { ProfilePage } from "@/components/portal/dashboard/ProfilePage";
 
 export const metadata: Metadata = { title: "Profile · Portal" };
 

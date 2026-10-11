@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Onboarding } from "@/themes/core/components/dashboard/Onboarding";
+import { Onboarding } from "@/components/portal/dashboard/Onboarding";
 
 export const metadata: Metadata = { title: "Complete your profile · Portal" };
 

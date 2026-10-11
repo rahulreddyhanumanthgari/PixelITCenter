@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { studentEvents } from "@/content/student-demo";
-import { ForType } from "@/themes/core/components/dashboard/ForType";
-import { SchedulePage } from "@/themes/core/components/dashboard/SchedulePage";
+import { ForType } from "@/components/portal/dashboard/ForType";
+import { SchedulePage } from "@/components/portal/dashboard/SchedulePage";
 
 export const metadata: Metadata = { title: "Schedule · Portal" };
 

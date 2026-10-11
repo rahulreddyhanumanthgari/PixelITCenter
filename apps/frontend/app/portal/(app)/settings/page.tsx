@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { SettingsPage } from "@/themes/core/components/dashboard/SettingsPage";
+import { SettingsPage } from "@/components/portal/dashboard/SettingsPage";
 
 export const metadata: Metadata = { title: "Settings · Portal" };
 

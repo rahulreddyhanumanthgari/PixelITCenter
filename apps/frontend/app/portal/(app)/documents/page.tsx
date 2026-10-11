@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { studentDocuments } from "@/content/student-demo";
-import { ForType } from "@/themes/core/components/dashboard/ForType";
-import { DocumentsPage } from "@/themes/core/components/dashboard/DocumentsPage";
+import { ForType } from "@/components/portal/dashboard/ForType";
+import { DocumentsPage } from "@/components/portal/dashboard/DocumentsPage";
 
 export const metadata: Metadata = { title: "Documents · Portal" };
 

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import { ForType, StudentOnly } from "@/themes/core/components/dashboard/ForType";
-import { JobsPage } from "@/themes/core/components/dashboard/student/JobsPage";
+import { ForType, StudentOnly } from "@/components/portal/dashboard/ForType";
+import { JobsPage } from "@/components/portal/dashboard/student/JobsPage";
 
 export const metadata: Metadata = { title: "Jobs · Portal" };
 

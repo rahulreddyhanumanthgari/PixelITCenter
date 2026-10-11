@@ -27,7 +27,7 @@ export const site = {
 } as const;
 
 // The Portal Login page (/portal). Sign-in is a demo for now (see
-// themes/core/components/dashboard/session.ts): nothing is sent anywhere.
+// components/portal/dashboard/session.ts): nothing is sent anywhere.
 export const portal = {
   pageTitle: "Portal Login",
 } as const;
