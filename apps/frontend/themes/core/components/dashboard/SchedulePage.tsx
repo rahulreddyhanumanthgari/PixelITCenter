@@ -1,14 +1,30 @@
 import { Clock, Users } from "lucide-react";
-import { events } from "@/content/portal-demo";
+import { events as starter } from "@/content/portal-demo";
 import { Chip, PageHeader } from "./ui";
 
-const KIND_TONE = { Deadline: "bad", Interview: "warn", Call: undefined, Meeting: "ink", Training: "good" } as const;
+const KIND_TONE = {
+  Deadline: "bad",
+  Interview: "warn",
+  Call: undefined,
+  Meeting: "ink",
+  Training: "good",
+  Class: "ink",
+  "Mock interview": "good",
+} as const;
 
 /** The next few days: meetings, interviews, training and deadlines. */
-export function SchedulePage() {
+export function SchedulePage({
+  title = "Schedule",
+  body = "What's coming up over the next few days.",
+  events = starter,
+}: {
+  title?: string;
+  body?: string;
+  events?: typeof starter;
+}) {
   return (
     <div className="space-y-6">
-      <PageHeader title="Schedule" body="What's coming up over the next few days." />
+      <PageHeader title={title} body={body} />
       <div className="space-y-6">
         {events.map((d) => (
           <section key={d.day} aria-labelledby={`day-${d.day}`}>

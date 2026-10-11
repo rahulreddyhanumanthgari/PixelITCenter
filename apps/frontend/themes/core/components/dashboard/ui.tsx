@@ -52,6 +52,19 @@ const TONES: Record<string, Tone> = {
   Overdue: "bad",
   High: "bad",
   Normal: "good",
+  // Student corner
+  Shortlisted: "ink",
+  Interview: "warn",
+  Offer: "good",
+  Done: "good",
+  Graded: "good",
+  Submitted: "good",
+  Reviewed: "good",
+  "Needs changes": "warn",
+  Strong: "good",
+  Good: "good",
+  "Practise more": "warn",
+  "Expires soon": "bad",
 };
 
 /** A status / priority chip; the colour follows the word. */

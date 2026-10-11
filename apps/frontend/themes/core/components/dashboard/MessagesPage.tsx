@@ -10,8 +10,14 @@ import { Avatar, PageHeader } from "./ui";
  * list, then the thread with a back arrow). Sending adds the message here
  * only; nothing leaves the browser.
  */
-export function MessagesPage() {
-  const [list, setList] = useState<Conversation[]>(starter);
+export function MessagesPage({
+  starter: initial = starter,
+  body = "Your account manager, recruiter, trainers and support, in one place.",
+}: {
+  starter?: Conversation[];
+  body?: string;
+}) {
+  const [list, setList] = useState<Conversation[]>(initial);
   const [openId, setOpenId] = useState<string | null>(null);
   const [draft, setDraft] = useState("");
   const thread = useRef<HTMLDivElement>(null);
@@ -38,7 +44,7 @@ export function MessagesPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Messages" body="Your account manager, recruiter, trainers and support, in one place." />
+      <PageHeader title="Messages" body={body} />
 
       <div className="dash-card grid min-h-[32rem] overflow-hidden md:grid-cols-[18rem_minmax(0,1fr)]">
         <ul className={`border-[var(--dash-line)] md:border-r ${open ? "hidden md:block" : ""}`} aria-label="Conversations">

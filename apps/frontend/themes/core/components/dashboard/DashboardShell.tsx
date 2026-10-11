@@ -4,9 +4,10 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Bell, LoaderCircle, LogOut, Menu, MessageSquare, Search, X } from "lucide-react";
-import { accountTypes, documents, notifications, projects } from "@/content/portal-demo";
+import { accountTypes, conversations, documents, notifications, projects } from "@/content/portal-demo";
+import { jobs, practiceProjects, studentConversations, studentDocuments, studentNotifications } from "@/content/student-demo";
 import { Logo } from "@/themes/core/components/layout/Logo";
-import { allNavItems, navGroups } from "./nav";
+import { navFor, navItemsFor } from "./nav";
 import { profileCompletion, signOut, updateSession, useSession, type Session } from "./session";
 import { Avatar } from "./ui";
 
@@ -90,7 +91,7 @@ function Sidebar({
       </Link>
 
       <nav className="mt-3 flex-1">
-        {navGroups.map((g, i) => (
+        {navFor(profile.accountType).map((g, i) => (
           <div key={g.label ?? i}>
             {g.label && <p className="dash-group-label">{g.label}</p>}
             <ul className="space-y-0.5">
@@ -153,12 +154,23 @@ function useDismiss(open: boolean, close: () => void) {
   return ref;
 }
 
-// What the search box can find: pages, projects and documents.
-const searchIndex = [
-  ...allNavItems.map((n) => ({ label: n.label, hint: "Page", href: n.href })),
-  ...projects.map((p) => ({ label: p.name, hint: `Project · ${p.org}`, href: "/portal/projects" })),
-  ...documents.map((d) => ({ label: d.name, hint: `Document · ${d.category}`, href: "/portal/documents" })),
-];
+// What the search box can find: pages, projects, documents (and jobs for
+// students). Students get the student corner's own content.
+function searchIndex(student: boolean) {
+  const pages = navItemsFor(student ? "student" : null).map((n) => ({ label: n.label, hint: "Page", href: n.href }));
+  if (student)
+    return [
+      ...pages,
+      ...jobs.map((j) => ({ label: j.title, hint: `Job · ${j.company}`, href: "/portal/jobs" })),
+      ...practiceProjects.map((p) => ({ label: p.name, hint: "Practice project", href: "/portal/projects" })),
+      ...studentDocuments.map((d) => ({ label: d.name, hint: `Document · ${d.category}`, href: "/portal/documents" })),
+    ];
+  return [
+    ...pages,
+    ...projects.map((p) => ({ label: p.name, hint: `Project · ${p.org}`, href: "/portal/projects" })),
+    ...documents.map((d) => ({ label: d.name, hint: `Document · ${d.category}`, href: "/portal/documents" })),
+  ];
+}
 
 function Topbar({ session, onMenu }: { session: Session; onMenu: () => void }) {
   const router = useRouter();
@@ -168,9 +180,12 @@ function Topbar({ session, onMenu }: { session: Session; onMenu: () => void }) {
   const bellRef = useDismiss(bellOpen, closeBell);
   const searchRef = useDismiss(query !== "", () => setQuery(""));
 
+  const student = session.profile.accountType === "student";
   const q = query.trim().toLowerCase();
-  const results = q ? searchIndex.filter((r) => r.label.toLowerCase().includes(q)).slice(0, 6) : [];
-  const unread = notifications.filter((n) => !session.readNotifications.includes(n.id));
+  const results = q ? searchIndex(student).filter((r) => r.label.toLowerCase().includes(q)).slice(0, 6) : [];
+  const notes = student ? studentNotifications : notifications;
+  const unread = notes.filter((n) => !session.readNotifications.includes(n.id));
+  const unreadMessages = (student ? studentConversations : conversations).reduce((n, c) => n + c.unread, 0);
 
   return (
     // A div, not <header>: the site's header styles (light.css) target header.
@@ -194,7 +209,7 @@ function Topbar({ session, onMenu }: { session: Session; onMenu: () => void }) {
               setQuery("");
             }
           }}
-          placeholder="Search projects, documents, pages…"
+          placeholder={student ? "Search jobs, projects, documents…" : "Search projects, documents, pages…"}
           autoComplete="off"
         />
         <Search className="pointer-events-none absolute top-1/2 right-3.5 size-4 -translate-y-1/2 text-[var(--dash-muted)]" aria-hidden="true" />
@@ -223,9 +238,9 @@ function Topbar({ session, onMenu }: { session: Session; onMenu: () => void }) {
       </div>
 
       <div className="ml-auto flex items-center gap-2">
-        <Link href="/portal/messages" className="dash-icon-btn" aria-label="Messages, 4 unread">
+        <Link href="/portal/messages" className="dash-icon-btn" aria-label={`Messages, ${unreadMessages} unread`}>
           <MessageSquare className="size-4" />
-          <span className="dash-dot">4</span>
+          <span className="dash-dot">{unreadMessages}</span>
         </Link>
 
         <div className="relative" ref={bellRef}>
@@ -247,13 +262,13 @@ function Topbar({ session, onMenu }: { session: Session; onMenu: () => void }) {
                   type="button"
                   className="text-xs font-semibold text-[var(--dash-orange-ink)] hover:underline disabled:opacity-40"
                   disabled={!unread.length}
-                  onClick={() => updateSession((s) => ({ ...s, readNotifications: notifications.map((n) => n.id) }))}
+                  onClick={() => updateSession((s) => ({ ...s, readNotifications: [...s.readNotifications, ...notes.map((n) => n.id)] }))}
                 >
                   Mark all read
                 </button>
               </div>
               <ul>
-                {notifications.map((n) => {
+                {notes.map((n) => {
                   const isUnread = !session.readNotifications.includes(n.id);
                   return (
                     <li key={n.id} className="flex gap-3 rounded-xl px-2.5 py-2.5">

@@ -3,11 +3,24 @@
 import { useState } from "react";
 import { ChevronDown, Mail, MapPin, Phone } from "lucide-react";
 import { site } from "@/content/site";
-import { faqs, tickets as starter } from "@/content/portal-demo";
-import { Chip, PageHeader, useToast } from "./ui";
+import { faqs as defaultFaqs, tickets as starter } from "@/content/portal-demo";
+import { Avatar, Chip, PageHeader, useToast } from "./ui";
 
-/** Contact details, common questions and support tickets. */
-export function SupportPage() {
+type Person = { name: string; role: string; email: string };
+
+/**
+ * Contact details, common questions and support tickets. Students see it as
+ * "Help", with their recruiter, placement lead and trainer listed first.
+ */
+export function SupportPage({
+  title = "Support",
+  faqs = defaultFaqs,
+  people,
+}: {
+  title?: string;
+  faqs?: { q: string; a: string }[];
+  people?: Person[];
+}) {
   const [tickets, setTickets] = useState(starter);
   const [subject, setSubject] = useState("");
   const [detail, setDetail] = useState("");
@@ -21,7 +34,29 @@ export function SupportPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Support" body="Questions, problems or requests. We usually reply within one working day." />
+      <PageHeader title={title} body="Questions, problems or requests. We usually reply within one working day." />
+
+      {people && (
+        <section aria-labelledby="people-heading">
+          <h2 id="people-heading" className="dash-section-title">
+            Your people
+          </h2>
+          <ul className="mt-3 grid gap-3 md:grid-cols-3">
+            {people.map((p) => (
+              <li key={p.email} className="dash-stat flex items-center gap-3">
+                <Avatar name={p.name} size={40} />
+                <span className="min-w-0">
+                  <span className="block text-sm font-semibold">{p.name}</span>
+                  <span className="block text-xs text-[var(--dash-muted)]">{p.role}</span>
+                  <a href={`mailto:${p.email}`} className="block truncate text-xs font-semibold text-[var(--dash-orange-ink)] hover:underline">
+                    {p.email}
+                  </a>
+                </span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       <ul className="grid gap-3 md:grid-cols-3">
         {contacts.map(({ icon: Icon, label, value, href }) => (

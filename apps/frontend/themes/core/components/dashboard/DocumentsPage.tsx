@@ -3,24 +3,37 @@
 import { useRef, useState } from "react";
 import { Download, FileText, Upload } from "lucide-react";
 import { documents as starter } from "@/content/portal-demo";
-import { PageHeader, useToast } from "./ui";
+import { Chip, PageHeader, useToast } from "./ui";
 
 function formatSize(bytes: number) {
   return bytes > 1024 * 1024 ? `${(bytes / 1024 / 1024).toFixed(1)} MB` : `${Math.max(1, Math.round(bytes / 1024))} KB`;
 }
 
-/** Shared files by category. Upload adds the file to this list only (demo). */
-export function DocumentsPage() {
-  const [docs, setDocs] = useState(starter);
+type Doc = { id: string; name: string; category: string; size: string; updated: string; by?: string; expires?: string; expiresSoon?: boolean };
+
+/**
+ * Shared files by category. Upload adds the file to this list only (demo).
+ * Students' files carry an expiry date (ID, work papers) instead of "shared by".
+ */
+export function DocumentsPage({
+  starter: initial = starter,
+  body = "Contracts, plans, certificates and timesheets shared with you.",
+}: {
+  starter?: Doc[];
+  body?: string;
+}) {
+  const [docs, setDocs] = useState<Doc[]>(initial);
+  const withExpiry = initial.some((d) => d.expires);
   const [category, setCategory] = useState("All");
   const fileInput = useRef<HTMLInputElement>(null);
   const [toast, showToast] = useToast();
-  const categories = ["All", ...Array.from(new Set(starter.map((d) => d.category))), ...(docs.some((d) => d.category === "Uploads") ? ["Uploads"] : [])];
+  const categories = ["All", ...Array.from(new Set(initial.map((d) => d.category))), ...(docs.some((d) => d.category === "Uploads") ? ["Uploads"] : [])];
+  const soon = docs.filter((d) => d.expiresSoon);
   const shown = docs.filter((d) => category === "All" || d.category === category);
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Documents" body="Contracts, plans, certificates and timesheets shared with you.">
+      <PageHeader title="Documents" body={body}>
         <button type="button" className="dash-btn" onClick={() => fileInput.current?.click()}>
           <Upload className="size-4" aria-hidden="true" /> Upload
         </button>
@@ -43,6 +56,12 @@ export function DocumentsPage() {
         />
       </PageHeader>
 
+      {soon.map((d) => (
+        <p key={d.id} className="portal-error flex flex-wrap items-center gap-x-2">
+          <strong>{d.name.replace(/\.\w+$/, "")} expires {d.expires}.</strong> Upload a new one so nothing is delayed.
+        </p>
+      ))}
+
       <div className="dash-scroll-row -mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0">
         <div className="dash-tabs" role="group" aria-label="Filter by category">
           {categories.map((c) => (
@@ -62,7 +81,7 @@ export function DocumentsPage() {
                 <th scope="col">Category</th>
                 <th scope="col">Size</th>
                 <th scope="col">Updated</th>
-                <th scope="col">Shared by</th>
+                <th scope="col">{withExpiry ? "Expires" : "Shared by"}</th>
                 <th scope="col">
                   <span className="sr-only">Download</span>
                 </th>
@@ -82,7 +101,13 @@ export function DocumentsPage() {
                   <td>{d.category}</td>
                   <td>{d.size}</td>
                   <td>{d.updated}</td>
-                  <td>{d.by}</td>
+                  <td>
+                    {withExpiry ? (
+                      d.expiresSoon ? <Chip>Expires soon</Chip> : (d.expires ?? "—")
+                    ) : (
+                      d.by
+                    )}
+                  </td>
                   <td className="text-right">
                     <button
                       type="button"

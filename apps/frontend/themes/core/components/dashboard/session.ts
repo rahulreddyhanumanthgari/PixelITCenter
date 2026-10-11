@@ -2,6 +2,7 @@
 
 import { useSyncExternalStore } from "react";
 import { demoDirectory, starterTasks, type AccountType, type Task } from "@/content/portal-demo";
+import { resumes, starterApplications, type AppStage } from "@/content/student-demo";
 
 // DEMO sign-in. The "session" is a JSON blob in this browser's localStorage:
 // nothing is sent to a server and any password works. The real portal
@@ -37,6 +38,10 @@ export type Session = {
   readNotifications: string[];
   method: "password" | "google";
   signedInAt: string;
+  // Student corner. Optional: sessions saved before it existed lack them.
+  applications?: Record<string, AppStage>; // job id → stage
+  onboardingDone?: string[];
+  defaultResume?: string;
 };
 
 const KEY = "pixelit-portal-demo";
@@ -207,6 +212,35 @@ export function updateSession(change: (s: Session) => Session) {
 
 export function updateProfile(patch: Partial<Profile>) {
   updateSession((s) => ({ ...s, profile: { ...s.profile, ...patch } }));
+}
+
+// --- student corner ----------------------------------------------------------
+
+export const applicationsOf = (s: Session) => s.applications ?? starterApplications;
+export const onboardingOf = (s: Session) => s.onboardingDone ?? [];
+export const defaultResumeOf = (s: Session) => s.defaultResume ?? resumes[0].id;
+
+export function applyToJob(jobId: string, resumeId: string) {
+  updateSession((s) => ({ ...s, applications: { ...applicationsOf(s), [jobId]: "Applied" }, defaultResume: resumeId }));
+}
+
+export function withdrawApplication(jobId: string) {
+  updateSession((s) => {
+    const rest = { ...applicationsOf(s) };
+    delete rest[jobId];
+    return { ...s, applications: rest };
+  });
+}
+
+export function toggleOnboarding(id: string) {
+  updateSession((s) => {
+    const done = onboardingOf(s);
+    return { ...s, onboardingDone: done.includes(id) ? done.filter((x) => x !== id) : [...done, id] };
+  });
+}
+
+export function setDefaultResume(id: string) {
+  updateSession((s) => ({ ...s, defaultResume: id }));
 }
 
 export function setTasks(change: (tasks: Task[]) => Task[]) {
