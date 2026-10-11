@@ -14,24 +14,202 @@ export const studentStats = [
 export type AppStage = "Applied" | "Shortlisted" | "Interview" | "Offer";
 export const appStages: AppStage[] = ["Applied", "Shortlisted", "Interview", "Offer"];
 
+export type Employment = "Permanent" | "Contract" | "Part-time";
+export type WorkMode = "Remote" | "Hybrid" | "On-site";
+
 export type Job = {
   id: string;
   title: string;
   company: string;
+  /** City, State; or "Anywhere in the US" for remote roles. */
   location: string;
-  type: "Contract" | "Full-time" | "Contract to hire";
+  employment: Employment;
+  workMode: WorkMode;
   skills: string[];
   posted: string;
-  body: string;
+  /** Two lines for the card. The full JD is on the job's own page. */
+  brief: string;
+  // --- the full JD (job page) ---
+  pay: string;
+  /** Contract length, or hours for part-time. */
+  term: string;
+  start: string;
+  openings: number;
+  recruiter: "Hari" | "Mansingh";
+  about: string;
+  duties: string[];
+  mustHave: string[];
+  niceToHave: string[];
+  interviewSteps: string[];
+  companyAbout: string;
 };
 
 export const jobs: Job[] = [
-  { id: "j1", title: "Cloud Engineer (AWS)", company: "Brightline Finance", location: "Charlotte, NC · Hybrid", type: "Full-time", skills: ["AWS", "Terraform", "Python"], posted: "3 days ago", body: "Build and run the AWS platform behind daily risk reporting." },
-  { id: "j2", title: "DevOps Engineer", company: "Vertex Retail", location: "Remote (US)", type: "Contract", skills: ["GitHub Actions", "Docker", "AWS"], posted: "1 week ago", body: "Own CI/CD pipelines and release automation for 30+ services." },
-  { id: "j3", title: "Junior Site Reliability Engineer", company: "Northwind Health", location: "Raleigh, NC · On-site", type: "Contract to hire", skills: ["Linux", "Monitoring", "AWS"], posted: "2 weeks ago", body: "Keep patient-facing systems up; on-call rotation after 3 months." },
-  { id: "j4", title: "Cloud Support Associate", company: "Atlas Logistics", location: "Remote (US)", type: "Full-time", skills: ["AWS", "Networking"], posted: "2 days ago", body: "Help teams troubleshoot AWS networking and access problems." },
-  { id: "j5", title: "Infrastructure Engineer", company: "Oakridge Labs", location: "Durham, NC · Hybrid", type: "Contract", skills: ["Terraform", "Azure", "Kubernetes"], posted: "Today", body: "Move lab systems to infrastructure as code across Azure and AWS." },
-  { id: "j6", title: "Build and Release Engineer", company: "Cedar Systems", location: "Remote (US)", type: "Contract", skills: ["Jenkins", "Linux", "Python"], posted: "5 days ago", body: "Keep builds fast and green for a 200-engineer team." },
+  {
+    id: "j1",
+    title: "Cloud Engineer (AWS)",
+    company: "Brightline Finance",
+    location: "Charlotte, NC",
+    employment: "Permanent",
+    workMode: "Hybrid",
+    skills: ["AWS", "Terraform", "Python"],
+    posted: "3 days ago",
+    brief: "Build and run the AWS platform behind daily risk reporting, with a small team that owns it end to end.",
+    pay: "$115,000 – $130,000 a year",
+    term: "Permanent, full time",
+    start: "Nov 2",
+    openings: 2,
+    recruiter: "Hari",
+    about:
+      "Brightline's risk team runs reports every morning before the markets open. You'll keep the AWS platform under those reports fast, secure and cheap to run, and help move the last on-prem jobs to the cloud.",
+    duties: [
+      "Build and change AWS infrastructure with Terraform.",
+      "Automate deploys and checks with GitHub Actions.",
+      "Watch cost and performance; fix what slows the morning run.",
+      "Work with data engineers on new reporting pipelines.",
+    ],
+    mustHave: ["1+ year with AWS (EC2, S3, IAM, VPC)", "Terraform in a real project", "Python or Bash scripting", "Comfortable on Linux"],
+    niceToHave: ["AWS certification", "Experience in finance or other regulated work"],
+    interviewSteps: ["Call with Hari (20 min)", "Technical interview (60 min)", "Meet the team (45 min)"],
+    companyAbout: "A mid-size financial services firm in Charlotte. Hybrid: 2 days a week in the office.",
+  },
+  {
+    id: "j2",
+    title: "DevOps Engineer",
+    company: "Vertex Retail",
+    location: "Anywhere in the US",
+    employment: "Contract",
+    workMode: "Remote",
+    skills: ["GitHub Actions", "Docker", "AWS"],
+    posted: "1 week ago",
+    brief: "Own the CI/CD pipelines and release automation for 30+ services behind Vertex's online store.",
+    pay: "$65 – $75 an hour",
+    term: "12-month contract, likely to extend",
+    start: "As soon as possible",
+    openings: 1,
+    recruiter: "Hari",
+    about:
+      "Vertex ships its online store many times a day. You'll keep the pipelines that build, test and deploy it reliable, and make releases quicker and safer.",
+    duties: [
+      "Maintain and improve GitHub Actions pipelines.",
+      "Package services with Docker and deploy them to AWS.",
+      "Cut build times and flaky tests.",
+      "Help developers when a deploy goes wrong.",
+    ],
+    mustHave: ["CI/CD pipelines you built or ran", "Docker", "AWS basics", "Git and pull-request workflow"],
+    niceToHave: ["Kubernetes", "Experience with retail or e-commerce sites"],
+    interviewSteps: ["Call with Hari (20 min)", "Technical round: pipeline design (60 min)", "Hiring manager (30 min)"],
+    companyAbout: "A national retailer with 400 stores and a fast-growing online shop. Fully remote team.",
+  },
+  {
+    id: "j3",
+    title: "Junior Site Reliability Engineer",
+    company: "Northwind Health",
+    location: "Raleigh, NC",
+    employment: "Permanent",
+    workMode: "On-site",
+    skills: ["Linux", "Monitoring", "AWS"],
+    posted: "2 weeks ago",
+    brief: "Keep patient-facing systems up and fast. Join the on-call rotation after your first 3 months.",
+    pay: "$85,000 – $95,000 a year",
+    term: "Permanent, full time",
+    start: "Dec 1",
+    openings: 1,
+    recruiter: "Mansingh",
+    about:
+      "Northwind's patient portal and scheduling systems have to work around the clock. You'll learn the systems from senior SREs, then help keep them healthy and respond when they aren't.",
+    duties: [
+      "Watch dashboards and alerts; fix issues before patients notice.",
+      "Write runbooks for common problems.",
+      "Automate routine tasks with scripts.",
+      "Join the on-call rotation after 3 months (paid extra).",
+    ],
+    mustHave: ["Linux administration", "Basic networking (DNS, HTTP, TCP)", "Scripting in Bash or Python"],
+    niceToHave: ["Grafana or CloudWatch", "Healthcare or other always-on systems"],
+    interviewSteps: ["Recruiter screen (30 min)", "Technical interview (60 min)", "On-site visit and team lunch"],
+    companyAbout: "A regional healthcare network with 12 hospitals. On-site at the Raleigh tech centre.",
+  },
+  {
+    id: "j4",
+    title: "Cloud Support Associate",
+    company: "Atlas Logistics",
+    location: "Anywhere in the US",
+    employment: "Part-time",
+    workMode: "Remote",
+    skills: ["AWS", "Networking"],
+    posted: "2 days ago",
+    brief: "Help Atlas teams fix AWS networking and access problems. Flexible weekday hours.",
+    pay: "$35 – $40 an hour",
+    term: "20–25 hours a week",
+    start: "Oct 26",
+    openings: 2,
+    recruiter: "Mansingh",
+    about:
+      "Atlas teams open tickets when they can't reach a server or don't have the right access. You'll answer them, fix what you can and pass the rest on with clear notes.",
+    duties: [
+      "Answer AWS support tickets from internal teams.",
+      "Fix IAM permissions and security-group rules.",
+      "Write short how-to guides for repeat questions.",
+    ],
+    mustHave: ["AWS basics (IAM, VPC, EC2)", "Clear written English", "Patient with non-technical people"],
+    niceToHave: ["AWS Cloud Practitioner", "Help-desk experience"],
+    interviewSteps: ["Call with Mansingh (20 min)", "Practical test: 3 sample tickets (45 min)"],
+    companyAbout: "A freight and warehousing company moving its systems to AWS. Fully remote support team.",
+  },
+  {
+    id: "j5",
+    title: "Infrastructure Engineer",
+    company: "Oakridge Labs",
+    location: "Durham, NC",
+    employment: "Contract",
+    workMode: "Hybrid",
+    skills: ["Terraform", "Azure", "Kubernetes"],
+    posted: "Today",
+    brief: "Move lab systems to infrastructure as code across Azure and AWS, then hand over clean runbooks.",
+    pay: "$70 – $80 an hour",
+    term: "6-month contract",
+    start: "Nov 9",
+    openings: 1,
+    recruiter: "Hari",
+    about:
+      "Oakridge's lab systems were set up by hand over many years. You'll rebuild them as Terraform so they can be recreated in minutes, on Azure first and AWS later.",
+    duties: [
+      "Write Terraform for existing Azure systems.",
+      "Run small workloads on Kubernetes.",
+      "Document every system you move.",
+    ],
+    mustHave: ["Terraform", "Azure or AWS", "Kubernetes basics"],
+    niceToHave: ["Lab or research environments", "Ansible"],
+    interviewSteps: ["Call with Hari (20 min)", "Technical interview (60 min)"],
+    companyAbout: "A life-sciences research company. Hybrid: Tuesdays and Thursdays in Durham.",
+  },
+  {
+    id: "j6",
+    title: "Build and Release Engineer",
+    company: "Cedar Systems",
+    location: "Anywhere in the US",
+    employment: "Contract",
+    workMode: "Remote",
+    skills: ["Jenkins", "Linux", "Python"],
+    posted: "5 days ago",
+    brief: "Keep builds fast and green for a 200-engineer team, and plan the move from Jenkins to GitHub Actions.",
+    pay: "$60 – $70 an hour",
+    term: "9-month contract",
+    start: "Nov 16",
+    openings: 1,
+    recruiter: "Mansingh",
+    about:
+      "Cedar's engineers wait too long for builds. You'll speed up the Jenkins setup they have today and plan the move to GitHub Actions.",
+    duties: [
+      "Look after Jenkins jobs and build agents.",
+      "Find and fix slow or flaky builds.",
+      "Plan and start the move to GitHub Actions.",
+    ],
+    mustHave: ["Jenkins or another CI tool", "Linux", "Python scripting"],
+    niceToHave: ["GitHub Actions", "Large codebases"],
+    interviewSteps: ["Call with Mansingh (20 min)", "Technical interview (60 min)", "Engineering manager (30 min)"],
+    companyAbout: "A software company making scheduling tools for clinics. Fully remote.",
+  },
 ];
 
 /** Where each application stands at the start of the demo (job id → stage). */

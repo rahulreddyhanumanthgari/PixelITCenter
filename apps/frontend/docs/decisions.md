@@ -759,6 +759,19 @@ picks the page version (student / other). Data: `content/student-demo.ts`.
   projects = practice projects / portfolio, messages = recruiter, placement
   lead and support, calendar (`/portal/schedule`), documents with expiry
   warnings, help (`/portal/support`) with "your people".
+- **Job cards** (`JobCard`, Manas 2026-10-11): line 1 the role with its
+  type (Permanent / Contract / Part-time) and work style (Remote / Hybrid /
+  On-site); line 2 company and place; then skills, a 2-line brief, and
+  Apply at the bottom right. The rest of the card links to the job's page.
+  Filters: job type and work style.
+- **Job page** `/portal/jobs/[id]` (`JobDetail`): the full JD (about the
+  role, what you'll do, must-have / nice-to-have, skills, interview
+  process, about the company), key facts (pay, term, work style, start,
+  openings), the recruiter with an "Ask" link, and an Apply bar stuck to
+  the bottom right. Apply (pick a resume) is one shared popup
+  (`useApply`).
+- **Front end only for now** (Manas): nothing is sent to a server.
+  The backend gets its own conversation before it's built.
 - Applications, onboarding steps and the default resume are kept in the
   demo session. The offer's onboarding checklist is where the live portal
   would later switch the account from Student to Employee.

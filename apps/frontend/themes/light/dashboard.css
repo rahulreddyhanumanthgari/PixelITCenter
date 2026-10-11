@@ -590,6 +590,9 @@ select.dash-input {
   box-shadow: 0 16px 40px -16px rgb(4 19 39 / 0.6);
   animation: dash-toast-in 0.3s cubic-bezier(0.22, 1, 0.36, 1);
 }
+.dash-toast[data-raised] {
+  bottom: 6.5rem;
+}
 @keyframes dash-toast-in {
   from {
     opacity: 0;

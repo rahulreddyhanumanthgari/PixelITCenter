@@ -97,7 +97,7 @@ function Sidebar({
             <ul className="space-y-0.5">
               {g.items.map(({ href, label, icon: Icon, count }) => (
                 <li key={href}>
-                  <Link href={href} className="dash-nav-link" aria-current={pathname === href ? "page" : undefined}>
+                  <Link href={href} className="dash-nav-link" aria-current={pathname === href || pathname.startsWith(`${href}/`) ? "page" : undefined}>
                     <Icon className="size-[1.1rem]" aria-hidden="true" />
                     {label}
                     {count ? <span className="dash-nav-count">{count}</span> : null}
@@ -161,7 +161,7 @@ function searchIndex(student: boolean) {
   if (student)
     return [
       ...pages,
-      ...jobs.map((j) => ({ label: j.title, hint: `Job · ${j.company}`, href: "/portal/jobs" })),
+      ...jobs.map((j) => ({ label: j.title, hint: `Job · ${j.company}`, href: `/portal/jobs/${j.id}` })),
       ...practiceProjects.map((p) => ({ label: p.name, hint: "Practice project", href: "/portal/projects" })),
       ...studentDocuments.map((d) => ({ label: d.name, hint: `Document · ${d.category}`, href: "/portal/documents" })),
     ];

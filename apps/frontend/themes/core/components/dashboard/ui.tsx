@@ -116,8 +116,11 @@ export function PageHeader({ title, body, children }: { title: ReactNode; body?:
   );
 }
 
-/** A note that shows for a few seconds: `const [toast, show] = useToast()`. */
-export function useToast(): [ReactNode, (text: string) => void] {
+/**
+ * A note that shows for a few seconds: `const [toast, show] = useToast()`.
+ * `raised` lifts it above a bar stuck to the bottom (the job page's Apply bar).
+ */
+export function useToast({ raised = false }: { raised?: boolean } = {}): [ReactNode, (text: string) => void] {
   const [text, setText] = useState<string | null>(null);
   const timer = useRef<ReturnType<typeof setTimeout>>(undefined);
   useEffect(() => () => clearTimeout(timer.current), []);
@@ -128,7 +131,11 @@ export function useToast(): [ReactNode, (text: string) => void] {
   };
   const node = (
     <div role="status" aria-live="polite">
-      {text && <div className="dash-toast">{text}</div>}
+      {text && (
+        <div className="dash-toast" data-raised={raised || undefined}>
+          {text}
+        </div>
+      )}
     </div>
   );
   return [node, show];
