@@ -753,10 +753,16 @@ picks the page version (student / other). Data: `content/student-demo.ts`.
   Health), recruiter = Hari, account manager / placement lead = Mansingh.
 - **New pages:** `/portal/jobs` (open roles, Apply with a chosen resume,
   My applications, onboarding checklist once there's an offer),
-  `/portal/interviews` (upcoming with prep tips, mock interviews with
-  feedback, practice questions), `/portal/resume` (versions, default for
+  `/portal/interviews` (upcoming interviews only; see below), `/portal/resume` (versions, default for
   applying, recruiter feedback, checklist). Other account types opening
   these see a "student corner" note.
+- **Interviews** (Manas 2026-10-11): one card per upcoming interview, with
+  a calendar-style date block, company, role, round, then labelled rows
+  (date and time, format, who you'll meet), the meeting link, and a prep
+  tip. The link is shared 1 day before: until then a dashed "Link will be
+  updated soon, shared on <date>" box; after, the link with Copy and Join.
+  Demo: Vertex Retail (tomorrow, link ready) and Northwind Health (in 3
+  days, link pending). No mock interviews or practice questions anywhere.
 - **Student versions of shared pages:** dashboard (`StudentHome`),
   projects = practice projects / portfolio, messages = recruiter, placement
   lead and support, calendar (`/portal/schedule`), documents with expiry

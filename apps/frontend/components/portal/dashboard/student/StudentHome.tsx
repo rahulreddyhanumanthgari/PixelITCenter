@@ -101,7 +101,7 @@ export function StudentHome() {
 
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_22rem]">
         <div className="min-w-0 space-y-6">
-          {/* Up next: interviews, mock interviews and calls */}
+          {/* Up next: interviews and calls */}
           <section aria-labelledby="next-heading">
             <h2 id="next-heading" className="dash-section-title">
               Up next
@@ -110,7 +110,7 @@ export function StudentHome() {
               {upNext.map((e) => (
                 <li key={e.title}>
                   <Link
-                    href={e.kind.includes("nterview") ? "/portal/interviews" : "/portal/schedule"}
+                    href={e.kind === "Interview" ? "/portal/interviews" : "/portal/schedule"}
                     className="dash-card dash-card-pad block h-full"
                   >
                     <Chip>{e.kind}</Chip>

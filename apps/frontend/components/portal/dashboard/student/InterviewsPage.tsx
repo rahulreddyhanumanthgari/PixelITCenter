@@ -1,56 +1,140 @@
 "use client";
 
-import { useState } from "react";
-import { CalendarDays, ChevronDown, Lightbulb, Phone, Users, Video } from "lucide-react";
-import { interviews, mockInterviews, questionBank } from "@/content/student-demo";
-import { Chip, PageHeader, useToast } from "../ui";
+import type { ReactNode } from "react";
+import { Check, Clock, Copy, Hourglass, Lightbulb, Link2, Users, Video } from "lucide-react";
+import { interviews, type Interview } from "@/content/student-demo";
+import { PageHeader, useToast } from "../ui";
 
-/** Real interviews coming up, mock interviews with feedback, and practice questions. */
+/** One labelled line in the card: icon, label, value. */
+function Row({ icon: Icon, label, children }: { icon: typeof Clock; label: string; children: ReactNode }) {
+  return (
+    <div className="flex items-start gap-3 py-2.5">
+      <Icon className="mt-0.5 size-4 flex-none text-[var(--dash-muted)]" aria-hidden="true" />
+      <dt className="w-24 flex-none text-xs leading-5 text-[var(--dash-muted)]">{label}</dt>
+      <dd className="min-w-0 text-sm font-semibold">{children}</dd>
+    </div>
+  );
+}
+
+/**
+ * The meeting link. Shared 1 day before the interview: until then a dashed
+ * "coming soon" box says when; after, the link with Copy and Join.
+ */
+function LinkBox({ interview, onToast }: { interview: Interview; onToast: (t: string) => void }) {
+  if (!interview.link)
+    return (
+      <div className="flex items-start gap-3 rounded-2xl border border-dashed border-[var(--dash-line-strong)] bg-[var(--dash-side)] p-4">
+        <Hourglass className="mt-0.5 size-5 flex-none text-[var(--dash-muted)]" aria-hidden="true" />
+        <div>
+          <p className="text-sm font-semibold">Link will be updated soon</p>
+          <p className="mt-0.5 text-sm text-[var(--dash-muted)]">
+            Shared on <span className="font-semibold text-[var(--dash-ink)]">{interview.linkOn}</span>, 1 day before your interview.
+          </p>
+        </div>
+      </div>
+    );
+
+  const url = `https://${interview.link}`;
+  return (
+    <div className="rounded-2xl border border-[rgb(12_177_223/0.35)] bg-[var(--dash-cyan-tint)] p-4">
+      <p className="flex items-center gap-2 text-sm font-semibold text-[var(--dash-cyan-ink)]">
+        <Check className="size-4" strokeWidth={3} aria-hidden="true" /> Your interview link is ready
+      </p>
+      <p className="mt-2 flex items-center gap-2 rounded-xl bg-white px-3 py-2 text-sm">
+        <Link2 className="size-4 flex-none text-[var(--dash-muted)]" aria-hidden="true" />
+        <span className="min-w-0 flex-1 truncate font-medium">{interview.link}</span>
+      </p>
+      <div className="mt-3 flex flex-wrap justify-end gap-2">
+        <button
+          type="button"
+          className="dash-btn-ghost h-9"
+          onClick={async () => {
+            try {
+              await navigator.clipboard.writeText(url);
+              onToast("Link copied.");
+            } catch {
+              onToast("Couldn't copy. Select the link and copy it instead.");
+            }
+          }}
+        >
+          <Copy className="size-4" aria-hidden="true" /> Copy link
+        </button>
+        <button
+          type="button"
+          className="dash-btn h-9"
+          data-tone="orange"
+          onClick={() => onToast("Demo: the real meeting opens here when the portal is live.")}
+        >
+          <Video className="size-4" aria-hidden="true" /> Join interview
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Upcoming interviews, one card each: a date block, the company and role,
+ * the time, format and who you'll meet, the meeting link (shared 1 day
+ * before) and a short prep tip.
+ */
 export function InterviewsPage() {
-  const [topic, setTopic] = useState(questionBank[0].topic);
   const [toast, showToast] = useToast();
-  const bank = questionBank.find((b) => b.topic === topic) ?? questionBank[0];
 
   return (
-    <div className="space-y-8">
-      <PageHeader title="Interviews" body="Get ready, practise with your recruiter, then go in confident.">
-        <button type="button" className="dash-btn" data-tone="orange" onClick={() => showToast("Request sent. Hari will offer you a mock interview slot. (Demo)")}>
-          Book a mock interview
-        </button>
-      </PageHeader>
+    <div className="space-y-6">
+      <PageHeader
+        title="Interviews"
+        body="Your upcoming interviews. Meeting links appear here 1 day before, and your recruiter emails them too."
+      />
 
       <section aria-labelledby="upcoming-heading">
         <h2 id="upcoming-heading" className="dash-section-title">
-          Coming up <span className="dash-count">{interviews.length}</span>
+          Upcoming <span className="dash-count">{interviews.length}</span>
         </h2>
-        <ul className="mt-3 grid gap-4 lg:grid-cols-2">
+        <ul className="mt-3 grid grid-cols-1 gap-4 xl:grid-cols-2">
           {interviews.map((i) => (
-            <li key={i.id} className="dash-card dash-card-pad">
-              <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0">
-                  <h3 className="text-base font-semibold">{i.company}</h3>
-                  <p className="text-sm text-[var(--dash-muted)]">
-                    {i.role} · {i.round}
-                  </p>
+            <li key={i.id} className="dash-card dash-card-pad flex flex-col gap-4">
+              {/* Date block + who and what */}
+              <div className="flex items-start gap-4">
+                <div className="grid w-16 flex-none overflow-hidden rounded-2xl border border-[var(--dash-line)] text-center" aria-hidden="true">
+                  <span className="bg-[var(--dash-ink)] py-1 text-[0.6875rem] font-semibold tracking-[0.12em] text-white uppercase">{i.month}</span>
+                  <span className="pt-1.5 text-2xl leading-none font-bold">{i.day}</span>
+                  <span className="pb-1.5 text-[0.6875rem] text-[var(--dash-muted)]">{i.weekday}</span>
                 </div>
-                <Chip>Interview</Chip>
+                <div className="min-w-0 flex-1">
+                  <p className="flex flex-wrap items-center gap-2">
+                    <span
+                      className="dash-chip"
+                      data-tone={i.relative === "Tomorrow" ? "warn" : undefined}
+                    >
+                      {i.relative}
+                    </span>
+                    <span className="dash-chip border border-[var(--dash-line-strong)] bg-white">{i.round}</span>
+                  </p>
+                  <h3 className="mt-2 text-lg leading-tight font-semibold">{i.company}</h3>
+                  <p className="text-sm text-[var(--dash-muted)]">{i.role}</p>
+                </div>
               </div>
-              <ul className="mt-4 space-y-1.5 text-sm">
-                <li className="flex items-center gap-2">
-                  <CalendarDays className="size-4 text-[var(--dash-muted)]" aria-hidden="true" /> {i.when}
-                </li>
-                <li className="flex items-center gap-2">
-                  {i.mode === "Phone" ? <Phone className="size-4 text-[var(--dash-muted)]" aria-hidden="true" /> : <Video className="size-4 text-[var(--dash-muted)]" aria-hidden="true" />}
-                  {i.mode}
-                </li>
-                <li className="flex items-center gap-2">
-                  <Users className="size-4 text-[var(--dash-muted)]" aria-hidden="true" /> {i.with}
-                </li>
-              </ul>
-              <p className="mt-4 flex gap-2 rounded-xl bg-[var(--dash-orange-tint)] p-3 text-sm leading-relaxed">
-                <Lightbulb className="mt-0.5 size-4 flex-none text-[var(--dash-orange-ink)]" aria-hidden="true" />
+
+              {/* The facts, one per line */}
+              <dl className="divide-y divide-[var(--dash-line)] border-y border-[var(--dash-line)]">
+                <Row icon={Clock} label="Date & time">
+                  {i.date} · {i.time}
+                </Row>
+                <Row icon={Video} label="Format">
+                  {i.format}
+                </Row>
+                <Row icon={Users} label="You'll meet">
+                  {i.with}
+                </Row>
+              </dl>
+
+              <LinkBox interview={i} onToast={showToast} />
+
+              <p className="flex gap-2 text-sm leading-relaxed text-[var(--dash-muted)]">
+                <Lightbulb className="mt-0.5 size-4 flex-none text-[var(--dash-orange)]" aria-hidden="true" />
                 <span>
-                  <span className="font-semibold">Prep tip: </span>
+                  <span className="font-semibold text-[var(--dash-ink)]">Prep tip: </span>
                   {i.prep}
                 </span>
               </p>
@@ -58,58 +142,6 @@ export function InterviewsPage() {
           ))}
         </ul>
       </section>
-
-      <div className="grid gap-6 xl:grid-cols-2">
-        <section aria-labelledby="mock-heading" className="dash-card dash-card-pad min-w-0">
-          <h2 id="mock-heading" className="dash-section-title">
-            Mock interviews
-          </h2>
-          <ul className="mt-3 divide-y divide-[var(--dash-line)]">
-            {mockInterviews.map((m) => (
-              <li key={m.id} className="py-3.5">
-                <div className="flex items-center justify-between gap-3">
-                  <span>
-                    <span className="block text-sm font-semibold">{m.topic}</span>
-                    <span className="block text-xs text-[var(--dash-muted)]">
-                      {m.date} · with {m.with}
-                    </span>
-                  </span>
-                  <Chip>{m.result}</Chip>
-                </div>
-                <p className="mt-2 text-sm leading-relaxed text-[var(--dash-muted)]">“{m.feedback}”</p>
-              </li>
-            ))}
-          </ul>
-        </section>
-
-        <section aria-labelledby="bank-heading" className="dash-card dash-card-pad min-w-0">
-          <h2 id="bank-heading" className="dash-section-title">
-            Practice questions
-          </h2>
-          <div className="dash-scroll-row mt-3 overflow-x-auto">
-            <div className="dash-tabs" role="group" aria-label="Topic">
-              {questionBank.map((b) => (
-                <button key={b.topic} type="button" className="dash-tab" aria-pressed={topic === b.topic} onClick={() => setTopic(b.topic)}>
-                  {b.topic}
-                </button>
-              ))}
-            </div>
-          </div>
-          <div className="mt-2 divide-y divide-[var(--dash-line)]">
-            {bank.questions.map((q) => (
-              <details key={q} className="group py-1">
-                <summary className="flex cursor-pointer list-none items-center justify-between gap-3 py-2.5 text-sm font-semibold [&::-webkit-details-marker]:hidden">
-                  {q}
-                  <ChevronDown className="size-4 flex-none transition group-open:rotate-180" aria-hidden="true" />
-                </summary>
-                <p className="pb-3 text-sm leading-relaxed text-[var(--dash-muted)]">
-                  Say it out loud in under two minutes, with one example from your projects. Your recruiter adds model answers here.
-                </p>
-              </details>
-            ))}
-          </div>
-        </section>
-      </div>
       {toast}
     </div>
   );

@@ -7,7 +7,6 @@ const KIND_TONE = {
   Interview: "warn",
   Call: undefined,
   Meeting: "ink",
-  "Mock interview": "good",
 } as const;
 
 /** The next few days: meetings, interviews, calls and deadlines. */

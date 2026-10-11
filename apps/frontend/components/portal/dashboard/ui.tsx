@@ -61,10 +61,6 @@ const TONES: Record<string, Tone> = {
   Submitted: "good",
   Reviewed: "good",
   "Needs changes": "warn",
-  Strong: "good",
-  Good: "good",
-  "Practise more": "warn",
-  "Mock interview": "good",
   "Expires soon": "bad",
 };
 

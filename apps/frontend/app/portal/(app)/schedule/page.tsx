@@ -8,7 +8,7 @@ export const metadata: Metadata = { title: "Schedule · Portal" };
 export default function Page() {
   return (
     <ForType
-      student={<SchedulePage title="Calendar" body="Classes, mock interviews, real interviews and deadlines." events={studentEvents} />}
+      student={<SchedulePage title="Calendar" body="Interviews, calls and deadlines." events={studentEvents} />}
       other={<SchedulePage />}
     />
   );

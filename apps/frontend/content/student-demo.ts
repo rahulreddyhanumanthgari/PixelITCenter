@@ -233,21 +233,66 @@ export const onboardingSteps: { id: string; title: string; body: string }[] = [
 
 // --- Interviews -------------------------------------------------------------
 
-export const interviews: { id: string; company: string; role: string; round: string; when: string; mode: string; with: string; prep: string }[] = [
-  { id: "i1", company: "Vertex Retail", role: "DevOps Engineer", round: "Technical round", when: "Mon, Oct 12 · 14:00", mode: "Video call", with: "Hiring manager + senior engineer", prep: "Expect a live pipeline design. Go over your GitHub Actions project: it's your best example." },
-  { id: "i2", company: "Northwind Health", role: "Junior SRE", round: "Recruiter screen", when: "Wed, Oct 14 · 11:00", mode: "Phone", with: "Talent partner", prep: "30 minutes on your background and availability. Keep your story to 2 minutes." },
-];
+export type Interview = {
+  id: string;
+  company: string;
+  role: string;
+  round: string;
+  /** Calendar-style date block. */
+  weekday: string;
+  day: string;
+  month: string;
+  date: string;
+  time: string;
+  /** "Tomorrow", "In 3 days". */
+  relative: string;
+  format: string;
+  with: string;
+  /**
+   * The meeting link is shared 1 day before the interview. Until then it's
+   * null and the card says when it will appear (`linkOn`). The live portal
+   * works this out from the date; here it's fixed for the demo.
+   */
+  link: string | null;
+  linkOn: string;
+  prep: string;
+};
 
-export const mockInterviews: { id: string; topic: string; date: string; with: string; result: "Strong" | "Good" | "Practise more"; feedback: string }[] = [
-  { id: "mi1", topic: "AWS core services", date: "Oct 2", with: "Hari", result: "Strong", feedback: "Clear answers on IAM and S3. Add a real example from your projects." },
-  { id: "mi2", topic: "Behavioural", date: "Sep 25", with: "Mansingh", result: "Practise more", feedback: "Use the STAR format and finish with the result. Slow down a little." },
-];
-
-export const questionBank: { topic: string; questions: string[] }[] = [
-  { topic: "AWS", questions: ["What is the difference between a security group and a NACL?", "How would you make an S3 bucket private but still share one file?", "Explain how an Auto Scaling group replaces an unhealthy instance."] },
-  { topic: "DevOps", questions: ["Walk me through a CI/CD pipeline you built.", "How do you roll back a bad deploy?", "What is blue-green deployment?"] },
-  { topic: "Terraform", questions: ["What is Terraform state and where should it live?", "How do modules help a team?", "What happens when someone changes infrastructure by hand?"] },
-  { topic: "Behavioural", questions: ["Tell me about a time something broke and you fixed it.", "Why cloud engineering?", "How do you learn a tool you've never used?"] },
+export const interviews: Interview[] = [
+  {
+    id: "i1",
+    company: "Vertex Retail",
+    role: "DevOps Engineer",
+    round: "Technical interview",
+    weekday: "Mon",
+    day: "12",
+    month: "Oct",
+    date: "Mon, Oct 12",
+    time: "14:00 – 15:00 (ET)",
+    relative: "Tomorrow",
+    format: "Video call · Google Meet",
+    with: "Hiring manager and a senior engineer",
+    link: "meet.google.com/vtx-dvop-1412",
+    linkOn: "Sun, Oct 11",
+    prep: "Expect a live pipeline design. Go over your GitHub Actions project: it's your best example.",
+  },
+  {
+    id: "i2",
+    company: "Northwind Health",
+    role: "Junior Site Reliability Engineer",
+    round: "Recruiter screen",
+    weekday: "Wed",
+    day: "14",
+    month: "Oct",
+    date: "Wed, Oct 14",
+    time: "11:00 – 11:30 (ET)",
+    relative: "In 3 days",
+    format: "Video call · Microsoft Teams",
+    with: "Talent partner",
+    link: null,
+    linkOn: "Tue, Oct 13",
+    prep: "30 minutes on your background and availability. Keep your story to 2 minutes.",
+  },
 ];
 
 // --- Calendar ----------------------------------------------------------------
@@ -262,7 +307,7 @@ export const studentEvents: { day: string; date: string; items: { time: string; 
     day: "Tomorrow",
     date: "Mon, Oct 12",
     items: [
-      { time: "10:00", title: "Mock interview: DevOps", kind: "Mock interview", with: "Hari" },
+      { time: "10:00", title: "Prep call for the Vertex Retail interview", kind: "Call", with: "Hari" },
       { time: "14:00", title: "Vertex Retail, technical round", kind: "Interview", with: "Hiring manager" },
     ],
   },
@@ -373,7 +418,7 @@ export const studentContacts: { name: string; role: string; email: string }[] = 
 export const studentFaqs: { q: string; a: string }[] = [
   { q: "How do I apply to a job?", a: "Open Jobs, pick a role and press Apply. Choose which resume to send. Your recruiter sees it straight away." },
   { q: "Can I apply to many jobs at once?", a: "Your recruiter picks the best few with you. Fewer, better-matched applications get more interviews." },
-  { q: "How do mock interviews work?", a: "Book one under Interviews. Hari or Mansingh plays the interviewer and sends you feedback the same day." },
+  { q: "When do I get the interview link?", a: "One day before the interview. It appears on the Interviews page, and your recruiter emails it too." },
   { q: "My ID is expiring. What should I do?", a: "Upload the new one under Documents before it expires so your placement isn't delayed." },
 ];
 
