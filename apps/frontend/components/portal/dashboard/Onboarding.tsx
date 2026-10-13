@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft, ArrowRight, LoaderCircle } from "lucide-react";
 import { accountTypes } from "@/content/portal-demo";
 import { Logo } from "@/components/site/layout/Logo";
+import { homeFor } from "./nav";
 import { AccountTypePicker, RoleFields, SkillsField, TextField } from "./ProfileFields";
 import { profileCompletion, updateProfile, useSession, type Profile } from "./session";
 
@@ -41,7 +42,7 @@ function OnboardingSteps({ saved }: { saved: Profile }) {
 
   const next = () => {
     updateProfile(draft);
-    if (last) router.push("/portal/dashboard");
+    if (last) router.push(homeFor(draft.accountType));
     else setStep(step + 1);
   };
 
@@ -120,7 +121,7 @@ function OnboardingSteps({ saved }: { saved: Profile }) {
                 className="text-xs font-semibold text-[var(--dash-muted)] hover:underline"
                 onClick={() => {
                   updateProfile(draft);
-                  router.push("/portal/dashboard");
+                  router.push(homeFor(draft.accountType));
                 }}
               >
                 Skip for now, I&apos;ll finish later

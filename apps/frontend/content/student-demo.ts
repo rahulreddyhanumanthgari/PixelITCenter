@@ -1,20 +1,18 @@
 // Demo data for the STUDENT corner of the portal: what a job seeker sees
-// after signing in (resume, jobs, interviews, recruiters). DUMMY data,
-// like content/portal-demo.ts; replace with real data when the portal exists.
+// after signing in (jobs, interviews, resume, documents, timesheets).
+// DUMMY data, like content/portal-demo.ts.
+//
+// Swapping in the real API: each export below stands for one future endpoint
+// (noted next to it). Pages read these lists directly and keep what the
+// student changes in the demo session (components/portal/dashboard/session.ts),
+// so moving to the API means replacing these imports and the session helpers
+// with fetches. The page components stay as they are.
 
 import type { CalEvent } from "./portal-demo";
 
-export const studentStats = [
-  { id: "jobs", label: "Jobs for you", value: "6", note: "2 new this week" },
-  { id: "applications", label: "Applications", value: "5", note: "1 offer" },
-  { id: "interviews", label: "Interviews this week", value: "2", note: "Next: Mon 14:00" },
-  { id: "messages", label: "Unread messages", value: "3", note: "From recruiters" },
-] as const;
-
-// --- Jobs and applications --------------------------------------------------
-
-export type AppStage = "Applied" | "Shortlisted" | "Interview" | "Offer";
-export const appStages: AppStage[] = ["Applied", "Shortlisted", "Interview", "Offer"];
+// --- Jobs ------------------------------------------------------------------------
+// Posted by admins on the employee/admin side. Students only view them; PixelIT's
+// recruiters submit the student's resume. GET /api/student/jobs
 
 export type Employment = "Permanent" | "Contract" | "Part-time";
 export type WorkMode = "Remote" | "Hybrid" | "On-site";
@@ -215,25 +213,36 @@ export const jobs: Job[] = [
   },
 ];
 
-/** Where each application stands at the start of the demo (job id → stage). */
-export const starterApplications: Record<string, AppStage> = {
-  j1: "Offer",
-  j2: "Interview",
-  j3: "Shortlisted",
-  j4: "Applied",
-  j6: "Applied",
-};
+/** Where PixelIT is with the student's resume for each job. */
+export type SubmissionStatus = "Not Submitted" | "Resume Submitted" | "Under Review" | "Interview Scheduled" | "Placed" | "Rejected";
 
-// Once an offer is accepted: what has to happen before day one.
-export const onboardingSteps: { id: string; title: string; body: string }[] = [
-  { id: "o1", title: "Accept the offer", body: "Sign the offer letter from Brightline Finance." },
-  { id: "o2", title: "Background check", body: "Fill in the form the screening company emails you." },
-  { id: "o3", title: "Employment forms", body: "Upload your ID and the signed tax and payroll forms." },
-  { id: "o4", title: "Laptop and accounts", body: "Confirm your shipping address for the work laptop." },
-  { id: "o5", title: "Start date", body: "Confirm Monday, Nov 2 with your recruiter." },
+export const submissionStatuses: { status: SubmissionStatus; help: string }[] = [
+  { status: "Not Submitted", help: "Your recruiter hasn't sent your resume for this role yet." },
+  { status: "Resume Submitted", help: "Your recruiter sent your resume to the client." },
+  { status: "Under Review", help: "The client is looking at your resume." },
+  { status: "Interview Scheduled", help: "The client wants to meet you. See Interviews." },
+  { status: "Placed", help: "You got the role. Congratulations!" },
+  { status: "Rejected", help: "The client chose someone else this time. Your recruiter keeps looking." },
 ];
 
+/** Status per job (job id → status). Missing = Not Submitted. Part of GET /api/student/jobs. */
+export const jobStatuses: Record<string, SubmissionStatus> = {
+  j1: "Under Review",
+  j2: "Interview Scheduled",
+  j3: "Interview Scheduled",
+  j4: "Resume Submitted",
+  j6: "Rejected",
+};
+
+/** The placed demo student (placed@pixelitcenter.com) got the Brightline role. */
+export const placedJobStatuses: Record<string, SubmissionStatus> = {
+  j1: "Placed",
+  j2: "Rejected",
+  j4: "Resume Submitted",
+};
+
 // --- Interviews -------------------------------------------------------------
+// GET /api/student/interviews
 
 export type Interview = {
   id: string;
@@ -297,24 +306,45 @@ export const interviews: Interview[] = [
   },
 ];
 
+export type PastInterview = { id: string; company: string; role: string; round: string; date: string; time: string; format: string };
+
+export const pastInterviews: PastInterview[] = [
+  { id: "p1", company: "Vertex Retail", role: "DevOps Engineer", round: "Recruiter screen", date: "Wed, Oct 7", time: "11:00 – 11:20 (ET)", format: "Phone call" },
+  { id: "p2", company: "Cedar Systems", role: "Build and Release Engineer", round: "Technical interview", date: "Tue, Sep 29", time: "15:00 – 16:00 (ET)", format: "Video call · Zoom" },
+];
+
+/** Email reminders for interviews. UI only for now. PUT /api/student/notification-settings */
+export const defaultReminders = { onSchedule: true, before24h: true, before1h: true };
+
 // --- Calendar ----------------------------------------------------------------
+// GET /api/student/calendar
 
 export const studentEvents: CalEvent[] = [
   { id: "s1", date: "2026-10-02", time: "15:00", end: "15:30", title: "Resume review", kind: "Call", with: "Mansingh" },
   { id: "s2", date: "2026-10-07", time: "11:00", end: "11:20", title: "Vertex Retail, recruiter screen", kind: "Interview", with: "Talent partner" },
-  { id: "s3", date: "2026-10-11", time: "20:00", title: "Upload resume v3 for review", kind: "Deadline", with: "Resume corner" },
   { id: "s4", date: "2026-10-12", time: "10:00", end: "10:30", title: "Prep call for the Vertex Retail interview", kind: "Call", with: "Hari" },
   { id: "s5", date: "2026-10-12", time: "14:00", end: "15:00", title: "Vertex Retail, technical interview", kind: "Interview", with: "Hiring manager and a senior engineer" },
-  { id: "s6", date: "2026-10-13", time: "16:00", end: "16:30", title: "Resume review call", kind: "Call", with: "Mansingh" },
+  { id: "s6", date: "2026-10-13", time: "16:00", end: "16:30", title: "PixelIT check-in call", kind: "Call", with: "Mansingh" },
   { id: "s7", date: "2026-10-14", time: "11:00", end: "11:30", title: "Northwind Health, recruiter screen", kind: "Interview", with: "Talent partner" },
   { id: "s8", date: "2026-10-14", time: "18:00", title: "Send two references to Hari", kind: "Deadline", with: "Hari" },
-  { id: "s9", date: "2026-10-16", time: "17:00", title: "Accept or decline the Brightline offer", kind: "Deadline", with: "Hari" },
-  { id: "s10", date: "2026-10-20", time: "12:00", title: "Background check form due", kind: "Deadline", with: "Onboarding" },
-  { id: "s11", date: "2026-10-27", time: "14:00", end: "14:30", title: "Onboarding call, Brightline Finance", kind: "Call", with: "Mansingh" },
-  { id: "s12", date: "2026-11-02", time: "09:00", end: "17:00", title: "First day at Brightline Finance", kind: "Meeting", with: "Brightline Finance team" },
+  { id: "s9", date: "2026-10-13", time: "09:30", end: "10:00", title: "Prep call for the Northwind Health interview", kind: "Call", with: "Hari" },
 ];
 
-// --- Recruiter chat -------------------------------------------------------------
+/**
+ * Times the student says they can take interviews. Recruiters read these
+ * instead of calling when a client asks for times.
+ * GET / POST / DELETE /api/student/availability (recruiters: GET /api/admin/students/:id/availability)
+ */
+export type AvailabilitySlot = { id: string; date: string; start: string; end: string; timezone: string };
+
+export const TIMEZONES = ["ET", "CT", "MT", "PT", "AKT", "HT"];
+
+export const starterAvailability: AvailabilitySlot[] = [
+  { id: "a1", date: "2026-10-15", start: "09:00", end: "12:00", timezone: "ET" },
+  { id: "a2", date: "2026-10-16", start: "13:00", end: "17:00", timezone: "ET" },
+];
+
+// --- Messages (front-end placeholder) -------------------------------------------
 
 export const studentConversations: {
   id: string;
@@ -329,7 +359,7 @@ export const studentConversations: {
     role: "Your recruiter",
     unread: 2,
     messages: [
-      { from: "them", text: "Great news: Brightline Finance sent an offer! Call me when you're free.", time: "09:40" },
+      { from: "them", text: "I sent your resume to Atlas Logistics for the Cloud Support Associate role.", time: "09:40" },
       { from: "them", text: "Also, Vertex Retail confirmed Monday 14:00 for the technical round.", time: "09:41" },
     ],
   },
@@ -339,8 +369,8 @@ export const studentConversations: {
     role: "Placement lead",
     unread: 1,
     messages: [
-      { from: "me", text: "I've updated my resume with the Terraform project.", time: "Fri" },
-      { from: "them", text: "Looks much better. Move the project above education and it's ready.", time: "Fri" },
+      { from: "me", text: "I've uploaded a new version of my resume.", time: "Fri" },
+      { from: "them", text: "Thanks. I left feedback in the Resume corner.", time: "Fri" },
     ],
   },
   {
@@ -349,26 +379,35 @@ export const studentConversations: {
     role: "Help desk",
     unread: 0,
     messages: [
-      { from: "them", text: "Your background-check form link is in your email.", time: "Wed" },
+      { from: "them", text: "Your visa copy is uploaded and checked.", time: "Wed" },
       { from: "me", text: "Got it, thanks!", time: "Wed" },
     ],
   },
 ];
 
-// --- Resume corner ---------------------------------------------------------------
+// --- Resume corner -----------------------------------------------------------------
+// One resume with its versions. Recruiters review the latest version and leave
+// feedback; students only read it.
+// GET /api/student/resume, POST /api/student/resume/versions
 
-export const resumes: { id: string; name: string; target: string; updated: string; status: "Reviewed" | "Needs changes" | "Draft" }[] = [
-  { id: "cv3", name: "Manas, Cloud Engineer v3.pdf", target: "Cloud / AWS roles", updated: "Oct 9", status: "Reviewed" },
-  { id: "cv2", name: "Manas, DevOps v2.pdf", target: "DevOps roles", updated: "Oct 2", status: "Needs changes" },
-  { id: "cv1", name: "Manas, General v1.pdf", target: "Any role", updated: "Sep 15", status: "Draft" },
+export type ResumeStatus = "Pending Review" | "Needs Changes" | "Approved";
+
+export type ResumeVersion = { id: string; version: number; fileName: string; size: string; uploaded: string };
+
+export const resumeVersions: ResumeVersion[] = [
+  { id: "v2", version: 2, fileName: "Manas_Resume_v2.pdf", size: "148 KB", uploaded: "Oct 9" },
+  { id: "v1", version: 1, fileName: "Manas_Resume.docx", size: "96 KB", uploaded: "Sep 15" },
 ];
 
-/** Recruiter notes on a resume. `resumeId` says which resume the note is about. */
-export const resumeFeedback: { id: string; resumeId: string; from: "Hari" | "Mansingh"; role: string; date: string; text: string }[] = [
-  { id: "f1", resumeId: "cv3", from: "Hari", role: "Recruiter", date: "Oct 10", text: "Approved. This is the one I'll send to Brightline Finance and Vertex Retail." },
-  { id: "f2", resumeId: "cv3", from: "Mansingh", role: "Placement lead", date: "Oct 9", text: "Strong summary. Put the Terraform project first and add numbers (e.g. 'cut deploy time from 20 to 5 minutes')." },
-  { id: "f3", resumeId: "cv2", from: "Mansingh", role: "Placement lead", date: "Oct 4", text: "Two pages is too long for DevOps roles. Cut your older jobs to one line each." },
-  { id: "f4", resumeId: "cv2", from: "Hari", role: "Recruiter", date: "Oct 3", text: "Clients search for 'AWS', 'Terraform' and 'CI/CD'. Make sure all three are in your skills line." },
+/** Status of the latest version. Set by the recruiter; a new upload resets it to Pending Review. */
+export const resumeStatus: ResumeStatus = "Needs Changes";
+
+export type ResumeFeedback = { id: string; versionId: string; author: string; role: string; date: string; text: string };
+
+export const resumeFeedback: ResumeFeedback[] = [
+  { id: "f1", versionId: "v2", author: "Mansingh", role: "Placement lead", date: "Oct 10", text: "Strong summary. Put the Terraform project first and add numbers, e.g. 'cut deploy time from 20 to 5 minutes'." },
+  { id: "f2", versionId: "v2", author: "Hari", role: "Recruiter", date: "Oct 10", text: "Clients search for 'AWS', 'Terraform' and 'CI/CD'. Make sure all three are in your skills line." },
+  { id: "f3", versionId: "v1", author: "Mansingh", role: "Placement lead", date: "Sep 17", text: "Two pages is too long. Cut your older jobs to one line each and send a PDF." },
 ];
 
 export const resumeChecklist: { id: string; text: string; done: boolean }[] = [
@@ -376,65 +415,91 @@ export const resumeChecklist: { id: string; text: string; done: boolean }[] = [
   { id: "c2", text: "Summary in 2–3 lines", done: true },
   { id: "c3", text: "Projects with tools and results", done: true },
   { id: "c4", text: "Certifications with dates", done: false },
-  { id: "c5", text: "GitHub and LinkedIn links", done: false },
+  { id: "c5", text: "LinkedIn link", done: false },
 ];
 
-// --- Practice projects (portfolio) ------------------------------------------------
+// --- Documents -------------------------------------------------------------------------
+// Only these types. GET / POST / DELETE /api/student/documents
 
-export type PracticeProject = {
-  id: string;
-  name: string;
-  stack: string[];
-  status: "Reviewed" | "In progress" | "Not started" | "In review";
-  progress: number;
-  body: string;
-  review?: string;
-  /** "github.com/owner/repo". Demo projects' repos are made up, so they don't open. */
-  repo?: string;
-  /** Added by the student from GitHub (opens the real link). */
-  fromGithub?: boolean;
-};
+export type StudentDocType = "resume" | "id" | "utility" | "passport" | "visa";
 
-export const practiceProjects: PracticeProject[] = [
-  { id: "p1", repo: "github.com/manas-demo/aws-3-tier-app", name: "3-tier web app on AWS", stack: ["Terraform", "EC2", "RDS", "ALB"], status: "Reviewed", progress: 100, body: "A load-balanced app with a private database, built entirely in Terraform.", review: "Clean modules. Add a diagram to the README." },
-  { id: "p2", repo: "github.com/manas-demo/static-site-pipeline", name: "CI/CD pipeline for a static site", stack: ["GitHub Actions", "S3", "CloudFront"], status: "Reviewed", progress: 100, body: "Every push tests, builds and deploys to S3 behind CloudFront.", review: "Great. This is your strongest interview story." },
-  { id: "p3", repo: "github.com/manas-demo/eks-api", name: "Containerised API on EKS", stack: ["Docker", "Kubernetes", "EKS"], status: "In progress", progress: 40, body: "A small API in Docker, deployed to EKS with health checks and autoscaling." },
-  { id: "p4", name: "Monitoring dashboard", stack: ["CloudWatch", "Grafana", "Lambda"], status: "Not started", progress: 0, body: "Alerts and dashboards for the 3-tier app. Planned next." },
+export type StudentDoc = { id: string; type: StudentDocType; fileName: string; size: string; uploaded: string; expires?: string };
+
+export const starterStudentDocs: StudentDoc[] = [
+  { id: "d1", type: "resume", fileName: "Manas_Resume_v2.pdf", size: "148 KB", uploaded: "Oct 9" },
+  { id: "d2", type: "id", fileName: "Drivers_License.jpg", size: "520 KB", uploaded: "Jul 12", expires: "Dec 2026" },
+  { id: "d3", type: "visa", fileName: "H1B_Visa.pdf", size: "410 KB", uploaded: "Jul 12", expires: "Mar 2027" },
 ];
 
-// --- Documents -----------------------------------------------------------------------
-
-export const studentDocuments: { id: string; name: string; category: string; size: string; updated: string; expires?: string; expiresSoon?: boolean }[] = [
-  { id: "sd1", name: "Manas, Cloud Engineer v3.pdf", category: "Resume", size: "142 KB", updated: "Oct 9" },
-  { id: "sd2", name: "AWS Cloud Practitioner certificate.pdf", category: "Certificates", size: "310 KB", updated: "Aug 30", expires: "Aug 2029" },
-  { id: "sd3", name: "Terraform Associate certificate.pdf", category: "Certificates", size: "240 KB", updated: "Oct 7" },
-  { id: "sd4", name: "Photo ID.pdf", category: "ID", size: "520 KB", updated: "Jul 12", expires: "Dec 2026", expiresSoon: true },
-  { id: "sd5", name: "Work authorization.pdf", category: "Work papers", size: "410 KB", updated: "Jul 12", expires: "Mar 2027" },
-  { id: "sd6", name: "Offer letter, Brightline Finance.pdf", category: "Offers", size: "188 KB", updated: "Today" },
+/** Sent by PixelIT (offer letters, agreements). Students download only. GET /api/student/documents/from-pixelit */
+export const fromPixelitDocs: { id: string; name: string; size: string; sent: string; by: string }[] = [
+  { id: "x1", name: "Welcome to PixelIT.pdf", size: "120 KB", sent: "Jul 10", by: "Mansingh" },
+  { id: "x2", name: "Marketing consent form.pdf", size: "84 KB", sent: "Jul 12", by: "Hari" },
 ];
 
-// --- Help & announcements -----------------------------------------------------------
+export const placedFromPixelitDocs = [{ id: "x3", name: "Offer letter, Brightline Finance.pdf", size: "188 KB", sent: "Jul 28", by: "Hari" }, ...fromPixelitDocs];
+
+// --- Timesheets (placed students only) ------------------------------------------------
+
+/** Set by admins; read-only for the student. GET /api/student/placement */
+export const placement = { client: "Brightline Finance", role: "Cloud Engineer (AWS)", hourlyRate: 65, startDate: "Aug 3, 2026" };
+
+export type TimesheetStatus = "Submitted" | "Under Verification" | "Approved" | "Invoiced" | "Paid";
+
+export const timesheetStatuses: { status: TimesheetStatus; help: string }[] = [
+  { status: "Submitted", help: "We have it. Accounts checks it next." },
+  { status: "Under Verification", help: "Accounts is checking your hours against the client-approved sheet." },
+  { status: "Approved", help: "Hours confirmed. The invoice is made next." },
+  { status: "Invoiced", help: "PixelIT has invoiced the client for this month." },
+  { status: "Paid", help: "Paid. Check your payslip." },
+];
+
+export type Timesheet = { id: string; month: string; hours: number; leaveDays: number; leaveNote: string; fileName: string; submitted: string; status: TimesheetStatus };
+
+/** GET / POST /api/student/timesheets */
+export const starterTimesheets: Timesheet[] = [
+  { id: "t2", month: "2026-09", hours: 160, leaveDays: 1, leaveNote: "Personal day on Sep 18.", fileName: "Timesheet_Sep_2026_signed.pdf", submitted: "Oct 1", status: "Under Verification" },
+  { id: "t1", month: "2026-08", hours: 168, leaveDays: 0, leaveNote: "", fileName: "Timesheet_Aug_2026_signed.pdf", submitted: "Sep 1", status: "Paid" },
+];
+
+// --- Help ----------------------------------------------------------------------------
 
 export const studentContacts: { name: string; role: string; email: string }[] = [
   { name: "Hari", role: "Your recruiter", email: "hari@pixelitcenter.com" },
   { name: "Mansingh", role: "Placement lead", email: "mansingh@pixelitcenter.com" },
+  { name: "Accounts", role: "Timesheets and pay", email: "accounts@pixelitcenter.com" },
 ];
+
+/** Office hours, Eastern Time, Monday to Friday. */
+export const officeHours = { open: 9, close: 18, label: "Mon–Fri, 9am–6pm ET" };
 
 export const studentFaqs: { q: string; a: string }[] = [
-  { q: "How do I apply to a job?", a: "Open Jobs, pick a role and press Apply. Choose which resume to send. Your recruiter sees it straight away." },
-  { q: "Can I apply to many jobs at once?", a: "Your recruiter picks the best few with you. Fewer, better-matched applications get more interviews." },
+  { q: "How do I apply to a job?", a: "You don't need to. PixelIT's recruiters send your resume to matching openings. Open Jobs to see where it has been sent and how it's going." },
   { q: "When do I get the interview link?", a: "One day before the interview. It appears on the Interviews page, and your recruiter emails it too." },
-  { q: "My ID is expiring. What should I do?", a: "Upload the new one under Documents before it expires so your placement isn't delayed." },
+  { q: "A client wants interview times. Do I need to call?", a: "No. Add the times you're free under Calendar → Availability. Your recruiter checks them there." },
+  { q: "My ID is expiring. What should I do?", a: "Upload the new one under Documents before it expires so nothing is delayed." },
 ];
 
-export const studentNotifications: { id: string; title: string; body: string; time: string }[] = [
-  { id: "sn1", title: "Offer received", body: "Brightline Finance sent you an offer. See Jobs → My applications.", time: "1h" },
-  { id: "sn2", title: "Interview confirmed", body: "Vertex Retail, Mon 14:00, technical round.", time: "2h" },
-  { id: "sn3", title: "Resume reviewed", body: "Mansingh reviewed Cloud Engineer v3.", time: "2d" },
-  { id: "sn4", title: "ID expires soon", body: "Your photo ID expires in December. Upload a new one.", time: "3d" },
+// --- Notifications --------------------------------------------------------------------
+// GET /api/student/notifications. In-app only for now; email delivery of the
+// same events comes later.
+
+export type StudentNotification = {
+  id: string;
+  kind: "interview" | "resume-feedback" | "resume-status" | "timesheet";
+  title: string;
+  body: string;
+  time: string;
+  href: string;
+};
+
+export const studentNotifications: StudentNotification[] = [
+  { id: "sn1", kind: "interview", title: "Interview scheduled", body: "Vertex Retail, Mon Oct 12, 14:00 ET, technical round.", time: "2h", href: "/portal/interviews" },
+  { id: "sn2", kind: "resume-feedback", title: "Resume feedback received", body: "Mansingh left feedback on version 2.", time: "1d", href: "/portal/resume" },
+  { id: "sn3", kind: "resume-status", title: "Resume status changed", body: "Version 2 needs changes. See the feedback.", time: "1d", href: "/portal/resume" },
 ];
 
-export const announcements: { id: string; title: string; body: string; date: string }[] = [
-  { id: "an1", title: "New roles this week", body: "6 new cloud and DevOps openings. Check Jobs.", date: "Oct 10" },
-  { id: "an2", title: "Thanksgiving break", body: "Office closed Nov 26–27. Recruiters reply again on Nov 30.", date: "Oct 8" },
+/** Only placed students get these. */
+export const placedNotifications: StudentNotification[] = [
+  { id: "sn4", kind: "timesheet", title: "Timesheet status changed", body: "September is under verification.", time: "3d", href: "/portal/timesheets" },
 ];

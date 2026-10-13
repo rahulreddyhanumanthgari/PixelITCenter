@@ -1,15 +1,9 @@
 import type { Metadata } from "next";
-import { Suspense } from "react";
-import { ForType, StudentOnly } from "@/components/portal/dashboard/ForType";
 import { JobsPage } from "@/components/portal/dashboard/student/JobsPage";
 
 export const metadata: Metadata = { title: "Jobs · Portal" };
 
-// Suspense: JobsPage reads ?tab= from the URL.
+// Students only (the dashboard shell's role guard keeps everyone else out).
 export default function Page() {
-  return (
-    <Suspense>
-      <ForType student={<JobsPage />} other={<StudentOnly />} />
-    </Suspense>
-  );
+  return <JobsPage />;
 }

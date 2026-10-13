@@ -5,26 +5,35 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Bell, LoaderCircle, LogOut, Menu, MessageSquare, Search, X } from "lucide-react";
 import { accountTypes, conversations, documents, notifications, projects } from "@/content/portal-demo";
-import { jobs, practiceProjects, studentConversations, studentDocuments, studentNotifications } from "@/content/student-demo";
+import { jobs, studentConversations } from "@/content/student-demo";
 import { Logo } from "@/components/site/layout/Logo";
-import { navFor, navItemsFor } from "./nav";
-import { profileCompletion, signOut, updateSession, useSession, type Session } from "./session";
+import { StudentOnly } from "./ForType";
+import { homeFor, isStudentOnly, navFor, navItemsFor, studentCanOpen } from "./nav";
+import { isPlaced, notificationsOf, profileCompletion, signOut, updateSession, useSession, type Session } from "./session";
 import { Avatar } from "./ui";
 
 /**
  * The frame around every dashboard page: sidebar, top bar (search,
- * messages, notifications) and the sign-in check: signed out → back to
- * /portal.
+ * messages, notifications), the sign-in check (signed out → back to
+ * /portal) and the role guard: students open only what their menu shows;
+ * everyone else is kept out of the student-only pages.
+ *
+ * TODO(auth): this guard is for the UI only. With real sign-in the API
+ * enforces the same rules on every request (role from the token).
  */
 export function DashboardShell({ children }: { children: ReactNode }) {
   const session = useSession();
   const router = useRouter();
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const student = session?.profile.accountType === "student";
+  const home = student && pathname === "/portal/dashboard";
 
   useEffect(() => {
     if (session === null) router.replace("/portal");
-  }, [session, router]);
+    // Students have no dashboard page: their home is Jobs.
+    else if (home) router.replace(homeFor("student"));
+  }, [session, router, home]);
 
   // Close the phone drawer after following a link.
   const [lastPath, setLastPath] = useState(pathname);
@@ -33,7 +42,7 @@ export function DashboardShell({ children }: { children: ReactNode }) {
     setOpen(false);
   }
 
-  if (!session) {
+  if (!session || home) {
     return (
       <div className="dash-app grid place-items-center">
         <LoaderCircle className="size-6 animate-spin text-[var(--dash-orange)]" aria-label="Loading" />
@@ -47,8 +56,23 @@ export function DashboardShell({ children }: { children: ReactNode }) {
       {open && <div className="dash-scrim lg:hidden" onClick={() => setOpen(false)} aria-hidden="true" />}
       <div className="dash-body">
         <Topbar session={session} onMenu={() => setOpen(true)} />
-        <main className="mx-auto w-full max-w-[84rem] px-4 pt-6 pb-16 sm:px-6 lg:px-8 lg:pt-8">{children}</main>
+        <main className="mx-auto w-full max-w-[84rem] px-4 pt-6 pb-16 sm:px-6 lg:px-8 lg:pt-8">
+          {student ? (studentCanOpen(pathname, isPlaced(session)) ? children : <NotInYourPortal />) : isStudentOnly(pathname) ? <StudentOnly /> : children}
+        </main>
       </div>
+    </div>
+  );
+}
+
+/** A student opened a page that isn't theirs (or Timesheets before being placed). */
+function NotInYourPortal() {
+  return (
+    <div className="dash-card dash-card-pad mx-auto mt-10 max-w-md text-center">
+      <p className="text-base font-semibold">This page isn&apos;t part of your portal</p>
+      <p className="mt-2 text-sm text-[var(--dash-muted)]">Use the menu to find your jobs, interviews, resume and documents.</p>
+      <Link href={homeFor("student")} className="dash-btn mt-4">
+        Go to Jobs
+      </Link>
     </div>
   );
 }
@@ -91,7 +115,7 @@ function Sidebar({
       </Link>
 
       <nav className="mt-3 flex-1">
-        {navFor(profile.accountType).map((g, i) => (
+        {navFor(profile.accountType, isPlaced(session)).map((g, i) => (
           <div key={g.label ?? i}>
             {g.label && <p className="dash-group-label">{g.label}</p>}
             <ul className="space-y-0.5">
@@ -154,17 +178,11 @@ function useDismiss(open: boolean, close: () => void) {
   return ref;
 }
 
-// What the search box can find: pages, projects, documents (and jobs for
-// students). Students get the student corner's own content.
-function searchIndex(student: boolean) {
-  const pages = navItemsFor(student ? "student" : null).map((n) => ({ label: n.label, hint: "Page", href: n.href }));
-  if (student)
-    return [
-      ...pages,
-      ...jobs.map((j) => ({ label: j.title, hint: `Job · ${j.company}`, href: `/portal/jobs/${j.id}` })),
-      ...practiceProjects.map((p) => ({ label: p.name, hint: "Practice project", href: "/portal/projects" })),
-      ...studentDocuments.map((d) => ({ label: d.name, hint: `Document · ${d.category}`, href: "/portal/documents" })),
-    ];
+// What the search box can find: pages, projects, documents (pages and jobs
+// for students). Students get the student corner's own content.
+function searchIndex(student: boolean, placed: boolean) {
+  const pages = navItemsFor(student ? "student" : null, placed).map((n) => ({ label: n.label, hint: "Page", href: n.href }));
+  if (student) return [...pages, ...jobs.map((j) => ({ label: j.title, hint: `Job · ${j.company}`, href: `/portal/jobs/${j.id}` }))];
   return [
     ...pages,
     ...projects.map((p) => ({ label: p.name, hint: `Project · ${p.org}`, href: "/portal/projects" })),
@@ -182,8 +200,10 @@ function Topbar({ session, onMenu }: { session: Session; onMenu: () => void }) {
 
   const student = session.profile.accountType === "student";
   const q = query.trim().toLowerCase();
-  const results = q ? searchIndex(student).filter((r) => r.label.toLowerCase().includes(q)).slice(0, 6) : [];
-  const notes = student ? studentNotifications : notifications;
+  const results = q ? searchIndex(student, isPlaced(session)).filter((r) => r.label.toLowerCase().includes(q)).slice(0, 6) : [];
+  // Students: interview scheduled, resume feedback, resume status, timesheet
+  // status. In the portal only for now; email delivery comes later.
+  const notes: { id: string; title: string; body: string; time: string; href?: string }[] = student ? notificationsOf(session) : notifications;
   const unread = notes.filter((n) => !session.readNotifications.includes(n.id));
   const unreadMessages = (student ? studentConversations : conversations).reduce((n, c) => n + c.unread, 0);
 
@@ -209,7 +229,7 @@ function Topbar({ session, onMenu }: { session: Session; onMenu: () => void }) {
               setQuery("");
             }
           }}
-          placeholder={student ? "Search jobs, projects, documents…" : "Search projects, documents, pages…"}
+          placeholder={student ? "Search jobs and pages…" : "Search projects, documents, pages…"}
           autoComplete="off"
         />
         <Search className="pointer-events-none absolute top-1/2 right-3.5 size-4 -translate-y-1/2 text-[var(--dash-muted)]" aria-hidden="true" />
@@ -270,8 +290,8 @@ function Topbar({ session, onMenu }: { session: Session; onMenu: () => void }) {
               <ul>
                 {notes.map((n) => {
                   const isUnread = !session.readNotifications.includes(n.id);
-                  return (
-                    <li key={n.id} className="flex gap-3 rounded-xl px-2.5 py-2.5">
+                  const body = (
+                    <>
                       <span
                         className="mt-1.5 size-2 flex-none rounded-full"
                         style={{ background: isUnread ? "var(--dash-orange)" : "transparent" }}
@@ -284,6 +304,24 @@ function Topbar({ session, onMenu }: { session: Session; onMenu: () => void }) {
                         </span>
                         <span className="block text-sm text-[var(--dash-muted)]">{n.body}</span>
                       </span>
+                    </>
+                  );
+                  return (
+                    <li key={n.id}>
+                      {n.href ? (
+                        <Link
+                          href={n.href}
+                          className="flex gap-3 rounded-xl px-2.5 py-2.5 hover:bg-[var(--dash-hover)]"
+                          onClick={() => {
+                            closeBell();
+                            updateSession((s) => ({ ...s, readNotifications: [...s.readNotifications, n.id] }));
+                          }}
+                        >
+                          {body}
+                        </Link>
+                      ) : (
+                        <div className="flex gap-3 rounded-xl px-2.5 py-2.5">{body}</div>
+                      )}
                     </li>
                   );
                 })}

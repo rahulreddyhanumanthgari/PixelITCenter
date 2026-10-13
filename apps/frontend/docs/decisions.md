@@ -732,83 +732,87 @@ will be, before the real one is built per account type.
 - To make it real: replace `session.ts` with Cognito + a profile lookup,
   and split `nav.ts` / the pages per account type.
 
-### Student corner (2026-10-11)
+### Student corner (reworked 2026-10-13)
 
-Student accounts get their own menu and pages; employees and clients keep
-the universal ones. `nav.ts` `navFor(type)` picks the menu; `ForType`
-picks the page version (student / other). Data: `content/student-demo.ts`.
+PixelIT is a staffing firm: students don't apply to jobs. PixelIT's
+recruiters market each student's resume to vendors and clients, and the
+student corner is for following that and handing over what recruiters need.
+`nav.ts` `navFor(type, placed)` picks the menu; `ForType` picks the page
+version (student / other). Data: `content/student-demo.ts`, where each list
+notes the API endpoint it stands for; what a student changes is kept in the
+demo session (`session.ts`, student-corner helpers), so swapping to the API
+is a change of data source, not of pages.
 
-- **Menu:** Dashboard · Get hired (Jobs, Interviews, Calendar, Messages) ·
-  Your profile (Resume corner, Projects, Documents, Profile) · Other (Help,
-  Settings). No Billing, no Tasks.
+- **Menu (final):** Jobs, Interviews, Calendar, Messages · Resume,
+  Documents, Profile, Timesheets (placed students only) · Help, Settings.
+  No Dashboard page for students: they land on Jobs, and `/portal/dashboard`
+  sends them there. No Projects, Billing or Tasks.
+- **Role guard** (`DashboardShell` + `nav.ts`): students open only what
+  their menu shows (and pages under it, e.g. a job); anything else shows
+  "This page isn't part of your portal". Other account types are kept out
+  of the student-only pages (Jobs, Interviews, Resume, Timesheets) with the
+  "student corner" note. UI only: the API must enforce the same rules.
+- **Placed students:** `session.isPlaced` (set from the demo directory:
+  `placed@pixelitcenter.com`; admins set it in the live portal). Only they
+  get Timesheets and timesheet notifications.
 - **Not a learning platform** (Manas): no courses, classes, modules,
-  recordings or trainers anywhere in the portal. A student is a job seeker
-  placed through Pixel IT; their profile asks for the role they want and
-  when they can start.
-- **No analytics** (Manas): a small firm means a few well-matched
-  applications, so "My applications" is a list with a stage stepper
-  (Applied → Shortlisted → Interview → Offer), not charts.
-- **Demo people:** only Joya, Hari, Manas, Rahul and Mansingh (Manas's
-  rule). Student = Manas, employee = Rahul, client = Joya (Northwind
-  Health), recruiter = Hari, account manager / placement lead = Mansingh.
-- **New pages:** `/portal/jobs` (open roles, Apply with a chosen resume,
-  My applications, onboarding checklist once there's an offer),
-  `/portal/interviews` (upcoming interviews only; see below), `/portal/resume` (versions, default for
-  applying, recruiter feedback, checklist). Other account types opening
-  these see a "student corner" note.
-- **Interviews** (Manas 2026-10-11): one card per upcoming interview, with
-  a calendar-style date block, company, role, round, then labelled rows
-  (date and time, format, who you'll meet), the meeting link, and a prep
-  tip. The link is shared 1 day before: until then a dashed "Link will be
-  updated soon, shared on <date>" box; after, the link with Copy and Join.
-  Demo: Vertex Retail (tomorrow, link ready) and Northwind Health (in 3
-  days, link pending). No mock interviews or practice questions anywhere.
-- **Calendar / Schedule** (`SchedulePage`, Manas 2026-10-11): two views,
-  remembered per browser. *Calendar*: a month grid (Sunday first, Today and
-  prev / next month); each day box lists its items (time on one line, title
-  on up to two), phones show coloured dots instead; picking a day shows it
-  in full below (beside on very wide screens). *List*: upcoming items
-  grouped by day ("Today", "Tomorrow", weekday), each with time, a colour
-  bar, title, type and who; "Show earlier" reveals past ones. Colours:
-  Interview orange, Call cyan, Meeting navy, Deadline red. Events carry a
-  real date (`CalEvent`, YYYY-MM-DD); the demo's "today" is `demoToday`
-  (Oct 11, 2026) so the data reads right. Date helpers: `lib/dates.ts`.
-- **Resume corner** (`ResumePage`, Manas 2026-10-11): one card per resume
-  with what it's for, when it was updated, its status in words (Reviewed:
-  ready to send · Needs changes: see the feedback · Draft: not reviewed
-  yet), its feedback count, Make default and Download. The default resume
-  (sent when applying) has an orange banner. Each recruiter note says which
-  resume it's about ("About Cloud Engineer v3", with that resume's status);
-  notes filter by resume, and a card's "N feedback notes" jumps to its own.
-  Data: `resumeFeedback[].resumeId`.
-- **Projects: Add from GitHub** (`GithubImport`, Manas 2026-10-11): a
-  button opens a form: repo link (checked as you type; github.com/owner/repo,
-  with or without https, .git or a sub-path), name (filled from the repo,
-  editable), what it does and tools used (optional). The project is added
-  at the top as "In review", with Open on GitHub and Remove, and kept in
-  the demo session (`addedProjects`). Every project shows its repo. Front
-  end only: nothing is fetched from GitHub. Reading the repo's description
-  and languages (or an AI summary) needs the backend.
-- **Student versions of shared pages:** dashboard (`StudentHome`),
-  projects = practice projects / portfolio, messages = recruiter, placement
-  lead and support, calendar (`/portal/schedule`), documents with expiry
-  warnings, help (`/portal/support`) with "your people".
-- **Job cards** (`JobCard`, Manas 2026-10-11): line 1 the role with its
-  type (Permanent / Contract / Part-time) and work style (Remote / Hybrid /
-  On-site); line 2 company and place; then skills, a 2-line brief, and
-  Apply at the bottom right. The rest of the card links to the job's page.
-  One "Filter" dropdown (`JobFilters`) with two tick lists, Job type and
-  Work style; nothing ticked in a list means any.
-- **Job page** `/portal/jobs/[id]` (`JobDetail`): the full JD (about the
-  role, what you'll do, must-have / nice-to-have, skills, interview
-  process as steps only with no people's names, e.g. "Recruiter screen",
-  "Technical assessment", "Technical interview 1", about the company), key facts (pay, term, work style, start,
-  openings), the recruiter with an "Ask" link, and an Apply bar stuck to
-  the bottom right. Apply (pick a resume) is one shared popup
-  (`useApply`).
-- **Front end only for now** (Manas): nothing is sent to a server, except
-  Placement Details (below). The rest of the backend gets its own
-  conversation before it's built.
+  recordings or trainers anywhere in the portal.
+- **Demo people:** only Joya, Hari, Manas, Rahul and Mansingh. Student =
+  Manas (both demo students), employee = Rahul, client = Joya (Northwind
+  Health), recruiter = Hari, placement lead = Mansingh.
+- **Jobs** (read only): posted by admins on the employee/admin side. Each
+  card: title, company, location, job type and work style, skills, brief,
+  and a status badge for the student's resume: Not Submitted, Resume
+  Submitted, Under Review, Interview Scheduled, Placed, Rejected (hover for
+  what it means; a "What do the statuses mean?" list under the banner
+  "PixelIT's recruiters submit your resume to matching openings. Check here
+  for progress."). Search and one Filter dropdown (job type, work style).
+  The job page (`/portal/jobs/[id]`) shows the full JD and the same status;
+  no Apply anywhere.
+- **Interviews:** upcoming cards (date block, company, role, round, time,
+  format, who, meeting link shared 1 day before, prep tip), a Past list,
+  and Email reminders switches (when scheduled, 24 h before, 1 h before),
+  saved in the session. Emails themselves need the backend.
+- **Calendar** (`SchedulePage` with the student-only `availability` prop,
+  via `StudentCalendar`): PixelIT calls, interviews and prep calls in a
+  month grid or list, plus **Availability**: the student adds "I'm
+  available" slots (date, from, to, optional time zone; no overlaps). Slots
+  are dashed green on the grid and in the lists, so they never look like a
+  booking, and are listed in a side panel that says recruiters can see
+  them. Employees and clients see the calendar exactly as before.
+- **Messages:** front-end placeholder. In-house vs third-party messaging is
+  pending a cost / effort decision (TODO in the route and component).
+- **Resume corner:** one resume with versions (PDF or .docx, up to 5 MB,
+  checked on the client). The latest version has a status: Pending Review,
+  Needs Changes, Approved; a new upload goes on top and resets it to Pending
+  Review. Recruiter feedback (author, role, date, which version) is read
+  only; replies go through Messages. Version history and a private
+  "Before you upload" checklist.
+- **Documents** (`StudentDocuments`, separate from the employee/client
+  `DocumentsPage`): only Resume, Driver's License or State ID, Passport
+  copy and Visa copy; "I don't have a Driver's License or State ID" swaps
+  that row for a Utility bill. PDF, JPG or PNG up to 5 MB, checked on the
+  client. A "From PixelIT" tab lists what PixelIT sent (offer letters,
+  forms).
+- **Profile:** the account form plus Placement Details (below).
+- **Timesheets** (placed only): current client and hourly rate (read only,
+  set by PixelIT), then one submission per month: month, total hours,
+  leave days (a note is required when leave > 0) and the client-approved
+  timesheet as ONE PDF (images, several files and renamed non-PDFs are
+  refused with a clear message; the first bytes must be "%PDF-"). History
+  with status: Submitted, Under Verification, Approved, Invoiced, Paid.
+  Students never make or edit invoices: accounts generates them from
+  approved hours × rate (TODO, backend).
+- **Help:** your people (recruiter, placement lead, accounts) with emails,
+  phone and office address, "Office open / closed now" (Mon–Fri 9am–6pm
+  ET), common questions, and "Raise a ticket" (subject, description); a
+  note says the recruiter and admin team see tickets.
+- **Notifications** (bell): interview scheduled, resume feedback received,
+  resume status changed, timesheet status changed (placed only). Each opens
+  its page. In the portal only for now; email delivery comes later.
+- **Front end only** except Placement Details (below): everything else is
+  demo data in this browser until its backend is built (Node.js, in
+  `apps/backend`).
 - **Placement Details** (student Profile page, 2026-10-13): the skill
   matrix recruiters need before marketing a profile, under "Please provide
   the following details and attach your updated resume, Driver's License
@@ -823,12 +827,10 @@ picks the page version (student / other). Data: `content/student-demo.ts`.
   comment), Approved; fields lock outside Draft / Needs update. This one
   section talks to the real API in `apps/backend` (see its README) at
   `NEXT_PUBLIC_PORTAL_API_URL` (default http://localhost:4000), using a
-  dev-only token for the demo email until Cognito lands. Rules live in
-  `components/portal/dashboard/student/placement/fields.ts`, mirrored from
-  `apps/backend/src/validation/profile.ts`.
-- Applications, onboarding steps and the default resume are kept in the
-  demo session. The offer's onboarding checklist is where the live portal
-  would later switch the account from Student to Employee.
+  dev-only token for the demo email until Cognito lands. The API encrypts
+  the three sensitive fields at rest (AES-256-GCM) and never logs them.
+  Rules live in `components/portal/dashboard/student/placement/fields.ts`,
+  mirrored from `apps/backend/src/validation/profile.ts`.
 
 ## Content
 

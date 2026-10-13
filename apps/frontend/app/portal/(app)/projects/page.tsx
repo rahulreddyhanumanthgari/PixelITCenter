@@ -1,10 +1,9 @@
 import type { Metadata } from "next";
-import { ForType } from "@/components/portal/dashboard/ForType";
 import { ProjectsPage } from "@/components/portal/dashboard/ProjectsPage";
-import { StudentProjects } from "@/components/portal/dashboard/student/StudentProjects";
 
 export const metadata: Metadata = { title: "Projects · Portal" };
 
+// Employees and clients only. Students have no Projects page (the shell keeps them out).
 export default function Page() {
-  return <ForType student={<StudentProjects />} other={<ProjectsPage />} />;
+  return <ProjectsPage />;
 }

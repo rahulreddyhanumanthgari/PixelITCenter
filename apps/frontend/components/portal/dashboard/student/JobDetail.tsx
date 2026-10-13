@@ -4,10 +4,9 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import { ArrowLeft, Briefcase, Building2, CalendarDays, Check, Clock, DollarSign, MapPin, MessageSquare, Users } from "lucide-react";
 import type { Job } from "@/content/student-demo";
-import { applicationsOf, useSession } from "../session";
-import { Avatar, Chip, useToast } from "../ui";
-import { useApply } from "./ApplyDialog";
-import { JobChips } from "./JobCard";
+import { jobStatusesOf, useSession } from "../session";
+import { Avatar } from "../ui";
+import { JobChips, statusHelp, SubmissionBadge } from "./JobCard";
 
 function Block({ title, children }: { title: string; children: ReactNode }) {
   return (
@@ -38,14 +37,13 @@ function Bullets({ items, tick = false }: { items: string[]; tick?: boolean }) {
 /**
  * One job's full JD: the role, what you'd do, what you need, how the
  * interviews go, the company, and the key facts (pay, term, start,
- * recruiter). Apply sits at the bottom right and stays in view.
+ * recruiter), and where PixelIT is with the student's resume. Read only:
+ * students don't apply, their recruiter submits the resume.
  */
 export function JobDetail({ job }: { job: Job }) {
   const session = useSession();
-  const [toast, showToast] = useToast({ raised: true });
-  const apply = useApply(showToast);
   if (!session) return null;
-  const stage = applicationsOf(session)[job.id];
+  const status = jobStatusesOf(session)[job.id] ?? "Not Submitted";
 
   const facts = [
     { icon: DollarSign, label: "Pay", value: job.pay },
@@ -120,6 +118,15 @@ export function JobDetail({ job }: { job: Job }) {
         </div>
 
         <aside className="min-w-0 space-y-4 lg:sticky lg:top-24 lg:self-start">
+          <section className="dash-card dash-card-pad" aria-labelledby="status-heading">
+            <h2 id="status-heading" className="dash-section-title">
+              Your resume for this role
+            </h2>
+            <p className="mt-3">
+              <SubmissionBadge status={status} />
+            </p>
+            <p className="mt-2 text-sm text-[var(--dash-muted)]">{statusHelp(status)}</p>
+          </section>
           <section className="dash-card dash-card-pad" aria-labelledby="facts-heading">
             <h2 id="facts-heading" className="dash-section-title">
               Key facts
@@ -147,31 +154,6 @@ export function JobDetail({ job }: { job: Job }) {
         </aside>
       </div>
 
-      {/* Apply: bottom right, always in view. */}
-      <div className="sticky bottom-4 z-20">
-        <div className="dash-card flex flex-wrap items-center justify-between gap-3 px-4 py-3 shadow-[0_16px_40px_-18px_rgb(4_19_39/0.45)] sm:px-5">
-          <p className="min-w-0 text-sm">
-            <span className="block truncate font-semibold">{job.title}</span>
-            <span className="block truncate text-xs text-[var(--dash-muted)]">
-              {job.company} · {job.pay}
-            </span>
-          </p>
-          {stage ? (
-            <span className="ml-auto flex items-center gap-2">
-              <Chip>{stage}</Chip>
-              <Link href="/portal/jobs?tab=mine" className="dash-btn-ghost">
-                View application
-              </Link>
-            </span>
-          ) : (
-            <button type="button" className="dash-btn ml-auto" data-tone="orange" onClick={() => apply.open(job)}>
-              Apply now
-            </button>
-          )}
-        </div>
-      </div>
-      {apply.dialog}
-      {toast}
     </div>
   );
 }

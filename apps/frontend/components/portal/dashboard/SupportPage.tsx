@@ -1,12 +1,21 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronDown, Mail, MapPin, Phone } from "lucide-react";
+import { ChevronDown, Clock, Mail, MapPin, Phone } from "lucide-react";
 import { site } from "@/content/site";
 import { faqs as defaultFaqs, tickets as starter } from "@/content/portal-demo";
 import { Avatar, Chip, PageHeader, useToast } from "./ui";
 
 type Person = { name: string; role: string; email: string };
+type OfficeHours = { open: number; close: number; label: string };
+
+/** Open now? Office hours are Eastern Time, Monday to Friday. */
+function officeOpen({ open, close }: OfficeHours, now = new Date()) {
+  const parts = new Intl.DateTimeFormat("en-US", { timeZone: "America/New_York", weekday: "short", hour: "numeric", hourCycle: "h23" }).formatToParts(now);
+  const day = parts.find((x) => x.type === "weekday")?.value ?? "";
+  const hour = Number(parts.find((x) => x.type === "hour")?.value ?? -1);
+  return !["Sat", "Sun"].includes(day) && hour >= open && hour < close;
+}
 
 /**
  * Contact details, common questions and support tickets. Students see it as
@@ -16,10 +25,20 @@ export function SupportPage({
   title = "Support",
   faqs = defaultFaqs,
   people,
+  hours,
+  ticketsNote,
+  detailLabel = "Details",
+  ticketTitle = "Open a ticket",
 }: {
   title?: string;
   faqs?: { q: string; a: string }[];
   people?: Person[];
+  /** Shows whether the office is open now (students' Help). */
+  hours?: OfficeHours;
+  /** A line under the ticket form, e.g. who sees tickets. */
+  ticketsNote?: string;
+  detailLabel?: string;
+  ticketTitle?: string;
 }) {
   const [tickets, setTickets] = useState(starter);
   const [subject, setSubject] = useState("");
@@ -31,6 +50,7 @@ export function SupportPage({
     { icon: Phone, label: "Phone", value: site.contact.phone, href: `tel:${site.contact.phone.replace(/[^+\d]/g, "")}` },
     { icon: MapPin, label: "Office", value: site.contact.location },
   ];
+  const isOpen = hours ? officeOpen(hours) : false;
 
   return (
     <div className="space-y-6">
@@ -56,6 +76,18 @@ export function SupportPage({
             ))}
           </ul>
         </section>
+      )}
+
+      {hours && (
+        <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm" role="status">
+          <Clock className="size-4 text-[var(--dash-muted)]" aria-hidden="true" />
+          <span className="dash-chip" data-tone={isOpen ? "good" : undefined}>
+            {isOpen ? "Office open now" : "Office closed now"}
+          </span>
+          <span className="text-[var(--dash-muted)]">
+            {hours.label}. {isOpen ? "Expect a reply today." : "Raise a ticket and we reply when we open."}
+          </span>
+        </p>
       )}
 
       <ul className="grid gap-3 md:grid-cols-3">
@@ -98,7 +130,7 @@ export function SupportPage({
 
         <section aria-labelledby="ticket-heading" className="dash-card dash-card-pad min-w-0">
           <h2 id="ticket-heading" className="dash-section-title">
-            Open a ticket
+            {ticketTitle}
           </h2>
           <form
             className="mt-4 space-y-3"
@@ -120,13 +152,14 @@ export function SupportPage({
             </div>
             <div>
               <label htmlFor="t-detail" className="dash-label">
-                Details
+                {detailLabel}
               </label>
               <textarea id="t-detail" value={detail} onChange={(e) => setDetail(e.target.value)} className="dash-input" placeholder="Anything that helps us sort it quickly." />
             </div>
             <button type="submit" className="dash-btn" disabled={!subject.trim()}>
               Send ticket
             </button>
+            {ticketsNote && <p className="text-xs text-[var(--dash-muted)]">{ticketsNote}</p>}
           </form>
 
           <h3 className="mt-6 text-sm font-semibold">Your tickets</h3>

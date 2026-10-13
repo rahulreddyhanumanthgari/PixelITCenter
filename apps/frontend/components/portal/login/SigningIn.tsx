@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Check, LoaderCircle } from "lucide-react";
 import { accountTypes, demoDirectory } from "@/content/portal-demo";
+import { homeFor } from "@/components/portal/dashboard/nav";
 import { demoSignIn, demoSignUp } from "@/components/portal/dashboard/session";
 
 export type SignInRequest = {
@@ -45,8 +46,8 @@ export function SigningIn({ request }: { request: SignInRequest }) {
       demoSignUp(request.name, request.email, request.method);
       router.push("/portal/onboarding");
     } else {
-      demoSignIn(request.email, request.method);
-      router.push("/portal/dashboard");
+      const profile = demoSignIn(request.email, request.method);
+      router.push(homeFor(profile.accountType));
     }
   }, [step, steps.length, signup, request, router]);
 
