@@ -21,6 +21,11 @@ npm run dev          # http://localhost:3000
 | `npm run build` | Production build |
 | `npm start` | Serve the production build |
 
+The student Profile page's **Placement details** section needs the portal API
+(`apps/backend`, see its README). Point the site at it with
+`NEXT_PUBLIC_PORTAL_API_URL` (default `http://localhost:4000`); without it, that
+section shows "Can't reach the placement service" and the rest of the site works.
+
 Don't run `npm run dev` and `npm run build` at the same time: they share
 `.next/`. For a test build next to a running dev server, use
 `NEXT_DIST_DIR=.next-test npm run build`.

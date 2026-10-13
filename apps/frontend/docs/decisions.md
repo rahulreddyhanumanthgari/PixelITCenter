@@ -806,8 +806,26 @@ picks the page version (student / other). Data: `content/student-demo.ts`.
   openings), the recruiter with an "Ask" link, and an Apply bar stuck to
   the bottom right. Apply (pick a resume) is one shared popup
   (`useApply`).
-- **Front end only for now** (Manas): nothing is sent to a server.
-  The backend gets its own conversation before it's built.
+- **Front end only for now** (Manas): nothing is sent to a server, except
+  Placement Details (below). The rest of the backend gets its own
+  conversation before it's built.
+- **Placement Details** (student Profile page, 2026-10-13): the skill
+  matrix recruiters need before marketing a profile, under "Please provide
+  the following details and attach your updated resume, Driver's License
+  (DL), and Visa copy to proceed." Five steps (Personal & professional,
+  Education, Interview logistics, References, Attachments) with done
+  counts, a completion bar, Save draft and Submit in a bar stuck to the
+  bottom. Submit is enabled only when every required field and all three
+  files are in; "Show what's missing" marks the gaps. Passport, SSN last
+  four and date of birth are password-style inputs with a show / hide eye;
+  once saved they come back only masked ("Saved: •••••567"). Status chip:
+  Draft, Submitted, Under review, Needs update (with the recruiter's
+  comment), Approved; fields lock outside Draft / Needs update. This one
+  section talks to the real API in `apps/backend` (see its README) at
+  `NEXT_PUBLIC_PORTAL_API_URL` (default http://localhost:4000), using a
+  dev-only token for the demo email until Cognito lands. Rules live in
+  `components/portal/dashboard/student/placement/fields.ts`, mirrored from
+  `apps/backend/src/validation/profile.ts`.
 - Applications, onboarding steps and the default resume are kept in the
   demo session. The offer's onboarding checklist is where the live portal
   would later switch the account from Student to Employee.
