@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { portal } from "@/content/site";
-import { Logo } from "@/themes/core/components/layout/Logo";
-import { PortalLoginForm } from "@/themes/core/components/portal/PortalLoginForm";
+import { Logo } from "@/components/site/layout/Logo";
+import { PortalLoginForm } from "@/components/portal/login/PortalLoginForm";
 
 // Portal Login, for now a page on the public site. It moves to
 // portal.pixelitcenter.com later (see site.portalUrl).
