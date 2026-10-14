@@ -732,6 +732,38 @@ will be, before the real one is built per account type.
 - To make it real: replace `session.ts` with Cognito + a profile lookup,
   and split `nav.ts` / the pages per account type.
 
+### Client section, admin only (2026-10-14, branch feature/client-dashboard)
+
+From the senior stakeholder's feedback: **clients never sign in.** They use their
+own VMS portals or email, so the "Client" account type, client sign-up, the
+client dashboard and the client-facing Projects, Tasks, Schedule and Billing
+pages are gone. The client section is an internal tool for PixelIT staff.
+(Earlier notes above that mention a client account or those pages are history.)
+
+- **Staff roles** on employee accounts (`staffRole` in the demo session,
+  `staffRoles` in `content/portal-demo.ts`): admin (Mansingh), accounts
+  (the "Accounts" team login), verifier (Joya), recruiter (Hari). Demo
+  emails: `admin@`, `accounts@`, `verifier@`, `recruiter@pixelitcenter.com`.
+  `employee@` (Rahul) has no staff role and sees no client section.
+- **Pages** under `/portal/admin/` (`components/portal/dashboard/admin/`),
+  in the menu group "Client section", filtered by role in `nav.ts`
+  (`clientSectionPages`): Clients (admin, accounts), Placements (all staff;
+  rates only for admin and accounts), Timesheets (admin, verifier, accounts),
+  Billing & invoices (admin, accounts). The shell shows "This page is for
+  PixelIT staff with access" to anyone else. **The API enforces the same
+  rules on every request**; the UI only follows them.
+- **Dashboard** for staff: a work queue from `GET /api/admin/overview`
+  (`admin/StaffQueue.tsx`); other employees keep recent activity.
+- Forms and details open in a side panel (`Panel`, a native `<dialog>`;
+  full screen on phones). Tables scroll inside their card, never the page.
+- These pages talk to the real API (`apps/backend`, see its README) with a
+  dev token for the demo email + staff role, kept in sessionStorage so page
+  reloads don't hit the dev endpoint's rate limit. No demo data in the
+  browser: run `npm run db:seed` in `apps/backend`.
+- Messages stays for staff (they talk to students there); only the client
+  conversation was removed. Schedule is now student-only (the Calendar).
+- Old sessions saved with the client type are signed out on load.
+
 ### Student corner (reworked 2026-10-13)
 
 PixelIT is a staffing firm: students don't apply to jobs. PixelIT's

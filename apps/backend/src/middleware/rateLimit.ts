@@ -13,5 +13,7 @@ const limiter = (limit: number, minutes: number) =>
 export const apiLimiter = () => limiter(300, 15);
 /** Uploads are heavier: fewer per window. */
 export const uploadLimiter = () => limiter(30, 15);
+/** Anything that sends email (invoices, reminders): a slip of the finger can't spam a client. */
+export const sendLimiter = () => limiter(30, 15);
 /** Dev sign-in tokens. */
 export const tokenLimiter = () => limiter(30, 15);

@@ -5,7 +5,7 @@ import { useSession } from "./session";
 
 /**
  * Shows the student version of a page to student accounts and the universal
- * one to everyone else. Employee and client versions slot in here later.
+ * one to everyone else (employees).
  */
 export function ForType({ student, other }: { student: ReactNode; other: ReactNode }) {
   const session = useSession();

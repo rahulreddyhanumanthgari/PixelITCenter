@@ -12,12 +12,45 @@ import { apiLimiter } from "./middleware/rateLimit.js";
 import { requestLog } from "./middleware/requestLog.js";
 import { apiRoutes } from "./routes/index.js";
 import { createProfileService } from "./services/profileService.js";
+import { createClientSection } from "./services/clientSection/index.js";
+import { createMailer, type Mailer } from "./lib/mailer.js";
+import type { FileReader } from "./controllers/files.js";
 
-export function createApp(env: Env, db: Db, overrides: { store?: FileStore; scan?: VirusScanner } = {}) {
+type Overrides = { store?: FileStore; scan?: VirusScanner; mailer?: Mailer; now?: () => Date };
+
+/** The services, shared by the HTTP app, the scheduled jobs and the seed script. */
+export function createServices(env: Env, db: Db, overrides: Overrides = {}) {
   const cipher = createFieldCipher({ [env.PII_ENCRYPTION_KEY_ID]: env.piiKey }, env.PII_ENCRYPTION_KEY_ID);
   const signer = createFileSigner(env.FILE_URL_SECRET, env.FILE_URL_TTL_SECONDS);
   const store = overrides.store ?? createLocalStore(env.storageDir);
-  const service = createProfileService({ db, cipher, store, signer, scan: overrides.scan ?? skipScan });
+  const scan = overrides.scan ?? skipScan;
+  const profile = createProfileService({ db, cipher, store, signer, scan });
+  const clientSection = createClientSection({
+    db,
+    store,
+    signer,
+    scan,
+    mailer: overrides.mailer ?? createMailer(env.mail),
+    company: env.company,
+    timeZone: env.JOBS_TIMEZONE,
+    portalUrl: env.PORTAL_URL.replace(/\/$/, ""),
+    mail: { maxAttempts: env.MAIL_MAX_ATTEMPTS, retryDelayMs: env.MAIL_RETRY_DELAY_MS },
+    now: overrides.now,
+  });
+  /** Signed links can point at a profile document or a client-section file. */
+  const readFile: FileReader = async (id) => {
+    try {
+      return await profile.readDocument(id);
+    } catch (e) {
+      if (e instanceof HttpError && e.status === 404) return clientSection.readFile(id);
+      throw e;
+    }
+  };
+  return { signer, profile, clientSection, readFile };
+}
+
+export function createApp(env: Env, db: Db, overrides: Overrides = {}, services = createServices(env, db, overrides)) {
+  const { signer, profile: service, clientSection, readFile } = services;
 
   const app = express();
   app.disable("x-powered-by");
@@ -42,7 +75,7 @@ export function createApp(env: Env, db: Db, overrides: { store?: FileStore; scan
   app.use(
     "/api",
     apiLimiter(),
-    apiRoutes(service, signer, {
+    apiRoutes(service, clientSection, signer, readFile, {
       auth: { secret: env.JWT_SECRET, issuer: env.JWT_ISSUER, audience: env.JWT_AUDIENCE },
       maxUploadBytes: env.maxUploadBytes,
       devAuth: env.DEV_AUTH_ENABLED && !env.isProduction,

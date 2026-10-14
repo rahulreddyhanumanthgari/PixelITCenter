@@ -3,9 +3,11 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import jwt from "jsonwebtoken";
 import { inject } from "vitest";
-import { createApp } from "../src/app.js";
+import { createApp, createServices } from "../src/app.js";
 import { loadEnv } from "../src/config/env.js";
+import type { Mail } from "../src/lib/mailer.js";
 import { createDb } from "../src/lib/prisma.js";
+import type { Role } from "../src/lib/roles.js";
 
 export const JWT_SECRET = "test-secret-test-secret-test-secret-123";
 
@@ -22,14 +24,33 @@ export function testEnv(overrides: Record<string, string> = {}) {
   });
 }
 
-export function makeApp(overrides: Record<string, string> = {}) {
+export function makeApp(overrides: Record<string, string> = {}, appOverrides: Parameters<typeof createServices>[2] = {}) {
   const env = testEnv(overrides);
   const db = createDb(env.DATABASE_URL, 1);
-  return { env, db, app: createApp(env, db) };
+  const services = createServices(env, db, appOverrides);
+  return { env, db, services, app: createApp(env, db, appOverrides, services) };
 }
 
-export function tokenFor(sub: string, role: "student" | "recruiter" | "admin" = "student", email = `${sub}@example.com`) {
+export function tokenFor(sub: string, role: Role = "student", email = `${sub}@example.com`) {
   return jwt.sign({ role, email }, JWT_SECRET, { algorithm: "HS256", subject: sub, expiresIn: "1h" });
+}
+
+/** A mailer that records what it would send, and can be told to fail. */
+export function fakeMailer() {
+  const sent: Mail[] = [];
+  let failing = false;
+  return {
+    provider: "fake",
+    sent,
+    fail(on: boolean) {
+      failing = on;
+    },
+    async send(mail: Mail) {
+      if (failing) throw Object.assign(new Error("connection refused by smtp.example.com"), { name: "SMTPError", code: "ECONNECTION" });
+      sent.push(mail);
+      return { messageId: `fake-${sent.length}` };
+    },
+  };
 }
 
 // Smallest files that pass the signature check.

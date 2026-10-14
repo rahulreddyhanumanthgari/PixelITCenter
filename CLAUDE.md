@@ -20,7 +20,7 @@ Workflow: `docs/workflow.md`. Frontend details: `apps/frontend/README.md` and `a
 |---|---|
 | `app/` | Routes only: layouts and pages that render components. No logic or styles. |
 | `components/site/` | The public website: `Home.tsx`, `layout/`, `hero/`, `sections/`, `ui/`. |
-| `components/portal/` | The portal: `login/`, `dashboard/` (shell, pages, demo session), `dashboard/student/`. |
+| `components/portal/` | The portal: `login/`, `dashboard/` (shell, pages, demo session), `dashboard/student/`, `dashboard/admin/` (client section, staff only). |
 | `animations/` | Anything that moves: `particles/` (scene, shaders, shapes), `journey/`, `story/`, `scroll/`, `gsap.ts`. |
 | `content/` | Copy and demo data, no JSX. |
 | `styles/` | CSS and fonts. |

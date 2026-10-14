@@ -600,7 +600,57 @@ select.dash-input {
   }
 }
 
+/* Side panel for forms and details (admin pages): a <dialog> that slides in
+   from the right; full screen on phones. */
+.dash-panel {
+  position: fixed;
+  inset: 0 0 0 auto;
+  width: min(38rem, 100vw);
+  max-width: 100vw;
+  height: 100dvh;
+  max-height: 100dvh;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: #ffffff;
+  color: var(--dash-ink);
+  box-shadow: -24px 0 60px -30px rgb(4 19 39 / 0.45);
+}
+.dash-panel[open] {
+  display: flex;
+  flex-direction: column;
+  animation: dash-panel-in 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.dash-panel::backdrop {
+  background: rgb(4 19 39 / 0.35);
+}
+@keyframes dash-panel-in {
+  from {
+    transform: translateX(2rem);
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .dash-panel[open] {
+    animation: none;
+  }
+}
+/* A table row that opens a panel. */
+.dash-table tr[data-clickable] {
+  cursor: pointer;
+}
+.dash-table tr[data-clickable]:hover td {
+  background: var(--dash-hover);
+}
+.dash-table tr[data-flag="bad"] td:first-child {
+  box-shadow: inset 3px 0 0 #dc2626;
+}
+
 .dash-app :focus-visible {
+  outline: 2px solid var(--dash-orange);
+  outline-offset: 2px;
+}
+.dash-panel :focus-visible {
   outline: 2px solid var(--dash-orange);
   outline-offset: 2px;
 }

@@ -72,7 +72,7 @@ function ProfileForm({ saved }: { saved: Profile }) {
         {dirty && <p className="text-xs font-semibold text-[var(--dash-orange-ink)]">Unsaved changes</p>}
       </div>
 
-      <Section title="Account type" body="Are you a student, an employee or a client? The live portal reads this from your account.">
+      <Section title="Account type" body="Are you a student or an employee? The live portal reads this from your account.">
         <AccountTypePicker value={draft.accountType} onChange={(accountType) => edit({ accountType })} />
       </Section>
 

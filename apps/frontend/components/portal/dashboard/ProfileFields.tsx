@@ -1,19 +1,17 @@
 "use client";
 
 import { useState, type ReactNode } from "react";
-import { BriefcaseBusiness, Building2, Check, GraduationCap, X } from "lucide-react";
+import { BriefcaseBusiness, Check, GraduationCap, X } from "lucide-react";
 import { accountTypes, type AccountType } from "@/content/portal-demo";
 import type { Profile } from "./session";
 
 // Profile form pieces, shared by the Profile page and the sign-up
 // onboarding: the account type cards, the fields for each type, skills.
 
-const TYPE_ICONS = { student: GraduationCap, employee: BriefcaseBusiness, client: Building2 };
+const TYPE_ICONS = { student: GraduationCap, employee: BriefcaseBusiness };
 
 export const targetRoles = ["Cloud Engineer", "DevOps Engineer", "Data Engineer", "QA Automation Engineer", "Security Analyst"];
 export const departments = ["Technology Services", "Talent & Staffing", "Sales", "Finance", "Operations"];
-export const industries = ["Healthcare", "Finance", "Retail", "Logistics", "Technology", "Manufacturing", "Other"];
-export const companySizes = ["1–50", "51–200", "201–1,000", "1,000–5,000", "5,000+"];
 
 export function Field({
   id,
@@ -104,10 +102,10 @@ function SelectField({
   );
 }
 
-/** Student / Employee / Client, as three cards (a radio group). */
+/** Student / Employee, as two cards (a radio group). Clients never sign in. */
 export function AccountTypePicker({ value, onChange }: { value: AccountType | null; onChange: (t: AccountType) => void }) {
   return (
-    <div role="radiogroup" aria-label="Account type" className="grid gap-3 sm:grid-cols-3">
+    <div role="radiogroup" aria-label="Account type" className="grid gap-3 sm:grid-cols-2">
       {accountTypes.map((t) => {
         const Icon = TYPE_ICONS[t.id];
         const on = value === t.id;
@@ -154,14 +152,6 @@ export function RoleFields({ profile, onChange }: { profile: Profile; onChange: 
         <SelectField name="department" label="Department" options={departments} profile={profile} onChange={onChange} />
         <TextField name="employeeId" label="Employee ID" placeholder="PIX-0000" profile={profile} onChange={onChange} />
         <TextField name="manager" label="Manager" placeholder="Who you report to" profile={profile} onChange={onChange} />
-      </div>
-    );
-  if (profile.accountType === "client")
-    return (
-      <div className="grid gap-4 sm:grid-cols-3">
-        <TextField name="company" label="Company" autoComplete="organization" profile={profile} onChange={onChange} />
-        <SelectField name="industry" label="Industry" options={industries} profile={profile} onChange={onChange} />
-        <SelectField name="companySize" label="Company size" options={companySizes} profile={profile} onChange={onChange} />
       </div>
     );
   return <p className="text-sm text-[var(--dash-muted)]">Choose an account type above to see its details.</p>;

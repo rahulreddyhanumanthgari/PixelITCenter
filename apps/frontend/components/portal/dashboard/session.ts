@@ -1,7 +1,7 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
-import { demoDirectory, starterTasks, type AccountType, type Task } from "@/content/portal-demo";
+import { demoDirectory, type AccountType, type StaffRole } from "@/content/portal-demo";
 import {
   defaultReminders,
   jobStatuses,
@@ -44,18 +44,15 @@ export type Profile = {
   department: string;
   employeeId: string;
   manager: string;
-  // Client
-  company: string;
-  industry: string;
-  companySize: string;
 };
 
 export type Session = {
   profile: Profile;
-  tasks: Task[];
   readNotifications: string[];
   method: "password" | "google";
   signedInAt: string;
+  /** Employees: their client-section role. Set by an admin in the live portal. */
+  staffRole?: StaffRole;
   // Student corner. Optional: sessions saved before they existed lack them.
   /** Placed with a client: Timesheets shows. Set by admins in the live portal. */
   isPlaced?: boolean;
@@ -85,12 +82,9 @@ const blankProfile: Profile = {
   department: "",
   employeeId: "",
   manager: "",
-  company: "",
-  industry: "",
-  companySize: "",
 };
 
-// Filled in for the three demo accounts, so their dashboards look lived-in.
+// Filled in for the demo accounts, so their dashboards look lived-in.
 const demoDetails: Record<AccountType, Partial<Profile>> = {
   student: {
     phone: "+1 (919) 555-0142",
@@ -108,13 +102,6 @@ const demoDetails: Record<AccountType, Partial<Profile>> = {
     employeeId: "PIX-0482",
     manager: "Mansingh",
   },
-  client: {
-    phone: "+1 (704) 555-0119",
-    location: "Charlotte, NC",
-    company: "Northwind Health",
-    industry: "Healthcare",
-    companySize: "1,000–5,000",
-  },
 };
 
 /** Which profile fields count towards "profile complete". */
@@ -122,7 +109,6 @@ export function profileFields(p: Profile): (keyof Profile)[] {
   const common: (keyof Profile)[] = ["fullName", "email", "phone", "location", "headline", "bio", "linkedin", "skills", "accountType"];
   if (p.accountType === "student") return [...common, "targetRole", "availability"];
   if (p.accountType === "employee") return [...common, "department", "employeeId", "manager"];
-  if (p.accountType === "client") return [...common, "company", "industry", "companySize"];
   return common;
 }
 
@@ -173,6 +159,8 @@ function read(): Session | null {
   } catch {
     cachedSession = null;
   }
+  // Client accounts no longer exist: a session saved before that is signed out.
+  if ((cachedSession?.profile.accountType as string) === "client") cachedSession = null;
   return cachedSession;
 }
 
@@ -210,7 +198,7 @@ export function demoSignIn(email: string, method: Session["method"] = "password"
   const profile: Profile = known
     ? { ...blankProfile, ...demoDetails[known.accountType], email: known.email, fullName: known.fullName, accountType: known.accountType, headline: known.headline }
     : { ...blankProfile, email: email.trim(), fullName: nameFromEmail(email) };
-  write({ profile, tasks: starterTasks, readNotifications: [], method, signedInAt: new Date().toISOString(), isPlaced: known?.isPlaced });
+  write({ profile, readNotifications: [], method, signedInAt: new Date().toISOString(), isPlaced: known?.isPlaced, staffRole: known?.staffRole });
   return profile;
 }
 
@@ -218,7 +206,6 @@ export function demoSignIn(email: string, method: Session["method"] = "password"
 export function demoSignUp(fullName: string, email: string, method: Session["method"] = "password") {
   write({
     profile: { ...blankProfile, fullName: fullName.trim(), email: email.trim() },
-    tasks: starterTasks,
     readNotifications: [],
     method,
     signedInAt: new Date().toISOString(),
@@ -242,6 +229,9 @@ export function updateProfile(patch: Partial<Profile>) {
 // Each helper stands in for an API call (see content/student-demo.ts).
 
 export const isPlaced = (s: Session) => s.profile.accountType === "student" && Boolean(s.isPlaced);
+
+/** An employee's client-section role, or null (students and other employees). */
+export const staffRoleOf = (s: Session): StaffRole | null => (s.profile.accountType === "employee" ? (s.staffRole ?? null) : null);
 
 /** Where PixelIT is with this student's resume, per job. */
 export const jobStatusesOf = (s: Session) => (isPlaced(s) ? placedJobStatuses : jobStatuses);
@@ -290,8 +280,4 @@ export const timesheetsOf = (s: Session) => s.timesheets ?? starterTimesheets;
 
 export function addTimesheet(t: Timesheet) {
   updateSession((s) => ({ ...s, timesheets: [t, ...timesheetsOf(s)] }));
-}
-
-export function setTasks(change: (tasks: Task[]) => Task[]) {
-  updateSession((s) => ({ ...s, tasks: change(s.tasks) }));
 }
