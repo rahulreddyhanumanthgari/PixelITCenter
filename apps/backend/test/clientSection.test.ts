@@ -156,6 +156,21 @@ describe("placements", () => {
     expect(res.status).toBe(400);
   });
 
+  it("only admins delete a placement, and only one with no timesheets", async () => {
+    const res = await request(app).post("/api/admin/placements").set(as("admin")).send({
+      clientId: ids.client,
+      consultantName: "Typo",
+      consultantEmail: "typo@example.com",
+      role: "Wrong entry",
+      billRate: 10,
+      payRate: 5,
+      startDate: `${twoMonthsAgo}-01`,
+    });
+    expect((await request(app).delete(`/api/admin/placements/${res.body.id}`).set(as("accounts"))).status).toBe(403);
+    expect((await request(app).delete(`/api/admin/placements/${res.body.id}`).set(as("admin"))).status).toBe(204);
+    expect((await request(app).get(`/api/admin/placements/${res.body.id}`).set(as("admin"))).status).toBe(404);
+  });
+
   it("refuses an end date before the start", async () => {
     const res = await request(app).patch(`/api/admin/placements/${ids.placement}`).set(as("admin")).send({ endDate: `${twoMonthsAgo}-01` });
     expect(res.status).toBe(400);
@@ -285,6 +300,14 @@ describe("timesheet workflow", () => {
     expect(detail.body.status).toBe("RECEIVED");
     expect(detail.body.hours).toBe(121);
     expect(detail.body.history.map((h: { to: string }) => h.to)).toEqual(["RECEIVED", "REJECTED", "RECEIVED"]);
+  });
+});
+
+describe("placement with timesheets", () => {
+  it("can't be deleted", async () => {
+    const res = await request(app).delete(`/api/admin/placements/${ids.placement}`).set(as("admin"));
+    expect(res.status).toBe(409);
+    expect(res.body.error).toMatch(/Ended/);
   });
 });
 

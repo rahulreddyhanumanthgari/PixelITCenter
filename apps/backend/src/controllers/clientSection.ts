@@ -71,6 +71,10 @@ export function clientSectionController(s: ClientSection) {
     createPlacement: async (req: Request, res: Response) => {
       res.status(201).json(await s.placements.create(actorOf(req), placementCreateSchema.parse(req.body)));
     },
+    deletePlacement: async (req: Request, res: Response) => {
+      await s.placements.remove(actorOf(req), idOf(req, "Placement"));
+      res.status(204).end();
+    },
     updatePlacement: async (req: Request, res: Response) => {
       res.json(await s.placements.update(actorOf(req), idOf(req, "Placement"), placementUpdateSchema.parse(req.body)));
     },

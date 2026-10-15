@@ -38,6 +38,7 @@ export function clientSectionRoutes(section: ClientSection, { authed, maxUploadB
   a.post("/placements", admin, c.createPlacement);
   a.get("/placements/:id", staff, c.getPlacement);
   a.patch("/placements/:id", admin, c.updatePlacement);
+  a.delete("/placements/:id", admin, c.deletePlacement);
 
   a.get("/timesheets", timesheetStaff, c.listTimesheets);
   a.post("/timesheets/reminders", timesheetStaff, sendLimiter(), c.sendReminders);

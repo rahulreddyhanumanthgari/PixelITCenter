@@ -184,60 +184,78 @@ export function DocumentsWindow({ name, open, onClose }: { name: string; open: b
 }
 
 /**
- * Admins only. Deleting needs the word DELETE typed in capitals, so it can't
- * happen by a slip of the mouse. FRONT END ONLY: see deletedStudents.ts.
+ * A red delete button whose window only lets you go ahead after typing DELETE
+ * in capital letters, so nothing is deleted by a slip of the mouse. Admins only
+ * (the caller decides whether to show it).
  */
-export function DeleteStudentButton({ student, onDeleted }: { student: RegisteredStudent; onDeleted: (message: string) => void }) {
+export function ConfirmDeleteButton({
+  label,
+  title,
+  warning,
+  onConfirm,
+}: {
+  label: string;
+  title: string;
+  warning: ReactNode;
+  /** Throw to keep the window open and show the message. */
+  onConfirm: () => Promise<void> | void;
+}) {
   const [open, setOpen] = useState(false);
   const [typed, setTyped] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [problem, setProblem] = useState<string | null>(null);
   const ready = typed === "DELETE";
   const close = () => {
     setOpen(false);
     setTyped("");
+    setProblem(null);
   };
   return (
     <>
       <button type="button" className="dash-btn" data-tone="danger" onClick={() => setOpen(true)}>
-        <Trash2 className="size-4" aria-hidden="true" /> Delete student
+        <Trash2 className="size-4" aria-hidden="true" /> {label}
       </button>
       <Panel
         center
         open={open}
-        title={`Delete ${student.fullName} (${student.pixelitId})?`}
+        title={title}
         subtitle="Admins only. This can't be undone."
         onClose={close}
         footer={
           <>
-            <button type="button" className="dash-btn-ghost mr-auto" onClick={close}>
+            <button type="button" className="dash-btn-ghost mr-auto" onClick={close} disabled={busy}>
               Cancel
             </button>
-            <button
-              type="submit"
-              form="delete-student"
-              className="dash-btn"
-              data-tone="danger"
-              disabled={!ready}
-            >
-              <Trash2 className="size-4" aria-hidden="true" /> Delete for good
+            <button type="submit" form="confirm-delete" className="dash-btn" data-tone="danger" disabled={!ready || busy}>
+              <Trash2 className="size-4" aria-hidden="true" /> {busy ? "Deleting…" : "Delete for good"}
             </button>
           </>
         }
       >
         <form
-          id="delete-student"
+          id="confirm-delete"
           className="space-y-4"
-          onSubmit={(e) => {
+          onSubmit={async (e) => {
             e.preventDefault();
             if (!ready) return;
-            deleteStudent(student.pixelitId);
-            close();
-            onDeleted(`${student.fullName} (${student.pixelitId}) was deleted.`);
+            setBusy(true);
+            setProblem(null);
+            try {
+              await onConfirm();
+              close();
+            } catch (err) {
+              setProblem(err instanceof Error ? err.message : "Couldn't delete it.");
+            } finally {
+              setBusy(false);
+            }
           }}
         >
-          <p className="rounded-2xl bg-[var(--dash-red-tint)] p-4 text-sm text-[var(--dash-red-ink)]">
-            Their account, profile and documents go away. Check it&apos;s the right person: <strong>{student.fullName}</strong>, {student.pixelitId},{" "}
-            {student.email}.
-          </p>
+          <div className="rounded-2xl bg-[var(--dash-red-tint)] p-4 text-sm text-[var(--dash-red-ink)]">{warning}</div>
+          {problem && (
+            <p role="alert" className="text-sm font-medium text-[var(--dash-red-ink)]">
+              {problem}
+            </p>
+          )}
           <div>
             <label htmlFor="delete-confirm" className="dash-label">
               Type <span className="font-mono font-bold">DELETE</span> to confirm
@@ -259,5 +277,24 @@ export function DeleteStudentButton({ student, onDeleted }: { student: Registere
         </form>
       </Panel>
     </>
+  );
+}
+
+/** Deletes a registered student. FRONT END ONLY: see deletedStudents.ts. */
+export function DeleteStudentButton({ student, onDeleted }: { student: RegisteredStudent; onDeleted: (message: string) => void }) {
+  return (
+    <ConfirmDeleteButton
+      label="Delete student"
+      title={`Delete ${student.fullName} (${student.pixelitId})?`}
+      warning={
+        <>
+          Their account, profile and documents go away. Check it&apos;s the right person: <strong>{student.fullName}</strong>, {student.pixelitId}, {student.email}.
+        </>
+      }
+      onConfirm={() => {
+        deleteStudent(student.pixelitId);
+        onDeleted(`${student.fullName} (${student.pixelitId}) was deleted.`);
+      }}
+    />
   );
 }

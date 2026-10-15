@@ -112,6 +112,22 @@ export function createPlacementsService(ctx: Ctx) {
       return placementView(p, true);
     },
 
+    /**
+     * Admins only (route). Only a placement with no timesheets can be deleted:
+     * once hours are in, it's part of the billing record, so it's ended instead.
+     */
+    async remove(actor: Actor, id: string) {
+      await load(id);
+      await db.$transaction(async (tx) => {
+        const timesheets = await tx.timesheet.count({ where: { placementId: id } });
+        if (timesheets > 0) {
+          throw conflict(`This placement has ${timesheets} timesheet${timesheets === 1 ? "" : "s"}, so it's part of billing and can't be deleted. Set its status to Ended instead.`);
+        }
+        await tx.placement.delete({ where: { id } });
+        await audit(actor, { action: "placement.delete", entityType: "placement", entityId: id }, tx);
+      });
+    },
+
     /** Rate changes apply to invoices raised from now on; raised invoices keep their copy. */
     async update(actor: Actor, id: string, input: PlacementInput) {
       const before = await load(id);

@@ -280,6 +280,7 @@ export const adminApi = {
     call<{ placements: Placement[] }>(who, `/api/admin/placements${query(f)}`),
   createPlacement: (who: Who, input: PlacementInput) => call<Placement>(who, "/api/admin/placements", json("POST", input)),
   updatePlacement: (who: Who, id: string, input: Partial<PlacementInput>) => call<Placement>(who, `/api/admin/placements/${id}`, json("PATCH", input)),
+  deletePlacement: (who: Who, id: string) => call<void>(who, `/api/admin/placements/${id}`, { method: "DELETE" }),
 
   timesheets: (who: Who, f: { month?: string; clientId?: string; status?: TimesheetStatus; consultant?: string } = {}) =>
     call<{ timesheets: TimesheetRow[] }>(who, `/api/admin/timesheets${query(f)}`),

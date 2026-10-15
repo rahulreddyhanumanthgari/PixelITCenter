@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 import { Avatar, Chip, PageHeader, useToast } from "../ui";
 import { adminApi, type Client, type EmploymentType, type ExtensionStatus, type Placement, type PlacementInput, type Who } from "./api";
 import { useDeletedStudents } from "./deletedStudents";
-import { DeleteStudentButton, DocumentsWindow, StudentProfile } from "./StudentProfile";
+import { ConfirmDeleteButton, DeleteStudentButton, DocumentsWindow, StudentProfile } from "./StudentProfile";
 import { can, Choice, date, EMPLOYMENT, Detail, Empty, ErrorNote, Field, fieldErrors, errorText, hours, Loading, Panel, usd, useApi, useWho } from "./ui";
 
 // Placements: who is placed where, at what rates, until when.
@@ -94,6 +94,7 @@ export function PlacementsPage() {
             isAdmin
               ? (message) => {
                   setOpenId(null);
+                  list.reload();
                   showToast(message);
                 }
               : undefined
@@ -256,6 +257,23 @@ function PlacementDetail({
               </button>
             )}
             {onDeleted && student && <DeleteStudentButton student={student} onDeleted={onDeleted} />}
+            {/* Typed in by hand, not linked to a registered student: delete the placement itself. */}
+            {onDeleted && !student && who && (
+              <ConfirmDeleteButton
+                label="Delete placement"
+                title={`Delete ${p.consultantName}'s placement?`}
+                warning={
+                  <>
+                    This removes the placement <strong>{p.consultantName}</strong> ({p.consultantEmail}) as {p.role} at {companyOf(p)}. A placement that already has
+                    timesheets can&apos;t be deleted; set it to Ended instead.
+                  </>
+                }
+                onConfirm={async () => {
+                  await adminApi.deletePlacement(who, p.id);
+                  onDeleted(`${p.consultantName}'s placement was deleted.`);
+                }}
+              />
+            )}
           </div>
         </div>
       </section>

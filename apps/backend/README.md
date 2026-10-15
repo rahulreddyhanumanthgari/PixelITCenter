@@ -170,7 +170,7 @@ All need `Authorization: Bearer <token>`. `admin` is always allowed.
 | GET / PATCH / DELETE | `/api/admin/clients/:id` | read: accounts · write: admin | Get / update / archive (refused while it has active placements). |
 | POST | `/api/admin/clients/:id/send-invoices` | accounts | "Send now" for all of a client's unsent invoices. |
 | GET / POST | `/api/admin/placements` | read: all staff · write: admin | List (`?clientId&status&q`); rates only for admin/accounts. |
-| GET / PATCH | `/api/admin/placements/:id` | read: all staff · write: admin | Get / update. |
+| GET / PATCH / DELETE | `/api/admin/placements/:id` | read: all staff · write: admin | Get / update / delete (only with no timesheets; otherwise set it Ended). |
 | GET | `/api/admin/timesheets` | verifier, accounts | List (`?month&clientId&status&consultant`). |
 | GET | `/api/admin/timesheets/:id` | verifier, accounts | Detail, history, signed PDF link, the moves this user may make. |
 | PATCH | `/api/admin/timesheets/:id` | verifier, accounts | `{ status, comment?, approvedHours? }`. |
