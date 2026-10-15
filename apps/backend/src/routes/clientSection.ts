@@ -57,6 +57,7 @@ export function clientSectionRoutes(section: ClientSection, { authed, maxUploadB
 
   a.get("/reports/billing-summary", finance, c.billingSummary);
   a.get("/audit-log", admin, c.auditLog);
+  a.get("/audit-log/summary", admin, c.auditSummary);
 
   const s = Router();
   s.use(authed, requireRole("student"));

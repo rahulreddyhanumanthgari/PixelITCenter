@@ -363,7 +363,7 @@ describe("payments", () => {
     expect(res.body.consultantPaidAt).toBe(today);
     expect(res.body.payments[0]).toMatchObject({ kind: "CONSULTANT_PAYOUT", amount: 10400, overrideReason: "Client confirmed wire, consultant needs pay today" });
 
-    const audit = await request(app).get(`/api/admin/audit-log?entityType=payment`).set(as("admin"));
+    const audit = await request(app).get(`/api/admin/audit-log?entityType=payment&pageSize=100`).set(as("admin"));
     expect(audit.body.entries.some((e: { action: string; detail: { reason?: string } }) => e.action === "payment.consultant.override" && e.detail.reason)).toBe(true);
     expect((await request(app).get("/api/admin/audit-log").set(as("accounts"))).status).toBe(403);
   });
@@ -386,6 +386,44 @@ describe("payments", () => {
     const inv = await db.invoice.findFirstOrThrow({ where: { sentAt: null } });
     const res = await request(app).post("/api/admin/payments/client").set(as("accounts")).send({ invoiceId: inv.id, status: "received", receivedDate: today });
     expect(res.status).toBe(409);
+  });
+});
+
+describe("activity log", () => {
+  it("filters, sorts and pages on the server", async () => {
+    const all = await request(app).get("/api/admin/audit-log?pageSize=5").set(as("admin"));
+    expect(all.status).toBe(200);
+    expect(all.body.entries).toHaveLength(5);
+    expect(all.body.total).toBeGreaterThan(5);
+    const at = (r: { body: { entries: { at: string }[] } }) => r.body.entries.map((e) => e.at);
+    expect(at(all)).toEqual([...at(all)].sort().reverse());
+
+    const page2 = await request(app).get("/api/admin/audit-log?pageSize=5&page=2").set(as("admin"));
+    expect(page2.body.entries[0].id).not.toBe(all.body.entries[0].id);
+
+    const oldest = await request(app).get("/api/admin/audit-log?pageSize=5&order=oldest").set(as("admin"));
+    expect(at(oldest)).toEqual([...at(oldest)].sort());
+
+    const changes = await request(app).get("/api/admin/audit-log?changesOnly=true&pageSize=100").set(as("admin"));
+    expect(changes.body.entries.some((e: { action: string }) => /\.(view|list)$/.test(e.action))).toBe(false);
+
+    const payments = await request(app).get("/api/admin/audit-log?action=payment.&pageSize=100").set(as("admin"));
+    expect(payments.body.entries.length).toBeGreaterThan(0);
+    expect(payments.body.entries.every((e: { action: string }) => e.action.startsWith("payment."))).toBe(true);
+
+    const byPerson = await request(app).get("/api/admin/audit-log?actor=u-verifier&pageSize=100").set(as("admin"));
+    expect(byPerson.body.entries.every((e: { by: string }) => e.by.includes("u-verifier"))).toBe(true);
+
+    expect((await request(app).get("/api/admin/audit-log?from=2026-12-01&to=2026-01-01").set(as("admin"))).status).toBe(400);
+    expect((await request(app).get("/api/admin/audit-log?entityType=nonsense").set(as("admin"))).status).toBe(400);
+  });
+
+  it("summarises each area for the admin panel, admins only", async () => {
+    const res = await request(app).get("/api/admin/audit-log/summary").set(as("admin"));
+    expect(res.status).toBe(200);
+    expect(res.body.changes.invoice).toBeGreaterThan(0);
+    expect(res.body.people).toContain("u-verifier@example.com");
+    expect((await request(app).get("/api/admin/audit-log/summary").set(as("accounts"))).status).toBe(403);
   });
 });
 

@@ -798,6 +798,24 @@ pages are gone. The client section is an internal tool for PixelIT staff.
   terms pre-fill Add client. The Activity log is the server's real audit log.
   With the backend: team and settings become server tables only admins
   change, and the API takes the role from there, not from the browser.
+- **Admin panel, round 2 (2026-10-15):** the sidebar card shows an
+  "Admin" badge for admins and "Employee" for everyone else; the Admin menu
+  group sits last, after Settings. Admin panel tabs: Analytics (first),
+  Team & access, Portal settings, Activity log.
+  - **Analytics:** stat tiles with change vs last month (new registrations,
+    students placed, new clients, active placements, billed, overdue), four
+    6-month column charts (registrations vs placements, billed vs received,
+    new clients, expected margin), plus where students are and the work
+    queues. Plain SVG (`admin/charts.tsx`), no chart library; colours are
+    slots 1–2 of the dataviz reference palette (validated on white); every
+    chart has a hover/focus tooltip and a "Show table" view. Clients,
+    placements, billing and queues are live; registrations come from the demo
+    student list.
+  - **Activity log:** area cards (Everything, Clients, Placements,
+    Timesheets, Invoices, Payments, Reports) with counts, each opening a
+    panel with person, action, date range, newest/oldest, changes-only and
+    25/50/100 per page. Filtering, sorting and paging run on the server
+    (`GET /api/admin/audit-log` + `/audit-log/summary`), so it scales.
 - **Deleting a student (2026-10-15, front end only):** admins only. "Delete
   student" on an open student in Talent and in Placements; the confirm window
   needs DELETE typed in capitals before "Delete for good" works. Demo: the

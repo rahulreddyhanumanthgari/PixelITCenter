@@ -20,9 +20,9 @@ import { can, date, Detail, EMPLOYMENT, ErrorNote, useApi, useWho } from "./ui";
 // FRONT END ONLY: students come from the demo list (content/registered-students.ts);
 // placed / on bench comes from the real placements where the email matches.
 
-type Status = "PLACED" | "UNPLACED" | "BENCH";
+export type Status = "PLACED" | "UNPLACED" | "BENCH";
 
-const STATUS_LABEL: Record<Status, string> = {
+export const STATUS_LABEL: Record<Status, string> = {
   PLACED: "Placed",
   UNPLACED: "Unplaced",
   BENCH: "On bench",
@@ -41,7 +41,7 @@ const STATUS_TONE: Record<Status, "good" | "warn" | "ink"> = {
 type Person = RegisteredStudent & { status: Status; placement?: Placement };
 
 /** Placed if a placement is still running; on bench if one ended (or marked so); else unplaced. */
-function withStatus(s: RegisteredStudent, placements: Placement[]): Person {
+export function withStatus(s: RegisteredStudent, placements: Placement[]): Person {
   const mine = placements.filter((p) => p.consultantEmail === s.email);
   const current = mine.find((p) => p.extensionStatus !== "ENDED");
   if (current) return { ...s, status: "PLACED", placement: current };

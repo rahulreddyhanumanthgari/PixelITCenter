@@ -182,7 +182,8 @@ All need `Authorization: Bearer <token>`. `admin` is always allowed.
 | POST | `/api/admin/payments/client` | accounts | `{ invoiceId, status: "expected", expectedDate, comment? }` or `{ …, status: "received", receivedDate, amount?, comment? }`. |
 | POST | `/api/admin/payments/consultant` | accounts | `{ invoiceId, paidDate, amount?, comment?, overrideReason? }` (override: admin only). |
 | GET | `/api/admin/reports/billing-summary` | accounts | `?month&clientId&status&consultant&format=csv`. |
-| GET | `/api/admin/audit-log` | admin | `?entityType&entityId&limit`. |
+| GET | `/api/admin/audit-log` | admin | Filtered, sorted, paged on the server: `?entityType&entityId&actor&action&from&to&order=newest\|oldest&changesOnly&page&pageSize` (≤100). Returns `{ entries, total, page, pageSize }`. `action` ending in `.` matches a prefix (`payment.`). |
+| GET | `/api/admin/audit-log/summary` | admin | Changes per area (all time and last 30 days) and the people who appear in the log. |
 | GET | `/api/student/placement` | student | Own client + own hourly rate. |
 | GET / POST | `/api/student/timesheets` | student | Own timesheets / upload: multipart `month, hours, leaveDays, leaveNote?, file` (one PDF). |
 | GET | `/api/student/notifications` | student | Reminders and send-backs. |

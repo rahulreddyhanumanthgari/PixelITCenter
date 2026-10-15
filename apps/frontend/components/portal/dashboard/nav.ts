@@ -48,7 +48,6 @@ export function navGroups(staffRole: StaffRole | null = null): { label?: string;
     { items: [{ href: "/portal/dashboard", label: "Dashboard", icon: LayoutDashboard }] },
     ...(recruiting.length ? [{ label: "Recruiting", items: recruiting }] : []),
     ...(clientSection.length ? [{ label: "Client section", items: clientSection }] : []),
-    ...(admin.length ? [{ label: "Admin", items: admin }] : []),
     {
       label: "Your account",
       items: [
@@ -64,6 +63,8 @@ export function navGroups(staffRole: StaffRole | null = null): { label?: string;
         { href: "/portal/settings", label: "Settings", icon: Settings },
       ],
     },
+    // Last, after Settings: only admins have it.
+    ...(admin.length ? [{ label: "Admin", items: admin }] : []),
   ];
 }
 

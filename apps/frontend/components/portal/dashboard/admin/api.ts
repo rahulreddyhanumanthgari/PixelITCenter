@@ -109,6 +109,7 @@ export type Client = {
   archived: boolean;
   activePlacements: number;
   unsentInvoices: number;
+  createdAt: string;
 };
 
 export type ClientInput = Omit<Client, "id" | "archived" | "activePlacements" | "unsentInvoices">;
@@ -252,6 +253,18 @@ export type BillingSummary = {
 
 export type BillingFilters = { month?: string; clientId?: string; status?: BillingStage | "overdue"; consultant?: string };
 
+export type AuditFilters = {
+  entityType?: string;
+  actor?: string;
+  action?: string;
+  from?: string;
+  to?: string;
+  order?: "newest" | "oldest";
+  changesOnly?: boolean;
+  page?: number;
+  pageSize?: number;
+};
+
 export type AuditEntry = { id: string; at: string; by: string; role: string; action: string; entityType: string; entityId: string | null; detail: unknown };
 
 export type Overview = {
@@ -306,8 +319,12 @@ export const adminApi = {
   consultantPayment: (who: Who, body: { invoiceId: string; paidDate: string; amount?: number; comment?: string; overrideReason?: string }) =>
     call<Invoice>(who, "/api/admin/payments/consultant", json("POST", body)),
 
-  auditLog: (who: Who, f: { entityType?: string; limit?: number } = {}) =>
-    call<{ entries: AuditEntry[] }>(who, `/api/admin/audit-log${query({ entityType: f.entityType, limit: f.limit ? String(f.limit) : undefined })}`),
+  auditLog: (who: Who, f: AuditFilters = {}) =>
+    call<{ entries: AuditEntry[]; total: number; page: number; pageSize: number }>(
+      who,
+      `/api/admin/audit-log${query({ ...f, changesOnly: f.changesOnly ? "true" : undefined, page: f.page ? String(f.page) : undefined, pageSize: f.pageSize ? String(f.pageSize) : undefined })}`,
+    ),
+  auditSummary: (who: Who) => call<{ changes: Record<string, number>; last30Days: Record<string, number>; people: string[] }>(who, "/api/admin/audit-log/summary"),
 
   billingSummary: (who: Who, f: BillingFilters = {}) => call<BillingSummary>(who, `/api/admin/reports/billing-summary${query(f)}`),
 

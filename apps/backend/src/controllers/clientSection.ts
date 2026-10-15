@@ -145,7 +145,10 @@ export function clientSectionController(s: ClientSection) {
       noStore(res).json(await s.reports.overview(actorOf(req)));
     },
     auditLog: async (req: Request, res: Response) => {
-      noStore(res).json({ entries: await s.auditLog(actorOf(req), auditListSchema.parse(req.query)) });
+      noStore(res).json(await s.auditLog(actorOf(req), auditListSchema.parse(req.query)));
+    },
+    auditSummary: async (req: Request, res: Response) => {
+      noStore(res).json(await s.auditSummary(actorOf(req)));
     },
 
     // --- the consultant (student role) ---

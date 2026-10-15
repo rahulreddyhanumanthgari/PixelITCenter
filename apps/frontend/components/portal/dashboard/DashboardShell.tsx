@@ -11,7 +11,7 @@ import { StudentOnly } from "./ForType";
 import { homeFor, isStudentOnly, navFor, navItemsFor, staffCanOpen, studentCanOpen } from "./nav";
 import { isPlaced, notificationsOf, pixelitIdOf, profileCompletion, signOut, updateSession, useSession, type Session } from "./session";
 import { joinTeam, useStaffRole } from "./team";
-import { Avatar } from "./ui";
+import { Avatar, Chip } from "./ui";
 
 /**
  * The frame around every dashboard page: sidebar, top bar (search,
@@ -143,15 +143,20 @@ function Sidebar({
         <Avatar name={profile.fullName || profile.email} size={34} />
         <span className="min-w-0 flex-1">
           <span className="block truncate text-sm font-semibold">{profile.fullName || profile.email}</span>
+          {profile.accountType === "employee" ? (
+            <span className="mt-0.5 flex items-center gap-1.5 text-xs text-[var(--dash-muted)]">
+              <Chip tone={role === "admin" ? "warn" : "ink"}>{role === "admin" ? "Admin" : "Employee"}</Chip>
+              PixelIT staff
+            </span>
+          ) : (
           <span className="block truncate text-xs text-[var(--dash-muted)]">
-            {profile.accountType === "employee"
-              ? "Employee · PixelIT staff"
-              : pixelitIdOf(session)
+            {pixelitIdOf(session)
                 ? `${pixelitIdOf(session)} · ${type?.label ?? "Student"}`
                 : type
                   ? `${type.label} account`
                   : "Account type not set"}
           </span>
+          )}
         </span>
       </Link>
 

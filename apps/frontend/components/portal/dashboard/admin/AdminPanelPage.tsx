@@ -1,15 +1,15 @@
 "use client";
 
-import { useMemo, useState, type FormEvent, type ReactNode } from "react";
-import { History, Search, Settings2, ShieldCheck, UserPlus, Users } from "lucide-react";
+import { useState, type FormEvent, type ReactNode } from "react";
+import { BarChart3, History, Search, Settings2, ShieldCheck, UserPlus, Users } from "lucide-react";
 import type { JobRole, TeamMember } from "@/content/portal-demo";
-import { cn } from "@/lib/utils";
 import { useSession } from "../session";
 import { addMember, adminCount, updateMember, useTeam } from "../team";
 import { Avatar, Chip, PageHeader, useToast } from "../ui";
-import { adminApi, type AuditEntry } from "./api";
+import { ActivityLog } from "./ActivityLog";
+import { AnalyticsTab } from "./AnalyticsTab";
 import { savePortalSettings, usePortalSettings, type PortalSettings } from "./portalSettings";
-import { Choice, dateTime, Empty, ErrorNote, Field, Loading, Panel, roleLabel, useApi, useWho } from "./ui";
+import { Choice, Empty, Field, Panel, roleLabel } from "./ui";
 
 // The Admin panel: only admins see it (menu, shell guard, and the API for the
 // activity log). Three tabs:
@@ -28,18 +28,19 @@ const JOB_ROLES: { id: JobRole | ""; label: string; body: string }[] = [
   { id: "accounts", label: "Accounts", body: "Clients, invoices, payments." },
 ];
 
-type Tab = "team" | "settings" | "activity";
+type Tab = "analytics" | "team" | "settings" | "activity";
 
 export function AdminPanelPage() {
-  const [tab, setTab] = useState<Tab>("team");
+  const [tab, setTab] = useState<Tab>("analytics");
   const [toast, showToast] = useToast();
   return (
     <div className="space-y-6">
-      <PageHeader title="Admin panel" body="Control the portal: who can do what, the portal's settings, and what's been done." />
+      <PageHeader title="Admin panel" body="Control the portal: how it's doing, who can do what, its settings, and everything that's been done." />
       <div className="dash-scroll-row -mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0">
         <div className="dash-tabs" role="tablist" aria-label="Admin panel">
           {(
             [
+              ["analytics", "Analytics", BarChart3],
               ["team", "Team & access", Users],
               ["settings", "Portal settings", Settings2],
               ["activity", "Activity log", History],
@@ -52,7 +53,15 @@ export function AdminPanelPage() {
         </div>
       </div>
       <div role="tabpanel" id={`panel-${tab}`} aria-labelledby={`tab-${tab}`}>
-        {tab === "team" ? <TeamTab onDone={showToast} /> : tab === "settings" ? <SettingsTab onDone={showToast} /> : <ActivityTab />}
+        {tab === "analytics" ? (
+          <AnalyticsTab />
+        ) : tab === "team" ? (
+          <TeamTab onDone={showToast} />
+        ) : tab === "settings" ? (
+          <SettingsTab onDone={showToast} />
+        ) : (
+          <ActivityLog />
+        )}
       </div>
       {toast}
     </div>
@@ -425,112 +434,5 @@ function SettingsCard({ title, body, children }: { title: string; body: string; 
       </div>
       <div>{children}</div>
     </section>
-  );
-}
-
-// --- Activity log -----------------------------------------------------------------------------
-
-const ACTIONS: Record<string, string> = {
-  "client.create": "Added a client",
-  "client.update": "Changed a client",
-  "client.archive": "Archived a client",
-  "client.view": "Opened a client",
-  "client.list": "Viewed clients",
-  "placement.create": "Added a placement",
-  "placement.update": "Changed a placement",
-  "placement.delete": "Deleted a placement",
-  "placement.view": "Opened a placement",
-  "placement.list": "Viewed placements",
-  "timesheet.status": "Moved a timesheet",
-  "timesheet.submit": "Student sent a timesheet",
-  "timesheet.resubmit": "Student sent a timesheet again",
-  "timesheet.reminders": "Sent timesheet reminders",
-  "timesheet.view": "Opened a timesheet",
-  "timesheet.list": "Viewed timesheets",
-  "invoice.create": "Raised an invoice",
-  "invoice.send": "Emailed an invoice",
-  "invoice.send_failed": "Invoice email failed",
-  "invoice.status": "Marked an invoice",
-  "invoice.pdf": "Opened an invoice PDF",
-  "invoice.view": "Opened an invoice",
-  "invoice.list": "Viewed invoices",
-  "payment.client.expected": "Noted an expected payment",
-  "payment.client.received": "Recorded a client payment",
-  "payment.consultant": "Recorded a consultant payment",
-  "payment.consultant.override": "Paid a consultant before the client (override)",
-  "report.billing_summary": "Viewed the billing summary",
-  "report.billing_summary.csv": "Exported the billing CSV",
-  "report.overview": "Opened the dashboard",
-  "audit.view": "Viewed the activity log",
-};
-
-const TYPES = ["", "client", "placement", "timesheet", "invoice", "payment", "report"] as const;
-
-function ActivityTab() {
-  const who = useWho();
-  const [type, setType] = useState<(typeof TYPES)[number]>("");
-  const [changesOnly, setChangesOnly] = useState(true);
-  const log = useApi(who ? () => adminApi.auditLog(who, { entityType: type || undefined, limit: 300 }) : null, [who?.email, type]);
-  const rows = useMemo(
-    () => (log.data?.entries ?? []).filter((e) => !changesOnly || !/\.(view|list|pdf)$|^report\.(overview|billing_summary)$|^audit\.view$/.test(e.action)),
-    [log.data, changesOnly],
-  );
-
-  return (
-    <div className="space-y-4">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
-        <div className="sm:w-60">
-          <label htmlFor="log-type" className="dash-label">
-            Show
-          </label>
-          <select id="log-type" className="dash-input" value={type} onChange={(e) => setType(e.target.value as typeof type)}>
-            <option value="">Everything</option>
-            {TYPES.filter(Boolean).map((t) => (
-              <option key={t} value={t}>
-                {t[0]!.toUpperCase() + t.slice(1)}s
-              </option>
-            ))}
-          </select>
-        </div>
-        <label className="flex min-h-[44px] items-center gap-2.5 text-sm font-medium">
-          <input type="checkbox" className="size-4 accent-[var(--dash-orange)]" checked={changesOnly} onChange={(e) => setChangesOnly(e.target.checked)} />
-          Changes only (hide views)
-        </label>
-      </div>
-      {log.error && <ErrorNote text={log.error} onRetry={log.reload} />}
-      {log.loading && !log.data ? (
-        <Loading />
-      ) : (
-        <div className="dash-card p-2 sm:p-3">
-          {rows.length === 0 ? (
-            <Empty title="Nothing here yet" />
-          ) : (
-            <ul className="divide-y divide-[var(--dash-line)]">
-              {rows.map((e) => (
-                <LogRow key={e.id} entry={e} />
-              ))}
-            </ul>
-          )}
-        </div>
-      )}
-      <p className="text-xs text-[var(--dash-muted)]">From the server&apos;s audit log: who did what to billing data, and when. Newest first.</p>
-    </div>
-  );
-}
-
-function LogRow({ entry: e }: { entry: AuditEntry }) {
-  const label = ACTIONS[e.action] ?? e.action.replace(/[._]/g, " ");
-  const reason = (e.detail as { reason?: string } | null)?.reason;
-  return (
-    <li className="flex flex-col gap-1 px-2 py-3 sm:flex-row sm:items-center sm:gap-4 sm:px-3">
-      <span className="text-xs text-[var(--dash-muted)] sm:w-44 sm:flex-none">{dateTime(e.at)}</span>
-      <span className="min-w-0 flex-1">
-        <span className={cn("block text-sm font-semibold", e.action.endsWith("override") && "text-[var(--dash-orange-ink)]")}>{label}</span>
-        {reason && <span className="block text-xs text-[var(--dash-muted)]">Reason: {reason}</span>}
-      </span>
-      <span className="text-xs text-[var(--dash-muted)] sm:text-right">
-        {e.by} · {roleLabel(e.role)}
-      </span>
-    </li>
   );
 }

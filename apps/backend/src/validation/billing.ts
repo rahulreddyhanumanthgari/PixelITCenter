@@ -214,6 +214,25 @@ export const billingSummarySchema = z
   .strict();
 export type BillingFilters = z.infer<typeof billingSummarySchema>;
 
+export const AUDIT_ENTITY_TYPES = ["client", "placement", "timesheet", "invoice", "payment", "report", "email", "audit"] as const;
+
+/** The activity log is filtered, sorted and paged on the server, so it stays fast with any number of entries. */
 export const auditListSchema = z
-  .object({ entityType: z.string().max(40).optional(), entityId: z.string().max(64).optional(), limit: z.coerce.number().int().min(1).max(500).optional() })
-  .strict();
+  .object({
+    entityType: z.enum(AUDIT_ENTITY_TYPES).optional(),
+    entityId: z.string().max(64).optional(),
+    /** Part of the person's email. */
+    actor: z.string().trim().max(254).optional(),
+    /** An exact action, e.g. "invoice.send", or a prefix ending in ".", e.g. "payment.". */
+    action: z.string().trim().max(80).regex(/^[a-z_.]+$/, "Not an action name.").optional(),
+    from: day.optional(),
+    to: day.optional(),
+    order: z.enum(["newest", "oldest"]).default("newest"),
+    /** Hide views (opened a page, listed records): show only changes. */
+    changesOnly: z.enum(["true", "false"]).default("false").transform((v) => v === "true"),
+    page: z.coerce.number().int().min(1).max(100_000).default(1),
+    pageSize: z.coerce.number().int().min(1).max(100).default(25),
+  })
+  .strict()
+  .refine((f) => !f.from || !f.to || f.from <= f.to, { message: "The start date is after the end date.", path: ["to"] });
+export type AuditFilters = z.infer<typeof auditListSchema>;
