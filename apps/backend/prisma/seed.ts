@@ -77,12 +77,59 @@ async function reset() {
   await Promise.all(files.map((f) => store.remove(f.storageKey).catch(() => undefined)));
 }
 
+// The companies on the website's "Our clients" logo strip, as demo client
+// records (the portal shows their logos from apps/frontend/public/clients).
+// Contacts and emails are made up (.example domains): DEMO ONLY.
+const LOGO_CLIENTS: { name: string; type: "CLIENT" | "VENDOR"; terms: number; vms?: [string, string]; slug: string; since: string }[] = [
+  { name: "Syntel", type: "VENDOR", terms: 45, slug: "syntel", since: "2026-02-03" },
+  { name: "Adobe", type: "CLIENT", terms: 30, vms: ["SAP Fieldglass", "https://adobe.fieldglass.example"], slug: "adobe", since: "2026-02-17" },
+  { name: "Intel", type: "CLIENT", terms: 45, vms: ["Beeline", "https://intel.beeline.example"], slug: "intel", since: "2026-03-02" },
+  { name: "Mastercard", type: "CLIENT", terms: 60, vms: ["SAP Fieldglass", "https://mastercard.fieldglass.example"], slug: "mastercard", since: "2026-03-23" },
+  { name: "Costco Wholesale", type: "CLIENT", terms: 30, slug: "costco", since: "2026-04-06" },
+  { name: "Fidelity Investments", type: "CLIENT", terms: 45, vms: ["Beeline", "https://fidelity.beeline.example"], slug: "fidelity", since: "2026-04-20" },
+  { name: "MetLife", type: "CLIENT", terms: 60, slug: "metlife", since: "2026-05-04" },
+  { name: "ScriptPro", type: "CLIENT", terms: 30, slug: "scriptpro", since: "2026-05-18" },
+  { name: "Charter Communications", type: "CLIENT", terms: 45, vms: ["VNDLY", "https://charter.vndly.example"], slug: "charter", since: "2026-06-01" },
+  { name: "New York Life", type: "CLIENT", terms: 45, slug: "newyorklife", since: "2026-06-15" },
+  { name: "bp", type: "CLIENT", terms: 60, vms: ["SAP Fieldglass", "https://bp.fieldglass.example"], slug: "bp", since: "2026-07-06" },
+  { name: "Vanguard", type: "CLIENT", terms: 30, slug: "vanguard", since: "2026-07-20" },
+  { name: "BlueCross BlueShield", type: "CLIENT", terms: 45, slug: "bcbs", since: "2026-08-03" },
+  { name: "PRA Health Sciences", type: "CLIENT", terms: 30, slug: "prahs", since: "2026-08-17" },
+  { name: "Arthrex", type: "CLIENT", terms: 30, slug: "arthrex", since: "2026-09-07" },
+  { name: "Cisco", type: "CLIENT", terms: 45, vms: ["Beeline", "https://cisco.beeline.example"], slug: "cisco", since: "2026-09-21" },
+  { name: "Apex.AI", type: "CLIENT", terms: 30, slug: "apexai", since: "2026-10-05" },
+  { name: "Trek", type: "CLIENT", terms: 30, slug: "trek", since: "2026-10-12" },
+];
+
+/** Adds any website-logo client that isn't there yet (by name). Safe to run again. */
+async function addLogoClients() {
+  let added = 0;
+  for (const c of LOGO_CLIENTS) {
+    if (await db.client.findFirst({ where: { name: c.name } })) continue;
+    await on(c.since).clients.create(admin, {
+      name: c.name,
+      type: c.type,
+      contactPerson: c.type === "VENDOR" ? "Vendor Management" : "Accounts Payable",
+      billingEmail: `ap@${c.slug}.example`,
+      paymentTermsDays: c.terms,
+      ...(c.vms ? { vmsPortalName: c.vms[0], vmsPortalUrl: c.vms[1] } : {}),
+      autoSendInvoices: !c.vms,
+      notes: "Demo client from the website's logo strip.",
+    });
+    // Onboarded on that date (the service stamps "now").
+    await db.client.updateMany({ where: { name: c.name }, data: { createdAt: new Date(`${c.since}T14:00:00Z`) } });
+    added++;
+  }
+  return added;
+}
+
 async function main() {
   if (process.argv.includes("--reset")) {
     await reset();
     console.log("Client-section tables cleared.");
   } else if ((await db.client.count()) > 0) {
-    console.log("Already seeded (clients exist). Run with --reset to start over.");
+    const added = await addLogoClients();
+    console.log(added ? `Added ${added} website-logo clients.` : "Already seeded (clients exist). Run with --reset to start over.");
     return;
   }
 
@@ -198,7 +245,8 @@ async function main() {
   await step("2026-10-05", verifier, t.id, "VERIFIED", "Hours match the signed sheet.");
   await step("2026-10-06", verifier, t.id, "VERIFIER_APPROVED");
 
-  console.log("Seeded: 3 clients, 3 placements, 6 timesheets, 4 invoices.");
+  const logos = await addLogoClients();
+  console.log(`Seeded: ${3 + logos} clients, 3 placements, 6 timesheets, 4 invoices.`);
 }
 
 main()

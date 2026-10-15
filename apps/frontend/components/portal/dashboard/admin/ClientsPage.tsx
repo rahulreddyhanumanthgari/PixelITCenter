@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from "react";
+import Image from "next/image";
 import Link from "next/link";
+import { clientProof } from "@/content/site";
 import { ArrowLeft, ArrowRight, Check, ExternalLink, Pencil, Plus, Search, Send } from "lucide-react";
 import { Avatar, Chip, PageHeader, useToast } from "../ui";
 import { adminApi, type Client, type ClientInput, type ClientType, type Who } from "./api";
@@ -141,9 +143,20 @@ export function ClientsPage() {
 }
 
 /** A company "logo": its initials in a rounded square. */
+/** The company's logo if we have one (the website's client logos), else its initials. */
 function Logo({ name, size }: { name: string; size: number }) {
-  return <Avatar name={name} size={size} className="rounded-2xl" />;
+  const logo = logoFor(name);
+  if (!logo) return <Avatar name={name} size={size} className="rounded-2xl" />;
+  // Logos are wide (300×150): a white tile 1.6× as wide as it is tall.
+  return (
+    <span className="grid place-items-center rounded-2xl bg-white ring-1 ring-[var(--dash-line)]" style={{ width: Math.round(size * 1.6), height: size, padding: size * 0.14 }}>
+      <Image src={logo} alt="" width={300} height={150} className="h-full w-full object-contain" />
+    </span>
+  );
 }
+
+const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, "");
+const logoFor = (name: string) => clientProof.logos.find((l) => norm(l.name) === norm(name))?.src;
 
 /** A big card: logo, name, client or vendor, contact. The whole card opens the client. */
 function ClientCard({ client: c, onOpen }: { client: Client; onOpen: () => void }) {

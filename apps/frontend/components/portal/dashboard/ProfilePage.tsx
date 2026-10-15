@@ -26,14 +26,14 @@ export function ProfilePage() {
   if (!session) return null;
   return (
     <div className="space-y-10">
-      <ProfileForm saved={session.profile} pixelitId={pixelitIdOf(session)} />
+      <ProfileForm saved={session.profile} pixelitId={pixelitIdOf(session)} photo={session.photo} />
       {session.profile.accountType === "student" && session.profile.email && <PlacementDetails email={session.profile.email} />}
     </div>
   );
 }
 
 /** The whole profile, edited as a draft; the ring follows as you type. */
-function ProfileForm({ saved, pixelitId }: { saved: Profile; pixelitId: string | null }) {
+function ProfileForm({ saved, pixelitId, photo }: { saved: Profile; pixelitId: string | null; photo?: string }) {
   const [draft, setDraft] = useState<Profile>(saved);
   const [toast, showToast] = useToast();
   const edit = (patch: Partial<Profile>) => setDraft((d) => ({ ...d, ...patch }));
@@ -60,7 +60,7 @@ function ProfileForm({ saved, pixelitId }: { saved: Profile; pixelitId: string |
       </PageHeader>
 
       <div className="dash-hero flex flex-wrap items-center gap-4 p-4 sm:p-6">
-        <ProfileRing name={draft.fullName || draft.email} percent={percent} size={88} />
+        <ProfileRing name={draft.fullName || draft.email} percent={percent} size={104} photo={photo} editable />
         <div className="min-w-0 flex-1">
           <p className="truncate text-lg font-semibold">{draft.fullName || "Your name"}</p>
           <p className="truncate text-sm text-[var(--dash-muted)]">{draft.headline || "Add a headline"}</p>

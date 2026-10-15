@@ -54,6 +54,8 @@ export type Session = {
   signedInAt: string;
   /** Students: their unique PixelIT ID ("PIC-1005"), given when they register. */
   pixelitId?: string;
+  /** Profile photo, a small square JPEG (data: URL). Everyone can set one. */
+  photo?: string;
   // Student corner. Optional: sessions saved before they existed lack them.
   /** Placed with a client: Timesheets shows. Set by admins in the live portal. */
   isPlaced?: boolean;
@@ -243,6 +245,11 @@ export function signOut() {
 export function updateSession(change: (s: Session) => Session) {
   const s = read();
   if (s) write(change(s));
+}
+
+/** Your profile photo; null removes it. */
+export function setPhoto(photo: string | null) {
+  updateSession((s) => ({ ...s, photo: photo ?? undefined }));
 }
 
 export function updateProfile(patch: Partial<Profile>) {

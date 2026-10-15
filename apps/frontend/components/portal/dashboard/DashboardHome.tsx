@@ -45,7 +45,7 @@ export function DashboardHome() {
               Profile
             </h2>
             <div className="mt-3 flex items-center gap-4">
-              <ProfileRing name={profile.fullName || profile.email} percent={percent} />
+              <ProfileRing name={profile.fullName || profile.email} percent={percent} photo={session.photo} editable />
               <div>
                 <p className="flex items-baseline gap-1 text-[2rem] leading-none font-semibold">
                   {percent}

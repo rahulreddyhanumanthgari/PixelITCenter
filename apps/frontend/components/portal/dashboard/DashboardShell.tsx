@@ -140,7 +140,7 @@ function Sidebar({
       </div>
 
       <Link href="/portal/profile" className="dash-account mt-5">
-        <Avatar name={profile.fullName || profile.email} size={34} />
+        <Avatar name={profile.fullName || profile.email} size={34} photo={session.photo} />
         <span className="min-w-0 flex-1">
           <span className="block truncate text-sm font-semibold">{profile.fullName || profile.email}</span>
           {profile.accountType === "employee" ? (
@@ -374,7 +374,7 @@ function Topbar({ session, onMenu }: { session: Session; onMenu: () => void }) {
         </div>
 
         <Link href="/portal/profile" className="hidden sm:block" aria-label="Your profile">
-          <Avatar name={session.profile.fullName || session.profile.email} size={40} />
+          <Avatar name={session.profile.fullName || session.profile.email} size={40} photo={session.photo} />
         </Link>
       </div>
     </div>

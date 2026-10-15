@@ -104,7 +104,9 @@ npm run db:seed              # demo clients, placements, timesheets at every sta
 npm run db:seed -- --reset   # wipe the client-section tables and seed again
 ```
 
-The seed never emails anyone (it uses the `log` mailer). The portal has two demo
+It also adds the 18 companies from the website's client logo strip as demo
+clients (made-up `.example` emails). Running it on a database that already has
+clients only adds whichever of those are missing. The seed never emails anyone (it uses the `log` mailer). The portal has two demo
 logins (any password): `employee@pixelitcenter.com` (an admin: sees the whole
 client section) and `student@` / `placed@pixelitcenter.com` (students). The other
 staff roles below are enforced by the API and are used once real accounts

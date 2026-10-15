@@ -798,6 +798,18 @@ pages are gone. The client section is an internal tool for PixelIT staff.
   terms pre-fill Add client. The Activity log is the server's real audit log.
   With the backend: team and settings become server tables only admins
   change, and the API takes the role from there, not from the browser.
+- **Profile photos (2026-10-15, front end only):** everyone (students,
+  employees, admins) can add a photo: hover the avatar on Profile or the
+  Dashboard card for a pencil (on touch screens an orange pencil badge always
+  shows), pick a JPG/PNG/WebP up to 10 MB; it's centre-cropped and shrunk to
+  a 256 px JPEG and replaces the initials in the sidebar, top bar, Profile and
+  Dashboard. "Remove" goes back to initials. Demo: kept in the session in
+  this browser; with the backend it's uploaded to private storage.
+- **Website client logos as clients (2026-10-15, demo data):** the 18
+  companies on the homepage logo strip (`content/site.ts` clientProof) are
+  demo client records, added by `npm run db:seed` (only the missing ones, by
+  name; made-up `.example` billing emails). Client cards show the company's
+  logo from `public/clients/` when the name matches, else its initials.
 - **Admin panel, round 2 (2026-10-15):** the sidebar card shows an
   "Admin" badge for admins and "Employee" for everyone else; the Admin menu
   group sits last, after Settings. Admin panel tabs: Analytics (first),
