@@ -151,3 +151,29 @@ export const tickets: { id: string; subject: string; status: "Open" | "Resolved"
   { id: "SUP-214", subject: "VPN access for Northwind", status: "Resolved", updated: "Thu" },
   { id: "SUP-219", subject: "Laptop for the Vertex Retail start", status: "Open", updated: "Today" },
 ];
+
+// --- Client section: a placed student's documents (DEMO) ---------------------------
+// What staff see under "Documents" on a placement. In the live portal these come
+// from the student's own Documents page (their account); for now every placed
+// student shows the same demo set with their name on the files.
+
+export type ConsultantDocType = "resume" | "id" | "passport" | "visa";
+
+export const consultantDocLabels: Record<ConsultantDocType, string> = {
+  resume: "Resume",
+  id: "Driver's License or State ID",
+  passport: "Passport",
+  visa: "Visa",
+};
+
+export type ConsultantDoc = { type: ConsultantDocType; fileName: string; size: string; uploaded: string; expires?: string };
+
+/** A placed student's documents. Passport is left out on purpose, to show a missing one. */
+export function consultantDocsDemo(name: string): ConsultantDoc[] {
+  const file = name.trim().replace(/\s+/g, "_") || "Student";
+  return [
+    { type: "resume", fileName: `${file}_Resume.pdf`, size: "148 KB", uploaded: "Oct 9, 2026" },
+    { type: "id", fileName: `${file}_Drivers_License.jpg`, size: "520 KB", uploaded: "Jul 12, 2026", expires: "Dec 2026" },
+    { type: "visa", fileName: `${file}_Visa.pdf`, size: "410 KB", uploaded: "Jul 12, 2026", expires: "Mar 2027" },
+  ];
+}

@@ -2,7 +2,8 @@
 
 import { useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from "react";
 import Link from "next/link";
-import { ArrowLeft, ArrowRight, Check, Pencil, Plus, Search } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, FileText, Pencil, Plus, Search } from "lucide-react";
+import { consultantDocLabels, consultantDocsDemo, type ConsultantDocType } from "@/content/portal-demo";
 import { cn } from "@/lib/utils";
 import { Avatar, Chip, PageHeader, useToast } from "../ui";
 import { adminApi, type Client, type ExtensionStatus, type Placement, type PlacementInput, type Who } from "./api";
@@ -181,6 +182,7 @@ function PlacementDetail({ who, placement: p, onBack, onEdit }: { who: Who | nul
   const money = p.billRate !== undefined;
   const back = useRef<HTMLButtonElement>(null);
   useEffect(() => back.current?.focus(), []);
+  const [showDocs, setShowDocs] = useState(false);
 
   return (
     <div className="space-y-6">
@@ -204,13 +206,20 @@ function PlacementDetail({ who, placement: p, onBack, onEdit }: { who: Who | nul
               {!p.consultantLinked && <Chip>Hasn&apos;t signed in yet</Chip>}
             </p>
           </div>
-          {onEdit && (
-            <button type="button" className="dash-btn" onClick={onEdit}>
-              <Pencil className="size-4" aria-hidden="true" /> Edit placement
+          <div className="flex w-full flex-col gap-2 sm:w-auto">
+            <button type="button" className="dash-btn-ghost" onClick={() => setShowDocs(true)}>
+              <FileText className="size-4" aria-hidden="true" /> Documents
             </button>
-          )}
+            {onEdit && (
+              <button type="button" className="dash-btn" onClick={onEdit}>
+                <Pencil className="size-4" aria-hidden="true" /> Edit placement
+              </button>
+            )}
+          </div>
         </div>
       </section>
+
+      <DocumentsWindow name={p.consultantName} open={showDocs} onClose={() => setShowDocs(false)} />
 
       <div className={cn("grid gap-4 sm:gap-5", money && "lg:grid-cols-2")}>
         <InfoCard title="Placement">
@@ -271,6 +280,57 @@ function PlacementDetail({ who, placement: p, onBack, onEdit }: { who: Who | nul
         </section>
       )}
     </div>
+  );
+}
+
+/**
+ * The student's documents, in a small centred window. FRONT END ONLY: demo
+ * files from content/portal-demo.ts. In the live portal they come from the
+ * student's own Documents page; that wiring is decided with the backend.
+ */
+function DocumentsWindow({ name, open, onClose }: { name: string; open: boolean; onClose: () => void }) {
+  const [toast, showToast] = useToast();
+  const docs = consultantDocsDemo(name);
+  return (
+    <>
+      <Panel center open={open} title={`${name}'s documents`} subtitle="Uploaded by the student from their account." onClose={onClose}>
+        <ul className="space-y-2.5">
+          {(Object.keys(consultantDocLabels) as ConsultantDocType[]).map((type) => {
+            const d = docs.find((x) => x.type === type);
+            return (
+              <li key={type} className="flex items-center gap-3 rounded-2xl border border-[var(--dash-line)] p-3.5">
+                <span className={cn("grid size-10 flex-none place-items-center rounded-xl", d ? "bg-[var(--dash-orange-tint)] text-[var(--dash-orange)]" : "bg-[var(--dash-side)] text-[var(--dash-faint)]")}>
+                  <FileText className="size-5" aria-hidden="true" />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block text-sm font-semibold">{consultantDocLabels[type]}</span>
+                  {d ? (
+                    <>
+                      <span className="block text-xs break-all text-[var(--dash-ink)]">{d.fileName}</span>
+                      <span className="block text-xs text-[var(--dash-muted)]">
+                        {d.size} · uploaded {d.uploaded}
+                        {d.expires && ` · expires ${d.expires}`}
+                      </span>
+                    </>
+                  ) : (
+                    <span className="block text-xs text-[var(--dash-muted)]">Not uploaded yet</span>
+                  )}
+                </span>
+                {d ? (
+                  <button type="button" className="dash-btn-ghost h-9 min-h-[44px] px-3 sm:min-h-0" onClick={() => showToast("Demo: the file opens once the portal is connected to the backend.")}>
+                    View
+                  </button>
+                ) : (
+                  <Chip tone="warn">Missing</Chip>
+                )}
+              </li>
+            );
+          })}
+        </ul>
+        <p className="mt-4 text-xs text-[var(--dash-muted)]">Demo files. In the live portal these are the documents the student uploads under Documents.</p>
+      </Panel>
+      {toast}
+    </>
   );
 }
 
