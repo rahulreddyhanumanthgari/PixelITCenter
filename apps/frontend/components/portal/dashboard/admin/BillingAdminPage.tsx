@@ -20,6 +20,7 @@ import {
   hours,
   Loading,
   Panel,
+  MonthYearPicker,
   roleLabel,
   SearchSelect,
   STAGES,
@@ -103,16 +104,9 @@ function statusOf(a: Account): Status {
   return { label: "No invoice yet", tone: "ink" };
 }
 
-const MONTH_NAMES = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-/** This year back to 2020, newest first. */
-const YEARS = Array.from({ length: new Date().getFullYear() - 2019 }, (_, i) => String(new Date().getFullYear() - i));
-
 export function BillingAdminPage() {
   const who = useWho();
   const [filters, setFilters] = useState<BillingFilters>({});
-  // Any year and month: the month needs a year; a year on its own shows that whole year.
-  const [year, setYear] = useState("");
-  const [monthNo, setMonthNo] = useState("");
   const query = useDebounced(filters);
   const summary = useApi(who ? () => adminApi.billingSummary(who, query) : null, [who?.email, who?.role, JSON.stringify(query)]);
   const clients = useApi(who ? () => adminApi.clients(who) : null, [who?.email, who?.role]);
@@ -184,55 +178,8 @@ export function BillingAdminPage() {
         </button>
       </PageHeader>
 
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
-        <div className="grid grid-cols-2 gap-3 sm:col-span-2 xl:col-span-2">
-          <div>
-            <label htmlFor="bl-year" className="sr-only">
-              Year
-            </label>
-            <select
-              id="bl-year"
-              className="dash-input"
-              value={year}
-              onChange={(e) => {
-                const y = e.target.value;
-                setYear(y);
-                set({ year: y || undefined, month: y && monthNo ? `${y}-${monthNo}` : undefined });
-              }}
-            >
-              <option value="">All years</option>
-              {YEARS.map((y) => (
-                <option key={y} value={y}>
-                  {y}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label htmlFor="bl-month" className="sr-only">
-              Month
-            </label>
-            <select
-              id="bl-month"
-              className="dash-input"
-              value={monthNo}
-              disabled={!year}
-              title={year ? undefined : "Pick a year first"}
-              onChange={(e) => {
-                const m = e.target.value;
-                setMonthNo(m);
-                set({ month: m ? `${year}-${m}` : undefined });
-              }}
-            >
-              <option value="">{year ? "All months" : "Month"}</option>
-              {MONTH_NAMES.map((name, i) => (
-                <option key={name} value={String(i + 1).padStart(2, "0")}>
-                  {name}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <MonthYearPicker id="bl-period" value={{ month: filters.month, year: filters.year }} onChange={(v) => set({ month: v.month, year: v.year })} />
         <SearchSelect
           id="bl-client"
           label="Company"

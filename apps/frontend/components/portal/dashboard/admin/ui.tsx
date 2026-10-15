@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
-import { AlertTriangle, Check, LoaderCircle, Search, X } from "lucide-react";
+import { AlertTriangle, CalendarDays, Check, ChevronDown, ChevronLeft, ChevronRight, LoaderCircle, Search, X } from "lucide-react";
 import { staffRoles } from "@/content/portal-demo";
 import { cn } from "@/lib/utils";
 import { useSession } from "../session";
@@ -431,6 +431,128 @@ export function SearchSelect({
             </li>
           ))}
         </ul>
+      )}
+    </div>
+  );
+}
+
+const MONTHS_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+/**
+ * One box with a calendar icon for picking a period: click, flip the year with
+ * the arrows, click a month. "Whole year" picks the year; "All time" clears it.
+ * Value: { month: "2026-08" } or { year: "2026" } or {} (all time).
+ */
+export function MonthYearPicker({
+  id,
+  value,
+  onChange,
+  minYear = 2020,
+}: {
+  id: string;
+  value: { month?: string; year?: string };
+  onChange: (v: { month?: string; year?: string }) => void;
+  minYear?: number;
+}) {
+  const now = new Date();
+  const thisYear = now.getFullYear();
+  const pickedYear = Number((value.month ?? value.year ?? "").slice(0, 4)) || thisYear;
+  const [open, setOpen] = useState(false);
+  const [shownYear, setShownYear] = useState(pickedYear);
+  const box = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const onDown = (e: PointerEvent) => {
+      if (!box.current?.contains(e.target as Node)) setOpen(false);
+    };
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
+    document.addEventListener("pointerdown", onDown);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("pointerdown", onDown);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
+
+  const label = value.month
+    ? `${MONTHS_SHORT[Number(value.month.slice(5)) - 1]} ${value.month.slice(0, 4)}`
+    : value.year
+      ? `${value.year} · whole year`
+      : "All time";
+  const choose = (v: { month?: string; year?: string }) => {
+    onChange(v);
+    setOpen(false);
+  };
+
+  return (
+    <div ref={box} className="relative">
+      <button
+        type="button"
+        id={id}
+        aria-haspopup="dialog"
+        aria-expanded={open}
+        aria-label={`Period: ${label}. Change`}
+        onClick={() => {
+          setShownYear(pickedYear);
+          setOpen((o) => !o);
+        }}
+        className="dash-input flex items-center gap-2.5 text-left"
+      >
+        <CalendarDays className="size-4 flex-none text-[var(--dash-orange)]" aria-hidden="true" />
+        <span className={cn("min-w-0 flex-1 truncate", !value.month && !value.year && "text-[var(--dash-muted)]")}>{label}</span>
+        <ChevronDown className={cn("size-4 flex-none text-[var(--dash-muted)] transition-transform", open && "rotate-180")} aria-hidden="true" />
+      </button>
+      {open && (
+        <div role="dialog" aria-label="Pick a month and year" className="absolute left-0 z-30 mt-1.5 w-[17.5rem] max-w-[calc(100vw-2rem)] rounded-2xl bg-white p-3 shadow-[0_18px_40px_-18px_rgb(4_19_39/0.45)] ring-1 ring-[var(--dash-line)]">
+          <div className="flex items-center justify-between">
+            <button type="button" className="dash-icon-btn size-9 disabled:cursor-not-allowed disabled:opacity-35" aria-label="Previous year" disabled={shownYear <= minYear} onClick={() => setShownYear((y) => y - 1)}>
+              <ChevronLeft className="size-4" />
+            </button>
+            <span className="text-base font-semibold tabular-nums" aria-live="polite">
+              {shownYear}
+            </span>
+            <button type="button" className="dash-icon-btn size-9 disabled:cursor-not-allowed disabled:opacity-35" aria-label="Next year" disabled={shownYear >= thisYear} onClick={() => setShownYear((y) => y + 1)}>
+              <ChevronRight className="size-4" />
+            </button>
+          </div>
+          <div className="mt-3 grid grid-cols-3 gap-1.5">
+            {MONTHS_SHORT.map((m, i) => {
+              const key = `${shownYear}-${String(i + 1).padStart(2, "0")}`;
+              const on = value.month === key;
+              const future = shownYear === thisYear && i > now.getMonth();
+              return (
+                <button
+                  key={m}
+                  type="button"
+                  aria-pressed={on}
+                  disabled={future}
+                  onClick={() => choose({ month: key })}
+                  className={cn(
+                    "h-10 rounded-xl text-sm font-medium transition",
+                    on ? "bg-[var(--dash-orange)] text-white" : "hover:bg-[var(--dash-hover)]",
+                    future && "cursor-not-allowed text-[var(--dash-faint)] hover:bg-transparent",
+                  )}
+                >
+                  {m}
+                </button>
+              );
+            })}
+          </div>
+          <div className="mt-3 flex gap-2 border-t border-[var(--dash-line)] pt-3">
+            <button
+              type="button"
+              aria-pressed={value.year === String(shownYear) && !value.month}
+              className={cn("dash-btn-ghost h-9 flex-1 px-2 text-xs", value.year === String(shownYear) && !value.month && "border-[var(--dash-orange)] text-[var(--dash-orange-ink)]")}
+              onClick={() => choose({ year: String(shownYear) })}
+            >
+              Whole {shownYear}
+            </button>
+            <button type="button" className="dash-btn-ghost h-9 flex-1 px-2 text-xs" onClick={() => choose({})}>
+              All time
+            </button>
+          </div>
+        </div>
       )}
     </div>
   );
