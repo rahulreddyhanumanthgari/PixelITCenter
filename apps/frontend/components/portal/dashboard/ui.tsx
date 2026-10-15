@@ -182,15 +182,15 @@ function squarePhoto(file: File): Promise<string> {
   });
 }
 
-/** Page heading + one line under it + optional buttons on the right. */
+/** Page heading, centred: the title, one line under it, then any buttons. */
 export function PageHeader({ title, body, children }: { title: ReactNode; body?: ReactNode; children?: ReactNode }) {
   return (
-    <div className="flex flex-wrap items-end justify-between gap-4">
-      <div className="min-w-0">
+    <div className="flex flex-col items-center gap-4 text-center">
+      <div className="min-w-0 max-w-3xl">
         <h1 className="dash-title">{title}</h1>
         {body && <p className="mt-2 text-sm text-[var(--dash-muted)] sm:text-[0.9375rem]">{body}</p>}
       </div>
-      {children && <div className="flex flex-wrap gap-2">{children}</div>}
+      {children && <div className="flex flex-wrap justify-center gap-2">{children}</div>}
     </div>
   );
 }
