@@ -25,7 +25,7 @@ const JOB_ROLES: { id: JobRole | ""; label: string; body: string }[] = [
   { id: "", label: "No access", body: "Can't open staff pages yet." },
   { id: "recruiter", label: "Recruiter", body: "Talent and placements, no billing." },
   { id: "verifier", label: "Verifier", body: "Checks timesheets." },
-  { id: "accounts", label: "Accounts", body: "Clients, invoices, payments." },
+  { id: "accounts", label: "Accounts", body: "Confirms timesheet hours. No billing." },
 ];
 
 type Tab = "analytics" | "team" | "settings" | "activity";
@@ -258,7 +258,8 @@ function AdminChangeWindow({
             <ul className="list-disc space-y-1 pl-5 text-[var(--dash-muted)]">
               <li>give and take away access, and make other admins</li>
               <li>change the portal&apos;s settings</li>
-              <li>see and change every client, placement, timesheet and invoice</li>
+              <li>see billing: invoices, payments and amounts (admins only)</li>
+              <li>see and change every client, placement and timesheet</li>
               <li>delete students and placements</li>
             </ul>
           </div>

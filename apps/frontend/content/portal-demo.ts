@@ -47,7 +47,7 @@ export const launchTeam: TeamMember[] = [
 
 export const staffRoles: Record<StaffRole, { label: string; body: string }> = {
   admin: { label: "Admin", body: "Everything, including client records and payment overrides." },
-  accounts: { label: "Accounts", body: "Confirms hours, raises invoices, records payments." },
+  accounts: { label: "Accounts", body: "Confirms timesheet hours (which raises the invoice). Billing itself is admins only." },
   verifier: { label: "Verifier", body: "Checks timesheet hours against the client-approved PDF." },
   recruiter: { label: "Recruiter", body: "Sees placements. No billing data." },
 };

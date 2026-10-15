@@ -9,14 +9,16 @@ import type { ClientSection } from "../services/clientSection/index.js";
 // consultant's own placement and timesheets. Every route needs a signed-in user
 // with the right role; it is checked here, on the server, for every request.
 //
-//   admin     everything
-//   accounts  clients (read), placements, timesheets (accounts steps), invoices, payments, reports
+//   admin     everything, including billing (invoices, payments, reports, reminders)
+//   accounts  clients (read), placements (no rates), timesheets (the accounts check)
 //   verifier  placements (no rates), timesheets (verifier steps)
 //   recruiter placements (no rates), nothing else
 //   student   only their own placement (client + their hourly rate) and timesheets
 
 const admin = requireRole("admin");
-const finance = requireRole("admin", "accounts");
+const clientReaders = requireRole("admin", "accounts");
+/** Billing (invoices, payments, reports, reminders): admins only. */
+const billing = admin;
 const timesheetStaff = requireRole("admin", "verifier", "accounts");
 const staff = requireRole("admin", "accounts", "verifier", "recruiter");
 
@@ -27,12 +29,12 @@ export function clientSectionRoutes(section: ClientSection, { authed, maxUploadB
   a.use(authed);
   a.get("/overview", staff, c.overview);
 
-  a.get("/clients", finance, c.listClients);
+  a.get("/clients", clientReaders, c.listClients);
   a.post("/clients", admin, c.createClient);
-  a.get("/clients/:id", finance, c.getClient);
+  a.get("/clients/:id", clientReaders, c.getClient);
   a.patch("/clients/:id", admin, c.updateClient);
   a.delete("/clients/:id", admin, c.archiveClient);
-  a.post("/clients/:id/send-invoices", finance, sendLimiter(), c.sendClientInvoices);
+  a.post("/clients/:id/send-invoices", billing, sendLimiter(), c.sendClientInvoices);
 
   a.get("/placements", staff, c.listPlacements);
   a.post("/placements", admin, c.createPlacement);
@@ -45,17 +47,18 @@ export function clientSectionRoutes(section: ClientSection, { authed, maxUploadB
   a.get("/timesheets/:id", timesheetStaff, c.getTimesheet);
   a.patch("/timesheets/:id", timesheetStaff, c.moveTimesheet);
 
-  a.get("/invoices", finance, c.listInvoices);
-  a.post("/invoices", finance, c.generateInvoice);
-  a.get("/invoices/:id", finance, c.getInvoice);
-  a.patch("/invoices/:id", finance, c.moveInvoice);
-  a.get("/invoices/:id/pdf", finance, c.invoicePdf);
-  a.post("/invoices/:id/send", finance, sendLimiter(), c.sendInvoice);
+  a.get("/invoices", billing, c.listInvoices);
+  a.post("/invoices", billing, c.generateInvoice);
+  a.get("/invoices/:id", billing, c.getInvoice);
+  a.patch("/invoices/:id", billing, c.moveInvoice);
+  a.get("/invoices/:id/pdf", billing, c.invoicePdf);
+  a.post("/invoices/:id/send", billing, sendLimiter(), c.sendInvoice);
 
-  a.post("/payments/client", finance, c.recordClientPayment);
-  a.post("/payments/consultant", finance, c.recordConsultantPayment);
+  a.post("/payments/client", billing, c.recordClientPayment);
+  a.post("/payments/consultant", billing, c.recordConsultantPayment);
+  a.post("/payments/reminders", billing, sendLimiter(), c.paymentReminder);
 
-  a.get("/reports/billing-summary", finance, c.billingSummary);
+  a.get("/reports/billing-summary", billing, c.billingSummary);
   a.get("/audit-log", admin, c.auditLog);
   a.get("/audit-log/summary", admin, c.auditSummary);
 

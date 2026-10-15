@@ -398,6 +398,7 @@ enum EmailKind {
   INVOICE
   TIMESHEET_REMINDER
   TIMESHEET_REJECTED
+  PAYMENT_REMINDER
 }
 
 enum EmailStatus {

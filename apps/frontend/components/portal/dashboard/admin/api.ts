@@ -215,6 +215,8 @@ export type BillingStage = "timesheet_received" | "timesheet_submitted" | "invoi
 
 export type SummaryRow = {
   timesheetId: string;
+  placementId: string;
+  role: string;
   invoiceId: string | null;
   invoiceNumber: string | null;
   month: string;
@@ -325,6 +327,14 @@ export const adminApi = {
       `/api/admin/audit-log${query({ ...f, changesOnly: f.changesOnly ? "true" : undefined, page: f.page ? String(f.page) : undefined, pageSize: f.pageSize ? String(f.pageSize) : undefined })}`,
     ),
   auditSummary: (who: Who) => call<{ changes: Record<string, number>; last30Days: Record<string, number>; people: string[] }>(who, "/api/admin/audit-log/summary"),
+
+  /** The payment reminder for one placement's unpaid invoices; `preview` returns it without sending. */
+  paymentReminder: (who: Who, placementId: string, preview = false) =>
+    call<{ to: string; subject: string; text: string; invoices: number; total: number; sent: boolean }>(
+      who,
+      "/api/admin/payments/reminders",
+      json("POST", preview ? { placementId, preview } : { placementId }),
+    ),
 
   billingSummary: (who: Who, f: BillingFilters = {}) => call<BillingSummary>(who, `/api/admin/reports/billing-summary${query(f)}`),
 

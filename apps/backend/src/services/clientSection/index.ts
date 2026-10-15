@@ -22,7 +22,7 @@ export function createClientSection(deps: ClientSectionDeps) {
   const placements = createPlacementsService(ctx);
   const invoices = createInvoicesService(ctx, deliver);
   const timesheets = createTimesheetsService(ctx, deliver, invoices, placements);
-  const payments = createPaymentsService(ctx, invoices);
+  const payments = createPaymentsService(ctx, invoices, deliver);
   const reports = createReportsService(ctx);
 
   return {

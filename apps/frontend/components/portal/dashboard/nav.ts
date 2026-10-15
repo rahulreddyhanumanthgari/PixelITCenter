@@ -35,7 +35,7 @@ export const clientSectionPages: (NavItem & { roles: StaffRole[]; group?: "Recru
   { href: "/portal/admin/clients", label: "Clients", icon: Building2, roles: ["admin", "accounts"] },
   { href: "/portal/admin/placements", label: "Placements", icon: Handshake, roles: ["admin", "accounts", "verifier", "recruiter"] },
   { href: "/portal/admin/timesheets", label: "Timesheets", icon: Clock, roles: ["admin", "verifier", "accounts"] },
-  { href: "/portal/admin/billing", label: "Billing & invoices", icon: ReceiptText, roles: ["admin", "accounts"] },
+  { href: "/portal/admin/billing", label: "Billing & invoices", icon: ReceiptText, roles: ["admin"] },
 ];
 
 export function navGroups(staffRole: StaffRole | null = null): { label?: string; items: NavItem[] }[] {

@@ -117,7 +117,7 @@ staff roles below are enforced by the API and are used once real accounts
 | Role | Can |
 |---|---|
 | admin | Everything: client records, placements, both timesheet roles, payments, the consultant-payment override, the audit log. |
-| accounts | Read clients; see placements with rates; the accounts check (only after the verifier approves); invoices; payments; reports; CSV. |
+| accounts | Read clients; see placements (no rates); the accounts check (only after the verifier approves). No billing. |
 | verifier | See placements **without rates**; verify, approve or send back timesheets. |
 | recruiter | See placements **without rates**. Nothing else in this section. |
 | student | Only their own placement (client name and their own hourly pay rate, never the bill rate) and their own timesheets. |
@@ -163,7 +163,7 @@ There is no client role. A token with `role: "client"` is refused (401).
 
 ### Endpoints
 
-All need `Authorization: Bearer <token>`. `admin` is always allowed.
+All need `Authorization: Bearer <token>`. `admin` is always allowed. Billing (invoices, payments, the billing report, reminders) is admin only; the table's "accounts" mentions below for those rows are now admin.
 
 | Method | Path | Roles | What |
 |---|---|---|---|
@@ -182,6 +182,7 @@ All need `Authorization: Bearer <token>`. `admin` is always allowed.
 | GET | `/api/admin/invoices/:id/pdf` | accounts | Short-lived signed link to the PDF. |
 | POST | `/api/admin/invoices/:id/send` | accounts | Email it now (`{ resend: true }` to send again). |
 | POST | `/api/admin/payments/client` | accounts | `{ invoiceId, status: "expected", expectedDate, comment? }` or `{ …, status: "received", receivedDate, amount?, comment? }`. |
+| POST | `/api/admin/payments/reminders` | admin | `{ placementId, preview? }`: email the company's billing email a fixed reminder listing that placement's unpaid invoices (preview returns it without sending). |
 | POST | `/api/admin/payments/consultant` | accounts | `{ invoiceId, paidDate, amount?, comment?, overrideReason? }` (override: admin only). |
 | GET | `/api/admin/reports/billing-summary` | accounts | `?month&clientId&status&consultant&format=csv`. |
 | GET | `/api/admin/audit-log` | admin | Filtered, sorted, paged on the server: `?entityType&entityId&actor&action&from&to&order=newest\|oldest&changesOnly&page&pageSize` (≤100). Returns `{ entries, total, page, pageSize }`. `action` ending in `.` matches a prefix (`payment.`). |

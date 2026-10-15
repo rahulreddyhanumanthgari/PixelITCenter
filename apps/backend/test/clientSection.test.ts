@@ -124,7 +124,7 @@ describe("clients", () => {
 });
 
 describe("placements", () => {
-  it("stores bill and pay rates; only admin and accounts see them", async () => {
+  it("stores bill and pay rates; only admins see them", async () => {
     const res = await request(app).post("/api/admin/placements").set(as("admin")).send({
       clientId: ids.client,
       consultantName: "Manas",
@@ -145,7 +145,9 @@ describe("placements", () => {
     expect(JSON.stringify(recruiter.body)).not.toMatch(/billRate|payRate|marginPerHour/);
 
     const accounts = await request(app).get("/api/admin/placements").set(as("accounts"));
-    expect(accounts.body.placements.find((p: { id: string }) => p.id === ids.placement).billRate).toBe(95);
+    expect(accounts.body.placements.find((p: { id: string }) => p.id === ids.placement).billRate).toBeUndefined();
+    const admin = await request(app).get("/api/admin/placements").set(as("admin"));
+    expect(admin.body.placements.find((p: { id: string }) => p.id === ids.placement).billRate).toBe(95);
   });
 
   it("stores the employment type and refuses unknown ones", async () => {
@@ -250,10 +252,11 @@ describe("timesheet workflow", () => {
     expect(res.status).toBe(200);
     expect(res.body.status).toBe("INVOICE_RAISED");
     expect(res.body.invoice.number).toMatch(/^PIX-\d{4}-\d{4}$/);
-    expect(res.body.invoice.amount).toBe(15200);
+    // Accounts does the check but doesn't see money; the admin view below has the amount.
+    expect(res.body.invoice.amount).toBeUndefined();
     ids.invoice = res.body.invoice.id;
 
-    const inv = await request(app).get(`/api/admin/invoices/${ids.invoice}`).set(as("accounts"));
+    const inv = await request(app).get(`/api/admin/invoices/${ids.invoice}`).set(as("admin"));
     expect(inv.body).toMatchObject({ hours: 160, billRate: 95, amount: 15200, paymentTermsDays: 30, status: "RAISED", consultantName: "Manas" });
     expect(inv.body.dueDate).toBe(addDays(inv.body.issueDate, 30));
   });
@@ -313,7 +316,7 @@ describe("placement with timesheets", () => {
 
 describe("invoices", () => {
   it("serves the PDF through a short-lived signed link only", async () => {
-    const link = await request(app).get(`/api/admin/invoices/${ids.invoice}/pdf`).set(as("accounts"));
+    const link = await request(app).get(`/api/admin/invoices/${ids.invoice}/pdf`).set(as("admin"));
     expect(link.status).toBe(200);
     const file = await request(app).get(link.body.url);
     expect(file.status).toBe(200);
@@ -324,10 +327,10 @@ describe("invoices", () => {
 
   it("a failed send is retried, logged per attempt and flagged", async () => {
     mailer.fail(true);
-    const res = await request(app).post(`/api/admin/invoices/${ids.invoice}/send`).set(as("accounts")).send({});
+    const res = await request(app).post(`/api/admin/invoices/${ids.invoice}/send`).set(as("admin")).send({});
     mailer.fail(false);
     expect(res.status).toBe(502);
-    const inv = await request(app).get(`/api/admin/invoices/${ids.invoice}`).set(as("accounts"));
+    const inv = await request(app).get(`/api/admin/invoices/${ids.invoice}`).set(as("admin"));
     expect(inv.body.emailFailed).toBe(true);
     expect(inv.body.sentAt).toBeNull();
     expect(inv.body.emails.filter((e: { status: string }) => e.status === "FAILED")).toHaveLength(3);
@@ -336,7 +339,7 @@ describe("invoices", () => {
 
   it("Send now emails the invoice and the approved timesheet to the billing email", async () => {
     const before = mailer.sent.length;
-    const res = await request(app).post(`/api/admin/invoices/${ids.invoice}/send`).set(as("accounts")).send({});
+    const res = await request(app).post(`/api/admin/invoices/${ids.invoice}/send`).set(as("admin")).send({});
     expect(res.status).toBe(200);
     expect(res.body).toMatchObject({ status: "SENT", emailFailed: false });
     expect(res.body.timesheet.status).toBe("SUBMITTED_TO_CLIENT");
@@ -345,15 +348,16 @@ describe("invoices", () => {
     expect(mail.attachments?.map((a) => a.contentType)).toEqual(["application/pdf", "application/pdf"]);
     expect(mail.subject).toContain(res.body.number);
 
-    expect((await request(app).post(`/api/admin/invoices/${ids.invoice}/send`).set(as("accounts")).send({})).status).toBe(409);
+    expect((await request(app).post(`/api/admin/invoices/${ids.invoice}/send`).set(as("admin")).send({})).status).toBe(409);
   });
 });
 
 describe("payments", () => {
   it("blocks paying the consultant before the client pays; only an admin can override, with a reason", async () => {
-    let res = await request(app).post("/api/admin/payments/consultant").set(as("accounts")).send({ invoiceId: ids.invoice, paidDate: today });
+    let res = await request(app).post("/api/admin/payments/consultant").set(as("admin")).send({ invoiceId: ids.invoice, paidDate: today });
     expect(res.status).toBe(409);
     expect(res.body.code).toBe("client_payment_missing");
+    // Billing is admins only: accounts can't record payments at all.
     res = await request(app).post("/api/admin/payments/consultant").set(as("accounts")).send({ invoiceId: ids.invoice, paidDate: today, overrideReason: "Consultant hardship, approved by Mansingh" });
     expect(res.status).toBe(403);
     res = await request(app).post("/api/admin/payments/consultant").set(as("admin")).send({ invoiceId: ids.invoice, paidDate: today, overrideReason: "short" });
@@ -369,23 +373,53 @@ describe("payments", () => {
   });
 
   it("records an expected date and comment, then the received payment", async () => {
-    let res = await request(app).post("/api/admin/payments/client").set(as("accounts")).send({ invoiceId: ids.invoice, status: "expected", expectedDate: addDays(today, 7), comment: "Payment processed, expected next week" });
+    let res = await request(app).post("/api/admin/payments/client").set(as("admin")).send({ invoiceId: ids.invoice, status: "expected", expectedDate: addDays(today, 7), comment: "Payment processed, expected next week" });
     expect(res.status).toBe(200);
     expect(res.body).toMatchObject({ clientPaymentExpectedDate: addDays(today, 7), clientPaymentComment: "Payment processed, expected next week" });
 
-    res = await request(app).post("/api/admin/payments/client").set(as("accounts")).send({ invoiceId: ids.invoice, status: "received", receivedDate: today, amount: 15000 });
+    res = await request(app).post("/api/admin/payments/client").set(as("admin")).send({ invoiceId: ids.invoice, status: "received", receivedDate: today, amount: 15000 });
     expect(res.status).toBe(400);
     expect(res.body.fields.comment).toBeTruthy();
-    res = await request(app).post("/api/admin/payments/client").set(as("accounts")).send({ invoiceId: ids.invoice, status: "received", receivedDate: today });
+    res = await request(app).post("/api/admin/payments/client").set(as("admin")).send({ invoiceId: ids.invoice, status: "received", receivedDate: today });
     expect(res.status).toBe(200);
     expect(res.body.status).toBe("CONSULTANT_PAID");
-    expect((await request(app).post("/api/admin/payments/client").set(as("accounts")).send({ invoiceId: ids.invoice, status: "received", receivedDate: today })).status).toBe(409);
+    expect((await request(app).post("/api/admin/payments/client").set(as("admin")).send({ invoiceId: ids.invoice, status: "received", receivedDate: today })).status).toBe(409);
   });
 
   it("can't record the client's payment before the invoice goes out", async () => {
     const inv = await db.invoice.findFirstOrThrow({ where: { sentAt: null } });
-    const res = await request(app).post("/api/admin/payments/client").set(as("accounts")).send({ invoiceId: inv.id, status: "received", receivedDate: today });
+    const res = await request(app).post("/api/admin/payments/client").set(as("admin")).send({ invoiceId: inv.id, status: "received", receivedDate: today });
     expect(res.status).toBe(409);
+  });
+});
+
+describe("payment reminders", () => {
+  it("previews, then emails the client the placement's unpaid invoices; admins only", async () => {
+    const inv = await db.invoice.findFirstOrThrow({ where: { clientId: ids.vendor, clientPaidAt: null } });
+    const body = { placementId: inv.placementId };
+    expect((await request(app).post("/api/admin/payments/reminders").set(as("accounts")).send(body)).status).toBe(403);
+
+    const before = mailer.sent.length;
+    const preview = await request(app).post("/api/admin/payments/reminders").set(as("admin")).send({ ...body, preview: true });
+    expect(preview.status).toBe(200);
+    expect(preview.body).toMatchObject({ sent: false, to: "invoices@apex.example", invoices: 1, total: 8050 });
+    expect(preview.body.text).toContain(inv.number);
+    expect(mailer.sent.length).toBe(before);
+
+    const sent = await request(app).post("/api/admin/payments/reminders").set(as("admin")).send(body);
+    expect(sent.body.sent).toBe(true);
+    expect(mailer.sent.at(-1)).toMatchObject({ to: "invoices@apex.example" });
+    expect(mailer.sent.at(-1)!.subject).toMatch(/^Payment reminder: 1 invoice, \$8,050\.00/);
+    const log = await db.emailLog.findFirstOrThrow({ where: { kind: "PAYMENT_REMINDER" } });
+    expect(log.status).toBe("SENT");
+  });
+
+  it("refuses when nothing is unpaid", async () => {
+    const paid = await db.invoice.findUniqueOrThrow({ where: { id: ids.invoice } });
+    const res = await request(app).post("/api/admin/payments/reminders").set(as("admin")).send({ placementId: paid.placementId, preview: true });
+    // Its only invoice so far is paid in full.
+    expect(res.status).toBe(409);
+    expect(res.body.error).toMatch(/Nothing is unpaid/);
   });
 });
 
@@ -431,7 +465,7 @@ describe("billing summary", () => {
   it("per consultant per month: hours, billed, received, paid, margin, stage, overdue", async () => {
     // Make the vendor invoice overdue.
     await db.invoice.updateMany({ where: { sentAt: null }, data: { dueDate: new Date(`${addDays(today, -5)}T00:00:00Z`) } });
-    const res = await request(app).get("/api/admin/reports/billing-summary").set(as("accounts"));
+    const res = await request(app).get("/api/admin/reports/billing-summary").set(as("admin"));
     expect(res.status).toBe(200);
     const manas = res.body.rows.find((r: { invoiceId: string }) => r.invoiceId === ids.invoice);
     expect(manas).toMatchObject({ hours: 160, billed: 15200, received: 15200, paid: 10400, margin: 4800, expectedMargin: 4800, stage: "consultant_paid", paidBeforeClient: false });
@@ -441,12 +475,12 @@ describe("billing summary", () => {
     expect(res.body.totals.overdueInvoices).toBe(1);
     expect(res.body.byConsultant.find((c: { consultantName: string }) => c.consultantName === "Manas").margin).toBe(4800);
 
-    const filtered = await request(app).get("/api/admin/reports/billing-summary?status=overdue").set(as("accounts"));
+    const filtered = await request(app).get("/api/admin/reports/billing-summary?status=overdue").set(as("admin"));
     expect(filtered.body.rows).toHaveLength(1);
   });
 
   it("exports CSV with formula-looking cells neutralised", async () => {
-    const res = await request(app).get(`/api/admin/reports/billing-summary?format=csv&month=${lastMonth}`).set(as("accounts"));
+    const res = await request(app).get(`/api/admin/reports/billing-summary?format=csv&month=${lastMonth}`).set(as("admin"));
     expect(res.status).toBe(200);
     expect(res.headers["content-type"]).toMatch(/text\/csv/);
     expect(res.headers["content-disposition"]).toContain(`billing-summary-${lastMonth}.csv`);

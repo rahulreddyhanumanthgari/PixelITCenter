@@ -14,6 +14,7 @@ import {
   invoiceMoveSchema,
   invoiceSendSchema,
   month as monthSchema,
+  paymentReminderSchema,
   placementCreateSchema,
   placementListSchema,
   placementUpdateSchema,
@@ -124,6 +125,9 @@ export function clientSectionController(s: ClientSection) {
     // --- payments ---
     recordClientPayment: async (req: Request, res: Response) => {
       res.json(await s.payments.recordClient(actorOf(req), clientPaymentSchema.parse(req.body)));
+    },
+    paymentReminder: async (req: Request, res: Response) => {
+      res.json(await s.payments.remind(actorOf(req), paymentReminderSchema.parse(req.body)));
     },
     recordConsultantPayment: async (req: Request, res: Response) => {
       res.json(await s.payments.recordConsultant(actorOf(req), consultantPaymentSchema.parse(req.body)));

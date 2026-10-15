@@ -53,6 +53,8 @@ export function createReportsService(ctx: Ctx) {
               : "timesheet_received";
     return {
       timesheetId: t.id,
+      placementId: t.placement.id,
+      role: t.placement.role,
       invoiceId: inv?.id ?? null,
       invoiceNumber: inv?.number ?? null,
       month: t.month,
@@ -207,12 +209,13 @@ export function createReportsService(ctx: Ctx) {
       const lastMonth = previousMonth(monthOf(today));
       const role = actor.role;
       const finance = canSeeMoney(role);
-      const timesheetStaff = role === "verifier" || finance;
+      const accounts = role === "admin" || role === "accounts";
+      const timesheetStaff = role === "verifier" || accounts;
 
       const [activePlacements, toVerify, toCheck, missing, unsent, overdue, toPay] = await Promise.all([
         db.placement.count({ where: { extensionStatus: { not: "ENDED" } } }),
         timesheetStaff && role !== "accounts" ? db.timesheet.count({ where: { status: { in: ["RECEIVED", "VERIFIED"] } } }) : null,
-        finance ? db.timesheet.count({ where: { status: "VERIFIER_APPROVED" } }) : null,
+        accounts ? db.timesheet.count({ where: { status: "VERIFIER_APPROVED" } }) : null,
         timesheetStaff ? db.placement.count({ where: { ...activeIn(lastMonth), extensionStatus: { not: "ENDED" }, timesheets: { none: { month: lastMonth } } } }) : null,
         finance ? db.invoice.count({ where: { sentAt: null } }) : null,
         finance ? db.invoice.count({ where: { clientPaidAt: null, dueDate: { lt: day(today) } } }) : null,

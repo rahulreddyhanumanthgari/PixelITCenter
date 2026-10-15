@@ -1,10 +1,10 @@
 "use client";
 
-import { useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import Link from "next/link";
-import { AlertTriangle, Download, FileDown, Mail, Send } from "lucide-react";
+import { AlertTriangle, ArrowLeft, ChevronRight, Download, FileDown, Mail, Search, Send } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Chip, PageHeader, useToast } from "../ui";
+import { Avatar, Chip, PageHeader, useToast } from "../ui";
 import { adminApi, openSignedFrom, type BillingFilters, type Invoice, type SummaryRow, type Who } from "./api";
 import {
   can,
@@ -19,7 +19,6 @@ import {
   FlowSteps,
   hours,
   Loading,
-  monthShort,
   Panel,
   recentMonths,
   roleLabel,
@@ -31,25 +30,102 @@ import {
   useWho,
 } from "./ui";
 
-// Billing and invoices (admin, accounts). One row per consultant per month,
-// tracked through five stages so nothing is missed:
+// Billing and invoices: ADMINS ONLY (menu, page guard and the API).
+//
+// One card per student at a company (a placement): at a glance who, where, how
+// much was billed, paid and unpaid, and what's due or overdue. "Email reminder"
+// sends the company's billing email a fixed message listing the unpaid invoices
+// (only the invoices and amounts change; the server writes and sends it, logged).
+// Click a card: every month's timesheet with its invoice and payments; click a
+// month to send the invoice or record a payment.
+//
+// Each month still moves through five stages so nothing is missed:
 //   Timesheet received → Timesheet submitted to client → Invoice sent
-//   → Payment received from client → Consultant paid
-// Invoices are raised automatically when accounts checks a timesheet; nobody
-// types an amount. "Consultant paid" is blocked until the client has paid,
+//   → Payment received from client → Student paid
+// Invoices are raised automatically when the timesheet's hours are confirmed;
+// nobody types an amount. "Student paid" is blocked until the client has paid,
 // unless an admin overrides it with a reason (logged).
+
+/** One placement's billing: the rows of the billing summary, added up. */
+type Account = {
+  placementId: string;
+  consultantName: string;
+  company: string;
+  client: SummaryRow["client"];
+  role: string;
+  rows: SummaryRow[];
+  billed: number;
+  received: number;
+  unpaid: number;
+  paidOut: number;
+  margin: number;
+  overdue: SummaryRow[];
+  nextDue: string | null;
+  waiting: number;
+};
+
+function accountsOf(rows: SummaryRow[]): Account[] {
+  const groups = new Map<string, SummaryRow[]>();
+  for (const r of rows) groups.set(r.placementId, [...(groups.get(r.placementId) ?? []), r]);
+  return [...groups.values()].map((g) => {
+    const first = g[0]!;
+    const invoiced = g.filter((r) => r.invoiceId);
+    const open = invoiced.filter((r) => r.stage !== "client_paid" && r.stage !== "consultant_paid");
+    const add = (k: "billed" | "received" | "paid" | "margin") => invoiced.reduce((a, r) => a + r[k], 0);
+    return {
+      placementId: first.placementId,
+      consultantName: first.consultantName,
+      company: first.endClientName ?? first.client.name,
+      client: first.client,
+      role: first.role,
+      rows: [...g].sort((a, b) => b.month.localeCompare(a.month)),
+      billed: add("billed"),
+      received: add("received"),
+      unpaid: open.reduce((a, r) => a + r.billed - r.received, 0),
+      paidOut: add("paid"),
+      margin: add("margin"),
+      overdue: g.filter((r) => r.overdue),
+      nextDue: open.map((r) => r.dueDate).filter((d): d is string => Boolean(d)).sort()[0] ?? null,
+      waiting: g.filter((r) => !r.invoiceId).length,
+    };
+  });
+}
+
+type Status = { label: string; tone: "good" | "warn" | "bad" | "ink" };
+
+function statusOf(a: Account): Status {
+  if (a.overdue.length) {
+    const days = Math.max(...a.overdue.map((r) => r.daysOverdue));
+    return { label: `Overdue ${days} day${days === 1 ? "" : "s"}`, tone: "bad" };
+  }
+  if (a.unpaid > 0) return { label: `Due ${date(a.nextDue)}`, tone: "warn" };
+  if (a.billed > 0) return { label: "All paid", tone: "good" };
+  return { label: "No invoice yet", tone: "ink" };
+}
 
 export function BillingAdminPage() {
   const who = useWho();
   const months = useMemo(() => recentMonths(12), []);
   const [filters, setFilters] = useState<BillingFilters>({});
-  const [view, setView] = useState<"rows" | "consultants">("rows");
   const query = useDebounced(filters);
   const summary = useApi(who ? () => adminApi.billingSummary(who, query) : null, [who?.email, who?.role, JSON.stringify(query)]);
   const clients = useApi(who ? () => adminApi.clients(who) : null, [who?.email, who?.role]);
-  const [open, setOpen] = useState<SummaryRow | null>(null);
+  const [openId, setOpenId] = useState<string | null>(null);
+  const [remind, setRemind] = useState<Account | null>(null);
   const [toast, showToast] = useToast();
   const set = (patch: Partial<BillingFilters>) => setFilters((f) => ({ ...f, ...patch }));
+
+  const accounts = useMemo(
+    () =>
+      accountsOf(summary.data?.rows ?? []).sort(
+        (a, b) => b.overdue.length - a.overdue.length || b.unpaid - a.unpaid || a.consultantName.localeCompare(b.consultantName),
+      ),
+    [summary.data],
+  );
+  const open = openId ? accounts.find((a) => a.placementId === openId) : undefined;
+  useEffect(() => {
+    window.scrollTo({ top: 0 });
+  }, [openId]);
 
   async function exportCsv() {
     if (!who) return;
@@ -60,11 +136,43 @@ export function BillingAdminPage() {
     }
   }
 
+  const reminder = who && (
+    <ReminderWindow
+      who={who}
+      account={remind}
+      onClose={() => setRemind(null)}
+      onSent={(message) => {
+        setRemind(null);
+        summary.reload();
+        showToast(message);
+      }}
+    />
+  );
+
+  if (open && who) {
+    return (
+      <>
+        <BillingDetail
+          who={who}
+          account={open}
+          onBack={() => setOpenId(null)}
+          onRemind={() => setRemind(open)}
+          onChanged={(message) => {
+            summary.reload();
+            showToast(message);
+          }}
+        />
+        {reminder}
+        {toast}
+      </>
+    );
+  }
+
   const t = summary.data?.totals;
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Billing & invoices" body="Every consultant, every month: timesheet, invoice, client payment, consultant pay.">
+      <PageHeader title="Billing & invoices" body="Every student at every company: what's billed, paid, unpaid and due. Open a card for month-by-month details.">
         <button type="button" className="dash-btn-ghost" onClick={exportCsv} disabled={!summary.data}>
           <Download className="size-4" aria-hidden="true" /> Export CSV
         </button>
@@ -86,10 +194,10 @@ export function BillingAdminPage() {
         </div>
         <div>
           <label htmlFor="bl-client" className="sr-only">
-            Client
+            Company
           </label>
           <select id="bl-client" className="dash-input" value={filters.clientId ?? ""} onChange={(e) => set({ clientId: e.target.value || undefined })}>
-            <option value="">All clients</option>
+            <option value="">All companies</option>
             {clients.data?.clients.map((c) => (
               <option key={c.id} value={c.id}>
                 {c.name}
@@ -111,11 +219,12 @@ export function BillingAdminPage() {
             ))}
           </select>
         </div>
-        <div>
+        <div className="relative">
           <label htmlFor="bl-consultant" className="sr-only">
-            Consultant
+            Student
           </label>
-          <input id="bl-consultant" type="search" className="dash-input" placeholder="Consultant name" value={filters.consultant ?? ""} onChange={(e) => set({ consultant: e.target.value || undefined })} />
+          <input id="bl-consultant" type="search" className="dash-input pr-10" placeholder="Student name" value={filters.consultant ?? ""} onChange={(e) => set({ consultant: e.target.value || undefined })} />
+          <Search className="pointer-events-none absolute top-1/2 right-3.5 size-4 -translate-y-1/2 text-[var(--dash-muted)]" aria-hidden="true" />
         </div>
       </div>
 
@@ -123,138 +232,265 @@ export function BillingAdminPage() {
 
       {t && (
         <ul className="grid grid-cols-2 gap-2.5 sm:gap-3 lg:grid-cols-5">
-          <Stat label="Billed" value={usd(t.billed)} note={`${hours(t.hours)} · ${t.rows} row${t.rows === 1 ? "" : "s"}`} />
-          <Stat label="Received from clients" value={usd(t.received)} note={`${usd(t.billed - t.received)} outstanding`} />
-          <Stat label="Paid to consultants" value={usd(t.paid)} />
-          <Stat label="Margin" value={usd(t.margin)} note={`Billed − paid. Expected: ${usd(t.expectedMargin)}`} />
+          <Stat label="Billed" value={usd(t.billed)} note={`${hours(t.hours)} · ${accounts.length} student${accounts.length === 1 ? "" : "s"}`} />
+          <Stat label="Received from companies" value={usd(t.received)} note={`${usd(t.billed - t.received)} unpaid`} />
+          <Stat label="Paid to students" value={usd(t.paid)} />
+          <Stat label="Margin" value={usd(t.margin)} note={`Expected: ${usd(t.expectedMargin)}`} />
           <Stat label="Overdue" value={String(t.overdueInvoices)} note={t.overdueInvoices ? `${usd(t.overdueAmount)} past due` : "Nothing past due"} bad={t.overdueInvoices > 0} />
         </ul>
       )}
 
-      <div className="dash-tabs" role="group" aria-label="View">
-        <button type="button" className="dash-tab" aria-pressed={view === "rows"} onClick={() => setView("rows")}>
-          By month
-        </button>
-        <button type="button" className="dash-tab" aria-pressed={view === "consultants"} onClick={() => setView("consultants")}>
-          By consultant
-        </button>
-      </div>
-
       {summary.loading && !summary.data ? (
         <Loading />
       ) : summary.data ? (
-        <div className="dash-card p-2 sm:p-3">
-          {summary.data.rows.length === 0 ? (
-            <Empty title="Nothing matches" body="Try another month, client or stage." />
-          ) : view === "rows" ? (
-            <div className="dash-table-wrap">
-              <table className="dash-table">
-                <thead>
-                  <tr>
-                    <th scope="col">Consultant</th>
-                    <th scope="col">Month</th>
-                    <th scope="col">Client</th>
-                    <th scope="col">Stage</th>
-                    <th scope="col">Hours</th>
-                    <th scope="col">Invoice</th>
-                    <th scope="col">Billed</th>
-                    <th scope="col">Received</th>
-                    <th scope="col">Paid out</th>
-                    <th scope="col">Margin</th>
-                    <th scope="col">Due</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {summary.data.rows.map((r) => (
-                    <tr key={r.timesheetId} data-clickable onClick={() => setOpen(r)} data-flag={r.overdue ? "bad" : undefined}>
-                      <td>
-                        <button type="button" className="text-left font-semibold hover:underline" onClick={(e) => (e.stopPropagation(), setOpen(r))}>
-                          {r.consultantName}
-                        </button>
-                      </td>
-                      <td>{monthShort(r.month)}</td>
-                      <td>{r.client.name}</td>
-                      <td>
-                        <span className="flex items-center gap-2">
-                          <FlowSteps steps={r.steps} compact />
-                          <span className="text-xs">{r.stageLabel}</span>
-                          {r.paidBeforeClient && <Chip tone="warn">Override</Chip>}
-                          {r.emailFailed && <Chip tone="bad">Email failed</Chip>}
-                        </span>
-                      </td>
-                      <td>{hours(r.hours)}</td>
-                      <td>{r.invoiceNumber ?? <span className="text-[var(--dash-muted)]">{r.timesheetStatusLabel}</span>}</td>
-                      <td className="font-semibold text-[var(--dash-ink)]">{r.invoiceNumber ? usd(r.billed) : "–"}</td>
-                      <td>{r.invoiceNumber ? usd(r.received) : "–"}</td>
-                      <td>{r.invoiceNumber ? usd(r.paid) : "–"}</td>
-                      <td>{r.invoiceNumber ? usd(r.margin) : "–"}</td>
-                      <td>
-                        {r.overdue ? (
-                          <Chip tone="bad">{`${r.daysOverdue} day${r.daysOverdue === 1 ? "" : "s"} overdue`}</Chip>
-                        ) : r.clientPaymentExpectedDate && r.stage !== "client_paid" && r.stage !== "consultant_paid" ? (
-                          <span title={r.clientPaymentComment ?? undefined}>Expected {date(r.clientPaymentExpectedDate)}</span>
-                        ) : (
-                          date(r.dueDate)
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          ) : (
-            <div className="dash-table-wrap">
-              <table className="dash-table">
-                <thead>
-                  <tr>
-                    <th scope="col">Consultant</th>
-                    <th scope="col">Clients</th>
-                    <th scope="col">Months</th>
-                    <th scope="col">Hours</th>
-                    <th scope="col">Billed</th>
-                    <th scope="col">Received from client</th>
-                    <th scope="col">Paid to consultant</th>
-                    <th scope="col">Margin</th>
-                    <th scope="col">Overdue</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {summary.data.byConsultant.map((c) => (
-                    <tr key={c.consultantName + c.clients.join()} data-flag={c.overdueInvoices ? "bad" : undefined}>
-                      <td>{c.consultantName}</td>
-                      <td>{c.clients.join(", ")}</td>
-                      <td>{c.months}</td>
-                      <td>{hours(c.hours)}</td>
-                      <td className="font-semibold text-[var(--dash-ink)]">{usd(c.billed)}</td>
-                      <td>{usd(c.received)}</td>
-                      <td>{usd(c.paid)}</td>
-                      <td>
-                        {usd(c.margin)}
-                        <span className="block text-xs text-[var(--dash-muted)]">expected {usd(c.expectedMargin)}</span>
-                      </td>
-                      <td>{c.overdueInvoices ? <Chip tone="bad">{String(c.overdueInvoices)}</Chip> : "0"}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
+        accounts.length === 0 ? (
+          <div className="dash-card">
+            <Empty title="Nothing matches" body="Try another month, company or stage." />
+          </div>
+        ) : (
+          <ul className="grid gap-4 sm:grid-cols-2 sm:gap-5 xl:grid-cols-3">
+            {accounts.map((a) => (
+              <li key={a.placementId} className="min-w-0">
+                <BillingCard account={a} onOpen={() => setOpenId(a.placementId)} onRemind={() => setRemind(a)} />
+              </li>
+            ))}
+          </ul>
+        )
       ) : null}
 
-      {who && (
-        <InvoicePanel
-          who={who}
-          row={open}
-          onClose={() => setOpen(null)}
-          onChanged={(message) => {
-            summary.reload();
-            showToast(message);
-          }}
-        />
-      )}
+      {reminder}
       {toast}
     </div>
+  );
+}
+
+/** At a glance: who, which company, billed / paid / unpaid, due or overdue. */
+function BillingCard({ account: a, onOpen, onRemind }: { account: Account; onOpen: () => void; onRemind: () => void }) {
+  const s = statusOf(a);
+  return (
+    <div className={cn("dash-card flex h-full flex-col overflow-hidden transition hover:border-[var(--dash-line-strong)] hover:shadow-[0_18px_40px_-28px_rgb(4_19_39/0.55)]", s.tone === "bad" && "border-[rgb(220_38_38/0.35)]")}>
+      <button type="button" onClick={onOpen} aria-label={`${a.consultantName} at ${a.company}: ${s.label}. Open billing.`} className="flex flex-1 flex-col text-left">
+        <span className="flex items-center gap-3.5 p-5 pb-4">
+          <Avatar name={a.consultantName} size={52} />
+          <span className="min-w-0 flex-1">
+            <span className="block truncate text-lg font-semibold">{a.consultantName}</span>
+            <span className="block truncate text-sm font-medium text-[var(--dash-cyan-ink)]">{a.company}</span>
+            <span className="block truncate text-xs text-[var(--dash-muted)]">
+              {a.role}
+              {a.client.type === "VENDOR" ? ` · via ${a.client.name}` : ""}
+            </span>
+          </span>
+          <ChevronRight className="size-5 flex-none text-[var(--dash-faint)]" aria-hidden="true" />
+        </span>
+        <span className="grid grid-cols-3 border-y border-[var(--dash-line)] bg-[var(--dash-side)]">
+          <Figure label="Billed" value={dollars(a.billed)} />
+          <Figure label="Paid" value={dollars(a.received)} />
+          <Figure label="Unpaid" value={dollars(a.unpaid)} strong={a.unpaid > 0} bad={a.overdue.length > 0} />
+        </span>
+        <span className="flex flex-wrap items-center gap-2 px-5 py-3.5">
+          <Chip tone={s.tone}>{s.label}</Chip>
+          {a.waiting > 0 && <Chip>{`${a.waiting} timesheet${a.waiting === 1 ? "" : "s"} not invoiced`}</Chip>}
+        </span>
+      </button>
+      {a.unpaid > 0 && (
+        <div className="border-t border-[var(--dash-line)] px-5 py-3">
+          <button type="button" className="dash-btn-ghost w-full" onClick={onRemind}>
+            <Mail className="size-4" aria-hidden="true" /> Email payment reminder
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/** Whole dollars for the cards ($36,960); the detail page shows cents. */
+const dollars = (n: number) => new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(n);
+
+function Figure({ label, value, strong = false, bad = false }: { label: string; value: string; strong?: boolean; bad?: boolean }) {
+  return (
+    <span className="min-w-0 px-1.5 py-3 text-center first:pl-4 last:pr-4">
+      <span className="block text-[0.6875rem] font-medium tracking-wide text-[var(--dash-muted)] uppercase">{label}</span>
+      <span className={cn("mt-0.5 block truncate text-sm font-semibold tabular-nums sm:text-base", strong && "text-[var(--dash-orange-ink)]", bad && "text-[var(--dash-red-ink)]")}>{value}</span>
+    </span>
+  );
+}
+
+/** One student at one company: totals, the reminder button, then every month. */
+function BillingDetail({ who, account: a, onBack, onRemind, onChanged }: { who: Who; account: Account; onBack: () => void; onRemind: () => void; onChanged: (message: string) => void }) {
+  const [row, setRow] = useState<SummaryRow | null>(null);
+  const back = useRef<HTMLButtonElement>(null);
+  useEffect(() => back.current?.focus(), []);
+  const s = statusOf(a);
+
+  return (
+    <div className="space-y-6">
+      <button ref={back} type="button" className="dash-btn-ghost" onClick={onBack}>
+        <ArrowLeft className="size-4" aria-hidden="true" /> All billing
+      </button>
+
+      <section className="dash-hero p-5 sm:p-8" aria-labelledby="billing-name">
+        <div className="flex flex-col items-center gap-5 text-center sm:flex-row sm:text-left">
+          <span className="rounded-full ring-4 ring-white">
+            <Avatar name={a.consultantName} size={96} />
+          </span>
+          <div className="min-w-0 flex-1">
+            <h1 id="billing-name" className="dash-title">
+              {a.consultantName}
+            </h1>
+            <p className="mt-2 text-lg font-medium text-[var(--dash-cyan-ink)]">{a.company}</p>
+            <p className="text-[0.9375rem] text-[var(--dash-muted)]">
+              {a.role}
+              {a.client.type === "VENDOR" ? ` · billed via ${a.client.name}` : ""}
+            </p>
+            <p className="mt-3 flex flex-wrap justify-center gap-2 sm:justify-start">
+              <Chip tone={s.tone}>{s.label}</Chip>
+            </p>
+          </div>
+          {a.unpaid > 0 && (
+            <button type="button" className="dash-btn" data-tone="orange" onClick={onRemind}>
+              <Mail className="size-4" aria-hidden="true" /> Email payment reminder
+            </button>
+          )}
+        </div>
+      </section>
+
+      <ul className="grid grid-cols-2 gap-2.5 sm:gap-3 lg:grid-cols-5">
+        <Stat label="Billed" value={usd(a.billed)} />
+        <Stat label="Received" value={usd(a.received)} />
+        <Stat label="Unpaid" value={usd(a.unpaid)} note={a.nextDue ? `Next due ${date(a.nextDue)}` : undefined} bad={a.overdue.length > 0} />
+        <Stat label="Paid to student" value={usd(a.paidOut)} />
+        <Stat label="Margin" value={usd(a.margin)} note="Billed − paid to student" />
+      </ul>
+
+      <section className="dash-card dash-card-pad" aria-labelledby="billing-months">
+        <h2 id="billing-months" className="dash-section-title">
+          Month by month <span className="dash-count">{a.rows.length}</span>
+        </h2>
+        <p className="mt-1 text-sm text-[var(--dash-muted)]">Each month&apos;s timesheet, its invoice and the payments. Open a month to send its invoice or record a payment.</p>
+        <ul className="mt-4 space-y-2.5">
+          {a.rows.map((r) => (
+            <li key={r.timesheetId}>
+              <button
+                type="button"
+                onClick={() => setRow(r)}
+                className={cn(
+                  "grid w-full gap-3 rounded-2xl border p-4 text-left transition hover:bg-[var(--dash-side)] sm:grid-cols-[9rem_minmax(0,1fr)_auto] sm:items-center",
+                  r.overdue ? "border-[rgb(220_38_38/0.35)]" : "border-[var(--dash-line)]",
+                )}
+              >
+                <span>
+                  <span className="block font-semibold">{r.monthLabel}</span>
+                  <span className="block text-xs text-[var(--dash-muted)]">{hours(r.hours)}</span>
+                </span>
+                <span className="min-w-0">
+                  <span className="flex flex-wrap items-center gap-2 text-sm">
+                    <FlowSteps steps={r.steps} compact />
+                    <span>{r.stageLabel}</span>
+                  </span>
+                  <span className="mt-1 block text-xs text-[var(--dash-muted)]">
+                    {r.invoiceNumber ? `${r.invoiceNumber} · ${usd(r.billed)} · due ${date(r.dueDate)}` : `Timesheet: ${r.timesheetStatusLabel}. The invoice is raised once the hours are confirmed.`}
+                    {r.clientPaymentExpectedDate && r.stage !== "client_paid" && r.stage !== "consultant_paid" ? ` · expected ${date(r.clientPaymentExpectedDate)}` : ""}
+                  </span>
+                </span>
+                <span className="flex flex-wrap items-center gap-2 sm:justify-end">
+                  {r.overdue && <Chip tone="bad">{`${r.daysOverdue} day${r.daysOverdue === 1 ? "" : "s"} overdue`}</Chip>}
+                  {r.invoiceId && !r.overdue && (
+                    <Chip tone={r.stage === "client_paid" || r.stage === "consultant_paid" ? "good" : "warn"}>
+                      {r.stage === "client_paid" || r.stage === "consultant_paid" ? "Paid" : "Unpaid"}
+                    </Chip>
+                  )}
+                  {r.emailFailed && <Chip tone="bad">Email failed</Chip>}
+                  <ChevronRight className="size-4 text-[var(--dash-faint)]" aria-hidden="true" />
+                </span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      <InvoicePanel
+        who={who}
+        row={row}
+        onClose={() => setRow(null)}
+        onChanged={(message) => {
+          setRow(null);
+          onChanged(message);
+        }}
+      />
+    </div>
+  );
+}
+
+/**
+ * The payment reminder: the server writes it (a fixed message; only the
+ * invoices and amounts change) and shows it here first. Sending emails the
+ * company's billing email and is logged.
+ */
+function ReminderWindow({ who, account, onClose, onSent }: { who: Who; account: Account | null; onClose: () => void; onSent: (message: string) => void }) {
+  const preview = useApi(account ? () => adminApi.paymentReminder(who, account.placementId, true) : null, [account?.placementId]);
+  const [busy, setBusy] = useState(false);
+  const [problem, setProblem] = useState<string | null>(null);
+  const [last, setLast] = useState(account);
+  if (account !== last) {
+    setLast(account);
+    setProblem(null);
+  }
+  const p = preview.data;
+
+  async function send() {
+    if (!account) return;
+    setBusy(true);
+    setProblem(null);
+    try {
+      const r = await adminApi.paymentReminder(who, account.placementId);
+      onSent(`Reminder emailed to ${r.to}.`);
+    } catch (e) {
+      setProblem(errorText(e));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <Panel
+      center
+      open={Boolean(account)}
+      title="Email a payment reminder"
+      subtitle={account ? `${account.consultantName} at ${account.company}` : undefined}
+      onClose={onClose}
+      footer={
+        <>
+          <button type="button" className="dash-btn-ghost mr-auto" onClick={onClose} disabled={busy}>
+            Cancel
+          </button>
+          <button type="button" className="dash-btn" data-tone="orange" onClick={send} disabled={busy || !p}>
+            <Send className="size-4" aria-hidden="true" /> {busy ? "Sending…" : "Send reminder"}
+          </button>
+        </>
+      }
+    >
+      {preview.error ? (
+        <ErrorNote text={preview.error} onRetry={preview.reload} />
+      ) : !p ? (
+        <Loading />
+      ) : (
+        <div className="space-y-4">
+          {problem && <ErrorNote text={problem} />}
+          <dl className="grid gap-3 rounded-2xl bg-[var(--dash-side)] p-4 text-sm">
+            <div>
+              <dt className="text-xs text-[var(--dash-muted)]">To</dt>
+              <dd className="font-medium break-all">{p.to}</dd>
+            </div>
+            <div>
+              <dt className="text-xs text-[var(--dash-muted)]">Subject</dt>
+              <dd className="font-medium">{p.subject}</dd>
+            </div>
+          </dl>
+          <pre className="max-h-[40dvh] overflow-auto rounded-2xl border border-[var(--dash-line)] p-4 font-sans text-sm leading-relaxed whitespace-pre-wrap">{p.text}</pre>
+          <p className="text-xs text-[var(--dash-muted)]">The message is always the same; only the invoices and amounts change. It goes to the company&apos;s billing email on file.</p>
+        </div>
+      )}
+    </Panel>
   );
 }
 

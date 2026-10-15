@@ -187,6 +187,9 @@ export const clientPaymentSchema = z.discriminatedUnion("status", [
     .strict(),
 ]);
 
+/** Remind a client about one placement's unpaid invoices. `preview: true` returns the email without sending it. */
+export const paymentReminderSchema = z.object({ placementId: uuid, preview: z.boolean().optional() }).strict();
+
 export const consultantPaymentSchema = z
   .object({
     invoiceId: uuid,

@@ -798,6 +798,17 @@ pages are gone. The client section is an internal tool for PixelIT staff.
   terms pre-fill Add client. The Activity log is the server's real audit log.
   With the backend: team and settings become server tables only admins
   change, and the API takes the role from there, not from the browser.
+- **Billing is admins only, as cards (2026-10-16):** the Billing menu item,
+  the page guard and the API (invoices, payments, billing report, reminders)
+  are admin-only; the Accounts role keeps the timesheet accounts check and
+  client records but no amounts. The page shows one card per student at a
+  company (billed / paid / unpaid, due or overdue, "not invoiced" count);
+  opening a card shows totals and each month's timesheet, invoice and
+  payment, and a month opens the invoice window (send, record payments).
+  "Email payment reminder" (card and detail) previews then sends a fixed
+  message listing the placement's unpaid invoices to the company's billing
+  email; only the invoices and amounts change (`POST
+  /api/admin/payments/reminders`, logged as PAYMENT_REMINDER + audit).
 - **Profile photos (2026-10-15, front end only):** everyone (students,
   employees, admins) can add a photo: hover the avatar on Profile or the
   Dashboard card for a pencil (on touch screens an orange pencil badge always
