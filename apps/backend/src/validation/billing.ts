@@ -209,6 +209,8 @@ export type BillingStage = (typeof BILLING_STAGES)[number];
 export const billingSummarySchema = z
   .object({
     month: month.optional(),
+    /** A whole year ("2026"); ignored when a month is given. */
+    year: z.string().regex(/^(19|20)\d{2}$/, "Use a year like 2026.").optional(),
     clientId: uuid.optional(),
     status: z.enum([...BILLING_STAGES, "overdue"]).optional(),
     consultant: z.string().trim().max(100).optional(),

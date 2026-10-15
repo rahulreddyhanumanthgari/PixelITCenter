@@ -20,8 +20,8 @@ import {
   hours,
   Loading,
   Panel,
-  recentMonths,
   roleLabel,
+  SearchSelect,
   STAGES,
   todayIso,
   usd,
@@ -103,10 +103,16 @@ function statusOf(a: Account): Status {
   return { label: "No invoice yet", tone: "ink" };
 }
 
+const MONTH_NAMES = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+/** This year back to 2020, newest first. */
+const YEARS = Array.from({ length: new Date().getFullYear() - 2019 }, (_, i) => String(new Date().getFullYear() - i));
+
 export function BillingAdminPage() {
   const who = useWho();
-  const months = useMemo(() => recentMonths(12), []);
   const [filters, setFilters] = useState<BillingFilters>({});
+  // Any year and month: the month needs a year; a year on its own shows that whole year.
+  const [year, setYear] = useState("");
+  const [monthNo, setMonthNo] = useState("");
   const query = useDebounced(filters);
   const summary = useApi(who ? () => adminApi.billingSummary(who, query) : null, [who?.email, who?.role, JSON.stringify(query)]);
   const clients = useApi(who ? () => adminApi.clients(who) : null, [who?.email, who?.role]);
@@ -178,33 +184,64 @@ export function BillingAdminPage() {
         </button>
       </PageHeader>
 
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <div>
-          <label htmlFor="bl-month" className="sr-only">
-            Month
-          </label>
-          <select id="bl-month" className="dash-input" value={filters.month ?? ""} onChange={(e) => set({ month: e.target.value || undefined })}>
-            <option value="">All months</option>
-            {months.map((m) => (
-              <option key={m.value} value={m.value}>
-                {m.label}
-              </option>
-            ))}
-          </select>
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+        <div className="grid grid-cols-2 gap-3 sm:col-span-2 xl:col-span-2">
+          <div>
+            <label htmlFor="bl-year" className="sr-only">
+              Year
+            </label>
+            <select
+              id="bl-year"
+              className="dash-input"
+              value={year}
+              onChange={(e) => {
+                const y = e.target.value;
+                setYear(y);
+                set({ year: y || undefined, month: y && monthNo ? `${y}-${monthNo}` : undefined });
+              }}
+            >
+              <option value="">All years</option>
+              {YEARS.map((y) => (
+                <option key={y} value={y}>
+                  {y}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label htmlFor="bl-month" className="sr-only">
+              Month
+            </label>
+            <select
+              id="bl-month"
+              className="dash-input"
+              value={monthNo}
+              disabled={!year}
+              title={year ? undefined : "Pick a year first"}
+              onChange={(e) => {
+                const m = e.target.value;
+                setMonthNo(m);
+                set({ month: m ? `${year}-${m}` : undefined });
+              }}
+            >
+              <option value="">{year ? "All months" : "Month"}</option>
+              {MONTH_NAMES.map((name, i) => (
+                <option key={name} value={String(i + 1).padStart(2, "0")}>
+                  {name}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
-        <div>
-          <label htmlFor="bl-client" className="sr-only">
-            Company
-          </label>
-          <select id="bl-client" className="dash-input" value={filters.clientId ?? ""} onChange={(e) => set({ clientId: e.target.value || undefined })}>
-            <option value="">All companies</option>
-            {clients.data?.clients.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name}
-              </option>
-            ))}
-          </select>
-        </div>
+        <SearchSelect
+          id="bl-client"
+          label="Company"
+          value={filters.clientId ?? ""}
+          onChange={(v) => set({ clientId: v || undefined })}
+          allLabel="All companies"
+          placeholder="Type a company name…"
+          options={(clients.data?.clients ?? []).map((c) => ({ value: c.id, label: c.name, hint: c.type === "VENDOR" ? "Vendor" : undefined }))}
+        />
         <div>
           <label htmlFor="bl-status" className="sr-only">
             Stage

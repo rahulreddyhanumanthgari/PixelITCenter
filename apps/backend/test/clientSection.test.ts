@@ -479,6 +479,16 @@ describe("billing summary", () => {
     expect(filtered.body.rows).toHaveLength(1);
   });
 
+  it("filters a whole year", async () => {
+    const year = lastMonth.slice(0, 4);
+    const res = await request(app).get(`/api/admin/reports/billing-summary?year=${year}`).set(as("admin"));
+    expect(res.status).toBe(200);
+    expect(res.body.rows.length).toBeGreaterThan(0);
+    expect(res.body.rows.every((r: { month: string }) => r.month.startsWith(`${year}-`))).toBe(true);
+    expect((await request(app).get("/api/admin/reports/billing-summary?year=1890").set(as("admin"))).body.rows).toBeUndefined();
+    expect((await request(app).get("/api/admin/reports/billing-summary?year=2999").set(as("admin"))).status).toBe(400);
+  });
+
   it("exports CSV with formula-looking cells neutralised", async () => {
     const res = await request(app).get(`/api/admin/reports/billing-summary?format=csv&month=${lastMonth}`).set(as("admin"));
     expect(res.status).toBe(200);

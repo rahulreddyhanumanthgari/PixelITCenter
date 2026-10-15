@@ -100,7 +100,7 @@ export function createReportsService(ctx: Ctx) {
     const today = ctx.today();
     const found = await db.timesheet.findMany({
       where: {
-        ...(f.month ? { month: f.month } : {}),
+        ...(f.month ? { month: f.month } : f.year ? { month: { startsWith: `${f.year}-` } } : {}),
         placement: {
           ...(f.clientId ? { clientId: f.clientId } : {}),
           ...(f.consultant ? { consultantName: { contains: f.consultant, mode: "insensitive" } } : {}),

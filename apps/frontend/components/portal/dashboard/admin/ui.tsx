@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
-import { AlertTriangle, Check, LoaderCircle, X } from "lucide-react";
+import { AlertTriangle, Check, LoaderCircle, Search, X } from "lucide-react";
 import { staffRoles } from "@/content/portal-demo";
 import { cn } from "@/lib/utils";
 import { useSession } from "../session";
@@ -304,5 +304,134 @@ export function Choice({ on, onClick, title, body }: { on: boolean; onClick: () 
       </span>
       {on && <Check className="size-5 flex-none text-[var(--dash-orange)]" aria-hidden="true" />}
     </button>
+  );
+}
+
+/**
+ * A drop-down you can type into: type a few letters and the list narrows.
+ * Built for long lists (hundreds of companies). Mouse, or arrows + Enter;
+ * Escape closes. The first option is "all" (empty value).
+ */
+export function SearchSelect({
+  id,
+  label,
+  value,
+  onChange,
+  options,
+  allLabel,
+  placeholder = "Type to search…",
+}: {
+  id: string;
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  options: { value: string; label: string; hint?: string }[];
+  allLabel: string;
+  placeholder?: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const [text, setText] = useState("");
+  const [active, setActive] = useState(0);
+  const box = useRef<HTMLDivElement>(null);
+  const selected = options.find((o) => o.value === value);
+  const q = text.trim().toLowerCase();
+  const list = [{ value: "", label: allLabel }, ...options.filter((o) => !q || o.label.toLowerCase().includes(q) || o.hint?.toLowerCase().includes(q))];
+
+  useEffect(() => {
+    if (!open) return;
+    const onDown = (e: PointerEvent) => {
+      if (!box.current?.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("pointerdown", onDown);
+    return () => document.removeEventListener("pointerdown", onDown);
+  }, [open]);
+
+  const pick = (v: string) => {
+    onChange(v);
+    setText("");
+    setOpen(false);
+  };
+
+  return (
+    <div ref={box} className="relative">
+      <label htmlFor={id} className="sr-only">
+        {label}
+      </label>
+      <input
+        id={id}
+        role="combobox"
+        aria-expanded={open}
+        aria-controls={`${id}-list`}
+        aria-autocomplete="list"
+        aria-activedescendant={open && list[active] ? `${id}-opt-${active}` : undefined}
+        className="dash-input pr-16"
+        autoComplete="off"
+        placeholder={open ? placeholder : (selected?.label ?? allLabel)}
+        value={open ? text : (selected?.label ?? "")}
+        onFocus={() => {
+          setOpen(true);
+          setActive(0);
+        }}
+        onClick={() => setOpen(true)}
+        onChange={(e) => {
+          setText(e.target.value);
+          setActive(e.target.value ? 1 : 0);
+          setOpen(true);
+        }}
+        onKeyDown={(e) => {
+          if (e.key === "ArrowDown") {
+            e.preventDefault();
+            setOpen(true);
+            setActive((a) => Math.min(list.length - 1, a + 1));
+          } else if (e.key === "ArrowUp") {
+            e.preventDefault();
+            setActive((a) => Math.max(0, a - 1));
+          } else if (e.key === "Enter" && open) {
+            e.preventDefault();
+            const o = list[active];
+            if (o) pick(o.value);
+          } else if (e.key === "Escape") {
+            setText("");
+            setOpen(false);
+          }
+        }}
+      />
+      {value && !open && (
+        <button type="button" className="absolute top-1/2 right-9 grid size-7 -translate-y-1/2 place-items-center rounded-full text-[var(--dash-muted)] hover:bg-[var(--dash-hover)]" aria-label={`Clear ${label}`} onClick={() => pick("")}>
+          <X className="size-3.5" />
+        </button>
+      )}
+      <Search className="pointer-events-none absolute top-1/2 right-3.5 size-4 -translate-y-1/2 text-[var(--dash-muted)]" aria-hidden="true" />
+      {open && (
+        <ul id={`${id}-list`} role="listbox" aria-label={label} className="absolute right-0 left-0 z-30 mt-1.5 max-h-72 overflow-y-auto rounded-2xl bg-white p-1.5 shadow-[0_18px_40px_-18px_rgb(4_19_39/0.45)] ring-1 ring-[var(--dash-line)]">
+          {list.length === 1 && q ? (
+            <li className="px-3 py-2.5 text-sm text-[var(--dash-muted)]">No match for “{text}”.</li>
+          ) : null}
+          {list.map((o, i) => (
+            <li
+              key={o.value || "all"}
+              id={`${id}-opt-${i}`}
+              role="option"
+              aria-selected={o.value === value}
+              onMouseEnter={() => setActive(i)}
+              onPointerDown={(e) => {
+                e.preventDefault();
+                pick(o.value);
+              }}
+              className={cn(
+                "flex cursor-pointer items-center justify-between gap-2 rounded-xl px-3 py-2.5 text-sm",
+                i === active && "bg-[var(--dash-hover)]",
+                o.value === value && "font-semibold",
+                !o.value && "text-[var(--dash-muted)]",
+              )}
+            >
+              <span className="min-w-0 truncate">{o.label}</span>
+              {o.hint && <span className="flex-none text-xs text-[var(--dash-faint)]">{o.hint}</span>}
+              {o.value === value && <Check className="size-4 flex-none text-[var(--dash-orange)]" aria-hidden="true" />}
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
   );
 }

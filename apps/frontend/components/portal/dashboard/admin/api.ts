@@ -253,7 +253,7 @@ export type BillingSummary = {
   totals: Totals & { rows: number; overdueAmount: number };
 };
 
-export type BillingFilters = { month?: string; clientId?: string; status?: BillingStage | "overdue"; consultant?: string };
+export type BillingFilters = { month?: string; year?: string; clientId?: string; status?: BillingStage | "overdue"; consultant?: string };
 
 export type AuditFilters = {
   entityType?: string;
