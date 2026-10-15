@@ -6,7 +6,7 @@ import { ArrowLeft, ArrowRight, Check, Pencil, Plus, Search } from "lucide-react
 import { cn } from "@/lib/utils";
 import { Avatar, Chip, PageHeader, useToast } from "../ui";
 import { adminApi, type Client, type ExtensionStatus, type Placement, type PlacementInput, type Who } from "./api";
-import { can, date, Detail, Empty, ErrorNote, Field, fieldErrors, errorText, hours, Loading, Panel, usd, useApi, useWho } from "./ui";
+import { can, Choice, date, Detail, Empty, ErrorNote, Field, fieldErrors, errorText, hours, Loading, Panel, usd, useApi, useWho } from "./ui";
 
 // Placements: who is placed where, at what rates, until when.
 //
@@ -551,27 +551,6 @@ function AddPlacementWizard({ who, open, known, onClose, onSaved }: { who: Who; 
         ) : null}
       </form>
     </Panel>
-  );
-}
-
-function Choice({ on, onClick, title, body }: { on: boolean; onClick: () => void; title: string; body?: string }) {
-  return (
-    <button
-      type="button"
-      role="radio"
-      aria-checked={on}
-      onClick={onClick}
-      className={cn(
-        "flex min-h-[56px] w-full items-center gap-3 rounded-2xl border px-4 py-3 text-left transition",
-        on ? "border-[var(--dash-orange)] bg-[var(--dash-orange-tint)]" : "border-[var(--dash-line-strong)] hover:bg-[var(--dash-side)]",
-      )}
-    >
-      <span className="min-w-0 flex-1">
-        <span className="block font-semibold">{title}</span>
-        {body && <span className="block text-sm text-[var(--dash-muted)]">{body}</span>}
-      </span>
-      {on && <Check className="size-5 flex-none text-[var(--dash-orange)]" aria-hidden="true" />}
-    </button>
   );
 }
 

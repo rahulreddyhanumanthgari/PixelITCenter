@@ -275,3 +275,25 @@ export function Detail({ label, children }: { label: string; children: ReactNode
     </div>
   );
 }
+
+/** One option in a step-by-step question (a radio button styled as a big row). */
+export function Choice({ on, onClick, title, body }: { on: boolean; onClick: () => void; title: string; body?: string }) {
+  return (
+    <button
+      type="button"
+      role="radio"
+      aria-checked={on}
+      onClick={onClick}
+      className={cn(
+        "flex min-h-[56px] w-full items-center gap-3 rounded-2xl border px-4 py-3 text-left transition",
+        on ? "border-[var(--dash-orange)] bg-[var(--dash-orange-tint)]" : "border-[var(--dash-line-strong)] hover:bg-[var(--dash-side)]",
+      )}
+    >
+      <span className="min-w-0 flex-1">
+        <span className="block font-semibold">{title}</span>
+        {body && <span className="block text-sm text-[var(--dash-muted)]">{body}</span>}
+      </span>
+      {on && <Check className="size-5 flex-none text-[var(--dash-orange)]" aria-hidden="true" />}
+    </button>
+  );
+}
