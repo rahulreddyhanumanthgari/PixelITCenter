@@ -422,6 +422,7 @@ function AddPlacementWizard({ who, open, known, onClose, onSaved }: { who: Who; 
 
   return (
     <Panel
+      center
       open={open}
       title="Add a placement"
       subtitle={review ? "Check everything, then add it." : `Question ${step + 1} of ${STEPS.length}`}

@@ -609,7 +609,9 @@ select.dash-input {
   max-width: 100vw;
   height: 100dvh;
   max-height: 100dvh;
-  margin: 0;
+  /* !important: the panel sits inside pages laid out with space-y-*, whose
+     utility margins would otherwise win over this components layer. */
+  margin: 0 !important;
   padding: 0;
   border: 0;
   background: #ffffff;
@@ -635,6 +637,28 @@ select.dash-input {
     animation: none;
   }
 }
+/* The same <dialog> as a small window in the middle of the screen
+   (step-by-step forms). 16px from the edges on phones. */
+.dash-panel.dash-modal {
+  inset: 0;
+  width: min(34rem, calc(100vw - 2rem));
+  /* fit-content, not auto: auto margins only centre a box with a set height. */
+  height: fit-content;
+  max-height: min(42rem, calc(100dvh - 2rem));
+  margin: auto !important;
+  border-radius: 1.5rem;
+  box-shadow: 0 30px 80px -30px rgb(4 19 39 / 0.55);
+}
+.dash-panel.dash-modal[open] {
+  animation-name: dash-modal-in;
+}
+@keyframes dash-modal-in {
+  from {
+    transform: translateY(0.75rem) scale(0.98);
+    opacity: 0;
+  }
+}
+
 /* A table row that opens a panel. */
 .dash-table tr[data-clickable] {
   cursor: pointer;

@@ -162,7 +162,24 @@ export function Toggle({ id, label, hint, checked, onChange }: { id: string; lab
  * A panel that slides in from the right (full screen on phones), built on
  * <dialog>: focus stays inside, Escape closes it, the page behind is inert.
  */
-export function Panel({ open, title, subtitle, onClose, children, footer }: { open: boolean; title: string; subtitle?: ReactNode; onClose: () => void; children: ReactNode; footer?: ReactNode }) {
+export function Panel({
+  open,
+  title,
+  subtitle,
+  onClose,
+  children,
+  footer,
+  center = false,
+}: {
+  open: boolean;
+  title: string;
+  subtitle?: ReactNode;
+  onClose: () => void;
+  children: ReactNode;
+  footer?: ReactNode;
+  /** A small window in the middle of the screen instead of a panel from the right. */
+  center?: boolean;
+}) {
   const ref = useRef<HTMLDialogElement>(null);
   useEffect(() => {
     const d = ref.current;
@@ -173,7 +190,7 @@ export function Panel({ open, title, subtitle, onClose, children, footer }: { op
   return (
     <dialog
       ref={ref}
-      className="dash-panel"
+      className={center ? "dash-panel dash-modal" : "dash-panel"}
       aria-labelledby="panel-title"
       onClose={onClose}
       onClick={(e) => e.target === e.currentTarget && onClose()}
