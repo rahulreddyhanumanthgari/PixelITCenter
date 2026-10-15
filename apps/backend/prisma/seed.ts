@@ -5,8 +5,8 @@
 //
 // Everything goes through the real services with the clock set to past dates,
 // so history, invoice numbers, PDFs, due dates and audit entries are genuine.
-// Demo people are only Manas and Rahul (consultants), Joya (verifier), Hari
-// (recruiter) and Mansingh (admin); the accounts login is the "Accounts" team.
+// Demo people: Manas and Rahul (consultants). Every staff step is done by the
+// one demo employee login (employee@, an admin).
 
 import "dotenv/config";
 import PDFDocument from "pdfkit";
@@ -24,9 +24,9 @@ const store = createLocalStore(env.storageDir);
 const mailer = createMailer({ provider: "log", from: env.MAIL_FROM });
 
 const person = (email: string, role: Role): Actor => ({ userId: devUserId(email), role, email });
-const admin = person("admin@pixelitcenter.com", "admin");
-const verifier = person("verifier@pixelitcenter.com", "verifier");
-const accounts = person("accounts@pixelitcenter.com", "accounts");
+const admin = person("employee@pixelitcenter.com", "admin");
+const verifier = admin;
+const accounts = admin;
 const manas = person("placed@pixelitcenter.com", "student");
 const rahul = person("rahul@pixelitcenter.com", "student");
 

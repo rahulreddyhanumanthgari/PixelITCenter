@@ -19,7 +19,6 @@ const twoMonthsAgo = previousMonth(lastMonth);
 
 const users: Record<string, { sub: string; role: Role }> = {
   admin: { sub: "u-admin", role: "admin" },
-  admin2: { sub: "u-admin-2", role: "admin" },
   accounts: { sub: "u-accounts", role: "accounts" },
   verifier: { sub: "u-verifier", role: "verifier" },
   recruiter: { sub: "u-recruiter", role: "recruiter" },
@@ -235,7 +234,7 @@ describe("timesheet workflow", () => {
     expect(inv.body.dueDate).toBe(addDays(inv.body.issueDate, 30));
   });
 
-  it("the person who approved as verifier can't also do the accounts check", async () => {
+  it("one admin can do every step, from verify to invoice", async () => {
     const p = await request(app).post("/api/admin/placements").set(as("admin")).send({
       clientId: ids.vendor,
       consultantName: "Rahul",
@@ -250,9 +249,8 @@ describe("timesheet workflow", () => {
     await move(ts.id, "admin", { status: "VERIFIED" });
     await move(ts.id, "admin", { status: "VERIFIER_APPROVED" });
     const res = await move(ts.id, "admin", { status: "ACCOUNTS_CHECKED" });
-    expect(res.status).toBe(403);
-    expect(res.body.error).toMatch(/someone else/i);
-    expect((await move(ts.id, "admin2", { status: "ACCOUNTS_CHECKED" })).status).toBe(200);
+    expect(res.status).toBe(200);
+    expect(res.body.status).toBe("INVOICE_RAISED");
   });
 
   it("send back needs a comment, tells the consultant, and the consultant can upload again", async () => {

@@ -42,11 +42,9 @@ export const demoDirectory: {
 }[] = [
   { email: "student@pixelitcenter.com", fullName: "Manas", accountType: "student", headline: "Cloud engineer, open to work" },
   { email: "placed@pixelitcenter.com", fullName: "Manas", accountType: "student", headline: "Cloud Engineer at Brightline Finance", isPlaced: true },
-  { email: "employee@pixelitcenter.com", fullName: "Rahul", accountType: "employee", headline: "Senior DevOps consultant" },
-  { email: "admin@pixelitcenter.com", fullName: "Mansingh", accountType: "employee", headline: "Placement lead", staffRole: "admin" },
-  { email: "accounts@pixelitcenter.com", fullName: "Accounts", accountType: "employee", headline: "Timesheets, invoices and pay", staffRole: "accounts" },
-  { email: "verifier@pixelitcenter.com", fullName: "Joya", accountType: "employee", headline: "Timesheet verification", staffRole: "verifier" },
-  { email: "recruiter@pixelitcenter.com", fullName: "Hari", accountType: "employee", headline: "Recruiter", staffRole: "recruiter" },
+  // One employee login. As admin it sees the whole client section. The other
+  // staff roles exist in the API for when real accounts (Cognito) arrive.
+  { email: "employee@pixelitcenter.com", fullName: "Rahul", accountType: "employee", headline: "Admin, Pixel IT Center", staffRole: "admin" },
 ];
 
 export const activity: { item: string; kind: string; status: string; updated: string; next: string }[] = [

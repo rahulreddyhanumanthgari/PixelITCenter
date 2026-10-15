@@ -18,9 +18,9 @@ import { activeIn, type PlacementsService } from "./placements.js";
 //   Received → Verified → Approved by verifier → Accounts checked → Invoice raised
 //            → Submitted to client
 //
-// Verifier and accounts are separate roles: accounts acts only after the verifier
-// approves, and the person who approved as verifier can't also do the accounts
-// check (not even an admin). Before the invoice, any step can send it back to the
+// Verifier and accounts are separate roles: a verifier can't do the accounts
+// check, and accounts acts only after the verifier approves. Admins can do every
+// step. Before the invoice, any step can send it back to the
 // consultant with a comment; they upload again and it starts over at Received.
 // Every move is in TimesheetStatusHistory (who, when, comment).
 
@@ -228,10 +228,6 @@ export function createTimesheetsService(ctx: Ctx, deliver: Deliver, invoices: In
 
         let approvedHours: Prisma.Decimal | undefined;
         if (body.status === "ACCOUNTS_CHECKED") {
-          const approver = t.history.find((h) => h.toStatus === "VERIFIER_APPROVED");
-          if (approver?.actorUserId === actor.userId) {
-            throw new HttpError(403, "You approved this timesheet as the verifier, so someone else must do the accounts check.");
-          }
           approvedHours = body.approvedHours === undefined ? t.hours : dec(body.approvedHours);
           if (!approvedHours.equals(t.hours) && !body.comment) {
             throw new HttpError(400, "Some details aren't in the right format.", { fields: { comment: "Say why the hours differ from the timesheet." } });

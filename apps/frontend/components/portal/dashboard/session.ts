@@ -231,7 +231,10 @@ export function updateProfile(patch: Partial<Profile>) {
 export const isPlaced = (s: Session) => s.profile.accountType === "student" && Boolean(s.isPlaced);
 
 /** An employee's client-section role, or null (students and other employees). */
-export const staffRoleOf = (s: Session): StaffRole | null => (s.profile.accountType === "employee" ? (s.staffRole ?? null) : null);
+export const staffRoleOf = (s: Session): StaffRole | null =>
+  s.profile.accountType === "employee"
+    ? (s.staffRole ?? demoDirectory.find((d) => d.email === s.profile.email.toLowerCase())?.staffRole ?? null)
+    : null;
 
 /** Where PixelIT is with this student's resume, per job. */
 export const jobStatusesOf = (s: Session) => (isPlaced(s) ? placedJobStatuses : jobStatuses);

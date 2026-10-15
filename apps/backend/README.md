@@ -104,9 +104,11 @@ npm run db:seed              # demo clients, placements, timesheets at every sta
 npm run db:seed -- --reset   # wipe the client-section tables and seed again
 ```
 
-The seed never emails anyone (it uses the `log` mailer). Demo sign-ins on the
-portal (any password): `admin@`, `accounts@`, `verifier@`, `recruiter@`,
-`employee@` and `placed@pixelitcenter.com`.
+The seed never emails anyone (it uses the `log` mailer). The portal has two demo
+logins (any password): `employee@pixelitcenter.com` (an admin: sees the whole
+client section) and `student@` / `placed@pixelitcenter.com` (students). The other
+staff roles below are enforced by the API and are used once real accounts
+(Cognito) arrive.
 
 ### Roles
 
@@ -125,9 +127,9 @@ There is no client role. A token with `role: "client"` is refused (401).
 `Received → Verified → Approved by verifier → Accounts checked → Invoice raised → Submitted to client`
 
 - Each move is stored in `TimesheetStatusHistory` (who, role, email, when, comment).
-- Verifier and accounts are separate: accounts acts only after the verifier
-  approves, and **the person who approved as verifier can't do the accounts check**
-  (not even an admin).
+- Verifier and accounts are separate roles: a verifier can't do the accounts
+  check, and accounts acts only after the verifier approves. An admin can do
+  every step.
 - Accounts can change the hours to bill; a comment is then required.
 - Before the invoice, any step can **send it back** with a comment (required). The
   consultant is told by email and in-portal notification, uploads again, and it

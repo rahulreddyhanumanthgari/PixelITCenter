@@ -740,11 +740,11 @@ client dashboard and the client-facing Projects, Tasks, Schedule and Billing
 pages are gone. The client section is an internal tool for PixelIT staff.
 (Earlier notes above that mention a client account or those pages are history.)
 
-- **Staff roles** on employee accounts (`staffRole` in the demo session,
-  `staffRoles` in `content/portal-demo.ts`): admin (Mansingh), accounts
-  (the "Accounts" team login), verifier (Joya), recruiter (Hari). Demo
-  emails: `admin@`, `accounts@`, `verifier@`, `recruiter@pixelitcenter.com`.
-  `employee@` (Rahul) has no staff role and sees no client section.
+- **Two demo logins only** (Manas, 2026-10-15: don't separate the logins):
+  `student@` / `placed@` (students) and `employee@` (Rahul), whose staff role
+  is **admin**, so the employee login sees the whole client section. The
+  other staff roles (accounts, verifier, recruiter) stay in the API and the
+  menu rules (`staffRoles`, `clientSectionPages`) for real accounts later.
 - **Pages** under `/portal/admin/` (`components/portal/dashboard/admin/`),
   in the menu group "Client section", filtered by role in `nav.ts`
   (`clientSectionPages`): Clients (admin, accounts), Placements (all staff;
