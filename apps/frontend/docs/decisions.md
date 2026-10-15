@@ -764,6 +764,17 @@ pages are gone. The client section is an internal tool for PixelIT staff.
   conversation was removed. Schedule is now student-only (the Calendar).
 - Old sessions saved with the client type are signed out on load.
 
+- **PixelIT IDs (2026-10-15, front end only):** every registered student
+  gets a unique ID, `PIC-1001`, `PIC-1002`… (never reused), so students with
+  the same name are never mixed up. Demo list: `content/registered-students.ts`
+  (two Manas, two Rahul on purpose). Students see it on Profile and in the
+  sidebar; staff see it on placement cards, can search by it, and pick the
+  student by name or ID as the first step of Add placement. An open
+  placement shows the student's whole profile (contact, work and visa,
+  education, interviews, masked identity, references) and their Documents.
+  With the backend: the server issues the next PIC at registration and the
+  profile comes from the student's saved Profile / Placement Details.
+
 ### Student corner (reworked 2026-10-13)
 
 PixelIT is a staffing firm: students don't apply to jobs. PixelIT's

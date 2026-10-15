@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } 
 import Link from "next/link";
 import { ArrowLeft, ArrowRight, Check, FileText, Pencil, Plus, Search } from "lucide-react";
 import { consultantDocLabels, consultantDocsDemo, type ConsultantDocType } from "@/content/portal-demo";
+import { registeredStudents, studentByEmail, type RegisteredStudent } from "@/content/registered-students";
 import { cn } from "@/lib/utils";
 import { Avatar, Chip, PageHeader, useToast } from "../ui";
 import { adminApi, type Client, type ExtensionStatus, type Placement, type PlacementInput, type Who } from "./api";
@@ -51,7 +52,8 @@ export function PlacementsPage() {
     (p) =>
       (status === "ALL" || p.extensionStatus === status) &&
       (!clientId || p.client.id === clientId) &&
-      (!needle || [p.consultantName, p.role, p.client.name, p.endClientName ?? ""].some((v) => v.toLowerCase().includes(needle))),
+      (!needle ||
+        [p.consultantName, p.role, p.client.name, p.endClientName ?? "", studentByEmail(p.consultantEmail)?.pixelitId ?? ""].some((v) => v.toLowerCase().includes(needle))),
   );
   const open = openId ? all.find((p) => p.id === openId) : undefined;
 
@@ -121,7 +123,7 @@ export function PlacementsPage() {
             <label className="sr-only" htmlFor="pl-search">
               Search placements
             </label>
-            <input id="pl-search" type="search" className="dash-input pr-10" placeholder="Student, role, company…" value={q} onChange={(e) => setQ(e.target.value)} />
+            <input id="pl-search" type="search" className="dash-input pr-10" placeholder="Name, PIC ID, role, company…" value={q} onChange={(e) => setQ(e.target.value)} />
             <Search className="pointer-events-none absolute top-1/2 right-3.5 size-4 -translate-y-1/2 text-[var(--dash-muted)]" aria-hidden="true" />
           </div>
         </div>
@@ -154,11 +156,12 @@ export function PlacementsPage() {
 
 /** A big card: photo, name, company, role. The whole card opens the placement. */
 function PlacementCard({ placement: p, onOpen }: { placement: Placement; onOpen: () => void }) {
+  const pic = studentByEmail(p.consultantEmail)?.pixelitId;
   return (
     <button
       type="button"
       onClick={onOpen}
-      aria-label={`${p.consultantName}, ${p.role} at ${companyOf(p)}. Open placement.`}
+      aria-label={`${p.consultantName}${pic ? ` (${pic})` : ""}, ${p.role} at ${companyOf(p)}. Open placement.`}
       className="dash-card group block h-full w-full overflow-hidden text-center transition hover:-translate-y-0.5 hover:border-[var(--dash-line-strong)] hover:shadow-[0_18px_40px_-28px_rgb(4_19_39/0.55)]"
     >
       <span className="dash-hero block h-20 rounded-none border-0" aria-hidden="true" />
@@ -167,6 +170,7 @@ function PlacementCard({ placement: p, onOpen }: { placement: Placement; onOpen:
           <Avatar name={p.consultantName} size={88} />
         </span>
         <span className="mt-4 block text-xl font-semibold">{p.consultantName}</span>
+        {pic && <span className="mt-0.5 block text-xs font-semibold tracking-wider text-[var(--dash-muted)]">{pic}</span>}
         <span className="mt-1 block text-[0.9375rem] font-medium text-[var(--dash-cyan-ink)]">{companyOf(p)}</span>
         <span className="mt-0.5 block text-sm text-[var(--dash-muted)]">{p.role}</span>
       </span>
@@ -183,6 +187,7 @@ function PlacementDetail({ who, placement: p, onBack, onEdit }: { who: Who | nul
   const back = useRef<HTMLButtonElement>(null);
   useEffect(() => back.current?.focus(), []);
   const [showDocs, setShowDocs] = useState(false);
+  const student = studentByEmail(p.consultantEmail);
 
   return (
     <div className="space-y-6">
@@ -202,6 +207,7 @@ function PlacementDetail({ who, placement: p, onBack, onEdit }: { who: Who | nul
             <p className="mt-2 text-lg font-medium text-[var(--dash-cyan-ink)]">{companyOf(p)}</p>
             <p className="text-[0.9375rem] text-[var(--dash-muted)]">{p.role}</p>
             <p className="mt-3 flex flex-wrap justify-center gap-2 sm:justify-start">
+              {student && <Chip tone="ink">{student.pixelitId}</Chip>}
               <Chip tone={STATUS[p.extensionStatus].tone}>{STATUS[p.extensionStatus].label}</Chip>
               {!p.consultantLinked && <Chip>Hasn&apos;t signed in yet</Chip>}
             </p>
@@ -245,6 +251,8 @@ function PlacementDetail({ who, placement: p, onBack, onEdit }: { who: Who | nul
         )}
       </div>
 
+      <StudentProfile student={student} email={p.consultantEmail} />
+
       {seesTimesheets && (
         <section className="dash-card dash-card-pad" aria-labelledby="placement-timesheets">
           <div className="flex items-center justify-between gap-2">
@@ -279,6 +287,124 @@ function PlacementDetail({ who, placement: p, onBack, onEdit }: { who: Who | nul
           )}
         </section>
       )}
+    </div>
+  );
+}
+
+/**
+ * Everything the student filled in on their Profile page (account details and
+ * Placement Details), so staff never retype it. FRONT END ONLY: read from the
+ * demo student list by email; with the backend it comes from the student's
+ * saved profile. Passport, SSN and date of birth stay masked here.
+ */
+function StudentProfile({ student: s, email }: { student: RegisteredStudent | undefined; email: string }) {
+  if (!s) {
+    return (
+      <section className="dash-card dash-card-pad">
+        <h2 className="dash-section-title">Student profile</h2>
+        <p className="mt-3 text-sm text-[var(--dash-muted)]">
+          No registered student uses {email}. Students register on the portal first; their profile and PixelIT ID then show here.
+        </p>
+      </section>
+    );
+  }
+  return (
+    <section className="dash-card dash-card-pad" aria-labelledby="student-profile">
+      <div className="flex flex-wrap items-baseline justify-between gap-2">
+        <h2 id="student-profile" className="dash-section-title">
+          Student profile
+        </h2>
+        <p className="text-xs text-[var(--dash-muted)]">
+          {s.pixelitId} · registered {date(s.registeredOn)} · from the student&apos;s Profile page
+        </p>
+      </div>
+
+      <div className="mt-5 grid gap-4 lg:grid-cols-2">
+        <ProfileGroup title="Contact">
+          <Detail label="Phone">{s.phone}</Detail>
+          <Detail label="Email">{s.email}</Detail>
+          <Detail label="Current location">{s.currentLocation}</Detail>
+          <Detail label="Open to relocating">{s.relocation}</Detail>
+          <Detail label="LinkedIn">
+            <a href={s.linkedin} target="_blank" rel="noopener noreferrer" className="break-all text-[var(--dash-orange-ink)] hover:underline">
+              {s.linkedin.replace(/^https:\/\/(www\.)?/, "")}
+            </a>
+          </Detail>
+          <Detail label="Skype">{s.skypeId ?? "–"}</Detail>
+        </ProfileGroup>
+
+        <ProfileGroup title="Work and visa">
+          <Detail label="Visa status">{s.visaStatus}</Detail>
+          <Detail label="US entry">
+            {s.usEntryVisaType}, {s.usEntryYear}
+          </Detail>
+          <Detail label="US experience">{s.usExperienceYears} years</Detail>
+          <Detail label="Relevant experience">{s.relevantExperienceYears} years</Detail>
+          <Detail label="Looking for">{s.targetRole}</Detail>
+          <Detail label="Available to start">{s.availableToStart}</Detail>
+          <div className="sm:col-span-2">
+            <Detail label="Skills">
+              <span className="mt-1 flex flex-wrap gap-1.5">
+                {s.skills.map((k) => (
+                  <Chip key={k}>{k}</Chip>
+                ))}
+              </span>
+            </Detail>
+          </div>
+        </ProfileGroup>
+
+        <ProfileGroup title="Education">
+          <Detail label="Bachelor's">
+            {s.bachelors.degree}
+            <span className="block text-xs font-normal text-[var(--dash-muted)]">
+              {s.bachelors.university}, {s.bachelors.year}
+            </span>
+          </Detail>
+          <Detail label="Master's">
+            {s.masters ? (
+              <>
+                {s.masters.degree}
+                <span className="block text-xs font-normal text-[var(--dash-muted)]">
+                  {s.masters.university}, {s.masters.year}
+                </span>
+              </>
+            ) : (
+              "–"
+            )}
+          </Detail>
+        </ProfileGroup>
+
+        <ProfileGroup title="Interviews">
+          <Detail label="Best time for calls">{s.bestTimeForCalls}</Detail>
+          <Detail label="Preferred interview location">{s.preferredInterviewLocation}</Detail>
+        </ProfileGroup>
+
+        <ProfileGroup title="Identity (masked)">
+          <Detail label="Passport number">{`•••••${s.passportLast3}`}</Detail>
+          <Detail label="SSN last four">{s.ssnLast4Set ? "••••" : "Not given"}</Detail>
+          <Detail label="Date of birth">{s.dateOfBirthSet ? "••••-••-••" : "Not given"}</Detail>
+        </ProfileGroup>
+
+        <ProfileGroup title="References">
+          {s.references.map((r) => (
+            <Detail key={r.email} label={`${r.role}, ${r.location}`}>
+              {r.name}
+              <span className="block text-xs font-normal break-all text-[var(--dash-muted)]">
+                {r.email} · {r.phone}
+              </span>
+            </Detail>
+          ))}
+        </ProfileGroup>
+      </div>
+    </section>
+  );
+}
+
+function ProfileGroup({ title, children }: { title: string; children: ReactNode }) {
+  return (
+    <div className="rounded-2xl bg-[var(--dash-side)] p-4">
+      <h3 className="text-sm font-semibold">{title}</h3>
+      <dl className="mt-3 grid grid-cols-1 gap-x-5 gap-y-3 sm:grid-cols-2">{children}</dl>
     </div>
   );
 }
@@ -349,7 +475,6 @@ const emptyDraft = { consultantName: "", consultantEmail: "", clientId: "", endC
 type Draft = typeof emptyDraft;
 type Key = keyof Draft;
 
-const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const money2 = (v: string) => /^\d+(\.\d{1,2})?$/.test(v) && Number(v) > 0;
 
 type Step = {
@@ -361,8 +486,7 @@ type Step = {
 };
 
 const STEPS: Step[] = [
-  { key: "consultantName", question: "Who is being placed?", hint: "The student's name." },
-  { key: "consultantEmail", question: "What's their portal email?", hint: "Links this placement to their account.", check: (v) => (EMAIL.test(v) ? null : "Enter a valid email address.") },
+  { key: "consultantEmail", question: "Which student is being placed?", hint: "Search by name or PixelIT ID. Their profile comes with them, so nothing is typed twice." },
   { key: "clientId", question: "Which client or vendor?", hint: "Who PixelIT bills for this placement." },
   { key: "endClientName", question: "Who is the end client?", hint: "The company they actually work at. Leave empty if it's the client itself.", optional: true },
   { key: "role", question: "What's their role?", hint: "e.g. Cloud Engineer (AWS)" },
@@ -411,8 +535,6 @@ function AddPlacementWizard({ who, open, known, onClose, onSaved }: { who: Who; 
     setError(null);
   };
 
-  // Students already placed before: picking a name fills in their email.
-  const people = useMemo(() => [...new Map(known.map((p) => [p.consultantName, p.consultantEmail])).entries()], [known]);
   const clientList = clients.data?.clients ?? [];
   const clientOf = (id: string) => clientList.find((c) => c.id === id);
 
@@ -421,7 +543,7 @@ function AddPlacementWizard({ who, open, known, onClose, onSaved }: { who: Who; 
     if (review) return void save();
     if (!current) return;
     const v = draft[current.key].trim();
-    if (!v && !current.optional) return setError("Please answer this to go on.");
+    if (!v && !current.optional) return setError(current.key === "consultantEmail" ? "Pick a student to go on." : "Please answer this to go on.");
     const why = v ? current.check?.(v, draft) : null;
     if (why) return setError(why);
     // Choosing a vendor fills in its end client.
@@ -464,6 +586,7 @@ function AddPlacementWizard({ who, open, known, onClose, onSaved }: { who: Who; 
   const shown = (k: Key) => {
     const v = draft[k];
     if (!v) return "–";
+    if (k === "consultantEmail") return `${draft.consultantName} · ${studentByEmail(v)?.pixelitId ?? v}`;
     if (k === "clientId") return clientOf(v)?.name ?? "–";
     if (k === "billRate" || k === "payRate") return `${usd(Number(v))}/h`;
     if (k === "startDate" || k === "endDate") return date(v);
@@ -564,25 +687,8 @@ function AddPlacementWizard({ who, open, known, onClose, onSaved }: { who: Who; 
                     <Choice key={s} on={draft.extensionStatus === s} onClick={() => set({ extensionStatus: s })} title={STATUS[s].label} body={STATUS[s].body} />
                   ))}
                 </div>
-              ) : current.key === "consultantName" ? (
-                <>
-                  <input
-                    {...inputProps("consultantName")}
-                    list="wiz-people"
-                    autoComplete="off"
-                    onChange={(e) => {
-                      const email = people.find(([n]) => n === e.target.value)?.[1];
-                      set({ consultantName: e.target.value, ...(email && !draft.consultantEmail ? { consultantEmail: email } : {}) });
-                    }}
-                  />
-                  <datalist id="wiz-people">
-                    {people.map(([n]) => (
-                      <option key={n} value={n} />
-                    ))}
-                  </datalist>
-                </>
               ) : current.key === "consultantEmail" ? (
-                <input {...inputProps("consultantEmail")} type="email" inputMode="email" autoComplete="off" />
+                <StudentPicker value={draft.consultantEmail} placements={known} onPick={(st) => set({ consultantEmail: st.email, consultantName: st.fullName })} />
               ) : current.key === "billRate" || current.key === "payRate" ? (
                 <div className="relative">
                   <span className="pointer-events-none absolute top-1/2 left-4 -translate-y-1/2 text-lg text-[var(--dash-muted)]" aria-hidden="true">
@@ -611,6 +717,66 @@ function AddPlacementWizard({ who, open, known, onClose, onSaved }: { who: Who; 
         ) : null}
       </form>
     </Panel>
+  );
+}
+
+/**
+ * Pick a registered student: search by name or PixelIT ID. Students with the
+ * same name are told apart by their ID, email and city. FRONT END ONLY: the
+ * list is the demo student directory; with the backend it's a student search.
+ */
+function StudentPicker({ value, placements, onPick }: { value: string; placements: Placement[]; onPick: (s: RegisteredStudent) => void }) {
+  const [q, setQ] = useState("");
+  const needle = q.trim().toLowerCase();
+  const found = registeredStudents.filter((s) => !needle || s.fullName.toLowerCase().includes(needle) || s.pixelitId.toLowerCase().includes(needle) || s.email.includes(needle));
+  const placedAt = (email: string) => placements.find((p) => p.consultantEmail === email && p.extensionStatus !== "ENDED");
+
+  return (
+    <div className="space-y-3">
+      <div className="relative">
+        <label htmlFor="wiz-student-search" className="sr-only">
+          Search students by name or PixelIT ID
+        </label>
+        <input id="wiz-student-search" type="search" className="dash-input h-12 pr-10" placeholder="Name or PIC-…" value={q} onChange={(e) => setQ(e.target.value)} autoComplete="off" />
+        <Search className="pointer-events-none absolute top-1/2 right-3.5 size-4 -translate-y-1/2 text-[var(--dash-muted)]" aria-hidden="true" />
+      </div>
+      {found.length === 0 ? (
+        <p className="text-sm text-[var(--dash-muted)]">No registered student matches. Students register on the portal first and get their PixelIT ID then.</p>
+      ) : (
+        <div role="radiogroup" aria-label="Students" className="grid max-h-[40dvh] gap-2 overflow-y-auto pr-1">
+          {found.map((s) => {
+            const on = value === s.email;
+            const now = placedAt(s.email);
+            return (
+              <button
+                key={s.pixelitId}
+                type="button"
+                role="radio"
+                aria-checked={on}
+                onClick={() => onPick(s)}
+                className={cn(
+                  "flex w-full items-center gap-3 rounded-2xl border px-3.5 py-3 text-left transition",
+                  on ? "border-[var(--dash-orange)] bg-[var(--dash-orange-tint)]" : "border-[var(--dash-line-strong)] hover:bg-[var(--dash-side)]",
+                )}
+              >
+                <Avatar name={s.fullName} size={44} />
+                <span className="min-w-0 flex-1">
+                  <span className="flex flex-wrap items-center gap-x-2">
+                    <span className="font-semibold">{s.fullName}</span>
+                    <span className="text-xs font-bold tracking-wider text-[var(--dash-orange-ink)]">{s.pixelitId}</span>
+                  </span>
+                  <span className="block truncate text-xs text-[var(--dash-muted)]">
+                    {s.email} · {s.location}
+                  </span>
+                  {now && <span className="block text-xs font-medium text-[var(--dash-orange-ink)]">Already placed at {companyOf(now)}</span>}
+                </span>
+                {on && <Check className="size-5 flex-none text-[var(--dash-orange)]" aria-hidden="true" />}
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
   );
 }
 

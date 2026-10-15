@@ -2,6 +2,7 @@
 
 import { useSyncExternalStore } from "react";
 import { demoDirectory, type AccountType, type StaffRole } from "@/content/portal-demo";
+import { firstFreePicNumber, formatPic, studentByEmail } from "@/content/registered-students";
 import {
   defaultReminders,
   jobStatuses,
@@ -53,6 +54,8 @@ export type Session = {
   signedInAt: string;
   /** Employees: their client-section role. Set by an admin in the live portal. */
   staffRole?: StaffRole;
+  /** Students: their unique PixelIT ID ("PIC-1005"), given when they register. */
+  pixelitId?: string;
   // Student corner. Optional: sessions saved before they existed lack them.
   /** Placed with a client: Timesheets shows. Set by admins in the live portal. */
   isPlaced?: boolean;
@@ -198,7 +201,16 @@ export function demoSignIn(email: string, method: Session["method"] = "password"
   const profile: Profile = known
     ? { ...blankProfile, ...demoDetails[known.accountType], email: known.email, fullName: known.fullName, accountType: known.accountType, headline: known.headline }
     : { ...blankProfile, email: email.trim(), fullName: nameFromEmail(email) };
-  write({ profile, readNotifications: [], method, signedInAt: new Date().toISOString(), isPlaced: known?.isPlaced, staffRole: known?.staffRole });
+  write({
+    profile,
+    readNotifications: [],
+    method,
+    signedInAt: new Date().toISOString(),
+    isPlaced: known?.isPlaced,
+    staffRole: known?.staffRole,
+    // An email we don't know stands for someone who registered earlier: give them an ID.
+    pixelitId: known ? undefined : (studentByEmail(email)?.pixelitId ?? nextDemoPic()),
+  });
   return profile;
 }
 
@@ -209,7 +221,22 @@ export function demoSignUp(fullName: string, email: string, method: Session["met
     readNotifications: [],
     method,
     signedInAt: new Date().toISOString(),
+    pixelitId: nextDemoPic(),
   });
+}
+
+// DEMO: the next free PIC number, counted in this browser. The live portal's
+// server gives out the number when the student registers, so it's unique for everyone.
+const PIC_KEY = "pixelit-demo-next-pic";
+function nextDemoPic() {
+  let n = firstFreePicNumber();
+  try {
+    n = Math.max(n, Number(window.localStorage.getItem(PIC_KEY)) || 0);
+    window.localStorage.setItem(PIC_KEY, String(n + 1));
+  } catch {
+    // Storage blocked: the number is still unique among the demo students.
+  }
+  return formatPic(n);
 }
 
 export function signOut() {
@@ -229,6 +256,10 @@ export function updateProfile(patch: Partial<Profile>) {
 // Each helper stands in for an API call (see content/student-demo.ts).
 
 export const isPlaced = (s: Session) => s.profile.accountType === "student" && Boolean(s.isPlaced);
+
+/** A student's unique PixelIT ID ("PIC-1002"), or null for everyone else. */
+export const pixelitIdOf = (s: Session): string | null =>
+  s.profile.accountType === "student" ? (studentByEmail(s.profile.email)?.pixelitId ?? s.pixelitId ?? null) : null;
 
 /** An employee's client-section role, or null (students and other employees). */
 export const staffRoleOf = (s: Session): StaffRole | null =>

@@ -9,7 +9,7 @@ import { jobs, studentConversations } from "@/content/student-demo";
 import { Logo } from "@/components/site/layout/Logo";
 import { StudentOnly } from "./ForType";
 import { homeFor, isStudentOnly, navFor, navItemsFor, staffCanOpen, studentCanOpen } from "./nav";
-import { isPlaced, notificationsOf, profileCompletion, signOut, staffRoleOf, updateSession, useSession, type Session } from "./session";
+import { isPlaced, notificationsOf, pixelitIdOf, profileCompletion, signOut, staffRoleOf, updateSession, useSession, type Session } from "./session";
 import { Avatar } from "./ui";
 
 /**
@@ -136,7 +136,13 @@ function Sidebar({
         <span className="min-w-0 flex-1">
           <span className="block truncate text-sm font-semibold">{profile.fullName || profile.email}</span>
           <span className="block truncate text-xs text-[var(--dash-muted)]">
-            {role ? `${staffRoles[role].label} · PixelIT staff` : type ? `${type.label} account` : "Account type not set"}
+            {role
+              ? `${staffRoles[role].label} · PixelIT staff`
+              : pixelitIdOf(session)
+                ? `${pixelitIdOf(session)} · ${type?.label ?? "Student"}`
+                : type
+                  ? `${type.label} account`
+                  : "Account type not set"}
           </span>
         </span>
       </Link>
