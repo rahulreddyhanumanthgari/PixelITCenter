@@ -7,7 +7,8 @@ import { registeredStudents, studentByEmail, type RegisteredStudent } from "@/co
 import { cn } from "@/lib/utils";
 import { Avatar, Chip, PageHeader, useToast } from "../ui";
 import { adminApi, type Client, type EmploymentType, type ExtensionStatus, type Placement, type PlacementInput, type Who } from "./api";
-import { DocumentsWindow, StudentProfile } from "./StudentProfile";
+import { useDeletedStudents } from "./deletedStudents";
+import { DeleteStudentButton, DocumentsWindow, StudentProfile } from "./StudentProfile";
 import { can, Choice, date, EMPLOYMENT, Detail, Empty, ErrorNote, Field, fieldErrors, errorText, hours, Loading, Panel, usd, useApi, useWho } from "./ui";
 
 // Placements: who is placed where, at what rates, until when.
@@ -44,7 +45,12 @@ export function PlacementsPage() {
   const [toast, showToast] = useToast();
   const isAdmin = can(who, "admin");
 
-  const all = useMemo(() => list.data?.placements ?? [], [list.data]);
+  const deleted = useDeletedStudents();
+  // A deleted student's placements go with them (demo: hidden in this browser).
+  const all = useMemo(
+    () => (list.data?.placements ?? []).filter((p) => !deleted.includes(studentByEmail(p.consultantEmail)?.pixelitId ?? "")),
+    [list.data, deleted],
+  );
   const money = all.some((p) => p.billRate !== undefined);
   const clients = useMemo(() => [...new Map(all.map((p) => [p.client.id, p.client.name])).entries()].sort((a, b) => a[1].localeCompare(b[1])), [all]);
   const needle = q.trim().toLowerCase();
@@ -79,7 +85,20 @@ export function PlacementsPage() {
   if (open) {
     return (
       <>
-        <PlacementDetail who={who} placement={open} onBack={() => setOpenId(null)} onEdit={isAdmin ? () => setEditing(open) : undefined} />
+        <PlacementDetail
+          who={who}
+          placement={open}
+          onBack={() => setOpenId(null)}
+          onEdit={isAdmin ? () => setEditing(open) : undefined}
+          onDeleted={
+            isAdmin
+              ? (message) => {
+                  setOpenId(null);
+                  showToast(message);
+                }
+              : undefined
+          }
+        />
         {dialogs}
         {toast}
       </>
@@ -181,7 +200,19 @@ function PlacementCard({ placement: p, onOpen }: { placement: Placement; onOpen:
 }
 
 /** One placement, filling the page. */
-function PlacementDetail({ who, placement: p, onBack, onEdit }: { who: Who | null; placement: Placement; onBack: () => void; onEdit?: () => void }) {
+function PlacementDetail({
+  who,
+  placement: p,
+  onBack,
+  onEdit,
+  onDeleted,
+}: {
+  who: Who | null;
+  placement: Placement;
+  onBack: () => void;
+  onEdit?: () => void;
+  onDeleted?: (message: string) => void;
+}) {
   const seesTimesheets = can(who, "admin", "verifier", "accounts");
   const timesheets = useApi(who && seesTimesheets ? () => adminApi.timesheets(who, { consultant: p.consultantName }) : null, [p.id, who?.role]);
   const mine = (timesheets.data?.timesheets ?? []).filter((t) => t.placement.id === p.id);
@@ -224,6 +255,7 @@ function PlacementDetail({ who, placement: p, onBack, onEdit }: { who: Who | nul
                 <Pencil className="size-4" aria-hidden="true" /> Edit placement
               </button>
             )}
+            {onDeleted && student && <DeleteStudentButton student={student} onDeleted={onDeleted} />}
           </div>
         </div>
       </section>
@@ -572,7 +604,8 @@ function AddPlacementWizard({ who, open, known, onClose, onSaved }: { who: Who; 
 function StudentPicker({ value, placements, onPick }: { value: string; placements: Placement[]; onPick: (s: RegisteredStudent) => void }) {
   const [q, setQ] = useState("");
   const needle = q.trim().toLowerCase();
-  const found = registeredStudents.filter((s) => !needle || s.fullName.toLowerCase().includes(needle) || s.pixelitId.toLowerCase().includes(needle) || s.email.includes(needle));
+  const deleted = useDeletedStudents();
+  const found = registeredStudents.filter((s) => !deleted.includes(s.pixelitId)).filter((s) => !needle || s.fullName.toLowerCase().includes(needle) || s.pixelitId.toLowerCase().includes(needle) || s.email.includes(needle));
   const placedAt = (email: string) => placements.find((p) => p.consultantEmail === email && p.extensionStatus !== "ENDED");
 
   return (

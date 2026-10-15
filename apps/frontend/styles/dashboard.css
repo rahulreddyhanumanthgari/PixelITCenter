@@ -343,6 +343,12 @@ button.dash-card:hover {
 .dash-btn[data-tone="orange"]:hover {
   background: #e85a08;
 }
+.dash-btn[data-tone="danger"] {
+  background: #dc2626;
+}
+.dash-btn[data-tone="danger"]:hover {
+  background: #b91c1c;
+}
 .dash-btn-ghost {
   background: #ffffff;
   border: 1px solid var(--dash-line-strong);
@@ -616,6 +622,8 @@ select.dash-input {
   border: 0;
   background: #ffffff;
   color: var(--dash-ink);
+  /* Opened from centred headers on phones; the window itself reads left to right. */
+  text-align: left;
   box-shadow: -24px 0 60px -30px rgb(4 19 39 / 0.45);
 }
 .dash-panel[open] {

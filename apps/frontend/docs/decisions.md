@@ -784,6 +784,13 @@ pages are gone. The client section is an internal tool for PixelIT staff.
   open to, work mode, availability, experience, open to relocating; search by
   name, email or PIC. A card opens to the full profile, current placement and
   Documents. Data: `content/registered-students.ts` (10 demo students).
+- **Deleting a student (2026-10-15, front end only):** admins only. "Delete
+  student" on an open student in Talent and in Placements; the confirm window
+  needs DELETE typed in capitals before "Delete for good" works. Demo: the
+  student (and their placement cards) are hidden in this browser
+  (`admin/deletedStudents.ts`), with a "Restore" link on Talent. With the
+  backend: a real admin-only, logged delete or archive; what happens to their
+  placements, timesheets and invoices is decided then.
 - **Role type on placements (2026-10-15, backend):** Full-time, Part-time,
   Contract, Contract-to-hire (`Placement.employmentType`, default Contract,
   migration `20261015000000_placement_employment_type`). Asked in Add

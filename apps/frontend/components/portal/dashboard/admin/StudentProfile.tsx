@@ -1,11 +1,12 @@
 "use client";
 
-import type { ReactNode } from "react";
-import { FileText } from "lucide-react";
+import { useState, type ReactNode } from "react";
+import { FileText, Trash2 } from "lucide-react";
 import { consultantDocLabels, consultantDocsDemo, type ConsultantDocType } from "@/content/portal-demo";
 import type { RegisteredStudent } from "@/content/registered-students";
 import { cn } from "@/lib/utils";
 import { Chip, useToast } from "../ui";
+import { deleteStudent } from "./deletedStudents";
 import { date, Detail, EMPLOYMENT, Panel } from "./ui";
 
 // A registered student's profile and documents, as staff see them on an open
@@ -178,6 +179,85 @@ export function DocumentsWindow({ name, open, onClose }: { name: string; open: b
         <p className="mt-4 text-xs text-[var(--dash-muted)]">Demo files. In the live portal these are the documents the student uploads under Documents.</p>
       </Panel>
       {toast}
+    </>
+  );
+}
+
+/**
+ * Admins only. Deleting needs the word DELETE typed in capitals, so it can't
+ * happen by a slip of the mouse. FRONT END ONLY: see deletedStudents.ts.
+ */
+export function DeleteStudentButton({ student, onDeleted }: { student: RegisteredStudent; onDeleted: (message: string) => void }) {
+  const [open, setOpen] = useState(false);
+  const [typed, setTyped] = useState("");
+  const ready = typed === "DELETE";
+  const close = () => {
+    setOpen(false);
+    setTyped("");
+  };
+  return (
+    <>
+      <button type="button" className="dash-btn" data-tone="danger" onClick={() => setOpen(true)}>
+        <Trash2 className="size-4" aria-hidden="true" /> Delete student
+      </button>
+      <Panel
+        center
+        open={open}
+        title={`Delete ${student.fullName} (${student.pixelitId})?`}
+        subtitle="Admins only. This can't be undone."
+        onClose={close}
+        footer={
+          <>
+            <button type="button" className="dash-btn-ghost mr-auto" onClick={close}>
+              Cancel
+            </button>
+            <button
+              type="submit"
+              form="delete-student"
+              className="dash-btn"
+              data-tone="danger"
+              disabled={!ready}
+            >
+              <Trash2 className="size-4" aria-hidden="true" /> Delete for good
+            </button>
+          </>
+        }
+      >
+        <form
+          id="delete-student"
+          className="space-y-4"
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (!ready) return;
+            deleteStudent(student.pixelitId);
+            close();
+            onDeleted(`${student.fullName} (${student.pixelitId}) was deleted.`);
+          }}
+        >
+          <p className="rounded-2xl bg-[var(--dash-red-tint)] p-4 text-sm text-[var(--dash-red-ink)]">
+            Their account, profile and documents go away. Check it&apos;s the right person: <strong>{student.fullName}</strong>, {student.pixelitId},{" "}
+            {student.email}.
+          </p>
+          <div>
+            <label htmlFor="delete-confirm" className="dash-label">
+              Type <span className="font-mono font-bold">DELETE</span> to confirm
+            </label>
+            <input
+              id="delete-confirm"
+              className="dash-input font-mono tracking-widest"
+              value={typed}
+              onChange={(e) => setTyped(e.target.value)}
+              autoComplete="off"
+              autoCapitalize="characters"
+              spellCheck={false}
+              aria-describedby="delete-hint"
+            />
+            <p id="delete-hint" className="mt-1.5 text-xs text-[var(--dash-muted)]">
+              {typed && !ready ? "Type it exactly, in capital letters: DELETE" : "In capital letters."}
+            </p>
+          </div>
+        </form>
+      </Panel>
     </>
   );
 }
