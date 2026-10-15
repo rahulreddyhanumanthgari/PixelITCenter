@@ -1,26 +1,34 @@
 "use client";
 
-import { useMemo, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from "react";
 import Link from "next/link";
-import { ChevronDown, Pencil, Plus, Search } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, Pencil, Plus, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Avatar, Chip, PageHeader, useToast } from "../ui";
-import { adminApi, type ExtensionStatus, type Placement, type PlacementInput, type Who } from "./api";
+import { adminApi, type Client, type ExtensionStatus, type Placement, type PlacementInput, type Who } from "./api";
 import { can, date, Detail, Empty, ErrorNote, Field, fieldErrors, errorText, hours, Loading, Panel, usd, useApi, useWho } from "./ui";
 
-// Placements: who is placed where, at what rates, until when. Replaces the old
-// projects / tasks / schedule pages. Admins add and edit; accounts sees the
-// rates; recruiters and verifiers see placements without any rates (the API
-// leaves them out for those roles).
+// Placements: who is placed where, at what rates, until when.
+//
+//   - Big cards: photo, name, company and role only.
+//   - Click a card: the other cards go away and that student's placement fills
+//     the page (details, rates, recent timesheets). "All placements" goes back.
+//   - Add placement: one question at a time, Next → Next → … → review → save.
+//
+// Admins add and edit; accounts sees the rates; recruiters and verifiers see
+// placements without any rates (the API leaves them out for those roles).
 
-const STATUS: Record<ExtensionStatus, { label: string; tone: "good" | "warn" | "ink" | undefined }> = {
-  ACTIVE: { label: "Active", tone: "good" },
-  EXTENSION_PENDING: { label: "Extension pending", tone: "warn" },
-  EXTENDED: { label: "Extended", tone: "ink" },
-  ENDED: { label: "Ended", tone: undefined },
+const STATUS: Record<ExtensionStatus, { label: string; tone: "good" | "warn" | "ink" | undefined; body: string }> = {
+  ACTIVE: { label: "Active", tone: "good", body: "Working at the client now." },
+  EXTENSION_PENDING: { label: "Extension pending", tone: "warn", body: "The contract may be extended; waiting to hear." },
+  EXTENDED: { label: "Extended", tone: "ink", body: "The client extended the contract." },
+  ENDED: { label: "Ended", tone: undefined, body: "The placement is over." },
 };
 
 const FILTERS: ("ALL" | ExtensionStatus)[] = ["ALL", "ACTIVE", "EXTENSION_PENDING", "EXTENDED", "ENDED"];
+
+/** The company the consultant works at: the end client when there is one. */
+const companyOf = (p: Placement) => p.endClientName ?? p.client.name;
 
 export function PlacementsPage() {
   const who = useWho();
@@ -28,7 +36,8 @@ export function PlacementsPage() {
   const [clientId, setClientId] = useState("");
   const [q, setQ] = useState("");
   const list = useApi(who ? () => adminApi.placements(who) : null, [who?.email, who?.role]);
-  const [editing, setEditing] = useState<Placement | "new" | null>(null);
+  const [adding, setAdding] = useState(false);
+  const [editing, setEditing] = useState<Placement | null>(null);
   const [openId, setOpenId] = useState<string | null>(null);
   const [toast, showToast] = useToast();
   const isAdmin = can(who, "admin");
@@ -43,12 +52,42 @@ export function PlacementsPage() {
       (!clientId || p.client.id === clientId) &&
       (!needle || [p.consultantName, p.role, p.client.name, p.endClientName ?? ""].some((v) => v.toLowerCase().includes(needle))),
   );
+  const open = openId ? all.find((p) => p.id === openId) : undefined;
+
+  // Opening or closing a placement starts at the top of the page.
+  useEffect(() => {
+    window.scrollTo({ top: 0 });
+  }, [openId]);
+
+  const saved = (message: string) => {
+    setAdding(false);
+    setEditing(null);
+    list.reload();
+    showToast(message);
+  };
+
+  const dialogs = who && isAdmin && (
+    <>
+      <AddPlacementWizard who={who} open={adding} known={all} onClose={() => setAdding(false)} onSaved={saved} />
+      <EditPlacementPanel who={who} placement={editing} onClose={() => setEditing(null)} onSaved={saved} />
+    </>
+  );
+
+  if (open) {
+    return (
+      <>
+        <PlacementDetail who={who} placement={open} onBack={() => setOpenId(null)} onEdit={isAdmin ? () => setEditing(open) : undefined} />
+        {dialogs}
+        {toast}
+      </>
+    );
+  }
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Placements" body={money ? "Who is placed where, at what rates. Bill rate is charged to the client; pay rate is paid to the consultant." : "Who is placed where and until when."}>
+      <PageHeader title="Placements" body={money ? "Who is placed where. Open a card to see everything about that placement." : "Who is placed where and until when."}>
         {isAdmin && (
-          <button type="button" className="dash-btn" data-tone="orange" onClick={() => setEditing("new")}>
+          <button type="button" className="dash-btn" data-tone="orange" onClick={() => setAdding(true)}>
             <Plus className="size-4" aria-hidden="true" /> Add placement
           </button>
         )}
@@ -81,7 +120,7 @@ export function PlacementsPage() {
             <label className="sr-only" htmlFor="pl-search">
               Search placements
             </label>
-            <input id="pl-search" type="search" className="dash-input pr-10" placeholder="Consultant, role, client…" value={q} onChange={(e) => setQ(e.target.value)} />
+            <input id="pl-search" type="search" className="dash-input pr-10" placeholder="Student, role, company…" value={q} onChange={(e) => setQ(e.target.value)} />
             <Search className="pointer-events-none absolute top-1/2 right-3.5 size-4 -translate-y-1/2 text-[var(--dash-muted)]" aria-hidden="true" />
           </div>
         </div>
@@ -96,142 +135,474 @@ export function PlacementsPage() {
             <Empty title="No placements match" body={all.length ? "Try another filter." : isAdmin ? "Add the first one with “Add placement”." : undefined} />
           </div>
         ) : (
-          <ul className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+          <ul className="grid gap-4 sm:grid-cols-2 sm:gap-5 xl:grid-cols-3">
             {shown.map((p) => (
-              <PlacementCard
-                key={p.id}
-                who={who}
-                placement={p}
-                open={openId === p.id}
-                onToggle={() => setOpenId((id) => (id === p.id ? null : p.id))}
-                onEdit={isAdmin ? () => setEditing(p) : undefined}
-              />
+              <li key={p.id}>
+                <PlacementCard placement={p} onOpen={() => setOpenId(p.id)} />
+              </li>
             ))}
           </ul>
         )
       ) : null}
 
-      {who && isAdmin && (
-        <PlacementPanel
-          who={who}
-          placement={editing}
-          onClose={() => setEditing(null)}
-          onSaved={(message) => {
-            setEditing(null);
-            list.reload();
-            showToast(message);
-          }}
-        />
-      )}
+      {dialogs}
       {toast}
     </div>
   );
 }
 
-/** The company the consultant works at: the end client when there is one. */
-const companyOf = (p: Placement) => p.endClientName ?? p.client.name;
-
-/**
- * One placed student. Closed: photo, name, company and role. Open (click): it
- * spans the row and shows everything about the placement, plus their recent
- * timesheets for the roles that can see timesheets.
- */
-function PlacementCard({ who, placement: p, open, onToggle, onEdit }: { who: Who | null; placement: Placement; open: boolean; onToggle: () => void; onEdit?: () => void }) {
-  const detailsId = `placement-${p.id}`;
-  const seesTimesheets = can(who, "admin", "verifier", "accounts");
-  const timesheets = useApi(
-    open && who && seesTimesheets ? () => adminApi.timesheets(who, { consultant: p.consultantName }) : null,
-    [open, p.id, who?.role],
-  );
-  const mine = (timesheets.data?.timesheets ?? []).filter((t) => t.placement.id === p.id).slice(0, 6);
-  const money = p.billRate !== undefined;
-
+/** A big card: photo, name, company, role. The whole card opens the placement. */
+function PlacementCard({ placement: p, onOpen }: { placement: Placement; onOpen: () => void }) {
   return (
-    <li className={cn("dash-card overflow-hidden transition-shadow", open && "shadow-[0_18px_40px_-28px_rgb(4_19_39/0.5)] sm:col-span-2 xl:col-span-3")}>
-      <button
-        type="button"
-        className="flex w-full items-center gap-3.5 p-4 text-left hover:bg-[var(--dash-hover)] sm:p-5"
-        aria-expanded={open}
-        aria-controls={detailsId}
-        onClick={onToggle}
-      >
-        <Avatar name={p.consultantName} size={52} />
-        <span className="min-w-0 flex-1">
-          <span className="block truncate text-base font-semibold">{p.consultantName}</span>
-          <span className="block truncate text-sm text-[var(--dash-cyan-ink)]">{companyOf(p)}</span>
-          <span className="block truncate text-sm text-[var(--dash-muted)]">{p.role}</span>
+    <button
+      type="button"
+      onClick={onOpen}
+      aria-label={`${p.consultantName}, ${p.role} at ${companyOf(p)}. Open placement.`}
+      className="dash-card group block h-full w-full overflow-hidden text-center transition hover:-translate-y-0.5 hover:border-[var(--dash-line-strong)] hover:shadow-[0_18px_40px_-28px_rgb(4_19_39/0.55)]"
+    >
+      <span className="dash-hero block h-20 rounded-none border-0" aria-hidden="true" />
+      <span className="relative z-10 -mt-12 flex flex-col items-center px-5 pb-7">
+        <span className="rounded-full ring-4 ring-white">
+          <Avatar name={p.consultantName} size={88} />
         </span>
-        <ChevronDown className={cn("size-5 flex-none text-[var(--dash-muted)] transition-transform", open && "rotate-180")} aria-hidden="true" />
-      </button>
-
-      {open && (
-        <div id={detailsId} className="space-y-5 border-t border-[var(--dash-line)] p-4 sm:p-5">
-          <div className="flex flex-wrap items-center gap-2">
-            <Chip tone={STATUS[p.extensionStatus].tone}>{STATUS[p.extensionStatus].label}</Chip>
-            {!p.consultantLinked && <Chip>Hasn&apos;t signed in yet</Chip>}
-            {onEdit && (
-              <button type="button" className="dash-btn-ghost ml-auto min-h-[44px] sm:min-h-0" onClick={onEdit}>
-                <Pencil className="size-4" aria-hidden="true" /> Edit placement
-              </button>
-            )}
-          </div>
-
-          <dl className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-            <Detail label="Email">{p.consultantEmail}</Detail>
-            <Detail label={p.client.type === "VENDOR" ? "Vendor" : "Client"}>{p.client.name}</Detail>
-            <Detail label="End client">{p.endClientName ?? "–"}</Detail>
-            <Detail label="Role">{p.role}</Detail>
-            <Detail label="Start date">{date(p.startDate)}</Detail>
-            <Detail label="Contract end">{date(p.endDate)}</Detail>
-            {money && (
-              <>
-                <Detail label="Bill rate (to client)">{usd(p.billRate)}/h</Detail>
-                <Detail label="Pay rate (to consultant)">{usd(p.payRate)}/h</Detail>
-                <Detail label="Margin">
-                  <span className={p.marginPerHour !== undefined && p.marginPerHour < 0 ? "text-[var(--dash-red-ink)]" : undefined}>{usd(p.marginPerHour)}/h</span>
-                </Detail>
-              </>
-            )}
-          </dl>
-
-          {seesTimesheets && (
-            <section aria-label={`${p.consultantName}'s recent timesheets`}>
-              <div className="flex items-center justify-between gap-2">
-                <h3 className="text-sm font-semibold">Recent timesheets</h3>
-                <Link href="/portal/admin/timesheets" className="text-xs font-semibold text-[var(--dash-orange-ink)] hover:underline">
-                  Open Timesheets
-                </Link>
-              </div>
-              {timesheets.error ? (
-                <ErrorNote text={timesheets.error} onRetry={timesheets.reload} />
-              ) : timesheets.loading && !timesheets.data ? (
-                <Loading />
-              ) : mine.length === 0 ? (
-                <p className="mt-2 text-sm text-[var(--dash-muted)]">No timesheets yet.</p>
-              ) : (
-                <ul className="mt-2 divide-y divide-[var(--dash-line)] rounded-xl border border-[var(--dash-line)]">
-                  {mine.map((t) => (
-                    <li key={t.id} className="flex flex-wrap items-center justify-between gap-2 px-3 py-2.5 text-sm">
-                      <span className="font-medium">{t.monthLabel}</span>
-                      <span className="text-[var(--dash-muted)]">{hours(t.approvedHours ?? t.hours)}</span>
-                      <span className="flex items-center gap-2">
-                        {t.invoice && <span className="text-xs text-[var(--dash-muted)]">{t.invoice.number}</span>}
-                        <Chip tone={t.status === "REJECTED" ? "bad" : t.status === "RECEIVED" ? "warn" : "good"}>{t.statusLabel}</Chip>
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </section>
-          )}
-        </div>
-      )}
-    </li>
+        <span className="mt-4 block text-xl font-semibold">{p.consultantName}</span>
+        <span className="mt-1 block text-[0.9375rem] font-medium text-[var(--dash-cyan-ink)]">{companyOf(p)}</span>
+        <span className="mt-0.5 block text-sm text-[var(--dash-muted)]">{p.role}</span>
+      </span>
+    </button>
   );
 }
 
-const emptyDraft = { clientId: "", consultantName: "", consultantEmail: "", endClientName: "", role: "", billRate: "", payRate: "", startDate: "", endDate: "", extensionStatus: "ACTIVE" as ExtensionStatus };
+/** One placement, filling the page. */
+function PlacementDetail({ who, placement: p, onBack, onEdit }: { who: Who | null; placement: Placement; onBack: () => void; onEdit?: () => void }) {
+  const seesTimesheets = can(who, "admin", "verifier", "accounts");
+  const timesheets = useApi(who && seesTimesheets ? () => adminApi.timesheets(who, { consultant: p.consultantName }) : null, [p.id, who?.role]);
+  const mine = (timesheets.data?.timesheets ?? []).filter((t) => t.placement.id === p.id);
+  const money = p.billRate !== undefined;
+  const back = useRef<HTMLButtonElement>(null);
+  useEffect(() => back.current?.focus(), []);
+
+  return (
+    <div className="space-y-6">
+      <button ref={back} type="button" className="dash-btn-ghost" onClick={onBack}>
+        <ArrowLeft className="size-4" aria-hidden="true" /> All placements
+      </button>
+
+      <section className="dash-hero p-5 sm:p-8" aria-labelledby="placement-name">
+        <div className="flex flex-col items-center gap-5 text-center sm:flex-row sm:text-left">
+          <span className="rounded-full ring-4 ring-white">
+            <Avatar name={p.consultantName} size={112} />
+          </span>
+          <div className="min-w-0 flex-1">
+            <h1 id="placement-name" className="dash-title">
+              {p.consultantName}
+            </h1>
+            <p className="mt-2 text-lg font-medium text-[var(--dash-cyan-ink)]">{companyOf(p)}</p>
+            <p className="text-[0.9375rem] text-[var(--dash-muted)]">{p.role}</p>
+            <p className="mt-3 flex flex-wrap justify-center gap-2 sm:justify-start">
+              <Chip tone={STATUS[p.extensionStatus].tone}>{STATUS[p.extensionStatus].label}</Chip>
+              {!p.consultantLinked && <Chip>Hasn&apos;t signed in yet</Chip>}
+            </p>
+          </div>
+          {onEdit && (
+            <button type="button" className="dash-btn" onClick={onEdit}>
+              <Pencil className="size-4" aria-hidden="true" /> Edit placement
+            </button>
+          )}
+        </div>
+      </section>
+
+      <div className={cn("grid gap-4 sm:gap-5", money && "lg:grid-cols-2")}>
+        <InfoCard title="Placement">
+          <Detail label="Email">{p.consultantEmail}</Detail>
+          <Detail label={p.client.type === "VENDOR" ? "Vendor" : "Client"}>{p.client.name}</Detail>
+          <Detail label="End client">{p.endClientName ?? "–"}</Detail>
+          <Detail label="Role">{p.role}</Detail>
+          <Detail label="Start date">{date(p.startDate)}</Detail>
+          <Detail label="Contract end">{date(p.endDate)}</Detail>
+        </InfoCard>
+        {money && (
+          <InfoCard title="Rates">
+            <Detail label="Bill rate (charged to the client)">
+              <span className="text-xl">{usd(p.billRate)}</span>/h
+            </Detail>
+            <Detail label="Pay rate (paid to the student)">
+              <span className="text-xl">{usd(p.payRate)}</span>/h
+            </Detail>
+            <Detail label="Margin">
+              <span className={cn("text-xl", p.marginPerHour !== undefined && p.marginPerHour < 0 && "text-[var(--dash-red-ink)]")}>{usd(p.marginPerHour)}</span>/h
+            </Detail>
+          </InfoCard>
+        )}
+      </div>
+
+      {seesTimesheets && (
+        <section className="dash-card dash-card-pad" aria-labelledby="placement-timesheets">
+          <div className="flex items-center justify-between gap-2">
+            <h2 id="placement-timesheets" className="dash-section-title">
+              Timesheets <span className="dash-count">{mine.length}</span>
+            </h2>
+            <Link href="/portal/admin/timesheets" className="text-sm font-semibold text-[var(--dash-orange-ink)] hover:underline">
+              Open Timesheets
+            </Link>
+          </div>
+          {timesheets.error ? (
+            <div className="mt-3">
+              <ErrorNote text={timesheets.error} onRetry={timesheets.reload} />
+            </div>
+          ) : timesheets.loading && !timesheets.data ? (
+            <Loading />
+          ) : mine.length === 0 ? (
+            <p className="mt-3 text-sm text-[var(--dash-muted)]">No timesheets yet.</p>
+          ) : (
+            <ul className="mt-3 divide-y divide-[var(--dash-line)]">
+              {mine.map((t) => (
+                <li key={t.id} className="flex flex-wrap items-center gap-x-4 gap-y-1 py-3 text-sm">
+                  <span className="min-w-[8rem] font-semibold">{t.monthLabel}</span>
+                  <span className="text-[var(--dash-muted)]">{hours(t.approvedHours ?? t.hours)}</span>
+                  {t.invoice && <span className="text-[var(--dash-muted)]">{t.invoice.number}</span>}
+                  <span className="ml-auto">
+                    <Chip tone={t.status === "REJECTED" ? "bad" : t.status === "RECEIVED" ? "warn" : "good"}>{t.statusLabel}</Chip>
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+      )}
+    </div>
+  );
+}
+
+function InfoCard({ title, children }: { title: string; children: ReactNode }) {
+  return (
+    <section className="dash-card dash-card-pad">
+      <h2 className="dash-section-title">{title}</h2>
+      <dl className="mt-4 grid grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-2">{children}</dl>
+    </section>
+  );
+}
+
+// --- Add placement: one question at a time --------------------------------------------
+
+const emptyDraft = { consultantName: "", consultantEmail: "", clientId: "", endClientName: "", role: "", billRate: "", payRate: "", startDate: "", endDate: "", extensionStatus: "ACTIVE" as ExtensionStatus };
 type Draft = typeof emptyDraft;
+type Key = keyof Draft;
+
+const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const money2 = (v: string) => /^\d+(\.\d{1,2})?$/.test(v) && Number(v) > 0;
+
+type Step = {
+  key: Key;
+  question: string;
+  hint?: string;
+  optional?: boolean;
+  check?: (v: string, d: Draft) => string | null;
+};
+
+const STEPS: Step[] = [
+  { key: "consultantName", question: "Who is being placed?", hint: "The student's name." },
+  { key: "consultantEmail", question: "What's their portal email?", hint: "Links this placement to their account.", check: (v) => (EMAIL.test(v) ? null : "Enter a valid email address.") },
+  { key: "clientId", question: "Which client or vendor?", hint: "Who PixelIT bills for this placement." },
+  { key: "endClientName", question: "Who is the end client?", hint: "The company they actually work at. Leave empty if it's the client itself.", optional: true },
+  { key: "role", question: "What's their role?", hint: "e.g. Cloud Engineer (AWS)" },
+  { key: "billRate", question: "Bill rate per hour?", hint: "What the client is charged, in dollars.", check: (v) => (money2(v) ? null : "Enter an amount like 92 or 92.50.") },
+  { key: "payRate", question: "Pay rate per hour?", hint: "What the student is paid, in dollars. Students see only this rate.", check: (v) => (money2(v) ? null : "Enter an amount like 65 or 65.50.") },
+  { key: "startDate", question: "When do they start?" },
+  { key: "endDate", question: "When does the contract end?", hint: "Leave empty if there's no end date yet.", optional: true, check: (v, d) => (v && d.startDate && v < d.startDate ? "The end date can't be before the start date." : null) },
+  { key: "extensionStatus", question: "What's the status?" },
+];
+
+function AddPlacementWizard({ who, open, known, onClose, onSaved }: { who: Who; open: boolean; known: Placement[]; onClose: () => void; onSaved: (message: string) => void }) {
+  const clients = useApi(open ? () => adminApi.clients(who) : null, [open]);
+  const [draft, setDraft] = useState<Draft>(emptyDraft);
+  const [step, setStep] = useState(0);
+  const [error, setError] = useState<string | null>(null);
+  const [problem, setProblem] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [wasOpen, setWasOpen] = useState(open);
+
+  // Each time it opens, start from the first question.
+  if (open !== wasOpen) {
+    setWasOpen(open);
+    if (open) {
+      setDraft(emptyDraft);
+      setStep(0);
+      setError(null);
+      setProblem(null);
+    }
+  }
+
+  const review = step === STEPS.length;
+  const current = STEPS[step];
+  // Put the cursor in the new question (the chosen option, or the first one).
+  useEffect(() => {
+    if (!open) return;
+    const t = setTimeout(() => {
+      const form = document.getElementById("wizard-form");
+      const target = form?.querySelector<HTMLElement>('[aria-checked="true"], input, [role="radio"]');
+      target?.focus();
+    }, 50);
+    return () => clearTimeout(t);
+  }, [open, step]);
+
+  const set = (patch: Partial<Draft>) => {
+    setDraft((d) => ({ ...d, ...patch }));
+    setError(null);
+  };
+
+  // Students already placed before: picking a name fills in their email.
+  const people = useMemo(() => [...new Map(known.map((p) => [p.consultantName, p.consultantEmail])).entries()], [known]);
+  const clientList = clients.data?.clients ?? [];
+  const clientOf = (id: string) => clientList.find((c) => c.id === id);
+
+  function next(e?: FormEvent) {
+    e?.preventDefault();
+    if (review) return void save();
+    if (!current) return;
+    const v = draft[current.key].trim();
+    if (!v && !current.optional) return setError("Please answer this to go on.");
+    const why = v ? current.check?.(v, draft) : null;
+    if (why) return setError(why);
+    // Choosing a vendor fills in its end client.
+    if (current.key === "clientId" && !draft.endClientName) set({ endClientName: clientOf(v)?.endClientName ?? "" });
+    setError(null);
+    setStep(step + 1);
+  }
+
+  async function save() {
+    setBusy(true);
+    setProblem(null);
+    const body: PlacementInput = {
+      clientId: draft.clientId,
+      consultantName: draft.consultantName.trim(),
+      consultantEmail: draft.consultantEmail.trim(),
+      endClientName: draft.endClientName.trim() || null,
+      role: draft.role.trim(),
+      billRate: Number(draft.billRate),
+      payRate: Number(draft.payRate),
+      startDate: draft.startDate,
+      endDate: draft.endDate || null,
+      extensionStatus: draft.extensionStatus,
+    };
+    try {
+      await adminApi.createPlacement(who, body);
+      onSaved(`${body.consultantName} is placed at ${body.endClientName ?? clientOf(body.clientId)?.name ?? "the client"}.`);
+    } catch (err) {
+      // Go back to the first question the server didn't accept.
+      const fields = fieldErrors(err);
+      const at = STEPS.findIndex((s) => fields[s.key]);
+      if (at >= 0) {
+        setStep(at);
+        setError(fields[STEPS[at]!.key]!);
+      } else setProblem(errorText(err));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  const shown = (k: Key) => {
+    const v = draft[k];
+    if (!v) return "–";
+    if (k === "clientId") return clientOf(v)?.name ?? "–";
+    if (k === "billRate" || k === "payRate") return `${usd(Number(v))}/h`;
+    if (k === "startDate" || k === "endDate") return date(v);
+    if (k === "extensionStatus") return STATUS[v as ExtensionStatus].label;
+    return v;
+  };
+  const margin = draft.billRate && draft.payRate ? Number(draft.billRate) - Number(draft.payRate) : null;
+  const inputProps = (k: Key) => ({
+    id: `wiz-${k}`,
+    className: "dash-input h-14 text-lg",
+    value: draft[k],
+    "aria-invalid": Boolean(error) || undefined,
+    "aria-describedby": error ? "wiz-error" : current?.hint ? "wiz-hint" : undefined,
+    onChange: (e: { target: { value: string } }) => set({ [k]: e.target.value } as Partial<Draft>),
+  });
+
+  return (
+    <Panel
+      open={open}
+      title="Add a placement"
+      subtitle={review ? "Check everything, then add it." : `Question ${step + 1} of ${STEPS.length}`}
+      onClose={onClose}
+      footer={
+        <>
+          {step > 0 && (
+            <button type="button" className="dash-btn-ghost mr-auto" onClick={() => (setStep(step - 1), setError(null))} disabled={busy}>
+              <ArrowLeft className="size-4" aria-hidden="true" /> Back
+            </button>
+          )}
+          <button type="submit" form="wizard-form" className="dash-btn" data-tone="orange" disabled={busy}>
+            {review ? (
+              <>
+                <Check className="size-4" aria-hidden="true" /> {busy ? "Adding…" : "Add placement"}
+              </>
+            ) : (
+              <>
+                {current?.optional && !draft[current.key] ? "Skip" : "Next"} <ArrowRight className="size-4" aria-hidden="true" />
+              </>
+            )}
+          </button>
+        </>
+      }
+    >
+      <div className="dash-bar mb-8" aria-hidden="true">
+        <span style={{ width: `${(Math.min(step, STEPS.length) / STEPS.length) * 100}%` }} />
+      </div>
+
+      <form id="wizard-form" onSubmit={next} noValidate>
+        {review ? (
+          <div className="space-y-4">
+            {problem && <ErrorNote text={problem} />}
+            <div className="flex items-center gap-4 rounded-2xl bg-[var(--dash-side)] p-4">
+              <Avatar name={draft.consultantName} size={56} />
+              <div className="min-w-0">
+                <p className="text-lg font-semibold">{draft.consultantName}</p>
+                <p className="text-sm text-[var(--dash-cyan-ink)]">{draft.endClientName || clientOf(draft.clientId)?.name}</p>
+                <p className="text-sm text-[var(--dash-muted)]">{draft.role}</p>
+              </div>
+            </div>
+            <ul className="divide-y divide-[var(--dash-line)] rounded-2xl border border-[var(--dash-line)]">
+              {STEPS.map((s, i) => (
+                <li key={s.key} className="flex items-center gap-3 px-4 py-3">
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-xs text-[var(--dash-muted)]">{s.question}</span>
+                    <span className="block text-sm font-medium break-words">{shown(s.key)}</span>
+                  </span>
+                  <button type="button" className="text-sm font-semibold text-[var(--dash-orange-ink)] hover:underline" onClick={() => setStep(i)}>
+                    Change
+                  </button>
+                </li>
+              ))}
+            </ul>
+            {margin !== null && (
+              <p className={cn("text-sm", margin < 0 ? "font-semibold text-[var(--dash-red-ink)]" : "text-[var(--dash-muted)]")}>
+                Margin: {usd(margin)} per hour{margin < 0 ? ". The bill rate is below the pay rate; check both." : "."}
+              </p>
+            )}
+          </div>
+        ) : current ? (
+          <div>
+            <label htmlFor={`wiz-${current.key}`} className="block text-2xl font-semibold">
+              {current.question}
+              {current.optional && <span className="ml-2 text-base font-normal text-[var(--dash-muted)]">(optional)</span>}
+            </label>
+            {current.hint && (
+              <p id="wiz-hint" className="mt-2 text-sm text-[var(--dash-muted)]">
+                {current.hint}
+              </p>
+            )}
+
+            <div className="mt-6">
+              {current.key === "clientId" ? (
+                <ClientChoice clients={clientList} loading={clients.loading} value={draft.clientId} onPick={(id) => set({ clientId: id })} />
+              ) : current.key === "extensionStatus" ? (
+                <div role="radiogroup" aria-labelledby="wiz-extensionStatus" className="grid gap-2">
+                  {(Object.keys(STATUS) as ExtensionStatus[]).map((s) => (
+                    <Choice key={s} on={draft.extensionStatus === s} onClick={() => set({ extensionStatus: s })} title={STATUS[s].label} body={STATUS[s].body} />
+                  ))}
+                </div>
+              ) : current.key === "consultantName" ? (
+                <>
+                  <input
+                    {...inputProps("consultantName")}
+                    list="wiz-people"
+                    autoComplete="off"
+                    onChange={(e) => {
+                      const email = people.find(([n]) => n === e.target.value)?.[1];
+                      set({ consultantName: e.target.value, ...(email && !draft.consultantEmail ? { consultantEmail: email } : {}) });
+                    }}
+                  />
+                  <datalist id="wiz-people">
+                    {people.map(([n]) => (
+                      <option key={n} value={n} />
+                    ))}
+                  </datalist>
+                </>
+              ) : current.key === "consultantEmail" ? (
+                <input {...inputProps("consultantEmail")} type="email" inputMode="email" autoComplete="off" />
+              ) : current.key === "billRate" || current.key === "payRate" ? (
+                <div className="relative">
+                  <span className="pointer-events-none absolute top-1/2 left-4 -translate-y-1/2 text-lg text-[var(--dash-muted)]" aria-hidden="true">
+                    $
+                  </span>
+                  <input {...inputProps(current.key)} className="dash-input h-14 pl-9 text-lg" type="number" inputMode="decimal" min="0" step="0.01" />
+                </div>
+              ) : current.key === "startDate" || current.key === "endDate" ? (
+                <input {...inputProps(current.key)} type="date" />
+              ) : (
+                <input {...inputProps(current.key)} autoComplete="off" />
+              )}
+            </div>
+
+            {current.key === "payRate" && margin !== null && !error && (
+              <p className={cn("mt-3 text-sm", margin < 0 ? "font-semibold text-[var(--dash-red-ink)]" : "text-[var(--dash-muted)]")}>
+                Margin: {usd(margin)} per hour.
+              </p>
+            )}
+            {error && (
+              <p id="wiz-error" role="alert" className="mt-3 text-sm font-medium text-[var(--dash-red-ink)]">
+                {error}
+              </p>
+            )}
+          </div>
+        ) : null}
+      </form>
+    </Panel>
+  );
+}
+
+function Choice({ on, onClick, title, body }: { on: boolean; onClick: () => void; title: string; body?: string }) {
+  return (
+    <button
+      type="button"
+      role="radio"
+      aria-checked={on}
+      onClick={onClick}
+      className={cn(
+        "flex min-h-[56px] w-full items-center gap-3 rounded-2xl border px-4 py-3 text-left transition",
+        on ? "border-[var(--dash-orange)] bg-[var(--dash-orange-tint)]" : "border-[var(--dash-line-strong)] hover:bg-[var(--dash-side)]",
+      )}
+    >
+      <span className="min-w-0 flex-1">
+        <span className="block font-semibold">{title}</span>
+        {body && <span className="block text-sm text-[var(--dash-muted)]">{body}</span>}
+      </span>
+      {on && <Check className="size-5 flex-none text-[var(--dash-orange)]" aria-hidden="true" />}
+    </button>
+  );
+}
+
+function ClientChoice({ clients, loading, value, onPick }: { clients: Client[]; loading: boolean; value: string; onPick: (id: string) => void }) {
+  if (loading && !clients.length) return <Loading />;
+  if (!clients.length) {
+    return (
+      <p className="text-sm text-[var(--dash-muted)]">
+        No clients yet.{" "}
+        <Link href="/portal/admin/clients" className="font-semibold text-[var(--dash-orange-ink)] hover:underline">
+          Add one under Clients
+        </Link>{" "}
+        first.
+      </p>
+    );
+  }
+  return (
+    <div role="radiogroup" aria-labelledby="wiz-clientId" className="grid max-h-[50dvh] gap-2 overflow-y-auto">
+      {clients.map((c) => (
+        <Choice
+          key={c.id}
+          on={value === c.id}
+          onClick={() => onPick(c.id)}
+          title={c.name}
+          body={c.type === "VENDOR" ? `Vendor${c.endClientName ? ` · end client ${c.endClientName}` : ""}` : "Client"}
+        />
+      ))}
+    </div>
+  );
+}
+
+// --- Edit placement: every field on one form (quick changes) ------------------------------
 
 const toDraft = (p: Placement): Draft => ({
   clientId: p.client.id,
@@ -246,8 +617,7 @@ const toDraft = (p: Placement): Draft => ({
   extensionStatus: p.extensionStatus,
 });
 
-function PlacementPanel({ who, placement, onClose, onSaved }: { who: Who; placement: Placement | "new" | null; onClose: () => void; onSaved: (message: string) => void }) {
-  const isNew = placement === "new";
+function EditPlacementPanel({ who, placement, onClose, onSaved }: { who: Who; placement: Placement | null; onClose: () => void; onSaved: (message: string) => void }) {
   const clients = useApi(placement ? () => adminApi.clients(who) : null, [Boolean(placement)]);
   const [draft, setDraft] = useState<Draft>(emptyDraft);
   const [last, setLast] = useState(placement);
@@ -257,12 +627,12 @@ function PlacementPanel({ who, placement, onClose, onSaved }: { who: Who; placem
 
   if (placement !== last) {
     setLast(placement);
-    setDraft(placement && placement !== "new" ? toDraft(placement) : emptyDraft);
+    setDraft(placement ? toDraft(placement) : emptyDraft);
     setErrors({});
     setProblem(null);
   }
   const edit = (patch: Partial<Draft>) => setDraft((d) => ({ ...d, ...patch }));
-  const input = (k: keyof Draft) => ({
+  const input = (k: Key) => ({
     id: `pl-${k}`,
     className: "dash-input",
     value: draft[k],
@@ -271,32 +641,26 @@ function PlacementPanel({ who, placement, onClose, onSaved }: { who: Who; placem
     onChange: (e: { target: { value: string } }) => edit({ [k]: e.target.value } as Partial<Draft>),
   });
 
-  const bill = Number(draft.billRate);
-  const pay = Number(draft.payRate);
-  const margin = draft.billRate && draft.payRate ? bill - pay : null;
-
   async function save(e: FormEvent) {
     e.preventDefault();
     if (!placement) return;
     setBusy(true);
     setErrors({});
     setProblem(null);
-    const body: PlacementInput = {
-      clientId: draft.clientId,
-      consultantName: draft.consultantName,
-      consultantEmail: draft.consultantEmail,
-      endClientName: draft.endClientName || null,
-      role: draft.role,
-      billRate: Number(draft.billRate),
-      payRate: Number(draft.payRate),
-      startDate: draft.startDate,
-      endDate: draft.endDate || null,
-      extensionStatus: draft.extensionStatus,
-    };
     try {
-      if (isNew) await adminApi.createPlacement(who, body);
-      else await adminApi.updatePlacement(who, placement.id, body);
-      onSaved(isNew ? `Placement for ${draft.consultantName} added.` : "Saved. New rates apply to invoices raised from now on.");
+      await adminApi.updatePlacement(who, placement.id, {
+        clientId: draft.clientId,
+        consultantName: draft.consultantName,
+        consultantEmail: draft.consultantEmail,
+        endClientName: draft.endClientName || null,
+        role: draft.role,
+        billRate: Number(draft.billRate),
+        payRate: Number(draft.payRate),
+        startDate: draft.startDate,
+        endDate: draft.endDate || null,
+        extensionStatus: draft.extensionStatus,
+      });
+      onSaved("Saved. New rates apply to invoices raised from now on.");
     } catch (err) {
       setErrors(fieldErrors(err));
       setProblem(errorText(err));
@@ -308,12 +672,12 @@ function PlacementPanel({ who, placement, onClose, onSaved }: { who: Who; placem
   return (
     <Panel
       open={Boolean(placement)}
-      title={isNew ? "Add a placement" : `${(placement as Placement | null)?.consultantName ?? ""}, ${(placement as Placement | null)?.role ?? ""}`}
-      subtitle="Bill and pay rates feed the invoices. Consultants see only their client and their own pay rate."
+      title={`Edit ${placement?.consultantName ?? ""}'s placement`}
+      subtitle="Rate changes apply to invoices raised from now on."
       onClose={onClose}
       footer={
         <button type="submit" form="placement-form" className="dash-btn" data-tone="orange" disabled={busy}>
-          {busy ? "Saving…" : isNew ? "Add placement" : "Save"}
+          {busy ? "Saving…" : "Save"}
         </button>
       }
     >
@@ -321,20 +685,19 @@ function PlacementPanel({ who, placement, onClose, onSaved }: { who: Who; placem
         {problem && <ErrorNote text={problem} />}
         <Field id="pl-clientId" label="Client or vendor" error={errors.clientId}>
           <select {...input("clientId")}>
-            <option value="">Choose…</option>
             {clients.data?.clients.map((c) => (
               <option key={c.id} value={c.id}>
                 {c.name}
-                {c.type === "VENDOR" ? ` (vendor${c.endClientName ? ` → ${c.endClientName}` : ""})` : ""}
+                {c.type === "VENDOR" ? " (vendor)" : ""}
               </option>
             ))}
           </select>
         </Field>
         <div className="grid gap-4 sm:grid-cols-2">
-          <Field id="pl-consultantName" label="Consultant" error={errors.consultantName}>
+          <Field id="pl-consultantName" label="Student" error={errors.consultantName}>
             <input {...input("consultantName")} autoComplete="off" />
           </Field>
-          <Field id="pl-consultantEmail" label="Consultant's portal email" hint="Links the placement to their account." error={errors.consultantEmail}>
+          <Field id="pl-consultantEmail" label="Portal email" error={errors.consultantEmail}>
             <input {...input("consultantEmail")} type="email" inputMode="email" autoComplete="off" />
           </Field>
         </div>
@@ -342,23 +705,18 @@ function PlacementPanel({ who, placement, onClose, onSaved }: { who: Who; placem
           <Field id="pl-role" label="Role" error={errors.role}>
             <input {...input("role")} />
           </Field>
-          <Field id="pl-endClientName" label="End client (optional)" hint="Leave empty to use the client's." error={errors.endClientName}>
+          <Field id="pl-endClientName" label="End client (optional)" error={errors.endClientName}>
             <input {...input("endClientName")} />
           </Field>
         </div>
         <div className="grid grid-cols-2 gap-4">
-          <Field id="pl-billRate" label="Bill rate ($/h)" hint="Charged to the client." error={errors.billRate}>
+          <Field id="pl-billRate" label="Bill rate ($/h)" error={errors.billRate}>
             <input {...input("billRate")} type="number" inputMode="decimal" min="0" step="0.01" />
           </Field>
-          <Field id="pl-payRate" label="Pay rate ($/h)" hint="Paid to the consultant." error={errors.payRate}>
+          <Field id="pl-payRate" label="Pay rate ($/h)" error={errors.payRate}>
             <input {...input("payRate")} type="number" inputMode="decimal" min="0" step="0.01" />
           </Field>
         </div>
-        {margin !== null && (
-          <p className={`text-sm ${margin < 0 ? "font-semibold text-[var(--dash-red-ink)]" : "text-[var(--dash-muted)]"}`}>
-            Margin: {usd(margin)} per hour{margin < 0 ? ". The bill rate is below the pay rate; check both." : "."}
-          </p>
-        )}
         <div className="grid grid-cols-2 gap-4">
           <Field id="pl-startDate" label="Start date" error={errors.startDate}>
             <input {...input("startDate")} type="date" />
@@ -367,7 +725,7 @@ function PlacementPanel({ who, placement, onClose, onSaved }: { who: Who; placem
             <input {...input("endDate")} type="date" />
           </Field>
         </div>
-        <Field id="pl-extensionStatus" label="Extension status" error={errors.extensionStatus}>
+        <Field id="pl-extensionStatus" label="Status" error={errors.extensionStatus}>
           <select {...input("extensionStatus")}>
             {(Object.keys(STATUS) as ExtensionStatus[]).map((s) => (
               <option key={s} value={s}>
