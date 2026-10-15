@@ -1,10 +1,12 @@
 "use client";
 
 import { useMemo, useState, type FormEvent } from "react";
-import { Plus, Search } from "lucide-react";
-import { Chip, PageHeader, useToast } from "../ui";
+import Link from "next/link";
+import { ChevronDown, Pencil, Plus, Search } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Avatar, Chip, PageHeader, useToast } from "../ui";
 import { adminApi, type ExtensionStatus, type Placement, type PlacementInput, type Who } from "./api";
-import { can, date, Empty, ErrorNote, Field, fieldErrors, errorText, Loading, Panel, usd, useApi, useWho } from "./ui";
+import { can, date, Detail, Empty, ErrorNote, Field, fieldErrors, errorText, hours, Loading, Panel, usd, useApi, useWho } from "./ui";
 
 // Placements: who is placed where, at what rates, until when. Replaces the old
 // projects / tasks / schedule pages. Admins add and edit; accounts sees the
@@ -27,6 +29,7 @@ export function PlacementsPage() {
   const [q, setQ] = useState("");
   const list = useApi(who ? () => adminApi.placements(who) : null, [who?.email, who?.role]);
   const [editing, setEditing] = useState<Placement | "new" | null>(null);
+  const [openId, setOpenId] = useState<string | null>(null);
   const [toast, showToast] = useToast();
   const isAdmin = can(who, "admin");
 
@@ -88,67 +91,24 @@ export function PlacementsPage() {
       {list.loading && !list.data ? (
         <Loading />
       ) : list.data ? (
-        <div className="dash-card p-2 sm:p-3">
-          {shown.length === 0 ? (
+        shown.length === 0 ? (
+          <div className="dash-card">
             <Empty title="No placements match" body={all.length ? "Try another filter." : isAdmin ? "Add the first one with “Add placement”." : undefined} />
-          ) : (
-            <div className="dash-table-wrap">
-              <table className="dash-table">
-                <thead>
-                  <tr>
-                    <th scope="col">Consultant</th>
-                    <th scope="col">Client / vendor</th>
-                    <th scope="col">End client</th>
-                    <th scope="col">Role</th>
-                    {money && (
-                      <>
-                        <th scope="col">Bill rate</th>
-                        <th scope="col">Pay rate</th>
-                        <th scope="col">Margin / h</th>
-                      </>
-                    )}
-                    <th scope="col">Start</th>
-                    <th scope="col">Contract end</th>
-                    <th scope="col">Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {shown.map((p) => (
-                    <tr key={p.id} data-clickable={isAdmin || undefined} onClick={isAdmin ? () => setEditing(p) : undefined}>
-                      <td>
-                        {isAdmin ? (
-                          <button type="button" className="text-left font-semibold hover:underline" onClick={(e) => (e.stopPropagation(), setEditing(p))}>
-                            {p.consultantName}
-                          </button>
-                        ) : (
-                          p.consultantName
-                        )}
-                      </td>
-                      <td>
-                        {p.client.name}
-                        {p.client.type === "VENDOR" && <span className="ml-1.5 text-xs text-[var(--dash-muted)]">(vendor)</span>}
-                      </td>
-                      <td>{p.endClientName ?? "–"}</td>
-                      <td>{p.role}</td>
-                      {money && (
-                        <>
-                          <td>{usd(p.billRate)}/h</td>
-                          <td>{usd(p.payRate)}/h</td>
-                          <td className={p.marginPerHour !== undefined && p.marginPerHour < 0 ? "font-semibold text-[var(--dash-red-ink)]" : undefined}>{usd(p.marginPerHour)}</td>
-                        </>
-                      )}
-                      <td>{date(p.startDate)}</td>
-                      <td>{date(p.endDate)}</td>
-                      <td>
-                        <Chip tone={STATUS[p.extensionStatus].tone}>{STATUS[p.extensionStatus].label}</Chip>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
+          </div>
+        ) : (
+          <ul className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+            {shown.map((p) => (
+              <PlacementCard
+                key={p.id}
+                who={who}
+                placement={p}
+                open={openId === p.id}
+                onToggle={() => setOpenId((id) => (id === p.id ? null : p.id))}
+                onEdit={isAdmin ? () => setEditing(p) : undefined}
+              />
+            ))}
+          </ul>
+        )
       ) : null}
 
       {who && isAdmin && (
@@ -165,6 +125,108 @@ export function PlacementsPage() {
       )}
       {toast}
     </div>
+  );
+}
+
+/** The company the consultant works at: the end client when there is one. */
+const companyOf = (p: Placement) => p.endClientName ?? p.client.name;
+
+/**
+ * One placed student. Closed: photo, name, company and role. Open (click): it
+ * spans the row and shows everything about the placement, plus their recent
+ * timesheets for the roles that can see timesheets.
+ */
+function PlacementCard({ who, placement: p, open, onToggle, onEdit }: { who: Who | null; placement: Placement; open: boolean; onToggle: () => void; onEdit?: () => void }) {
+  const detailsId = `placement-${p.id}`;
+  const seesTimesheets = can(who, "admin", "verifier", "accounts");
+  const timesheets = useApi(
+    open && who && seesTimesheets ? () => adminApi.timesheets(who, { consultant: p.consultantName }) : null,
+    [open, p.id, who?.role],
+  );
+  const mine = (timesheets.data?.timesheets ?? []).filter((t) => t.placement.id === p.id).slice(0, 6);
+  const money = p.billRate !== undefined;
+
+  return (
+    <li className={cn("dash-card overflow-hidden transition-shadow", open && "shadow-[0_18px_40px_-28px_rgb(4_19_39/0.5)] sm:col-span-2 xl:col-span-3")}>
+      <button
+        type="button"
+        className="flex w-full items-center gap-3.5 p-4 text-left hover:bg-[var(--dash-hover)] sm:p-5"
+        aria-expanded={open}
+        aria-controls={detailsId}
+        onClick={onToggle}
+      >
+        <Avatar name={p.consultantName} size={52} />
+        <span className="min-w-0 flex-1">
+          <span className="block truncate text-base font-semibold">{p.consultantName}</span>
+          <span className="block truncate text-sm text-[var(--dash-cyan-ink)]">{companyOf(p)}</span>
+          <span className="block truncate text-sm text-[var(--dash-muted)]">{p.role}</span>
+        </span>
+        <ChevronDown className={cn("size-5 flex-none text-[var(--dash-muted)] transition-transform", open && "rotate-180")} aria-hidden="true" />
+      </button>
+
+      {open && (
+        <div id={detailsId} className="space-y-5 border-t border-[var(--dash-line)] p-4 sm:p-5">
+          <div className="flex flex-wrap items-center gap-2">
+            <Chip tone={STATUS[p.extensionStatus].tone}>{STATUS[p.extensionStatus].label}</Chip>
+            {!p.consultantLinked && <Chip>Hasn&apos;t signed in yet</Chip>}
+            {onEdit && (
+              <button type="button" className="dash-btn-ghost ml-auto min-h-[44px] sm:min-h-0" onClick={onEdit}>
+                <Pencil className="size-4" aria-hidden="true" /> Edit placement
+              </button>
+            )}
+          </div>
+
+          <dl className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+            <Detail label="Email">{p.consultantEmail}</Detail>
+            <Detail label={p.client.type === "VENDOR" ? "Vendor" : "Client"}>{p.client.name}</Detail>
+            <Detail label="End client">{p.endClientName ?? "–"}</Detail>
+            <Detail label="Role">{p.role}</Detail>
+            <Detail label="Start date">{date(p.startDate)}</Detail>
+            <Detail label="Contract end">{date(p.endDate)}</Detail>
+            {money && (
+              <>
+                <Detail label="Bill rate (to client)">{usd(p.billRate)}/h</Detail>
+                <Detail label="Pay rate (to consultant)">{usd(p.payRate)}/h</Detail>
+                <Detail label="Margin">
+                  <span className={p.marginPerHour !== undefined && p.marginPerHour < 0 ? "text-[var(--dash-red-ink)]" : undefined}>{usd(p.marginPerHour)}/h</span>
+                </Detail>
+              </>
+            )}
+          </dl>
+
+          {seesTimesheets && (
+            <section aria-label={`${p.consultantName}'s recent timesheets`}>
+              <div className="flex items-center justify-between gap-2">
+                <h3 className="text-sm font-semibold">Recent timesheets</h3>
+                <Link href="/portal/admin/timesheets" className="text-xs font-semibold text-[var(--dash-orange-ink)] hover:underline">
+                  Open Timesheets
+                </Link>
+              </div>
+              {timesheets.error ? (
+                <ErrorNote text={timesheets.error} onRetry={timesheets.reload} />
+              ) : timesheets.loading && !timesheets.data ? (
+                <Loading />
+              ) : mine.length === 0 ? (
+                <p className="mt-2 text-sm text-[var(--dash-muted)]">No timesheets yet.</p>
+              ) : (
+                <ul className="mt-2 divide-y divide-[var(--dash-line)] rounded-xl border border-[var(--dash-line)]">
+                  {mine.map((t) => (
+                    <li key={t.id} className="flex flex-wrap items-center justify-between gap-2 px-3 py-2.5 text-sm">
+                      <span className="font-medium">{t.monthLabel}</span>
+                      <span className="text-[var(--dash-muted)]">{hours(t.approvedHours ?? t.hours)}</span>
+                      <span className="flex items-center gap-2">
+                        {t.invoice && <span className="text-xs text-[var(--dash-muted)]">{t.invoice.number}</span>}
+                        <Chip tone={t.status === "REJECTED" ? "bad" : t.status === "RECEIVED" ? "warn" : "good"}>{t.statusLabel}</Chip>
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </section>
+          )}
+        </div>
+      )}
+    </li>
   );
 }
 
