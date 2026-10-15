@@ -809,6 +809,16 @@ pages are gone. The client section is an internal tool for PixelIT staff.
   message listing the placement's unpaid invoices to the company's billing
   email; only the invoices and amounts change (`POST
   /api/admin/payments/reminders`, logged as PAYMENT_REMINDER + audit).
+- **Billing, easier to read (2026-10-16):** still one page. On top, "Money
+  at a glance": one bar of everything billed split into collected / waiting
+  (not due) / overdue, each labelled with amount and %, plus paid to
+  students, margin and timesheets not invoiced. Then "Where every month is":
+  the five steps with how many months sit at each (click one to show only
+  those students; the stage filter runs in the page so the counts never
+  change), and "Show only overdue". Cards are grouped by what needs doing:
+  Overdue (send a reminder), Waiting for payment, Not invoiced yet, All paid;
+  each card has a "Collected %" bar. On an open card each month shows the
+  five steps written out with ticks, dates, "Next", or "N days overdue".
 - **Profile photos (2026-10-15, front end only):** everyone (students,
   employees, admins) can add a photo: hover the avatar on Profile or the
   Dashboard card for a pencil (on touch screens an orange pencil badge always

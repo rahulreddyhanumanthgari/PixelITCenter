@@ -5,7 +5,7 @@ import Link from "next/link";
 import { AlertTriangle, ArrowLeft, ChevronRight, Download, FileDown, Mail, Search, Send } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Avatar, Chip, PageHeader, useToast } from "../ui";
-import { adminApi, openSignedFrom, type BillingFilters, type Invoice, type SummaryRow, type Who } from "./api";
+import { adminApi, openSignedFrom, type BillingFilters, type BillingStage, type Invoice, type SummaryRow, type Who } from "./api";
 import {
   can,
   date,
@@ -108,20 +108,27 @@ export function BillingAdminPage() {
   const months = useMemo(() => recentMonths(12), []);
   const [filters, setFilters] = useState<BillingFilters>({});
   const query = useDebounced(filters);
-  const summary = useApi(who ? () => adminApi.billingSummary(who, query) : null, [who?.email, who?.role, JSON.stringify(query)]);
+  // The stage filter is applied here, not on the server, so the money overview and
+  // the step counts above the cards always show every month that matches the other filters.
+  const { status, ...serverQuery } = query;
+  const summary = useApi(who ? () => adminApi.billingSummary(who, serverQuery) : null, [who?.email, who?.role, JSON.stringify(serverQuery)]);
   const clients = useApi(who ? () => adminApi.clients(who) : null, [who?.email, who?.role]);
   const [openId, setOpenId] = useState<string | null>(null);
   const [remind, setRemind] = useState<Account | null>(null);
   const [toast, showToast] = useToast();
   const set = (patch: Partial<BillingFilters>) => setFilters((f) => ({ ...f, ...patch }));
 
+  const allRows = useMemo(() => summary.data?.rows ?? [], [summary.data]);
   const accounts = useMemo(
     () =>
-      accountsOf(summary.data?.rows ?? []).sort(
+      accountsOf(allRows.filter((r) => !status || (status === "overdue" ? r.overdue : r.stage === status))).sort(
         (a, b) => b.overdue.length - a.overdue.length || b.unpaid - a.unpaid || a.consultantName.localeCompare(b.consultantName),
       ),
-    [summary.data],
+    [allRows, status],
   );
+  const groups = GROUPS.map((g) => ({ ...g, items: accounts.filter((a) => groupOf(a) === g.id) })).filter((g) => g.items.length);
+  // Everyone in one group (or a stage picked): no group headings needed.
+  const single = groups.length <= 1;
   const open = openId ? accounts.find((a) => a.placementId === openId) : undefined;
   useEffect(() => {
     window.scrollTo({ top: 0 });
@@ -168,8 +175,6 @@ export function BillingAdminPage() {
     );
   }
 
-  const t = summary.data?.totals;
-
   return (
     <div className="space-y-6">
       <PageHeader title="Billing & invoices" body="Every student at every company: what's billed, paid, unpaid and due. Open a card for month-by-month details.">
@@ -178,7 +183,7 @@ export function BillingAdminPage() {
         </button>
       </PageHeader>
 
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-3 sm:grid-cols-3">
         <div>
           <label htmlFor="bl-month" className="sr-only">
             Month
@@ -205,20 +210,6 @@ export function BillingAdminPage() {
             ))}
           </select>
         </div>
-        <div>
-          <label htmlFor="bl-status" className="sr-only">
-            Stage
-          </label>
-          <select id="bl-status" className="dash-input" value={filters.status ?? ""} onChange={(e) => set({ status: (e.target.value || undefined) as BillingFilters["status"] })}>
-            <option value="">All stages</option>
-            <option value="overdue">Overdue invoices</option>
-            {STAGES.map((s) => (
-              <option key={s.id} value={s.id}>
-                At: {s.label}
-              </option>
-            ))}
-          </select>
-        </div>
         <div className="relative">
           <label htmlFor="bl-consultant" className="sr-only">
             Student
@@ -230,37 +221,232 @@ export function BillingAdminPage() {
 
       {summary.error && <ErrorNote text={summary.error} onRetry={summary.reload} />}
 
-      {t && (
-        <ul className="grid grid-cols-2 gap-2.5 sm:gap-3 lg:grid-cols-5">
-          <Stat label="Billed" value={usd(t.billed)} note={`${hours(t.hours)} · ${accounts.length} student${accounts.length === 1 ? "" : "s"}`} />
-          <Stat label="Received from companies" value={usd(t.received)} note={`${usd(t.billed - t.received)} unpaid`} />
-          <Stat label="Paid to students" value={usd(t.paid)} />
-          <Stat label="Margin" value={usd(t.margin)} note={`Expected: ${usd(t.expectedMargin)}`} />
-          <Stat label="Overdue" value={String(t.overdueInvoices)} note={t.overdueInvoices ? `${usd(t.overdueAmount)} past due` : "Nothing past due"} bad={t.overdueInvoices > 0} />
-        </ul>
-      )}
-
       {summary.loading && !summary.data ? (
         <Loading />
       ) : summary.data ? (
-        accounts.length === 0 ? (
-          <div className="dash-card">
-            <Empty title="Nothing matches" body="Try another month, company or stage." />
-          </div>
-        ) : (
-          <ul className="grid gap-4 sm:grid-cols-2 sm:gap-5 xl:grid-cols-3">
-            {accounts.map((a) => (
-              <li key={a.placementId} className="min-w-0">
-                <BillingCard account={a} onOpen={() => setOpenId(a.placementId)} onRemind={() => setRemind(a)} />
-              </li>
-            ))}
-          </ul>
-        )
+        <>
+          <MoneyOverview rows={allRows} />
+          <StepStrip rows={allRows} active={status} onPick={(id) => set({ status: status === id ? undefined : id })} />
+          {status && (
+            <p className="flex flex-wrap items-center gap-2 text-sm text-[var(--dash-muted)]">
+              Showing students with a month at <strong className="text-[var(--dash-ink)]">{status === "overdue" ? "Overdue" : STEP_TEXT[status].label}</strong>.
+              <button type="button" className="font-semibold text-[var(--dash-orange-ink)] hover:underline" onClick={() => set({ status: undefined })}>
+                Show everyone
+              </button>
+            </p>
+          )}
+          {accounts.length === 0 ? (
+            <div className="dash-card">
+              <Empty title="Nothing matches" body="Try another month, company or step." />
+            </div>
+          ) : (
+            groups.map((g) => (
+              <section key={g.id} aria-labelledby={`grp-${g.id}`} className="space-y-3">
+                {!single && (
+                  <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                    <h2 id={`grp-${g.id}`} className={cn("dash-section-title", g.id === "overdue" && "text-[var(--dash-red-ink)]")}>
+                      {g.title} <span className="dash-count">{g.items.length}</span>
+                    </h2>
+                    <p className="text-sm text-[var(--dash-muted)]">{g.body}</p>
+                  </div>
+                )}
+                <ul className="grid gap-4 sm:grid-cols-2 sm:gap-5 xl:grid-cols-3">
+                  {g.items.map((a) => (
+                    <li key={a.placementId} className="min-w-0">
+                      <BillingCard account={a} onOpen={() => setOpenId(a.placementId)} onRemind={() => setRemind(a)} />
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            ))
+          )}
+        </>
       ) : null}
 
       {reminder}
       {toast}
     </div>
+  );
+}
+
+// --- what needs doing ------------------------------------------------------------------------
+
+type GroupId = "overdue" | "due" | "notInvoiced" | "paid";
+
+const GROUPS: { id: GroupId; title: string; body: string }[] = [
+  { id: "overdue", title: "Overdue: send a reminder", body: "The company is past the due date." },
+  { id: "due", title: "Waiting for payment", body: "Invoice sent; not due yet." },
+  { id: "notInvoiced", title: "Not invoiced yet", body: "Timesheets in; the invoice is raised once the hours are confirmed." },
+  { id: "paid", title: "All paid", body: "Nothing outstanding." },
+];
+
+function groupOf(a: Account): GroupId {
+  const tone = statusOf(a).tone;
+  return tone === "bad" ? "overdue" : tone === "warn" ? "due" : tone === "ink" ? "notInvoiced" : "paid";
+}
+
+// --- money at a glance -----------------------------------------------------------------------
+
+const RED = "#dc2626";
+
+/** One bar for every dollar billed: collected, waiting (not due yet), overdue. Each part is labelled. */
+function MoneyOverview({ rows }: { rows: SummaryRow[] }) {
+  const invoiced = rows.filter((r) => r.invoiceId);
+  const billed = invoiced.reduce((n, r) => n + r.billed, 0);
+  const collected = invoiced.reduce((n, r) => n + r.received, 0);
+  const overdue = invoiced.filter((r) => r.overdue).reduce((n, r) => n + r.billed - r.received, 0);
+  const waiting = Math.max(0, billed - collected - overdue);
+  const paidOut = invoiced.reduce((n, r) => n + r.paid, 0);
+  const margin = invoiced.reduce((n, r) => n + r.margin, 0);
+  const notInvoiced = rows.filter((r) => !r.invoiceId).length;
+  const parts = [
+    { label: "Collected", help: "Companies have paid", value: collected, colour: "var(--dash-cyan)" },
+    { label: "Waiting", help: "Sent, not due yet", value: waiting, colour: "var(--dash-orange)" },
+    { label: "Overdue", help: "Past the due date", value: overdue, colour: RED },
+  ];
+  const pct = (n: number) => (billed ? Math.round((n / billed) * 100) : 0);
+
+  return (
+    <section className="dash-card dash-card-pad" aria-labelledby="money-title">
+      <div className="flex flex-wrap items-baseline justify-between gap-2">
+        <h2 id="money-title" className="text-[0.9375rem] font-semibold">
+          Money at a glance
+        </h2>
+        <p className="text-sm text-[var(--dash-muted)]">
+          Billed to companies: <strong className="text-lg text-[var(--dash-ink)] tabular-nums">{usd(billed)}</strong>
+        </p>
+      </div>
+      {/* A 2px surface gap between the parts; each part also has its label and amount below. */}
+      <div className="mt-4 flex h-4 w-full gap-[2px] overflow-hidden rounded-full bg-[rgb(4_19_39/0.06)]" role="img" aria-label={parts.map((p) => `${p.label} ${usd(p.value)}`).join(", ")}>
+        {parts
+          .filter((p) => p.value > 0)
+          .map((p) => (
+            <span key={p.label} className="h-full" style={{ width: `${(p.value / Math.max(billed, 1)) * 100}%`, background: p.colour }} title={`${p.label}: ${usd(p.value)}`} />
+          ))}
+      </div>
+      <ul className="mt-4 grid gap-3 sm:grid-cols-3">
+        {parts.map((p) => (
+          <li key={p.label} className="flex items-start gap-2.5">
+            <span className="mt-1.5 size-3 flex-none rounded-sm" style={{ background: p.colour }} aria-hidden="true" />
+            <span>
+              <span className="block text-sm font-semibold">
+                {p.label} <span className="font-normal text-[var(--dash-muted)]">· {pct(p.value)}%</span>
+              </span>
+              <span className={cn("block text-xl font-semibold tabular-nums", p.label === "Overdue" && p.value > 0 && "text-[var(--dash-red-ink)]")}>{usd(p.value)}</span>
+              <span className="block text-xs text-[var(--dash-muted)]">{p.help}</span>
+            </span>
+          </li>
+        ))}
+      </ul>
+      <p className="mt-4 flex flex-wrap gap-x-5 gap-y-1 border-t border-[var(--dash-line)] pt-3 text-sm text-[var(--dash-muted)]">
+        <span>
+          Paid to students: <strong className="text-[var(--dash-ink)] tabular-nums">{usd(paidOut)}</strong>
+        </span>
+        <span>
+          Margin so far: <strong className="text-[var(--dash-ink)] tabular-nums">{usd(margin)}</strong>
+        </span>
+        {notInvoiced > 0 && (
+          <span>
+            Not invoiced yet: <strong className="text-[var(--dash-ink)]">{notInvoiced} timesheet{notInvoiced === 1 ? "" : "s"}</strong>
+          </span>
+        )}
+      </p>
+    </section>
+  );
+}
+
+// --- the steps every month goes through ----------------------------------------------------
+
+const STEP_TEXT: Record<BillingStage, { label: string; help: string }> = {
+  timesheet_received: { label: "Timesheet in", help: "Hours received" },
+  timesheet_submitted: { label: "Sent to company", help: "Timesheet with them" },
+  invoice_sent: { label: "Invoice sent", help: "Waiting to be paid" },
+  client_paid: { label: "Company paid", help: "Student to be paid" },
+  consultant_paid: { label: "Student paid", help: "All done" },
+};
+
+/** The five steps with how many months sit at each now. Click one to show only those students. */
+function StepStrip({ rows, active, onPick }: { rows: SummaryRow[]; active?: BillingFilters["status"]; onPick: (id: NonNullable<BillingFilters["status"]>) => void }) {
+  const overdue = rows.filter((r) => r.overdue).length;
+  return (
+    <section aria-labelledby="steps-title" className="space-y-3">
+      <div className="flex flex-wrap items-baseline justify-between gap-2">
+        <h2 id="steps-title" className="text-[0.9375rem] font-semibold">
+          Where every month is
+        </h2>
+        <p className="text-xs text-[var(--dash-muted)]">Each month goes left to right. Click a step to show those students.</p>
+      </div>
+      <ol className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
+        {STAGES.map((st, i) => {
+          const count = rows.filter((r) => r.stage === st.id).length;
+          const on = active === st.id;
+          return (
+            <li key={st.id} className="relative">
+              <button
+                type="button"
+                aria-pressed={on}
+                onClick={() => onPick(st.id)}
+                className={cn(
+                  "flex h-full w-full flex-col rounded-2xl border p-3.5 text-left transition",
+                  on ? "border-[var(--dash-orange)] bg-[var(--dash-orange-tint)]" : "border-[var(--dash-line)] bg-white hover:border-[var(--dash-line-strong)]",
+                )}
+              >
+                <span className="flex items-center gap-2 text-xs font-semibold text-[var(--dash-muted)]">
+                  <span className="grid size-5 place-items-center rounded-full bg-[var(--dash-ink)] text-[0.6875rem] text-white">{i + 1}</span>
+                  {STEP_TEXT[st.id].label}
+                </span>
+                <span className="mt-2 text-2xl font-semibold tabular-nums">{count}</span>
+                <span className="text-xs text-[var(--dash-muted)]">
+                  {count === 1 ? "month" : "months"} · {STEP_TEXT[st.id].help}
+                </span>
+                {st.id === "invoice_sent" && overdue > 0 && (
+                  <span className="mt-2">
+                    <Chip tone="bad">{`${overdue} overdue`}</Chip>
+                  </span>
+                )}
+              </button>
+              {i < STAGES.length - 1 && (
+                <ChevronRight className="absolute top-1/2 -right-2.5 z-10 hidden size-4 -translate-y-1/2 rounded-full bg-[var(--dash-main)] text-[var(--dash-faint)] lg:block" aria-hidden="true" />
+              )}
+            </li>
+          );
+        })}
+      </ol>
+      {overdue > 0 && (
+        <button type="button" aria-pressed={active === "overdue"} onClick={() => onPick("overdue")} className={cn("dash-tab border", active === "overdue" ? "border-[var(--dash-red-ink)] bg-[var(--dash-red-tint)] text-[var(--dash-red-ink)]" : "border-[var(--dash-line)] bg-white")}>
+          <AlertTriangle className="mr-1.5 inline size-3.5" aria-hidden="true" /> Show only overdue ({overdue})
+        </button>
+      )}
+    </section>
+  );
+}
+
+/** One month's five steps written out: done (tick and date), now, or still to come. */
+function MonthTracker({ row: r }: { row: SummaryRow }) {
+  const doneCount = STAGES.filter((s) => r.steps[s.id]).length;
+  return (
+    <ol className="grid grid-cols-5 gap-1.5" aria-label={`${r.monthLabel}: ${r.stageLabel}`}>
+      {STAGES.map((st, i) => {
+        const at = r.steps[st.id];
+        const next = i === doneCount;
+        const late = next && st.id === "client_paid" && r.overdue;
+        return (
+          <li key={st.id} className="min-w-0">
+            <span
+              className={cn(
+                "block h-1.5 rounded-full",
+                at ? "bg-[var(--dash-cyan)]" : late ? "bg-[#dc2626]" : next ? "bg-[var(--dash-orange)]" : "bg-[rgb(4_19_39/0.1)]",
+              )}
+              aria-hidden="true"
+            />
+            <span className={cn("mt-1.5 block text-[0.6875rem] leading-tight", at ? "font-semibold text-[var(--dash-ink)]" : next ? "font-semibold" : "text-[var(--dash-faint)]", late && "text-[var(--dash-red-ink)]")}>
+              {STEP_TEXT[st.id].label}
+            </span>
+            <span className="block text-[0.6875rem] leading-tight text-[var(--dash-muted)]">{at ? date(at) : late ? `${r.daysOverdue}d overdue` : next ? "Next" : ""}</span>
+          </li>
+        );
+      })}
+    </ol>
   );
 }
 
@@ -287,6 +473,17 @@ function BillingCard({ account: a, onOpen, onRemind }: { account: Account; onOpe
           <Figure label="Paid" value={dollars(a.received)} />
           <Figure label="Unpaid" value={dollars(a.unpaid)} strong={a.unpaid > 0} bad={a.overdue.length > 0} />
         </span>
+        {a.billed > 0 && (
+          <span className="block px-5 pt-3.5">
+            <span className="flex items-baseline justify-between text-xs text-[var(--dash-muted)]">
+              <span>Collected</span>
+              <span className="font-semibold text-[var(--dash-ink)] tabular-nums">{Math.round((a.received / a.billed) * 100)}%</span>
+            </span>
+            <span className="mt-1 block h-2 overflow-hidden rounded-full bg-[rgb(4_19_39/0.07)]" aria-hidden="true">
+              <span className="block h-full rounded-full" style={{ width: `${(a.received / a.billed) * 100}%`, background: "var(--dash-cyan)" }} />
+            </span>
+          </span>
+        )}
         <span className="flex flex-wrap items-center gap-2 px-5 py-3.5">
           <Chip tone={s.tone}>{s.label}</Chip>
           {a.waiting > 0 && <Chip>{`${a.waiting} timesheet${a.waiting === 1 ? "" : "s"} not invoiced`}</Chip>}
@@ -374,7 +571,7 @@ function BillingDetail({ who, account: a, onBack, onRemind, onChanged }: { who: 
                 type="button"
                 onClick={() => setRow(r)}
                 className={cn(
-                  "grid w-full gap-3 rounded-2xl border p-4 text-left transition hover:bg-[var(--dash-side)] sm:grid-cols-[9rem_minmax(0,1fr)_auto] sm:items-center",
+                  "grid w-full gap-3 rounded-2xl border p-4 text-left transition hover:bg-[var(--dash-side)] sm:grid-cols-[8rem_minmax(0,1fr)_auto] sm:items-center",
                   r.overdue ? "border-[rgb(220_38_38/0.35)]" : "border-[var(--dash-line)]",
                 )}
               >
@@ -383,11 +580,8 @@ function BillingDetail({ who, account: a, onBack, onRemind, onChanged }: { who: 
                   <span className="block text-xs text-[var(--dash-muted)]">{hours(r.hours)}</span>
                 </span>
                 <span className="min-w-0">
-                  <span className="flex flex-wrap items-center gap-2 text-sm">
-                    <FlowSteps steps={r.steps} compact />
-                    <span>{r.stageLabel}</span>
-                  </span>
-                  <span className="mt-1 block text-xs text-[var(--dash-muted)]">
+                  <MonthTracker row={r} />
+                  <span className="mt-2 block text-xs text-[var(--dash-muted)]">
                     {r.invoiceNumber ? `${r.invoiceNumber} · ${usd(r.billed)} · due ${date(r.dueDate)}` : `Timesheet: ${r.timesheetStatusLabel}. The invoice is raised once the hours are confirmed.`}
                     {r.clientPaymentExpectedDate && r.stage !== "client_paid" && r.stage !== "consultant_paid" ? ` · expected ${date(r.clientPaymentExpectedDate)}` : ""}
                   </span>
