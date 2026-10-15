@@ -775,6 +775,20 @@ pages are gone. The client section is an internal tool for PixelIT staff.
   With the backend: the server issues the next PIC at registration and the
   profile comes from the student's saved Profile / Placement Details.
 
+- **Talent (2026-10-15, front end only):** sidebar group "Recruiting" →
+  Talent (admin, recruiter). Every registered student, placed or not, as big
+  cards; status Placed / Unplaced / On bench (bench = their placement ended or
+  they're marked so); "Match a job description" ranks students by how many of
+  the JD's keywords (comma-separated) appear in their title, headline and
+  skills; more filters: title, skills (must have all), visa, role type they're
+  open to, work mode, availability, experience, open to relocating; search by
+  name, email or PIC. A card opens to the full profile, current placement and
+  Documents. Data: `content/registered-students.ts` (10 demo students).
+- **Role type on placements (2026-10-15, backend):** Full-time, Part-time,
+  Contract, Contract-to-hire (`Placement.employmentType`, default Contract,
+  migration `20261015000000_placement_employment_type`). Asked in Add
+  placement, shown on cards, the open card and to the student.
+
 ### Student corner (reworked 2026-10-13)
 
 PixelIT is a staffing firm: students don't apply to jobs. PixelIT's

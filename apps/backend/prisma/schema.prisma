@@ -184,6 +184,14 @@ model Client {
   @@index([name])
 }
 
+/// The kind of job the consultant has at the client.
+enum EmploymentType {
+  FULL_TIME
+  PART_TIME
+  CONTRACT
+  CONTRACT_TO_HIRE
+}
+
 enum ExtensionStatus {
   ACTIVE
   EXTENSION_PENDING
@@ -211,6 +219,7 @@ model Placement {
   startDate        DateTime        @db.Date
   endDate          DateTime?       @db.Date
   extensionStatus  ExtensionStatus @default(ACTIVE)
+  employmentType   EmploymentType  @default(CONTRACT)
   createdAt        DateTime        @default(now())
   updatedAt        DateTime        @updatedAt
 

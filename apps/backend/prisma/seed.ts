@@ -129,6 +129,7 @@ async function main() {
     startDate: "2026-01-05",
     endDate: "2026-05-29",
     extensionStatus: "ENDED",
+    employmentType: "CONTRACT",
   });
   await setup.placements.create(admin, {
     clientId: northwind.id,
@@ -139,6 +140,7 @@ async function main() {
     payRate: 78,
     startDate: "2026-06-01",
     extensionStatus: "ACTIVE",
+    employmentType: "CONTRACT_TO_HIRE",
   });
   await setup.placements.create(admin, {
     clientId: apex.id,
@@ -150,6 +152,7 @@ async function main() {
     startDate: "2026-08-03",
     endDate: "2027-01-29",
     extensionStatus: "EXTENSION_PENDING",
+    employmentType: "CONTRACT",
   });
 
   // Rahul at Vertex Retail, April: the whole flow, paid.

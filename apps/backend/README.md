@@ -193,7 +193,7 @@ time that student signs in (their token's verified email), then by user id.
 
 ### Data
 
-`ClientType`, `Client`, `Placement`, `StoredFile` (timesheet and invoice PDFs),
+`ClientType`, `Client`, `Placement` (with `employmentType`: FULL_TIME, PART_TIME, CONTRACT, CONTRACT_TO_HIRE; default CONTRACT), `StoredFile` (timesheet and invoice PDFs),
 `Timesheet`, `TimesheetStatusHistory`, `Invoice` (client, rates and terms copied in
 at issue time), `InvoiceCounter`, `Payment`, `EmailLog` (one row per send attempt:
 to, subject, time, status, safe error code), `AuditLog` (every view and change of

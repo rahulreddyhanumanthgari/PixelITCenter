@@ -25,6 +25,7 @@ export function placementView(p: Full, withMoney: boolean) {
     startDate: isoDay(p.startDate),
     endDate: p.endDate ? isoDay(p.endDate) : null,
     extensionStatus: p.extensionStatus,
+    employmentType: p.employmentType,
     ...(withMoney ? { billRate: num(p.billRate), payRate: num(p.payRate), marginPerHour: num(p.billRate.sub(p.payRate)) } : {}),
   };
 }
@@ -143,6 +144,7 @@ export function createPlacementsService(ctx: Ctx) {
         startDate: isoDay(current.startDate),
         endDate: current.endDate ? isoDay(current.endDate) : null,
         status: current.extensionStatus,
+        employmentType: current.employmentType,
       };
     },
   };

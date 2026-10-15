@@ -151,9 +151,9 @@ function ClientCard({ client: c, onOpen }: { client: Client; onOpen: () => void 
       type="button"
       onClick={onOpen}
       aria-label={`${c.name}, ${typeLabel(c.type)}. Open client.`}
-      className="dash-card block h-full w-full overflow-hidden text-center transition hover:-translate-y-0.5 hover:border-[var(--dash-line-strong)] hover:shadow-[0_18px_40px_-28px_rgb(4_19_39/0.55)]"
+      className="dash-card flex h-full w-full flex-col justify-start overflow-hidden text-center transition hover:-translate-y-0.5 hover:border-[var(--dash-line-strong)] hover:shadow-[0_18px_40px_-28px_rgb(4_19_39/0.55)]"
     >
-      <span className="dash-hero block h-20 rounded-none border-0" aria-hidden="true" />
+      <span className="dash-hero block h-20 w-full flex-none rounded-none border-0" aria-hidden="true" />
       <span className="relative z-10 -mt-12 flex flex-col items-center px-5 pb-7">
         <span className="rounded-[1.25rem] ring-4 ring-white">
           <Logo name={c.name} size={88} />

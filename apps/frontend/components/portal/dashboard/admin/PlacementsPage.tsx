@@ -3,12 +3,12 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from "react";
 import Link from "next/link";
 import { ArrowLeft, ArrowRight, Check, FileText, Pencil, Plus, Search } from "lucide-react";
-import { consultantDocLabels, consultantDocsDemo, type ConsultantDocType } from "@/content/portal-demo";
 import { registeredStudents, studentByEmail, type RegisteredStudent } from "@/content/registered-students";
 import { cn } from "@/lib/utils";
 import { Avatar, Chip, PageHeader, useToast } from "../ui";
-import { adminApi, type Client, type ExtensionStatus, type Placement, type PlacementInput, type Who } from "./api";
-import { can, Choice, date, Detail, Empty, ErrorNote, Field, fieldErrors, errorText, hours, Loading, Panel, usd, useApi, useWho } from "./ui";
+import { adminApi, type Client, type EmploymentType, type ExtensionStatus, type Placement, type PlacementInput, type Who } from "./api";
+import { DocumentsWindow, StudentProfile } from "./StudentProfile";
+import { can, Choice, date, EMPLOYMENT, Detail, Empty, ErrorNote, Field, fieldErrors, errorText, hours, Loading, Panel, usd, useApi, useWho } from "./ui";
 
 // Placements: who is placed where, at what rates, until when.
 //
@@ -162,9 +162,9 @@ function PlacementCard({ placement: p, onOpen }: { placement: Placement; onOpen:
       type="button"
       onClick={onOpen}
       aria-label={`${p.consultantName}${pic ? ` (${pic})` : ""}, ${p.role} at ${companyOf(p)}. Open placement.`}
-      className="dash-card group block h-full w-full overflow-hidden text-center transition hover:-translate-y-0.5 hover:border-[var(--dash-line-strong)] hover:shadow-[0_18px_40px_-28px_rgb(4_19_39/0.55)]"
+      className="dash-card flex h-full w-full flex-col justify-start overflow-hidden text-center transition hover:-translate-y-0.5 hover:border-[var(--dash-line-strong)] hover:shadow-[0_18px_40px_-28px_rgb(4_19_39/0.55)]"
     >
-      <span className="dash-hero block h-20 rounded-none border-0" aria-hidden="true" />
+      <span className="dash-hero block h-20 w-full flex-none rounded-none border-0" aria-hidden="true" />
       <span className="relative z-10 -mt-12 flex flex-col items-center px-5 pb-7">
         <span className="rounded-full ring-4 ring-white">
           <Avatar name={p.consultantName} size={88} />
@@ -172,7 +172,9 @@ function PlacementCard({ placement: p, onOpen }: { placement: Placement; onOpen:
         <span className="mt-4 block text-xl font-semibold">{p.consultantName}</span>
         {pic && <span className="mt-0.5 block text-xs font-semibold tracking-wider text-[var(--dash-muted)]">{pic}</span>}
         <span className="mt-1 block text-[0.9375rem] font-medium text-[var(--dash-cyan-ink)]">{companyOf(p)}</span>
-        <span className="mt-0.5 block text-sm text-[var(--dash-muted)]">{p.role}</span>
+        <span className="mt-0.5 block text-sm text-[var(--dash-muted)]">
+          {p.role} · {EMPLOYMENT[p.employmentType].label}
+        </span>
       </span>
     </button>
   );
@@ -208,6 +210,7 @@ function PlacementDetail({ who, placement: p, onBack, onEdit }: { who: Who | nul
             <p className="text-[0.9375rem] text-[var(--dash-muted)]">{p.role}</p>
             <p className="mt-3 flex flex-wrap justify-center gap-2 sm:justify-start">
               {student && <Chip tone="ink">{student.pixelitId}</Chip>}
+              <Chip>{EMPLOYMENT[p.employmentType].label}</Chip>
               <Chip tone={STATUS[p.extensionStatus].tone}>{STATUS[p.extensionStatus].label}</Chip>
               {!p.consultantLinked && <Chip>Hasn&apos;t signed in yet</Chip>}
             </p>
@@ -233,6 +236,7 @@ function PlacementDetail({ who, placement: p, onBack, onEdit }: { who: Who | nul
           <Detail label={p.client.type === "VENDOR" ? "Vendor" : "Client"}>{p.client.name}</Detail>
           <Detail label="End client">{p.endClientName ?? "–"}</Detail>
           <Detail label="Role">{p.role}</Detail>
+          <Detail label="Role type">{EMPLOYMENT[p.employmentType].label}</Detail>
           <Detail label="Start date">{date(p.startDate)}</Detail>
           <Detail label="Contract end">{date(p.endDate)}</Detail>
         </InfoCard>
@@ -291,175 +295,6 @@ function PlacementDetail({ who, placement: p, onBack, onEdit }: { who: Who | nul
   );
 }
 
-/**
- * Everything the student filled in on their Profile page (account details and
- * Placement Details), so staff never retype it. FRONT END ONLY: read from the
- * demo student list by email; with the backend it comes from the student's
- * saved profile. Passport, SSN and date of birth stay masked here.
- */
-function StudentProfile({ student: s, email }: { student: RegisteredStudent | undefined; email: string }) {
-  if (!s) {
-    return (
-      <section className="dash-card dash-card-pad">
-        <h2 className="dash-section-title">Student profile</h2>
-        <p className="mt-3 text-sm text-[var(--dash-muted)]">
-          No registered student uses {email}. Students register on the portal first; their profile and PixelIT ID then show here.
-        </p>
-      </section>
-    );
-  }
-  return (
-    <section className="dash-card dash-card-pad" aria-labelledby="student-profile">
-      <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <h2 id="student-profile" className="dash-section-title">
-          Student profile
-        </h2>
-        <p className="text-xs text-[var(--dash-muted)]">
-          {s.pixelitId} · registered {date(s.registeredOn)} · from the student&apos;s Profile page
-        </p>
-      </div>
-
-      <div className="mt-5 grid gap-4 lg:grid-cols-2">
-        <ProfileGroup title="Contact">
-          <Detail label="Phone">{s.phone}</Detail>
-          <Detail label="Email">{s.email}</Detail>
-          <Detail label="Current location">{s.currentLocation}</Detail>
-          <Detail label="Open to relocating">{s.relocation}</Detail>
-          <Detail label="LinkedIn">
-            <a href={s.linkedin} target="_blank" rel="noopener noreferrer" className="break-all text-[var(--dash-orange-ink)] hover:underline">
-              {s.linkedin.replace(/^https:\/\/(www\.)?/, "")}
-            </a>
-          </Detail>
-          <Detail label="Skype">{s.skypeId ?? "–"}</Detail>
-        </ProfileGroup>
-
-        <ProfileGroup title="Work and visa">
-          <Detail label="Visa status">{s.visaStatus}</Detail>
-          <Detail label="US entry">
-            {s.usEntryVisaType}, {s.usEntryYear}
-          </Detail>
-          <Detail label="US experience">{s.usExperienceYears} years</Detail>
-          <Detail label="Relevant experience">{s.relevantExperienceYears} years</Detail>
-          <Detail label="Looking for">{s.targetRole}</Detail>
-          <Detail label="Available to start">{s.availableToStart}</Detail>
-          <div className="sm:col-span-2">
-            <Detail label="Skills">
-              <span className="mt-1 flex flex-wrap gap-1.5">
-                {s.skills.map((k) => (
-                  <Chip key={k}>{k}</Chip>
-                ))}
-              </span>
-            </Detail>
-          </div>
-        </ProfileGroup>
-
-        <ProfileGroup title="Education">
-          <Detail label="Bachelor's">
-            {s.bachelors.degree}
-            <span className="block text-xs font-normal text-[var(--dash-muted)]">
-              {s.bachelors.university}, {s.bachelors.year}
-            </span>
-          </Detail>
-          <Detail label="Master's">
-            {s.masters ? (
-              <>
-                {s.masters.degree}
-                <span className="block text-xs font-normal text-[var(--dash-muted)]">
-                  {s.masters.university}, {s.masters.year}
-                </span>
-              </>
-            ) : (
-              "–"
-            )}
-          </Detail>
-        </ProfileGroup>
-
-        <ProfileGroup title="Interviews">
-          <Detail label="Best time for calls">{s.bestTimeForCalls}</Detail>
-          <Detail label="Preferred interview location">{s.preferredInterviewLocation}</Detail>
-        </ProfileGroup>
-
-        <ProfileGroup title="Identity (masked)">
-          <Detail label="Passport number">{`•••••${s.passportLast3}`}</Detail>
-          <Detail label="SSN last four">{s.ssnLast4Set ? "••••" : "Not given"}</Detail>
-          <Detail label="Date of birth">{s.dateOfBirthSet ? "••••-••-••" : "Not given"}</Detail>
-        </ProfileGroup>
-
-        <ProfileGroup title="References">
-          {s.references.map((r) => (
-            <Detail key={r.email} label={`${r.role}, ${r.location}`}>
-              {r.name}
-              <span className="block text-xs font-normal break-all text-[var(--dash-muted)]">
-                {r.email} · {r.phone}
-              </span>
-            </Detail>
-          ))}
-        </ProfileGroup>
-      </div>
-    </section>
-  );
-}
-
-function ProfileGroup({ title, children }: { title: string; children: ReactNode }) {
-  return (
-    <div className="rounded-2xl bg-[var(--dash-side)] p-4">
-      <h3 className="text-sm font-semibold">{title}</h3>
-      <dl className="mt-3 grid grid-cols-1 gap-x-5 gap-y-3 sm:grid-cols-2">{children}</dl>
-    </div>
-  );
-}
-
-/**
- * The student's documents, in a small centred window. FRONT END ONLY: demo
- * files from content/portal-demo.ts. In the live portal they come from the
- * student's own Documents page; that wiring is decided with the backend.
- */
-function DocumentsWindow({ name, open, onClose }: { name: string; open: boolean; onClose: () => void }) {
-  const [toast, showToast] = useToast();
-  const docs = consultantDocsDemo(name);
-  return (
-    <>
-      <Panel center open={open} title={`${name}'s documents`} subtitle="Uploaded by the student from their account." onClose={onClose}>
-        <ul className="space-y-2.5">
-          {(Object.keys(consultantDocLabels) as ConsultantDocType[]).map((type) => {
-            const d = docs.find((x) => x.type === type);
-            return (
-              <li key={type} className="flex items-center gap-3 rounded-2xl border border-[var(--dash-line)] p-3.5">
-                <span className={cn("grid size-10 flex-none place-items-center rounded-xl", d ? "bg-[var(--dash-orange-tint)] text-[var(--dash-orange)]" : "bg-[var(--dash-side)] text-[var(--dash-faint)]")}>
-                  <FileText className="size-5" aria-hidden="true" />
-                </span>
-                <span className="min-w-0 flex-1">
-                  <span className="block text-sm font-semibold">{consultantDocLabels[type]}</span>
-                  {d ? (
-                    <>
-                      <span className="block text-xs break-all text-[var(--dash-ink)]">{d.fileName}</span>
-                      <span className="block text-xs text-[var(--dash-muted)]">
-                        {d.size} · uploaded {d.uploaded}
-                        {d.expires && ` · expires ${d.expires}`}
-                      </span>
-                    </>
-                  ) : (
-                    <span className="block text-xs text-[var(--dash-muted)]">Not uploaded yet</span>
-                  )}
-                </span>
-                {d ? (
-                  <button type="button" className="dash-btn-ghost h-9 min-h-[44px] px-3 sm:min-h-0" onClick={() => showToast("Demo: the file opens once the portal is connected to the backend.")}>
-                    View
-                  </button>
-                ) : (
-                  <Chip tone="warn">Missing</Chip>
-                )}
-              </li>
-            );
-          })}
-        </ul>
-        <p className="mt-4 text-xs text-[var(--dash-muted)]">Demo files. In the live portal these are the documents the student uploads under Documents.</p>
-      </Panel>
-      {toast}
-    </>
-  );
-}
-
 function InfoCard({ title, children }: { title: string; children: ReactNode }) {
   return (
     <section className="dash-card dash-card-pad">
@@ -471,7 +306,7 @@ function InfoCard({ title, children }: { title: string; children: ReactNode }) {
 
 // --- Add placement: one question at a time --------------------------------------------
 
-const emptyDraft = { consultantName: "", consultantEmail: "", clientId: "", endClientName: "", role: "", billRate: "", payRate: "", startDate: "", endDate: "", extensionStatus: "ACTIVE" as ExtensionStatus };
+const emptyDraft = { consultantName: "", consultantEmail: "", clientId: "", endClientName: "", role: "", billRate: "", payRate: "", startDate: "", endDate: "", extensionStatus: "ACTIVE" as ExtensionStatus, employmentType: "CONTRACT" as EmploymentType };
 type Draft = typeof emptyDraft;
 type Key = keyof Draft;
 
@@ -490,6 +325,7 @@ const STEPS: Step[] = [
   { key: "clientId", question: "Which client or vendor?", hint: "Who PixelIT bills for this placement." },
   { key: "endClientName", question: "Who is the end client?", hint: "The company they actually work at. Leave empty if it's the client itself.", optional: true },
   { key: "role", question: "What's their role?", hint: "e.g. Cloud Engineer (AWS)" },
+  { key: "employmentType", question: "What kind of role is it?" },
   { key: "billRate", question: "Bill rate per hour?", hint: "What the client is charged, in dollars.", check: (v) => (money2(v) ? null : "Enter an amount like 92 or 92.50.") },
   { key: "payRate", question: "Pay rate per hour?", hint: "What the student is paid, in dollars. Students see only this rate.", check: (v) => (money2(v) ? null : "Enter an amount like 65 or 65.50.") },
   { key: "startDate", question: "When do they start?" },
@@ -566,6 +402,7 @@ function AddPlacementWizard({ who, open, known, onClose, onSaved }: { who: Who; 
       startDate: draft.startDate,
       endDate: draft.endDate || null,
       extensionStatus: draft.extensionStatus,
+      employmentType: draft.employmentType,
     };
     try {
       await adminApi.createPlacement(who, body);
@@ -591,6 +428,7 @@ function AddPlacementWizard({ who, open, known, onClose, onSaved }: { who: Who; 
     if (k === "billRate" || k === "payRate") return `${usd(Number(v))}/h`;
     if (k === "startDate" || k === "endDate") return date(v);
     if (k === "extensionStatus") return STATUS[v as ExtensionStatus].label;
+    if (k === "employmentType") return EMPLOYMENT[v as EmploymentType].label;
     return v;
   };
   const margin = draft.billRate && draft.payRate ? Number(draft.billRate) - Number(draft.payRate) : null;
@@ -681,6 +519,12 @@ function AddPlacementWizard({ who, open, known, onClose, onSaved }: { who: Who; 
             <div className="mt-6">
               {current.key === "clientId" ? (
                 <ClientChoice clients={clientList} loading={clients.loading} value={draft.clientId} onPick={(id) => set({ clientId: id })} />
+              ) : current.key === "employmentType" ? (
+                <div role="radiogroup" aria-labelledby="wiz-employmentType" className="grid gap-2">
+                  {(Object.keys(EMPLOYMENT) as EmploymentType[]).map((t) => (
+                    <Choice key={t} on={draft.employmentType === t} onClick={() => set({ employmentType: t })} title={EMPLOYMENT[t].label} body={EMPLOYMENT[t].body} />
+                  ))}
+                </div>
               ) : current.key === "extensionStatus" ? (
                 <div role="radiogroup" aria-labelledby="wiz-extensionStatus" className="grid gap-2">
                   {(Object.keys(STATUS) as ExtensionStatus[]).map((s) => (
@@ -821,6 +665,7 @@ const toDraft = (p: Placement): Draft => ({
   startDate: p.startDate,
   endDate: p.endDate ?? "",
   extensionStatus: p.extensionStatus,
+  employmentType: p.employmentType,
 });
 
 function EditPlacementPanel({ who, placement, onClose, onSaved }: { who: Who; placement: Placement | null; onClose: () => void; onSaved: (message: string) => void }) {
@@ -865,6 +710,7 @@ function EditPlacementPanel({ who, placement, onClose, onSaved }: { who: Who; pl
         startDate: draft.startDate,
         endDate: draft.endDate || null,
         extensionStatus: draft.extensionStatus,
+        employmentType: draft.employmentType,
       });
       onSaved("Saved. New rates apply to invoices raised from now on.");
     } catch (err) {
@@ -931,6 +777,15 @@ function EditPlacementPanel({ who, placement, onClose, onSaved }: { who: Who; pl
             <input {...input("endDate")} type="date" />
           </Field>
         </div>
+        <Field id="pl-employmentType" label="Role type" error={errors.employmentType}>
+          <select {...input("employmentType")}>
+            {(Object.keys(EMPLOYMENT) as EmploymentType[]).map((t) => (
+              <option key={t} value={t}>
+                {EMPLOYMENT[t].label}
+              </option>
+            ))}
+          </select>
+        </Field>
         <Field id="pl-extensionStatus" label="Status" error={errors.extensionStatus}>
           <select {...input("extensionStatus")}>
             {(Object.keys(STATUS) as ExtensionStatus[]).map((s) => (

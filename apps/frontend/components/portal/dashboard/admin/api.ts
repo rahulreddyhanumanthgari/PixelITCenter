@@ -114,6 +114,7 @@ export type Client = {
 export type ClientInput = Omit<Client, "id" | "archived" | "activePlacements" | "unsentInvoices">;
 
 export type ExtensionStatus = "ACTIVE" | "EXTENSION_PENDING" | "EXTENDED" | "ENDED";
+export type EmploymentType = "FULL_TIME" | "PART_TIME" | "CONTRACT" | "CONTRACT_TO_HIRE";
 
 export type Placement = {
   id: string;
@@ -126,6 +127,7 @@ export type Placement = {
   startDate: string;
   endDate: string | null;
   extensionStatus: ExtensionStatus;
+  employmentType: EmploymentType;
   /** Admin and accounts only. */
   billRate?: number;
   payRate?: number;
@@ -143,6 +145,7 @@ export type PlacementInput = {
   startDate: string;
   endDate: string | null;
   extensionStatus: ExtensionStatus;
+  employmentType: EmploymentType;
 };
 
 export type TimesheetStatus = "RECEIVED" | "VERIFIED" | "VERIFIER_APPROVED" | "ACCOUNTS_CHECKED" | "INVOICE_RAISED" | "SUBMITTED_TO_CLIENT" | "REJECTED";

@@ -14,6 +14,7 @@ import {
   ReceiptText,
   Settings,
   UserRound,
+  UsersRound,
   type LucideIcon,
 } from "lucide-react";
 
@@ -27,7 +28,8 @@ export type NavItem = { href: string; label: string; icon: LucideIcon; count?: n
  * The client section (internal, admin only): which staff roles see each page.
  * The API enforces the same rules on every request; this only shapes the menu.
  */
-export const clientSectionPages: (NavItem & { roles: StaffRole[] })[] = [
+export const clientSectionPages: (NavItem & { roles: StaffRole[]; group?: "Recruiting" })[] = [
+  { href: "/portal/admin/talent", label: "Talent", icon: UsersRound, roles: ["admin", "recruiter"], group: "Recruiting" },
   { href: "/portal/admin/clients", label: "Clients", icon: Building2, roles: ["admin", "accounts"] },
   { href: "/portal/admin/placements", label: "Placements", icon: Handshake, roles: ["admin", "accounts", "verifier", "recruiter"] },
   { href: "/portal/admin/timesheets", label: "Timesheets", icon: Clock, roles: ["admin", "verifier", "accounts"] },
@@ -35,10 +37,14 @@ export const clientSectionPages: (NavItem & { roles: StaffRole[] })[] = [
 ];
 
 export function navGroups(staffRole: StaffRole | null = null): { label?: string; items: NavItem[] }[] {
-  const clientSection = staffRole ? clientSectionPages.filter((p) => p.roles.includes(staffRole)) : [];
+  const mine = staffRole ? clientSectionPages.filter((p) => p.roles.includes(staffRole)) : [];
+  const item = ({ href, label, icon }: NavItem) => ({ href, label, icon });
+  const recruiting = mine.filter((p) => p.group === "Recruiting").map(item);
+  const clientSection = mine.filter((p) => !p.group).map(item);
   return [
     { items: [{ href: "/portal/dashboard", label: "Dashboard", icon: LayoutDashboard }] },
-    ...(clientSection.length ? [{ label: "Client section", items: clientSection.map(({ href, label, icon }) => ({ href, label, icon })) }] : []),
+    ...(recruiting.length ? [{ label: "Recruiting", items: recruiting }] : []),
+    ...(clientSection.length ? [{ label: "Client section", items: clientSection }] : []),
     {
       label: "Your account",
       items: [

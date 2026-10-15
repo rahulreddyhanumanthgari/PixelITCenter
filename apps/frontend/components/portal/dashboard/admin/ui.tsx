@@ -5,10 +5,18 @@ import { AlertTriangle, Check, LoaderCircle, X } from "lucide-react";
 import { staffRoles } from "@/content/portal-demo";
 import { cn } from "@/lib/utils";
 import { staffRoleOf, useSession } from "../session";
-import { ApiError, type BillingStage, type Who } from "./api";
+import { ApiError, type BillingStage, type EmploymentType, type Who } from "./api";
 
 // Small pieces shared by the client-section pages (Clients, Placements,
 // Timesheets, Billing).
+
+/** Full-time, part-time, contract or contract-to-hire: on placements and in Talent. */
+export const EMPLOYMENT: Record<EmploymentType, { label: string; body: string }> = {
+  FULL_TIME: { label: "Full-time", body: "On the client's payroll, permanent." },
+  PART_TIME: { label: "Part-time", body: "Fewer hours a week." },
+  CONTRACT: { label: "Contract", body: "For a set period, billed hourly." },
+  CONTRACT_TO_HIRE: { label: "Contract-to-hire", body: "Contract first; the client may hire them full-time." },
+};
 
 /** The signed-in staff member, for API calls. Null for anyone without a staff role. */
 export function useWho(): Who | null {

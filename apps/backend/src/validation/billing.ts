@@ -75,6 +75,7 @@ export const clientListSchema = z
 // --- placements ----------------------------------------------------------------------
 
 export const EXTENSION_STATUSES = ["ACTIVE", "EXTENSION_PENDING", "EXTENDED", "ENDED"] as const;
+export const EMPLOYMENT_TYPES = ["FULL_TIME", "PART_TIME", "CONTRACT", "CONTRACT_TO_HIRE"] as const;
 
 const placementFields = {
   clientId: uuid,
@@ -88,13 +89,18 @@ const placementFields = {
   startDate: day,
   endDate: day.nullable().optional(),
   extensionStatus: z.enum(EXTENSION_STATUSES),
+  employmentType: z.enum(EMPLOYMENT_TYPES),
 };
 
 const datesInOrder = (p: { startDate?: string; endDate?: string | null }) => !p.startDate || !p.endDate || p.endDate >= p.startDate;
 const endAfterStart = { message: "The end date can't be before the start date.", path: ["endDate"] };
 
 export const placementCreateSchema = z
-  .object({ ...placementFields, extensionStatus: placementFields.extensionStatus.default("ACTIVE") })
+  .object({
+    ...placementFields,
+    extensionStatus: placementFields.extensionStatus.default("ACTIVE"),
+    employmentType: placementFields.employmentType.default("CONTRACT"),
+  })
   .strict()
   .refine(datesInOrder, endAfterStart);
 export const placementUpdateSchema = z.object(placementFields).partial().strict().refine(datesInOrder, endAfterStart);

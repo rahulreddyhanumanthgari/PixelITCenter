@@ -136,6 +136,7 @@ describe("placements", () => {
     });
     expect(res.status).toBe(201);
     expect(res.body.marginPerHour).toBe(30);
+    expect(res.body.employmentType).toBe("CONTRACT");
     ids.placement = res.body.id;
 
     const recruiter = await request(app).get("/api/admin/placements").set(as("recruiter"));
@@ -145,6 +146,14 @@ describe("placements", () => {
 
     const accounts = await request(app).get("/api/admin/placements").set(as("accounts"));
     expect(accounts.body.placements.find((p: { id: string }) => p.id === ids.placement).billRate).toBe(95);
+  });
+
+  it("stores the employment type and refuses unknown ones", async () => {
+    let res = await request(app).patch(`/api/admin/placements/${ids.placement}`).set(as("admin")).send({ employmentType: "FULL_TIME" });
+    expect(res.status).toBe(200);
+    expect(res.body.employmentType).toBe("FULL_TIME");
+    res = await request(app).patch(`/api/admin/placements/${ids.placement}`).set(as("admin")).send({ employmentType: "FREELANCE" });
+    expect(res.status).toBe(400);
   });
 
   it("refuses an end date before the start", async () => {
@@ -157,7 +166,7 @@ describe("placements", () => {
     const res = await request(app).get("/api/student/placement").set(as("student"));
     expect(res.status).toBe(200);
     expect(res.body).toMatchObject({ client: "Northwind Health", hourlyRate: 65, role: "Cloud Engineer (AWS)" });
-    expect(Object.keys(res.body).sort()).toEqual(["client", "endDate", "hourlyRate", "id", "role", "startDate", "status"]);
+    expect(Object.keys(res.body).sort()).toEqual(["client", "employmentType", "endDate", "hourlyRate", "id", "role", "startDate", "status"]);
     expect(Object.values(res.body)).not.toContain(95);
   });
 });
