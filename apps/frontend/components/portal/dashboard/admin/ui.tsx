@@ -4,7 +4,8 @@ import { useCallback, useEffect, useRef, useState, type ReactNode } from "react"
 import { AlertTriangle, Check, LoaderCircle, X } from "lucide-react";
 import { staffRoles } from "@/content/portal-demo";
 import { cn } from "@/lib/utils";
-import { staffRoleOf, useSession } from "../session";
+import { useSession } from "../session";
+import { useStaffRole } from "../team";
 import { ApiError, type BillingStage, type EmploymentType, type Who } from "./api";
 
 // Small pieces shared by the client-section pages (Clients, Placements,
@@ -21,7 +22,7 @@ export const EMPLOYMENT: Record<EmploymentType, { label: string; body: string }>
 /** The signed-in staff member, for API calls. Null for anyone without a staff role. */
 export function useWho(): Who | null {
   const session = useSession();
-  const role = session ? staffRoleOf(session) : null;
+  const role = useStaffRole();
   return session && role ? { email: session.profile.email, role } : null;
 }
 

@@ -13,6 +13,7 @@ import {
   Mic,
   ReceiptText,
   Settings,
+  ShieldCheck,
   UserRound,
   UsersRound,
   type LucideIcon,
@@ -28,7 +29,8 @@ export type NavItem = { href: string; label: string; icon: LucideIcon; count?: n
  * The client section (internal, admin only): which staff roles see each page.
  * The API enforces the same rules on every request; this only shapes the menu.
  */
-export const clientSectionPages: (NavItem & { roles: StaffRole[]; group?: "Recruiting" })[] = [
+export const clientSectionPages: (NavItem & { roles: StaffRole[]; group?: "Recruiting" | "Admin" })[] = [
+  { href: "/portal/admin/panel", label: "Admin panel", icon: ShieldCheck, roles: ["admin"], group: "Admin" },
   { href: "/portal/admin/talent", label: "Talent", icon: UsersRound, roles: ["admin", "recruiter"], group: "Recruiting" },
   { href: "/portal/admin/clients", label: "Clients", icon: Building2, roles: ["admin", "accounts"] },
   { href: "/portal/admin/placements", label: "Placements", icon: Handshake, roles: ["admin", "accounts", "verifier", "recruiter"] },
@@ -41,10 +43,12 @@ export function navGroups(staffRole: StaffRole | null = null): { label?: string;
   const item = ({ href, label, icon }: NavItem) => ({ href, label, icon });
   const recruiting = mine.filter((p) => p.group === "Recruiting").map(item);
   const clientSection = mine.filter((p) => !p.group).map(item);
+  const admin = mine.filter((p) => p.group === "Admin").map(item);
   return [
     { items: [{ href: "/portal/dashboard", label: "Dashboard", icon: LayoutDashboard }] },
     ...(recruiting.length ? [{ label: "Recruiting", items: recruiting }] : []),
     ...(clientSection.length ? [{ label: "Client section", items: clientSection }] : []),
+    ...(admin.length ? [{ label: "Admin", items: admin }] : []),
     {
       label: "Your account",
       items: [

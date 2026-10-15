@@ -252,6 +252,8 @@ export type BillingSummary = {
 
 export type BillingFilters = { month?: string; clientId?: string; status?: BillingStage | "overdue"; consultant?: string };
 
+export type AuditEntry = { id: string; at: string; by: string; role: string; action: string; entityType: string; entityId: string | null; detail: unknown };
+
 export type Overview = {
   role: StaffRole;
   today: string;
@@ -303,6 +305,9 @@ export const adminApi = {
   ) => call<Invoice>(who, "/api/admin/payments/client", json("POST", body)),
   consultantPayment: (who: Who, body: { invoiceId: string; paidDate: string; amount?: number; comment?: string; overrideReason?: string }) =>
     call<Invoice>(who, "/api/admin/payments/consultant", json("POST", body)),
+
+  auditLog: (who: Who, f: { entityType?: string; limit?: number } = {}) =>
+    call<{ entries: AuditEntry[] }>(who, `/api/admin/audit-log${query({ entityType: f.entityType, limit: f.limit ? String(f.limit) : undefined })}`),
 
   billingSummary: (who: Who, f: BillingFilters = {}) => call<BillingSummary>(who, `/api/admin/reports/billing-summary${query(f)}`),
 

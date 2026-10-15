@@ -1,7 +1,7 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
-import { demoDirectory, type AccountType, type StaffRole } from "@/content/portal-demo";
+import { demoDirectory, type AccountType } from "@/content/portal-demo";
 import { firstFreePicNumber, formatPic, studentByEmail } from "@/content/registered-students";
 import {
   defaultReminders,
@@ -52,8 +52,6 @@ export type Session = {
   readNotifications: string[];
   method: "password" | "google";
   signedInAt: string;
-  /** Employees: their client-section role. Set by an admin in the live portal. */
-  staffRole?: StaffRole;
   /** Students: their unique PixelIT ID ("PIC-1005"), given when they register. */
   pixelitId?: string;
   // Student corner. Optional: sessions saved before they existed lack them.
@@ -207,7 +205,6 @@ export function demoSignIn(email: string, method: Session["method"] = "password"
     method,
     signedInAt: new Date().toISOString(),
     isPlaced: known?.isPlaced,
-    staffRole: known?.staffRole,
     // An email we don't know stands for someone who registered earlier: give them an ID.
     pixelitId: known ? undefined : (studentByEmail(email)?.pixelitId ?? nextDemoPic()),
   });
@@ -261,11 +258,7 @@ export const isPlaced = (s: Session) => s.profile.accountType === "student" && B
 export const pixelitIdOf = (s: Session): string | null =>
   s.profile.accountType === "student" ? (studentByEmail(s.profile.email)?.pixelitId ?? s.pixelitId ?? null) : null;
 
-/** An employee's client-section role, or null (students and other employees). */
-export const staffRoleOf = (s: Session): StaffRole | null =>
-  s.profile.accountType === "employee"
-    ? (s.staffRole ?? demoDirectory.find((d) => d.email === s.profile.email.toLowerCase())?.staffRole ?? null)
-    : null;
+// An employee's role comes from the team list, which only admins change: see team.ts.
 
 /** Where PixelIT is with this student's resume, per job. */
 export const jobStatusesOf = (s: Session) => (isPlaced(s) ? placedJobStatuses : jobStatuses);

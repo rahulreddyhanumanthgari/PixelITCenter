@@ -2,9 +2,10 @@
 
 import Link from "next/link";
 import { ChevronRight, UserRoundPlus } from "lucide-react";
-import { accountTypes, activity, staffRoles } from "@/content/portal-demo";
+import { accountTypes, activity } from "@/content/portal-demo";
 import { StaffQueue } from "./admin/StaffQueue";
-import { profileCompletion, staffRoleOf, useSession } from "./session";
+import { profileCompletion, useSession } from "./session";
+import { useStaffRole } from "./team";
 import { Chip, PageHeader, ProfileRing } from "./ui";
 
 function greeting() {
@@ -19,11 +20,11 @@ function greeting() {
  */
 export function DashboardHome() {
   const session = useSession();
+  const role = useStaffRole();
   if (!session) return null;
   const { profile } = session;
   const percent = profileCompletion(profile);
   const type = accountTypes.find((t) => t.id === profile.accountType);
-  const role = staffRoleOf(session);
   const firstName = profile.fullName.split(" ")[0] || "there";
 
   return (
@@ -55,7 +56,6 @@ export function DashboardHome() {
                 </p>
                 <p className="mt-2 flex flex-wrap gap-1.5">
                   <Chip tone={type ? "ink" : "warn"}>{type ? `${type.label} account` : "Account type not set"}</Chip>
-                  {role && <Chip tone="warn">{staffRoles[role].label}</Chip>}
                 </p>
               </div>
             </div>

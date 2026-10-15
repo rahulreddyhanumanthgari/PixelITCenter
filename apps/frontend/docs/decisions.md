@@ -784,6 +784,20 @@ pages are gone. The client section is an internal tool for PixelIT staff.
   open to, work mode, availability, experience, open to relocating; search by
   name, email or PIC. A card opens to the full profile, current placement and
   Documents. Data: `content/registered-students.ts` (10 demo students).
+- **Admin panel and access (2026-10-15, front end only):** admin is a
+  permission, not a name tag: the sidebar says "Employee · PixelIT staff"
+  for every employee. Admins get an extra menu group "Admin" → Admin panel
+  (Team & access, Portal settings, Activity log). The team list starts from
+  `launchTeam` (content/portal-demo.ts): Rahul (employee@) and Mansingh are
+  the admins written in at launch. An employee who signs up joins with no
+  access; only an admin gives a job role (Recruiter, Verifier, Accounts) or
+  makes someone an admin (always asks first; the last admin can't be
+  removed). Roles are read from the team store (`dashboard/team.ts`), not the
+  session. Portal settings (company details, default payment terms, reminder
+  days) are kept in the browser (`admin/portalSettings.ts`); the default
+  terms pre-fill Add client. The Activity log is the server's real audit log.
+  With the backend: team and settings become server tables only admins
+  change, and the API takes the role from there, not from the browser.
 - **Deleting a student (2026-10-15, front end only):** admins only. "Delete
   student" on an open student in Talent and in Placements; the confirm window
   needs DELETE typed in capitals before "Delete for good" works. Demo: the

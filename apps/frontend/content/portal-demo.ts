@@ -13,10 +13,37 @@ export const accountTypes: { id: AccountType; label: string; body: string }[] = 
 ];
 
 /**
- * What a PixelIT employee may do in the client section. Set by an admin in
- * the live portal (never chosen at sign-up); the API checks it on every request.
+ * What a PixelIT employee may do in the client section: their job role, or
+ * "admin" when an admin has made them one (admins can do everything). Given by
+ * an admin, never chosen at sign-up; the API checks it on every request.
  */
 export type StaffRole = "admin" | "accounts" | "verifier" | "recruiter";
+
+/** The work an employee does. Admin is a separate switch on top of this. */
+export type JobRole = "recruiter" | "verifier" | "accounts";
+
+export type TeamMember = {
+  email: string;
+  fullName: string;
+  title: string;
+  jobRole: JobRole | null;
+  /** Controls the whole portal (Admin panel). Only another admin can turn it on. */
+  isAdmin: boolean;
+  addedOn: string;
+};
+
+/**
+ * The team at launch. These admins are written in before the portal goes
+ * live; every other employee starts with no access until an admin gives it.
+ * DEMO: kept in this browser (components/portal/dashboard/team.ts); with the
+ * backend it's a server table, changed only by admins and logged.
+ */
+export const launchTeam: TeamMember[] = [
+  { email: "employee@pixelitcenter.com", fullName: "Rahul", title: "Operations", jobRole: null, isAdmin: true, addedOn: "2026-06-01" },
+  { email: "mansingh@pixelitcenter.com", fullName: "Mansingh", title: "Placement lead", jobRole: "accounts", isAdmin: true, addedOn: "2026-06-01" },
+  { email: "hari@pixelitcenter.com", fullName: "Hari", title: "Recruiter", jobRole: "recruiter", isAdmin: false, addedOn: "2026-06-15" },
+  { email: "joya@pixelitcenter.com", fullName: "Joya", title: "Timesheet verification", jobRole: "verifier", isAdmin: false, addedOn: "2026-07-02" },
+];
 
 export const staffRoles: Record<StaffRole, { label: string; body: string }> = {
   admin: { label: "Admin", body: "Everything, including client records and payment overrides." },
@@ -37,14 +64,11 @@ export const demoDirectory: {
   headline: string;
   /** Students only: placed with a client, so Timesheets shows. */
   isPlaced?: boolean;
-  /** Employees only: their client-section role. */
-  staffRole?: StaffRole;
 }[] = [
   { email: "student@pixelitcenter.com", fullName: "Manas", accountType: "student", headline: "Cloud engineer, open to work" },
   { email: "placed@pixelitcenter.com", fullName: "Manas", accountType: "student", headline: "Cloud Engineer at Brightline Finance", isPlaced: true },
-  // One employee login. As admin it sees the whole client section. The other
-  // staff roles exist in the API for when real accounts (Cognito) arrive.
-  { email: "employee@pixelitcenter.com", fullName: "Rahul", accountType: "employee", headline: "Admin, Pixel IT Center", staffRole: "admin" },
+  // One employee login: Rahul, one of the admins written in at launch (launchTeam).
+  { email: "employee@pixelitcenter.com", fullName: "Rahul", accountType: "employee", headline: "Operations, Pixel IT Center" },
 ];
 
 export const activity: { item: string; kind: string; status: string; updated: string; next: string }[] = [

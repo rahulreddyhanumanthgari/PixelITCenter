@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ArrowLeft, ArrowRight, Check, ExternalLink, Pencil, Plus, Search, Send } from "lucide-react";
 import { Avatar, Chip, PageHeader, useToast } from "../ui";
 import { adminApi, type Client, type ClientInput, type ClientType, type Who } from "./api";
+import { getPortalSettings } from "./portalSettings";
 import { can, Choice, Detail, Empty, ErrorNote, Field, fieldErrors, errorText, Loading, Panel, Toggle, useApi, useWho } from "./ui";
 
 // Clients and vendors (admin, accounts). No logins: clients never sign in to the
@@ -417,7 +418,8 @@ function AddClientWizard({ who, open, onClose, onSaved }: { who: Who; open: bool
   if (open !== wasOpen) {
     setWasOpen(open);
     if (open) {
-      setDraft(emptyDraft);
+      // New clients start on the payment terms set in the Admin panel.
+      setDraft({ ...emptyDraft, paymentTermsDays: String(getPortalSettings().defaultPaymentTermsDays) });
       setStep(0);
       setError(null);
       setProblem(null);
