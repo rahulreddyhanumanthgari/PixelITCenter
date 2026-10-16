@@ -21,6 +21,11 @@ npm run dev          # http://localhost:3000
 | `npm run build` | Production build |
 | `npm start` | Serve the production build |
 
+The student Profile page's **Placement details** section needs the portal API
+(`apps/backend`, see its README). Point the site at it with
+`NEXT_PUBLIC_PORTAL_API_URL` (default `http://localhost:4000`); without it, that
+section shows "Can't reach the placement service" and the rest of the site works.
+
 Don't run `npm run dev` and `npm run build` at the same time: they share
 `.next/`. For a test build next to a running dev server, use
 `NEXT_DIST_DIR=.next-test npm run build`.
@@ -29,21 +34,27 @@ Don't run `npm run dev` and `npm run build` at the same time: they share
 
 The site has one design: the Pixel IT particle site in light colours (the
 dark version was retired on 2026-10-08). `app/layout.tsx` loads
-`themes/core/core.css` (structure) and `themes/light/light.css` (colours and
+`styles/core.css` (structure) and `styles/light.css` (colours and
 light-specific styles) and sets `<html data-theme="light">`, which the
 particle scene reads to draw solid ink-coloured cubes on white, no bloom.
 
 ## Folders
 
 ```
-app/            root layout, "/" (page.tsx), not-found, sitemap, robots, icon
-themes/
-  core/         the site: Home.tsx, core.css (type, cards, footer), fonts.ts,
-                components/ (hero, journey, particles, story, layout,
-                sections, ui), lib/ (particle forms, gsap), hooks/, shaders/
-  light/        colours (light.css) and the light sections: Services,
-                Staffing, Why, card entrance
-content/        ALL site copy (site.ts): edit text here, not in components
+app/            routes only: layouts, pages, not-found, sitemap, robots, icon
+components/
+  site/         the website: Home.tsx, layout/ (header, footer, logo),
+                hero/, sections/ (incl. services, staffing, why), ui/
+  portal/       the portal: login/ (sign-in page), dashboard/ (shell,
+                pages, demo session) and dashboard/student/ (student corner)
+animations/     everything that moves: particles/ (scene, shaders, shape
+                lib), journey/ (scroll journey), story/, scroll/ (card
+                entrance, How We Work progress), gsap.ts
+content/        ALL copy and demo data (site.ts, portal-demo.ts,
+                student-demo.ts): edit text here, not in components
+styles/         core.css (type, cards, footer), light.css (colours),
+                dashboard.css (portal), fonts.ts
+hooks/          shared React hooks (device quality tier)
 lib/            metadata, utils
 types/          ambient type declarations (e.g. *.glsl imports)
 public/         static files: brand logo, client logos
@@ -53,6 +64,6 @@ docs/           decisions.md: why each part works the way it does
 ## Tuning the particles
 
 Every visual number for the particle journey is in
-[`themes/core/components/journey/journey-config.ts`](themes/core/components/journey/journey-config.ts);
-the shapes themselves are in `themes/core/lib/particles/`, and their motion
-and colour in `themes/core/shaders/particle.vert.glsl`.
+[`animations/journey/journey-config.ts`](animations/journey/journey-config.ts);
+the shapes themselves are in `animations/particles/lib/`, and their motion
+and colour in `animations/particles/shaders/particle.vert.glsl`.

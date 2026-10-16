@@ -9,10 +9,12 @@
 // written for the redesign direction in the modernization plan — replace it
 // with business-approved wording (plan phase 0D) before launch.
 
+import { portalUrl } from "./portal-url";
+
 export const site = {
   name: "Pixel IT Center",
   url: "https://pixelitcenter.com",
-  portalUrl: "https://portal.pixelitcenter.com",
+  portalUrl, // see portal-url.ts
   description:
     "Pixel IT Center Corporation delivers IT staffing and technology services in AI, cloud, cybersecurity, big data, DevOps and QA automation for teams building what's next.",
   // From pixelitcenter.com.
@@ -22,6 +24,12 @@ export const site = {
     location: "189 Tarleton Dr, Fuquay Varina, NC 27526",
   },
   linkedin: "https://www.linkedin.com/company/pixel-it-center/",
+} as const;
+
+// The Portal Login page (/portal). Sign-in is a demo for now (see
+// components/portal/dashboard/session.ts): nothing is sent anywhere.
+export const portal = {
+  pageTitle: "Portal Login",
 } as const;
 
 export const nav = [

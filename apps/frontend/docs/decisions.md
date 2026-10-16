@@ -15,8 +15,10 @@ group, `themes/dark/`, the Dark / Light switch, `lib/design.ts` and the
 cookie rewrite). It is recoverable from git history (commit `dbc37d2` and
 earlier).
 
-- **Folders.** `themes/core/` is the site (everything described below);
-  `themes/light/` holds the colours and the light-only sections.
+- **Folders** (reorganised 2026-10-11; the old `themes/` folder is gone):
+  `components/site/` the website, `components/portal/` the portal,
+  `animations/` everything that moves, `styles/` CSS and fonts. Map and
+  rules: the repo's root `CLAUDE.md`.
 - **One root layout.** `app/layout.tsx` loads `core.css` + `light.css` and
   sets `<html data-theme="light">`; the 404 page is a normal
   `app/not-found.tsx`.
@@ -30,10 +32,10 @@ earlier).
 
 Everything is a Server Component except:
 
-- `components/journey/*` and `components/particles/*` — WebGL needs the browser
-- `components/sections/LogoMarquee.tsx` — hover detection on the moving strip
-- `components/layout/HeaderShell.tsx` — solid header after scrolling
-- `components/layout/MobileMenu.tsx` — open/close state
+- `animations/journey/*` and `animations/particles/*` — WebGL needs the browser
+- `components/site/sections/LogoMarquee.tsx` — hover detection on the moving strip
+- `components/site/layout/HeaderShell.tsx` — solid header after scrolling
+- `components/site/layout/MobileMenu.tsx` — open/close state
 
 The homepage is statically prerendered. The hero `h1`, copy and CTAs are plain
 server-rendered HTML, so SEO does not depend on the 3D scene.
@@ -163,7 +165,7 @@ scrolls the four steps (Discover, Plan, Deliver, Support).
 
 - **Text.** `ProcessProgress` gives each step a ScrollTrigger that scrubs
   0→1 while the step passes 58% of the viewport. The sum (0 = Discover
-  active … 4 = all done) goes into the shared `lib/processProgress.ts`. Steps
+  active … 4 = all done) goes into the shared `animations/scroll/processProgressStore.ts`. Steps
   get `data-state` (`inactive` / `active` / `completed`), which drives the
   styling: dimmed, full emphasis with the accent number, or ✓. This works
   with or without WebGL.
@@ -175,8 +177,8 @@ scrolls the four steps (Discover, Plan, Deliver, Support).
 These are enhancements on top of the journey. None of them change the forms
 or the morph.
 
-- **Ambient star field** (`StarField`, `lib/particles/stars.ts`,
-  `shaders/stars.vert.glsl`). It is a second `THREE.Points` in the same
+- **Ambient star field** (`StarField`, `animations/particles/lib/stars.ts`,
+  `animations/particles/shaders/stars.vert.glsl`). It is a second `THREE.Points` in the same
   canvas: white/off-white points spread through real depth (z −2.5 … −26,
   mostly far).
   - Far points are dim; near ones are slightly larger and move more.
@@ -292,7 +294,7 @@ top of the planets, so the two merged.)
 
 The Staffing form (`earth`) is a dense particle Earth with real continents.
 
-- **Continents.** `lib/particles/landMask.ts` is a 720×360 run-length land
+- **Continents.** `animations/particles/lib/landMask.ts` is a 720×360 run-length land
   mask (12 KB). It was generated once from Natural Earth 1:50m land (the
   public-domain world-atlas package), with a scanline fill that unwraps
   rings across the date line.
@@ -461,7 +463,7 @@ centred Why content, which sits inside its opening.
 
 ### Engine
 
-**`lib/particles/`** (independent of site content)
+**`animations/particles/lib/`** (independent of site content)
 
 | File | Role |
 |---|---|
@@ -471,7 +473,7 @@ centred Why content, which sits inside its opening.
 | `generateTarget.ts` | `FORMS` registry, `alignByHeight`, colours (`colorsForSequence`, `monochromeColors`) |
 | `stars.ts`, `palette.ts`, `random.ts` | Background stars, colours, seeded PRNG |
 
-**`components/particles/`**
+**`animations/particles/`**
 
 - `ParticleSystem` — one `THREE.Points` plus shader, with look blending.
 - `ParticleCanvas` — camera and bloom.
@@ -479,7 +481,7 @@ centred Why content, which sits inside its opening.
 - `hooks.ts` — device tier, reduced motion, pointer.
 - `StarField` and `SceneErrorBoundary`.
 
-**`components/journey/`**
+**`animations/journey/`**
 
 - `journey-config.ts` — forms, looks, transitions, tiers. All tuning is here.
 - `JourneyScene`, `JourneyLayer`.
@@ -492,7 +494,7 @@ particle *i* sits at a similar height in each form. Colours are fixed per
 particle (the rocket palette's height order), so orange ends up low in every form and
 its blue nose high. The viewer can follow the material.
 
-**GPU side** (`shaders/particle.vert.glsl`). Attributes: `position` (current
+**GPU side** (`animations/particles/shaders/particle.vert.glsl`). Attributes: `position` (current
 form), `aTarget` (next form), `aColor`, `aRandom`, `aDelay`, `aScatterDir`,
 `aScatterDistance`, `aNoiseOffset`, `aScale`. JavaScript drives one number,
 `uProgress` (0..1). The shader turns it into each particle's own progress:
@@ -636,7 +638,7 @@ rejected; this is their replacement.
 
 ## Footer: the closing scene
 
-`components/layout/Footer.tsx` and the `.footer-*` styles in `globals.css`:
+`components/site/layout/Footer.tsx` and the `.footer-*` styles in `globals.css`:
 
 - **Top.** Logo and description on the left; Services, Company and Contact on
   the right, with generous space.
@@ -661,7 +663,7 @@ The earlier light-theme experiments (traced reference images, voxel cubes,
 per-section formations) were all removed at the owner's request. The light
 version is now simply the dark site in light colours:
 
-- `themes/light/light.css` holds the same tokens as `themes/dark/dark.css`
+- `themes/light/light.css` (now `styles/light.css`) holds the same tokens as `themes/dark/dark.css`
   in light values; `app/(light)` loads it and sets `data-theme="light"`.
 - The particle journey is unchanged in shape and motion. JourneyScene reads
   `data-theme`; in light it turns bloom off, uses `PALETTE.backgroundLight`
@@ -671,6 +673,289 @@ version is now simply the dark site in light colours:
   ones as navy.
 - The Dark / Light switch (`components/DesignSwitch.tsx`, cookie +
   rewrite of `/` to `/light`) chooses between them.
+
+## Portal Login (temporary page)
+
+The plan puts the portal on its own app at portal.pixelitcenter.com. Until
+that exists, Portal Login opens `/portal` on this site:
+
+- Every Portal Login link reads `site.portalUrl` (`content/portal-url.ts`).
+  Set `NEXT_PUBLIC_PORTAL_URL=https://portal.pixelitcenter.com` and they all
+  move to the real portal; then delete `app/portal` and
+  `components/portal`.
+- The page: a round back arrow (to the website) above one card with the
+  logo and Sign in / Sign up tabs; no site header. Sign in: Continue with Google, email,
+  password, forgot password. Sign up: Sign up with Google, full name, work
+  email, password (8+ characters) and confirm password. Both end in a
+  slide control (`SlideToSignIn`, like the phone's slide to answer). A tap
+  (or Enter / Space) makes the knob glide over on its own; on arrival the
+  bar turns orange and the knob pops into a white tick. If something is
+  missing or wrong, the bar flashes red on arrival, the knob slides back,
+  and the form lists each problem in friendly words ("Pop in your email so we can find your account.") with a
+  red outline on those fields until they're typed in.
+- Nothing is connected to a sign-in service yet: sign-in is a demo (below).
+- `/portal` is `noindex` and left out of the sitemap.
+- Per the plan, no real portal data or workflows (timesheets, invoices,
+  employees) go in this codebase; real sign-in is AWS Cognito in the
+  portal app. The dashboard below is a dummy-data preview only.
+
+## Portal dashboard demo (2026-10-11, branch feature/dashboard)
+
+Manas asked for a universal dashboard to show the team what the portal
+will be, before the real one is built per account type.
+
+- **The plan it previews.** Anyone signs up the same way. After sign-up
+  they complete a profile, which says whether they are a student, an
+  employee or a client. At sign-in, the email is looked up in the database
+  to find the account type, and each type gets its own dashboard
+  (employees get extra features). The sign-in page never asks for a type.
+- **Demo sign-in** (`components/portal/dashboard/session.ts`): a JSON session in
+  localStorage; any password works; nothing is sent anywhere. The email
+  picks the type from `demoDirectory` in `content/portal-demo.ts`
+  (`student@` / `employee@` / `client@pixelitcenter.com`). Any other email
+  signs in as a new account with no type. After the slide, `SigningIn`
+  shows the steps (check email → found a *type* account → open dashboard).
+  Sign up → `/portal/onboarding` (3 steps: type, details, about you) →
+  dashboard. Google signs in a made-up new account.
+- **Pages** (`app/portal/(app)/*`, frame `DashboardShell`): Dashboard,
+  Projects, Messages, Schedule, Tasks, Documents, Billing & invoices,
+  Profile, Support, Settings. Layout follows the owner's reference image:
+  sidebar, search + messages + notifications bar, profile card with a
+  completion ring and four stat tiles, project cards, activity table,
+  today's tasks. Universal for now: everyone sees the same menu.
+- All data is dummy (`content/portal-demo.ts`). Tasks, profile and read
+  notifications are saved in the demo session; messages, uploads and
+  tickets last only until you leave the page.
+- Styles: `styles/dashboard.css` (site tokens; in `@layer components`
+  so Tailwind utilities win). The top bar is a `div role="banner"` because
+  light.css styles every `<header>` as the site header.
+- To make it real: replace `session.ts` with Cognito + a profile lookup,
+  and split `nav.ts` / the pages per account type.
+
+### Client section, admin only (2026-10-14, branch feature/client-dashboard)
+
+From the senior stakeholder's feedback: **clients never sign in.** They use their
+own VMS portals or email, so the "Client" account type, client sign-up, the
+client dashboard and the client-facing Projects, Tasks, Schedule and Billing
+pages are gone. The client section is an internal tool for PixelIT staff.
+(Earlier notes above that mention a client account or those pages are history.)
+
+- **Two demo logins only** (Manas, 2026-10-15: don't separate the logins):
+  `student@` / `placed@` (students) and `employee@` (Rahul), whose staff role
+  is **admin**, so the employee login sees the whole client section. The
+  other staff roles (accounts, verifier, recruiter) stay in the API and the
+  menu rules (`staffRoles`, `clientSectionPages`) for real accounts later.
+- **Pages** under `/portal/admin/` (`components/portal/dashboard/admin/`),
+  in the menu group "Client section", filtered by role in `nav.ts`
+  (`clientSectionPages`): Clients (admin, accounts), Placements (all staff;
+  rates only for admin and accounts), Timesheets (admin, verifier, accounts),
+  Billing & invoices (admin, accounts). The shell shows "This page is for
+  PixelIT staff with access" to anyone else. **The API enforces the same
+  rules on every request**; the UI only follows them.
+- **Dashboard** for staff: a work queue from `GET /api/admin/overview`
+  (`admin/StaffQueue.tsx`); other employees keep recent activity.
+- Forms and details open in a side panel (`Panel`, a native `<dialog>`;
+  full screen on phones). Tables scroll inside their card, never the page.
+- These pages talk to the real API (`apps/backend`, see its README) with a
+  dev token for the demo email + staff role, kept in sessionStorage so page
+  reloads don't hit the dev endpoint's rate limit. No demo data in the
+  browser: run `npm run db:seed` in `apps/backend`.
+- Messages stays for staff (they talk to students there); only the client
+  conversation was removed. Schedule is now student-only (the Calendar).
+- Old sessions saved with the client type are signed out on load.
+
+- **PixelIT IDs (2026-10-15, front end only):** every registered student
+  gets a unique ID, `PIC-1001`, `PIC-1002`… (never reused), so students with
+  the same name are never mixed up. Demo list: `content/registered-students.ts`
+  (two Manas, two Rahul on purpose). Students see it on Profile and in the
+  sidebar; staff see it on placement cards, can search by it, and pick the
+  student by name or ID as the first step of Add placement. An open
+  placement shows the student's whole profile (contact, work and visa,
+  education, interviews, masked identity, references) and their Documents.
+  With the backend: the server issues the next PIC at registration and the
+  profile comes from the student's saved Profile / Placement Details.
+
+- **Talent (2026-10-15, front end only):** sidebar group "Recruiting" →
+  Talent (admin, recruiter). Every registered student, placed or not, as big
+  cards; status Placed / Unplaced / On bench (bench = their placement ended or
+  they're marked so); "Match a job description" ranks students by how many of
+  the JD's keywords (comma-separated) appear in their title, headline and
+  skills; more filters: title, skills (must have all), visa, role type they're
+  open to, work mode, availability, experience, open to relocating; search by
+  name, email or PIC. A card opens to the full profile, current placement and
+  Documents. Data: `content/registered-students.ts` (10 demo students).
+- **Admin panel and access (2026-10-15, front end only):** admin is a
+  permission, not a name tag: the sidebar says "Employee · PixelIT staff"
+  for every employee. Admins get an extra menu group "Admin" → Admin panel
+  (Team & access, Portal settings, Activity log). The team list starts from
+  `launchTeam` (content/portal-demo.ts): Rahul (employee@) and Mansingh are
+  the admins written in at launch. An employee who signs up joins with no
+  access; only an admin gives a job role (Recruiter, Verifier, Accounts) or
+  makes someone an admin (always asks first; the last admin can't be
+  removed). Roles are read from the team store (`dashboard/team.ts`), not the
+  session. Portal settings (company details, default payment terms, reminder
+  days) are kept in the browser (`admin/portalSettings.ts`); the default
+  terms pre-fill Add client. The Activity log is the server's real audit log.
+  With the backend: team and settings become server tables only admins
+  change, and the API takes the role from there, not from the browser.
+- **Billing is admins only, as cards (2026-10-16):** the Billing menu item,
+  the page guard and the API (invoices, payments, billing report, reminders)
+  are admin-only; the Accounts role keeps the timesheet accounts check and
+  client records but no amounts. The page shows one card per student at a
+  company (billed / paid / unpaid, due or overdue, "not invoiced" count);
+  opening a card shows totals and each month's timesheet, invoice and
+  payment, and a month opens the invoice window (send, record payments).
+  "Email payment reminder" (card and detail) previews then sends a fixed
+  message listing the placement's unpaid invoices to the company's billing
+  email; only the invoices and amounts change (`POST
+  /api/admin/payments/reminders`, logged as PAYMENT_REMINDER + audit).
+- **Billing card money bar (2026-10-16):** Manas preferred the previous
+  billing page (tiles, stage filter, one list of cards, dot steps) over the
+  "at a glance" redesign, which was reverted. What stayed: each card has its
+  own "Money at a glance" bar under Billed / Paid / Unpaid, splitting what
+  that student billed into collected (blue), waiting (orange) and overdue
+  (red), each with its % and amount.
+- **Profile photos (2026-10-15, front end only):** everyone (students,
+  employees, admins) can add a photo: hover the avatar on Profile or the
+  Dashboard card for a pencil (on touch screens an orange pencil badge always
+  shows), pick a JPG/PNG/WebP up to 10 MB; it's centre-cropped and shrunk to
+  a 256 px JPEG and replaces the initials in the sidebar, top bar, Profile and
+  Dashboard. "Remove" goes back to initials. Demo: kept in the session in
+  this browser; with the backend it's uploaded to private storage.
+- **Website client logos as clients (2026-10-15, demo data):** the 18
+  companies on the homepage logo strip (`content/site.ts` clientProof) are
+  demo client records, added by `npm run db:seed` (only the missing ones, by
+  name; made-up `.example` billing emails). Client cards show the company's
+  logo from `public/clients/` when the name matches, else its initials.
+- **Admin panel, round 2 (2026-10-15):** the sidebar card shows an
+  "Admin" badge for admins and "Employee" for everyone else; the Admin menu
+  group sits last, after Settings. Admin panel tabs: Analytics (first),
+  Team & access, Portal settings, Activity log.
+  - **Analytics:** stat tiles with change vs last month (new registrations,
+    students placed, new clients, active placements, billed, overdue), four
+    6-month column charts (registrations vs placements, billed vs received,
+    new clients, expected margin), plus where students are and the work
+    queues. Plain SVG (`admin/charts.tsx`), no chart library; colours are
+    slots 1–2 of the dataviz reference palette (validated on white); every
+    chart has a hover/focus tooltip and a "Show table" view. Clients,
+    placements, billing and queues are live; registrations come from the demo
+    student list.
+  - **Activity log:** area cards (Everything, Clients, Placements,
+    Timesheets, Invoices, Payments, Reports) with counts, each opening a
+    panel with person, action, date range, newest/oldest, changes-only and
+    25/50/100 per page. Filtering, sorting and paging run on the server
+    (`GET /api/admin/audit-log` + `/audit-log/summary`), so it scales.
+- **Deleting a student (2026-10-15, front end only):** admins only. "Delete
+  student" on an open student in Talent and in Placements; the confirm window
+  needs DELETE typed in capitals before "Delete for good" works. Demo: the
+  student (and their placement cards) are hidden in this browser
+  (`admin/deletedStudents.ts`), with a "Restore" link on Talent. With the
+  backend: a real admin-only, logged delete or archive; what happens to their
+  placements, timesheets and invoices is decided then.
+- **Role type on placements (2026-10-15, backend):** Full-time, Part-time,
+  Contract, Contract-to-hire (`Placement.employmentType`, default Contract,
+  migration `20261015000000_placement_employment_type`). Asked in Add
+  placement, shown on cards, the open card and to the student.
+
+### Student corner (reworked 2026-10-13)
+
+PixelIT is a staffing firm: students don't apply to jobs. PixelIT's
+recruiters market each student's resume to vendors and clients, and the
+student corner is for following that and handing over what recruiters need.
+`nav.ts` `navFor(type, placed)` picks the menu; `ForType` picks the page
+version (student / other). Data: `content/student-demo.ts`, where each list
+notes the API endpoint it stands for; what a student changes is kept in the
+demo session (`session.ts`, student-corner helpers), so swapping to the API
+is a change of data source, not of pages.
+
+- **Menu (final):** Jobs, Interviews, Calendar, Messages · Resume,
+  Documents, Profile, Timesheets (placed students only) · Help, Settings.
+  No Dashboard page for students: they land on Jobs, and `/portal/dashboard`
+  sends them there. No Projects, Billing or Tasks.
+- **Role guard** (`DashboardShell` + `nav.ts`): students open only what
+  their menu shows (and pages under it, e.g. a job); anything else shows
+  "This page isn't part of your portal". Other account types are kept out
+  of the student-only pages (Jobs, Interviews, Resume, Timesheets) with the
+  "student corner" note. UI only: the API must enforce the same rules.
+- **Placed students:** `session.isPlaced` (set from the demo directory:
+  `placed@pixelitcenter.com`; admins set it in the live portal). Only they
+  get Timesheets and timesheet notifications.
+- **Not a learning platform** (Manas): no courses, classes, modules,
+  recordings or trainers anywhere in the portal.
+- **Demo people:** only Joya, Hari, Manas, Rahul and Mansingh. Student =
+  Manas (both demo students), employee = Rahul, client = Joya (Northwind
+  Health), recruiter = Hari, placement lead = Mansingh.
+- **Jobs** (read only): posted by admins on the employee/admin side. Each
+  card: title, company, location, job type and work style, skills, brief,
+  and a status badge for the student's resume: Not Submitted, Resume
+  Submitted, Under Review, Interview Scheduled, Placed, Rejected (hover for
+  what it means; a "What do the statuses mean?" list under the banner
+  "PixelIT's recruiters submit your resume to matching openings. Check here
+  for progress."). Search and one Filter dropdown (job type, work style).
+  The job page (`/portal/jobs/[id]`) shows the full JD and the same status;
+  no Apply anywhere.
+- **Interviews:** upcoming cards (date block, company, role, round, time,
+  format, who, meeting link shared 1 day before, prep tip), a Past list,
+  and Email reminders switches (when scheduled, 24 h before, 1 h before),
+  saved in the session. Emails themselves need the backend.
+- **Calendar** (`SchedulePage` with the student-only `availability` prop,
+  via `StudentCalendar`): PixelIT calls, interviews and prep calls in a
+  month grid or list, plus **Availability**: the student adds "I'm
+  available" slots (date, from, to, optional time zone; no overlaps). Slots
+  are dashed green on the grid and in the lists, so they never look like a
+  booking, and are listed in a side panel that says recruiters can see
+  them. Employees and clients see the calendar exactly as before.
+- **Messages:** front-end placeholder. In-house vs third-party messaging is
+  pending a cost / effort decision (TODO in the route and component).
+- **Resume corner:** one resume with versions (PDF or .docx, up to 5 MB,
+  checked on the client). The latest version has a status: Pending Review,
+  Needs Changes, Approved; a new upload goes on top and resets it to Pending
+  Review. Recruiter feedback (author, role, date, which version) is read
+  only; replies go through Messages. Version history and a private
+  "Before you upload" checklist.
+- **Documents** (`StudentDocuments`, separate from the employee/client
+  `DocumentsPage`): only Resume, Driver's License or State ID, Passport
+  copy and Visa copy; "I don't have a Driver's License or State ID" swaps
+  that row for a Utility bill. PDF, JPG or PNG up to 5 MB, checked on the
+  client. A "From PixelIT" tab lists what PixelIT sent (offer letters,
+  forms).
+- **Profile:** the account form plus Placement Details (below).
+- **Timesheets** (placed only): current client and hourly rate (read only,
+  set by PixelIT), then one submission per month: month, total hours,
+  leave days (a note is required when leave > 0) and the client-approved
+  timesheet as ONE PDF (images, several files and renamed non-PDFs are
+  refused with a clear message; the first bytes must be "%PDF-"). History
+  with status: Submitted, Under Verification, Approved, Invoiced, Paid.
+  Students never make or edit invoices: accounts generates them from
+  approved hours × rate (TODO, backend).
+- **Help:** your people (recruiter, placement lead, accounts) with emails,
+  phone and office address, "Office open / closed now" (Mon–Fri 9am–6pm
+  ET), common questions, and "Raise a ticket" (subject, description); a
+  note says the recruiter and admin team see tickets.
+- **Notifications** (bell): interview scheduled, resume feedback received,
+  resume status changed, timesheet status changed (placed only). Each opens
+  its page. In the portal only for now; email delivery comes later.
+- **Front end only** except Placement Details (below): everything else is
+  demo data in this browser until its backend is built (Node.js, in
+  `apps/backend`).
+- **Placement Details** (student Profile page, 2026-10-13): the skill
+  matrix recruiters need before marketing a profile, under "Please provide
+  the following details and attach your updated resume, Driver's License
+  (DL), and Visa copy to proceed." Five steps (Personal & professional,
+  Education, Interview logistics, References, Attachments) with done
+  counts, a completion bar, Save draft and Submit in a bar stuck to the
+  bottom. Submit is enabled only when every required field and all three
+  files are in; "Show what's missing" marks the gaps. Passport, SSN last
+  four and date of birth are password-style inputs with a show / hide eye;
+  once saved they come back only masked ("Saved: •••••567"). Status chip:
+  Draft, Submitted, Under review, Needs update (with the recruiter's
+  comment), Approved; fields lock outside Draft / Needs update. This one
+  section talks to the real API in `apps/backend` (see its README) at
+  `NEXT_PUBLIC_PORTAL_API_URL` (default http://localhost:4000), using a
+  dev-only token for the demo email until Cognito lands. The API encrypts
+  the three sensitive fields at rest (AES-256-GCM) and never logs them.
+  Rules live in `components/portal/dashboard/student/placement/fields.ts`,
+  mirrored from `apps/backend/src/validation/profile.ts`.
 
 ## Content
 

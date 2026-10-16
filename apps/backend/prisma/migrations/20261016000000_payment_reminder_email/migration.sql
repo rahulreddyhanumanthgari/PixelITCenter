@@ -1,0 +1,3 @@
+-- AlterEnum
+ALTER TYPE "EmailKind" ADD VALUE 'PAYMENT_REMINDER';
+
