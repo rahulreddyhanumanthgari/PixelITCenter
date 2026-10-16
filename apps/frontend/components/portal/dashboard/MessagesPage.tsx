@@ -16,7 +16,7 @@ import { Avatar, PageHeader } from "./ui";
  */
 export function MessagesPage({
   starter: initial = starter,
-  body = "Your account manager, recruiter, clients and support, in one place.",
+  body = "Your account manager, recruiter and support, in one place.",
 }: {
   starter?: Conversation[];
   body?: string;

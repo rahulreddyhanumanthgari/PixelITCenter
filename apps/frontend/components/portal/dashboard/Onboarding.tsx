@@ -13,7 +13,8 @@ const STEPS = ["Who you are", "Your details", "About you"];
 
 /**
  * After sign-up: complete the profile in three short steps. Step 1 asks
- * student / employee / client, which is what decides the dashboard later.
+ * student / employee, which is what decides the dashboard later. Clients
+ * never sign in (they use their own VMS portals or email).
  */
 export function Onboarding() {
   const session = useSession();

@@ -4,9 +4,9 @@ import multer from "multer";
 // type check and virus scan run before anything touches disk. The stored
 // copy gets a random name in private storage (src/lib/storage.ts).
 
-export function singleUpload(maxBytes: number) {
+export function singleUpload(maxBytes: number, { fields = 4 }: { fields?: number } = {}) {
   return multer({
     storage: multer.memoryStorage(),
-    limits: { fileSize: maxBytes, files: 1, fields: 4, fieldSize: 1024, parts: 6, headerPairs: 50 },
+    limits: { fileSize: maxBytes, files: 1, fields, fieldSize: 1024, parts: fields + 2, headerPairs: 50 },
   }).single("file");
 }

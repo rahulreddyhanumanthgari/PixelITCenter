@@ -111,7 +111,7 @@ export function SettingsPage() {
             Sign out
           </h2>
           <p className="mt-2 text-sm text-[var(--dash-muted)]">
-            Signs you out of this browser. In this demo it also resets your profile and tasks.
+            Signs you out of this browser. In this demo it also resets your profile.
           </p>
           <button
             type="button"

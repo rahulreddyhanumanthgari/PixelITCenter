@@ -4,7 +4,7 @@ import { useState, type ReactNode } from "react";
 import { Check } from "lucide-react";
 import { accountTypes } from "@/content/portal-demo";
 import { AccountTypePicker, Field, RoleFields, SkillsField, TextField } from "./ProfileFields";
-import { profileCompletion, updateProfile, useSession, type Profile } from "./session";
+import { pixelitIdOf, profileCompletion, updateProfile, useSession, type Profile } from "./session";
 import { Chip, PageHeader, ProfileRing, useToast } from "./ui";
 import { PlacementDetails } from "./student/placement/PlacementDetails";
 
@@ -26,14 +26,14 @@ export function ProfilePage() {
   if (!session) return null;
   return (
     <div className="space-y-10">
-      <ProfileForm saved={session.profile} />
+      <ProfileForm saved={session.profile} pixelitId={pixelitIdOf(session)} photo={session.photo} />
       {session.profile.accountType === "student" && session.profile.email && <PlacementDetails email={session.profile.email} />}
     </div>
   );
 }
 
 /** The whole profile, edited as a draft; the ring follows as you type. */
-function ProfileForm({ saved }: { saved: Profile }) {
+function ProfileForm({ saved, pixelitId, photo }: { saved: Profile; pixelitId: string | null; photo?: string }) {
   const [draft, setDraft] = useState<Profile>(saved);
   const [toast, showToast] = useToast();
   const edit = (patch: Partial<Profile>) => setDraft((d) => ({ ...d, ...patch }));
@@ -60,7 +60,7 @@ function ProfileForm({ saved }: { saved: Profile }) {
       </PageHeader>
 
       <div className="dash-hero flex flex-wrap items-center gap-4 p-4 sm:p-6">
-        <ProfileRing name={draft.fullName || draft.email} percent={percent} size={88} />
+        <ProfileRing name={draft.fullName || draft.email} percent={percent} size={104} photo={photo} editable />
         <div className="min-w-0 flex-1">
           <p className="truncate text-lg font-semibold">{draft.fullName || "Your name"}</p>
           <p className="truncate text-sm text-[var(--dash-muted)]">{draft.headline || "Add a headline"}</p>
@@ -69,10 +69,17 @@ function ProfileForm({ saved }: { saved: Profile }) {
             <Chip tone={percent === 100 ? "good" : "warn"}>{`${percent}% complete`}</Chip>
           </p>
         </div>
+        {pixelitId && (
+          <div className="rounded-2xl bg-white/85 px-4 py-3 ring-1 ring-[var(--dash-line)]">
+            <p className="text-xs text-[var(--dash-muted)]">Your PixelIT ID</p>
+            <p className="text-lg font-bold tracking-wide">{pixelitId}</p>
+            <p className="text-xs text-[var(--dash-muted)]">Quote it when you contact us.</p>
+          </div>
+        )}
         {dirty && <p className="text-xs font-semibold text-[var(--dash-orange-ink)]">Unsaved changes</p>}
       </div>
 
-      <Section title="Account type" body="Are you a student, an employee or a client? The live portal reads this from your account.">
+      <Section title="Account type" body="Are you a student or an employee? The live portal reads this from your account.">
         <AccountTypePicker value={draft.accountType} onChange={(accountType) => edit({ accountType })} />
       </Section>
 

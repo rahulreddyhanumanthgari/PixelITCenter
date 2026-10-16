@@ -2,9 +2,11 @@ import type { Request, Response } from "express";
 import { z } from "zod";
 import { HttpError } from "../lib/errors.js";
 import type { FileSigner } from "../lib/storage.js";
-import type { ProfileService } from "../services/profileService.js";
 
 const id = z.uuid();
+
+/** Finds a stored file by id: a profile document, a timesheet PDF or an invoice PDF. */
+export type FileReader = (id: string) => Promise<{ doc: { mimeType: string; originalName: string }; data: Buffer }>;
 
 /**
  * GET /api/files/:id?expires=&signature=
@@ -12,7 +14,7 @@ const id = z.uuid();
  * works for FILE_URL_TTL_SECONDS. A link that is expired, altered or for
  * another file gets the same 404 as a file that doesn't exist.
  */
-export function filesController(service: ProfileService, signer: FileSigner) {
+export function filesController(read: FileReader, signer: FileSigner) {
   return {
     download: async (req: Request, res: Response) => {
       const docId = id.safeParse(req.params.id);
@@ -20,7 +22,7 @@ export function filesController(service: ProfileService, signer: FileSigner) {
       const signature = typeof req.query.signature === "string" ? req.query.signature : "";
       if (!docId.success || !signer.verify(docId.data, expires, signature)) throw new HttpError(404, "This link has expired. Open the file again from the portal.");
 
-      const { doc, data } = await service.readDocument(docId.data);
+      const { doc, data } = await read(docId.data);
       res.set({
         "Content-Type": doc.mimeType,
         "Content-Length": String(data.length),

@@ -3,6 +3,11 @@
 import { useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import { demoDirectory } from "@/content/portal-demo";
+
+// The sign-in page lists one student and one employee. Placed students are
+// managed on the employee side (Client section → Placements), so the placed
+// demo account isn't advertised here.
+const signInHints = demoDirectory.filter((d) => !d.isPlaced);
 import { site } from "@/content/site";
 import { SigningIn, type SignInRequest } from "./SigningIn";
 import { SlideToSignIn } from "./SlideToSignIn";
@@ -325,9 +330,9 @@ export function PortalLoginForm() {
             <div className="portal-demo-hint">
               <p>
                 <strong>Demo:</strong> any password works. Your email decides the account type. Try{" "}
-                {demoDirectory.map((d, i) => (
+                {signInHints.map((d, i) => (
                   <span key={d.email}>
-                    {i > 0 && (i === demoDirectory.length - 1 ? " or " : ", ")}
+                    {i > 0 && (i === signInHints.length - 1 ? " or " : ", ")}
                     <button type="button" onClick={() => fillEmail(d.email)}>
                       {d.email}
                     </button>

@@ -3,13 +3,54 @@
 // universal dashboard before the real portal (AWS Cognito + a database)
 // exists. Replace each list with real data per account type later.
 
-export type AccountType = "student" | "employee" | "client";
+// Clients and vendors never sign in: they use their own VMS portals or email.
+// The client section is an internal tool for PixelIT staff (see staffRoles).
+export type AccountType = "student" | "employee";
 
 export const accountTypes: { id: AccountType; label: string; body: string }[] = [
   { id: "student", label: "Student", body: "I'm looking for a job through Pixel IT Center." },
   { id: "employee", label: "Employee", body: "I work for Pixel IT Center." },
-  { id: "client", label: "Client", body: "My company works with Pixel IT Center." },
 ];
+
+/**
+ * What a PixelIT employee may do in the client section: their job role, or
+ * "admin" when an admin has made them one (admins can do everything). Given by
+ * an admin, never chosen at sign-up; the API checks it on every request.
+ */
+export type StaffRole = "admin" | "accounts" | "verifier" | "recruiter";
+
+/** The work an employee does. Admin is a separate switch on top of this. */
+export type JobRole = "recruiter" | "verifier" | "accounts";
+
+export type TeamMember = {
+  email: string;
+  fullName: string;
+  title: string;
+  jobRole: JobRole | null;
+  /** Controls the whole portal (Admin panel). Only another admin can turn it on. */
+  isAdmin: boolean;
+  addedOn: string;
+};
+
+/**
+ * The team at launch. These admins are written in before the portal goes
+ * live; every other employee starts with no access until an admin gives it.
+ * DEMO: kept in this browser (components/portal/dashboard/team.ts); with the
+ * backend it's a server table, changed only by admins and logged.
+ */
+export const launchTeam: TeamMember[] = [
+  { email: "employee@pixelitcenter.com", fullName: "Rahul", title: "Operations", jobRole: null, isAdmin: true, addedOn: "2026-06-01" },
+  { email: "mansingh@pixelitcenter.com", fullName: "Mansingh", title: "Placement lead", jobRole: "accounts", isAdmin: true, addedOn: "2026-06-01" },
+  { email: "hari@pixelitcenter.com", fullName: "Hari", title: "Recruiter", jobRole: "recruiter", isAdmin: false, addedOn: "2026-06-15" },
+  { email: "joya@pixelitcenter.com", fullName: "Joya", title: "Timesheet verification", jobRole: "verifier", isAdmin: false, addedOn: "2026-07-02" },
+];
+
+export const staffRoles: Record<StaffRole, { label: string; body: string }> = {
+  admin: { label: "Admin", body: "Everything, including client records and payment overrides." },
+  accounts: { label: "Accounts", body: "Confirms timesheet hours (which raises the invoice). Billing itself is admins only." },
+  verifier: { label: "Verifier", body: "Checks timesheet hours against the client-approved PDF." },
+  recruiter: { label: "Recruiter", body: "Sees placements. No billing data." },
+};
 
 /**
  * Demo sign-in: the email decides the account type, the way the real portal
@@ -26,104 +67,15 @@ export const demoDirectory: {
 }[] = [
   { email: "student@pixelitcenter.com", fullName: "Manas", accountType: "student", headline: "Cloud engineer, open to work" },
   { email: "placed@pixelitcenter.com", fullName: "Manas", accountType: "student", headline: "Cloud Engineer at Brightline Finance", isPlaced: true },
-  { email: "employee@pixelitcenter.com", fullName: "Rahul", accountType: "employee", headline: "Senior DevOps consultant" },
-  { email: "client@pixelitcenter.com", fullName: "Joya", accountType: "client", headline: "IT Director, Northwind Health" },
+  // One employee login: Rahul, one of the admins written in at launch (launchTeam).
+  { email: "employee@pixelitcenter.com", fullName: "Rahul", accountType: "employee", headline: "Operations, Pixel IT Center" },
 ];
-
-export type Status = "On track" | "At risk" | "Completed" | "Starting";
-
-export const projects: {
-  id: string;
-  name: string;
-  org: string;
-  area: string;
-  status: Status;
-  progress: number;
-  body: string;
-  due: string;
-  team: string[];
-}[] = [
-  {
-    id: "aws-migration",
-    name: "AWS cloud migration",
-    org: "Northwind Health",
-    area: "Cloud",
-    status: "On track",
-    progress: 68,
-    body: "Move 40 on-prem services to AWS with zero downtime for patient systems.",
-    due: "Dec 12",
-    team: ["Rahul", "Mansingh", "Hari"],
-  },
-  {
-    id: "qa-suite",
-    name: "QA automation suite",
-    org: "Vertex Retail",
-    area: "QA Automation",
-    status: "At risk",
-    progress: 42,
-    body: "Replace manual regression tests with a Playwright suite running in CI.",
-    due: "Nov 3",
-    team: ["Hari", "Manas"],
-  },
-  {
-    id: "gcp-data",
-    name: "GCP data platform",
-    org: "Brightline Finance",
-    area: "Big Data",
-    status: "On track",
-    progress: 85,
-    body: "BigQuery warehouse and dashboards for daily risk reporting.",
-    due: "Oct 30",
-    team: ["Mansingh", "Hari"],
-  },
-  {
-    id: "security-review",
-    name: "Security assessment",
-    org: "Atlas Logistics",
-    area: "Cybersecurity",
-    status: "Starting",
-    progress: 12,
-    body: "Risk assessment and penetration test ahead of SOC 2 audit.",
-    due: "Jan 20",
-    team: ["Rahul"],
-  },
-  {
-    id: "devops-pipeline",
-    name: "DevOps pipeline rebuild",
-    org: "Oakridge Labs",
-    area: "DevOps",
-    status: "Completed",
-    progress: 100,
-    body: "GitHub Actions pipeline with blue-green deploys to Azure.",
-    due: "Sep 28",
-    team: ["Hari", "Rahul"],
-  },
-];
-
-export const stats = [
-  { id: "projects", label: "Active projects", value: "4", trend: "+1", note: "vs last month" },
-  { id: "tasks", label: "Open tasks", value: "5", trend: "-3", note: "vs last week" },
-  { id: "meetings", label: "Meetings this week", value: "3", note: "Next: Tue 10:00" },
-  { id: "messages", label: "Unread messages", value: "4", note: "2 need a reply" },
-] as const;
 
 export const activity: { item: string; kind: string; status: string; updated: string; next: string }[] = [
-  { item: "Timesheet, week 40", kind: "Timesheet", status: "Approved", updated: "2 days ago", next: "Week 41 due Fri" },
-  { item: "Invoice INV-1042", kind: "Billing", status: "Paid", updated: "Yesterday", next: "None" },
+  { item: "Timesheet, September", kind: "Timesheet", status: "Approved", updated: "2 days ago", next: "October due Oct 31" },
   { item: "Offer letter, Vertex Retail", kind: "Document", status: "Signed", updated: "3 days ago", next: "Onboarding Mon" },
   { item: "Background check, Brightline Finance", kind: "Onboarding", status: "In progress", updated: "Today", next: "Results in 3 days" },
   { item: "Interview, Brightline Finance", kind: "Meeting", status: "Scheduled", updated: "1 week ago", next: "Tomorrow 14:00" },
-];
-
-export type Priority = "High" | "Medium" | "Normal";
-export type Task = { id: string; title: string; priority: Priority; done: boolean; due: string };
-
-export const starterTasks: Task[] = [
-  { id: "t1", title: "Submit timesheet for week 41", priority: "High", done: false, due: "Today" },
-  { id: "t2", title: "Review AWS migration plan", priority: "Medium", done: true, due: "Today" },
-  { id: "t3", title: "Upload signed NDA", priority: "Normal", done: false, due: "Tomorrow" },
-  { id: "t4", title: "Sign the updated contractor agreement", priority: "Medium", done: false, due: "Wed" },
-  { id: "t5", title: "Reply to Mansingh about the kickoff", priority: "Normal", done: false, due: "Thu" },
 ];
 
 export type Conversation = {
@@ -162,16 +114,6 @@ export const conversations: Conversation[] = [
     unread: 1,
     messages: [{ from: "them", text: "Your VPN access request is approved.", time: "Thu" }],
   },
-  {
-    id: "joya",
-    name: "Joya",
-    role: "Client, Northwind Health",
-    unread: 0,
-    messages: [
-      { from: "them", text: "Thanks for the migration update. Can we go through the cutover plan on Tuesday?", time: "Wed" },
-      { from: "me", text: "Yes, I'll bring the runbook.", time: "Wed" },
-    ],
-  },
 ];
 
 /**
@@ -201,7 +143,7 @@ export const events: CalEvent[] = [
   { id: "e4", date: "2026-10-12", time: "14:00", end: "15:00", title: "Interview, Brightline Finance", kind: "Interview", with: "Hiring panel" },
   { id: "e5", date: "2026-10-12", time: "15:00", end: "15:30", title: "Call about the Vertex Retail role", kind: "Call", with: "Hari" },
   { id: "e6", date: "2026-10-13", time: "10:00", end: "11:00", title: "Northwind Health kickoff", kind: "Meeting", with: "Mansingh, Rahul" },
-  { id: "e7", date: "2026-10-13", time: "16:00", end: "17:00", title: "Quarterly review, Northwind Health", kind: "Meeting", with: "Joya" },
+  { id: "e7", date: "2026-10-13", time: "16:00", end: "17:00", title: "Quarterly review, Northwind Health", kind: "Meeting", with: "Mansingh" },
   { id: "e8", date: "2026-10-16", time: "17:00", title: "Week 42 timesheet due", kind: "Deadline", with: "Payroll" },
   { id: "e9", date: "2026-10-20", time: "11:00", end: "11:45", title: "Sprint review, Vertex Retail", kind: "Meeting", with: "Hari" },
   { id: "e10", date: "2026-10-23", time: "15:00", end: "15:30", title: "Check-in with your account manager", kind: "Call", with: "Mansingh" },
@@ -216,29 +158,15 @@ export const documents: { id: string; name: string; category: string; size: stri
   { id: "d5", name: "Timesheet, week 40.xlsx", category: "Timesheets", size: "48 KB", updated: "Oct 4", by: "You" },
 ];
 
-export const invoices: { id: string; title: string; amount: string; issued: string; due: string; status: "Paid" | "Due" | "Overdue" }[] = [
-  { id: "INV-1045", title: "AWS migration, October", amount: "$12,400.00", issued: "Oct 1", due: "Oct 31", status: "Due" },
-  { id: "INV-1042", title: "QA automation, September", amount: "$8,250.00", issued: "Sep 1", due: "Sep 30", status: "Paid" },
-  { id: "INV-1038", title: "Security assessment, deposit", amount: "$3,000.00", issued: "Aug 20", due: "Sep 19", status: "Overdue" },
-  { id: "INV-1031", title: "DevOps pipeline, final", amount: "$6,900.00", issued: "Aug 1", due: "Aug 31", status: "Paid" },
-];
-
-export const billingSummary = [
-  { label: "Outstanding", value: "$15,400", note: "2 invoices" },
-  { label: "Paid this year", value: "$48,150", note: "11 invoices" },
-  { label: "Next due", value: "Oct 31", note: "INV-1045" },
-] as const;
-
 export const notifications: { id: string; title: string; body: string; time: string }[] = [
   { id: "n1", title: "Kickoff moved", body: "Northwind Health kickoff is now Tue 10:00.", time: "1h" },
-  { id: "n2", title: "Timesheet approved", body: "Week 40 was approved by Payroll.", time: "2d" },
+  { id: "n2", title: "Timesheet approved", body: "September was approved by Accounts.", time: "2d" },
   { id: "n3", title: "New document", body: "Hari shared the Vertex Retail offer letter.", time: "3d" },
-  { id: "n4", title: "Invoice paid", body: "INV-1042 was paid. Thank you!", time: "4d" },
 ];
 
 export const faqs: { q: string; a: string }[] = [
-  { q: "How do I submit a timesheet?", a: "Open Tasks, pick the timesheet task and upload it under Documents. Payroll approves it within two working days." },
-  { q: "Who do I contact about an invoice?", a: "Your account manager, or info@pixelitcenter.com. Quote the invoice number (INV-…)." },
+  { q: "Where are timesheets and invoices?", a: "Staff with a client-section role (admin, accounts, verifier) find them in the menu under Client section. Clients never sign in here." },
+  { q: "Who do I contact about an invoice?", a: "The accounts team, at accounts@pixelitcenter.com. Quote the invoice number (PIX-…)." },
   { q: "How do I change my account type?", a: "Your account type comes from your profile. Email support if it is wrong and we'll fix it." },
   { q: "Is my data safe?", a: "Yes. The live portal will sign you in through a secure provider. This page is a demo and saves nothing to a server." },
 ];
@@ -247,3 +175,29 @@ export const tickets: { id: string; subject: string; status: "Open" | "Resolved"
   { id: "SUP-214", subject: "VPN access for Northwind", status: "Resolved", updated: "Thu" },
   { id: "SUP-219", subject: "Laptop for the Vertex Retail start", status: "Open", updated: "Today" },
 ];
+
+// --- Client section: a placed student's documents (DEMO) ---------------------------
+// What staff see under "Documents" on a placement. In the live portal these come
+// from the student's own Documents page (their account); for now every placed
+// student shows the same demo set with their name on the files.
+
+export type ConsultantDocType = "resume" | "id" | "passport" | "visa";
+
+export const consultantDocLabels: Record<ConsultantDocType, string> = {
+  resume: "Resume",
+  id: "Driver's License or State ID",
+  passport: "Passport",
+  visa: "Visa",
+};
+
+export type ConsultantDoc = { type: ConsultantDocType; fileName: string; size: string; uploaded: string; expires?: string };
+
+/** A placed student's documents. Passport is left out on purpose, to show a missing one. */
+export function consultantDocsDemo(name: string): ConsultantDoc[] {
+  const file = name.trim().replace(/\s+/g, "_") || "Student";
+  return [
+    { type: "resume", fileName: `${file}_Resume.pdf`, size: "148 KB", uploaded: "Oct 9, 2026" },
+    { type: "id", fileName: `${file}_Drivers_License.jpg`, size: "520 KB", uploaded: "Jul 12, 2026", expires: "Dec 2026" },
+    { type: "visa", fileName: `${file}_Visa.pdf`, size: "410 KB", uploaded: "Jul 12, 2026", expires: "Mar 2027" },
+  ];
+}

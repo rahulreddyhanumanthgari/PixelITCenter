@@ -343,6 +343,12 @@ button.dash-card:hover {
 .dash-btn[data-tone="orange"]:hover {
   background: #e85a08;
 }
+.dash-btn[data-tone="danger"] {
+  background: #dc2626;
+}
+.dash-btn[data-tone="danger"]:hover {
+  background: #b91c1c;
+}
 .dash-btn-ghost {
   background: #ffffff;
   border: 1px solid var(--dash-line-strong);
@@ -600,7 +606,83 @@ select.dash-input {
   }
 }
 
+/* Side panel for forms and details (admin pages): a <dialog> that slides in
+   from the right; full screen on phones. */
+.dash-panel {
+  position: fixed;
+  inset: 0 0 0 auto;
+  width: min(38rem, 100vw);
+  max-width: 100vw;
+  height: 100dvh;
+  max-height: 100dvh;
+  /* !important: the panel sits inside pages laid out with space-y-*, whose
+     utility margins would otherwise win over this components layer. */
+  margin: 0 !important;
+  padding: 0;
+  border: 0;
+  background: #ffffff;
+  color: var(--dash-ink);
+  /* Opened from centred headers on phones; the window itself reads left to right. */
+  text-align: left;
+  box-shadow: -24px 0 60px -30px rgb(4 19 39 / 0.45);
+}
+.dash-panel[open] {
+  display: flex;
+  flex-direction: column;
+  animation: dash-panel-in 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.dash-panel::backdrop {
+  background: rgb(4 19 39 / 0.35);
+}
+@keyframes dash-panel-in {
+  from {
+    transform: translateX(2rem);
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .dash-panel[open] {
+    animation: none;
+  }
+}
+/* The same <dialog> as a small window in the middle of the screen
+   (step-by-step forms). 16px from the edges on phones. */
+.dash-panel.dash-modal {
+  inset: 0;
+  width: min(34rem, calc(100vw - 2rem));
+  /* fit-content, not auto: auto margins only centre a box with a set height. */
+  height: fit-content;
+  max-height: min(42rem, calc(100dvh - 2rem));
+  margin: auto !important;
+  border-radius: 1.5rem;
+  box-shadow: 0 30px 80px -30px rgb(4 19 39 / 0.55);
+}
+.dash-panel.dash-modal[open] {
+  animation-name: dash-modal-in;
+}
+@keyframes dash-modal-in {
+  from {
+    transform: translateY(0.75rem) scale(0.98);
+    opacity: 0;
+  }
+}
+
+/* A table row that opens a panel. */
+.dash-table tr[data-clickable] {
+  cursor: pointer;
+}
+.dash-table tr[data-clickable]:hover td {
+  background: var(--dash-hover);
+}
+.dash-table tr[data-flag="bad"] td:first-child {
+  box-shadow: inset 3px 0 0 #dc2626;
+}
+
 .dash-app :focus-visible {
+  outline: 2px solid var(--dash-orange);
+  outline-offset: 2px;
+}
+.dash-panel :focus-visible {
   outline: 2px solid var(--dash-orange);
   outline-offset: 2px;
 }

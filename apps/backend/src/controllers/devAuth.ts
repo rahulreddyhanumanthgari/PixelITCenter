@@ -2,6 +2,7 @@ import { createHash } from "node:crypto";
 import type { Request, Response } from "express";
 import jwt from "jsonwebtoken";
 import { z } from "zod";
+import { ROLES } from "../lib/roles.js";
 
 // DEV ONLY. The portal's sign-in is still a front-end demo, so there is no
 // real identity provider to issue tokens. When DEV_AUTH_ENABLED=true this
@@ -12,7 +13,7 @@ import { z } from "zod";
 const body = z
   .object({
     email: z.email(),
-    role: z.enum(["student", "recruiter", "admin"]).default("student"),
+    role: z.enum(ROLES).default("student"),
   })
   .strict();
 

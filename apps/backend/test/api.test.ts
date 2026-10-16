@@ -151,7 +151,8 @@ describe("documents", () => {
     expect(file.headers["cache-control"]).toBe("private, no-store");
     expect(Buffer.from(file.body).subarray(0, 5).toString()).toBe("%PDF-");
 
-    const tampered = first.body.url.replace(/signature=./, "signature=A");
+    // Change the signature's first character to a different one (never a no-op).
+    const tampered = first.body.url.replace(/signature=(.)/, (_: string, c: string) => `signature=${c === "A" ? "B" : "A"}`);
     expect((await request(app).get(tampered)).status).toBe(404);
     expect((await request(app).get(`/api/files/${first.body.id}`)).status).toBe(404);
 

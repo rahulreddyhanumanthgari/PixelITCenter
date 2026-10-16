@@ -2,7 +2,7 @@ import type { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
 import { z } from "zod";
 import { HttpError } from "../lib/errors.js";
-import type { Actor, Role } from "../services/profileService.js";
+import { ROLES, type Actor, type Role } from "../lib/roles.js";
 
 // Bearer-token auth. Tokens are HS256 JWTs signed with JWT_SECRET carrying
 // { sub, role, email }.
@@ -19,7 +19,7 @@ declare module "express-serve-static-core" {
 
 const claims = z.object({
   sub: z.string().min(1).max(128),
-  role: z.enum(["student", "recruiter", "admin"]),
+  role: z.enum(ROLES),
   email: z.email().optional(),
 });
 

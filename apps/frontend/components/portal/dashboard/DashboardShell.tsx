@@ -4,22 +4,24 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Bell, LoaderCircle, LogOut, Menu, MessageSquare, Search, X } from "lucide-react";
-import { accountTypes, conversations, documents, notifications, projects } from "@/content/portal-demo";
+import { accountTypes, conversations, documents, notifications, type StaffRole } from "@/content/portal-demo";
 import { jobs, studentConversations } from "@/content/student-demo";
 import { Logo } from "@/components/site/layout/Logo";
 import { StudentOnly } from "./ForType";
-import { homeFor, isStudentOnly, navFor, navItemsFor, studentCanOpen } from "./nav";
-import { isPlaced, notificationsOf, profileCompletion, signOut, updateSession, useSession, type Session } from "./session";
-import { Avatar } from "./ui";
+import { homeFor, isStudentOnly, navFor, navItemsFor, staffCanOpen, studentCanOpen } from "./nav";
+import { isPlaced, notificationsOf, pixelitIdOf, profileCompletion, signOut, updateSession, useSession, type Session } from "./session";
+import { joinTeam, useStaffRole } from "./team";
+import { Avatar, Chip } from "./ui";
 
 /**
  * The frame around every dashboard page: sidebar, top bar (search,
  * messages, notifications), the sign-in check (signed out → back to
  * /portal) and the role guard: students open only what their menu shows;
- * everyone else is kept out of the student-only pages.
+ * everyone else is kept out of the student-only pages, and the client
+ * section (/portal/admin/...) opens only for the staff roles each page lists.
  *
- * TODO(auth): this guard is for the UI only. With real sign-in the API
- * enforces the same rules on every request (role from the token).
+ * This guard only shapes the UI. The API enforces the same rules on every
+ * request from the role in the token (apps/backend/src/routes/clientSection.ts).
  */
 export function DashboardShell({ children }: { children: ReactNode }) {
   const session = useSession();
@@ -28,6 +30,13 @@ export function DashboardShell({ children }: { children: ReactNode }) {
   const [open, setOpen] = useState(false);
   const student = session?.profile.accountType === "student";
   const home = student && pathname === "/portal/dashboard";
+  const role = useStaffRole();
+  const employee = session?.profile.accountType === "employee" ? session.profile : null;
+
+  // A new employee joins the team with no access; an admin gives it.
+  useEffect(() => {
+    if (employee?.email) joinTeam(employee.email, employee.fullName);
+  }, [employee?.email, employee?.fullName]);
 
   useEffect(() => {
     if (session === null) router.replace("/portal");
@@ -57,7 +66,15 @@ export function DashboardShell({ children }: { children: ReactNode }) {
       <div className="dash-body">
         <Topbar session={session} onMenu={() => setOpen(true)} />
         <main className="mx-auto w-full max-w-[84rem] px-4 pt-6 pb-16 sm:px-6 lg:px-8 lg:pt-8">
-          {student ? (studentCanOpen(pathname, isPlaced(session)) ? children : <NotInYourPortal />) : isStudentOnly(pathname) ? <StudentOnly /> : children}
+          {student ? (
+            studentCanOpen(pathname, isPlaced(session)) ? children : <NotInYourPortal />
+          ) : isStudentOnly(pathname) ? (
+            <StudentOnly />
+          ) : staffCanOpen(pathname, role) ? (
+            children
+          ) : (
+            <StaffOnly hasAccess={Boolean(role)} />
+          )}
         </main>
       </div>
     </div>
@@ -77,6 +94,23 @@ function NotInYourPortal() {
   );
 }
 
+/** A staff page opened without the access it needs. */
+function StaffOnly({ hasAccess }: { hasAccess: boolean }) {
+  return (
+    <div className="dash-card dash-card-pad mx-auto mt-10 max-w-md text-center">
+      <p className="text-base font-semibold">This page is for PixelIT staff with access</p>
+      <p className="mt-2 text-sm text-[var(--dash-muted)]">
+        {hasAccess
+          ? "Your access doesn't include this page. Ask an admin if you need it."
+          : "You don't have access to staff pages yet. An admin gives access from the Admin panel."}
+      </p>
+      <Link href="/portal/dashboard" className="dash-btn mt-4">
+        Go to the dashboard
+      </Link>
+    </div>
+  );
+}
+
 function Sidebar({
   session,
   open,
@@ -91,6 +125,7 @@ function Sidebar({
   const router = useRouter();
   const { profile } = session;
   const type = accountTypes.find((t) => t.id === profile.accountType);
+  const role = useStaffRole();
   const percent = profileCompletion(profile);
 
   return (
@@ -105,17 +140,28 @@ function Sidebar({
       </div>
 
       <Link href="/portal/profile" className="dash-account mt-5">
-        <Avatar name={profile.fullName || profile.email} size={34} />
+        <Avatar name={profile.fullName || profile.email} size={34} photo={session.photo} />
         <span className="min-w-0 flex-1">
           <span className="block truncate text-sm font-semibold">{profile.fullName || profile.email}</span>
+          {profile.accountType === "employee" ? (
+            <span className="mt-0.5 flex items-center gap-1.5 text-xs text-[var(--dash-muted)]">
+              <Chip tone={role === "admin" ? "warn" : "ink"}>{role === "admin" ? "Admin" : "Employee"}</Chip>
+              PixelIT staff
+            </span>
+          ) : (
           <span className="block truncate text-xs text-[var(--dash-muted)]">
-            {type ? `${type.label} account` : "Account type not set"}
+            {pixelitIdOf(session)
+                ? `${pixelitIdOf(session)} · ${type?.label ?? "Student"}`
+                : type
+                  ? `${type.label} account`
+                  : "Account type not set"}
           </span>
+          )}
         </span>
       </Link>
 
       <nav className="mt-3 flex-1">
-        {navFor(profile.accountType, isPlaced(session)).map((g, i) => (
+        {navFor(profile.accountType, isPlaced(session), role).map((g, i) => (
           <div key={g.label ?? i}>
             {g.label && <p className="dash-group-label">{g.label}</p>}
             <ul className="space-y-0.5">
@@ -178,16 +224,12 @@ function useDismiss(open: boolean, close: () => void) {
   return ref;
 }
 
-// What the search box can find: pages, projects, documents (pages and jobs
-// for students). Students get the student corner's own content.
-function searchIndex(student: boolean, placed: boolean) {
-  const pages = navItemsFor(student ? "student" : null, placed).map((n) => ({ label: n.label, hint: "Page", href: n.href }));
+// What the search box can find: pages and documents (pages and jobs for
+// students). Students get the student corner's own content.
+function searchIndex(student: boolean, placed: boolean, role: StaffRole | null) {
+  const pages = navItemsFor(student ? "student" : null, placed, role).map((n) => ({ label: n.label, hint: "Page", href: n.href }));
   if (student) return [...pages, ...jobs.map((j) => ({ label: j.title, hint: `Job · ${j.company}`, href: `/portal/jobs/${j.id}` }))];
-  return [
-    ...pages,
-    ...projects.map((p) => ({ label: p.name, hint: `Project · ${p.org}`, href: "/portal/projects" })),
-    ...documents.map((d) => ({ label: d.name, hint: `Document · ${d.category}`, href: "/portal/documents" })),
-  ];
+  return [...pages, ...documents.map((d) => ({ label: d.name, hint: `Document · ${d.category}`, href: "/portal/documents" }))];
 }
 
 function Topbar({ session, onMenu }: { session: Session; onMenu: () => void }) {
@@ -199,8 +241,9 @@ function Topbar({ session, onMenu }: { session: Session; onMenu: () => void }) {
   const searchRef = useDismiss(query !== "", () => setQuery(""));
 
   const student = session.profile.accountType === "student";
+  const role = useStaffRole();
   const q = query.trim().toLowerCase();
-  const results = q ? searchIndex(student, isPlaced(session)).filter((r) => r.label.toLowerCase().includes(q)).slice(0, 6) : [];
+  const results = q ? searchIndex(student, isPlaced(session), role).filter((r) => r.label.toLowerCase().includes(q)).slice(0, 6) : [];
   // Students: interview scheduled, resume feedback, resume status, timesheet
   // status. In the portal only for now; email delivery comes later.
   const notes: { id: string; title: string; body: string; time: string; href?: string }[] = student ? notificationsOf(session) : notifications;
@@ -229,7 +272,7 @@ function Topbar({ session, onMenu }: { session: Session; onMenu: () => void }) {
               setQuery("");
             }
           }}
-          placeholder={student ? "Search jobs and pages…" : "Search projects, documents, pages…"}
+          placeholder={student ? "Search jobs and pages…" : "Search pages and documents…"}
           autoComplete="off"
         />
         <Search className="pointer-events-none absolute top-1/2 right-3.5 size-4 -translate-y-1/2 text-[var(--dash-muted)]" aria-hidden="true" />
@@ -331,7 +374,7 @@ function Topbar({ session, onMenu }: { session: Session; onMenu: () => void }) {
         </div>
 
         <Link href="/portal/profile" className="hidden sm:block" aria-label="Your profile">
-          <Avatar name={session.profile.fullName || session.profile.email} size={40} />
+          <Avatar name={session.profile.fullName || session.profile.email} size={40} photo={session.photo} />
         </Link>
       </div>
     </div>

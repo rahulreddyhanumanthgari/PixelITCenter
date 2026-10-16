@@ -1,7 +1,8 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
-import { demoDirectory, starterTasks, type AccountType, type Task } from "@/content/portal-demo";
+import { demoDirectory, type AccountType } from "@/content/portal-demo";
+import { firstFreePicNumber, formatPic, studentByEmail } from "@/content/registered-students";
 import {
   defaultReminders,
   jobStatuses,
@@ -44,18 +45,17 @@ export type Profile = {
   department: string;
   employeeId: string;
   manager: string;
-  // Client
-  company: string;
-  industry: string;
-  companySize: string;
 };
 
 export type Session = {
   profile: Profile;
-  tasks: Task[];
   readNotifications: string[];
   method: "password" | "google";
   signedInAt: string;
+  /** Students: their unique PixelIT ID ("PIC-1005"), given when they register. */
+  pixelitId?: string;
+  /** Profile photo, a small square JPEG (data: URL). Everyone can set one. */
+  photo?: string;
   // Student corner. Optional: sessions saved before they existed lack them.
   /** Placed with a client: Timesheets shows. Set by admins in the live portal. */
   isPlaced?: boolean;
@@ -85,12 +85,9 @@ const blankProfile: Profile = {
   department: "",
   employeeId: "",
   manager: "",
-  company: "",
-  industry: "",
-  companySize: "",
 };
 
-// Filled in for the three demo accounts, so their dashboards look lived-in.
+// Filled in for the demo accounts, so their dashboards look lived-in.
 const demoDetails: Record<AccountType, Partial<Profile>> = {
   student: {
     phone: "+1 (919) 555-0142",
@@ -108,13 +105,6 @@ const demoDetails: Record<AccountType, Partial<Profile>> = {
     employeeId: "PIX-0482",
     manager: "Mansingh",
   },
-  client: {
-    phone: "+1 (704) 555-0119",
-    location: "Charlotte, NC",
-    company: "Northwind Health",
-    industry: "Healthcare",
-    companySize: "1,000–5,000",
-  },
 };
 
 /** Which profile fields count towards "profile complete". */
@@ -122,7 +112,6 @@ export function profileFields(p: Profile): (keyof Profile)[] {
   const common: (keyof Profile)[] = ["fullName", "email", "phone", "location", "headline", "bio", "linkedin", "skills", "accountType"];
   if (p.accountType === "student") return [...common, "targetRole", "availability"];
   if (p.accountType === "employee") return [...common, "department", "employeeId", "manager"];
-  if (p.accountType === "client") return [...common, "company", "industry", "companySize"];
   return common;
 }
 
@@ -173,6 +162,8 @@ function read(): Session | null {
   } catch {
     cachedSession = null;
   }
+  // Client accounts no longer exist: a session saved before that is signed out.
+  if ((cachedSession?.profile.accountType as string) === "client") cachedSession = null;
   return cachedSession;
 }
 
@@ -210,7 +201,15 @@ export function demoSignIn(email: string, method: Session["method"] = "password"
   const profile: Profile = known
     ? { ...blankProfile, ...demoDetails[known.accountType], email: known.email, fullName: known.fullName, accountType: known.accountType, headline: known.headline }
     : { ...blankProfile, email: email.trim(), fullName: nameFromEmail(email) };
-  write({ profile, tasks: starterTasks, readNotifications: [], method, signedInAt: new Date().toISOString(), isPlaced: known?.isPlaced });
+  write({
+    profile,
+    readNotifications: [],
+    method,
+    signedInAt: new Date().toISOString(),
+    isPlaced: known?.isPlaced,
+    // An email we don't know stands for someone who registered earlier: give them an ID.
+    pixelitId: known ? undefined : (studentByEmail(email)?.pixelitId ?? nextDemoPic()),
+  });
   return profile;
 }
 
@@ -218,11 +217,25 @@ export function demoSignIn(email: string, method: Session["method"] = "password"
 export function demoSignUp(fullName: string, email: string, method: Session["method"] = "password") {
   write({
     profile: { ...blankProfile, fullName: fullName.trim(), email: email.trim() },
-    tasks: starterTasks,
     readNotifications: [],
     method,
     signedInAt: new Date().toISOString(),
+    pixelitId: nextDemoPic(),
   });
+}
+
+// DEMO: the next free PIC number, counted in this browser. The live portal's
+// server gives out the number when the student registers, so it's unique for everyone.
+const PIC_KEY = "pixelit-demo-next-pic";
+function nextDemoPic() {
+  let n = firstFreePicNumber();
+  try {
+    n = Math.max(n, Number(window.localStorage.getItem(PIC_KEY)) || 0);
+    window.localStorage.setItem(PIC_KEY, String(n + 1));
+  } catch {
+    // Storage blocked: the number is still unique among the demo students.
+  }
+  return formatPic(n);
 }
 
 export function signOut() {
@@ -234,6 +247,11 @@ export function updateSession(change: (s: Session) => Session) {
   if (s) write(change(s));
 }
 
+/** Your profile photo; null removes it. */
+export function setPhoto(photo: string | null) {
+  updateSession((s) => ({ ...s, photo: photo ?? undefined }));
+}
+
 export function updateProfile(patch: Partial<Profile>) {
   updateSession((s) => ({ ...s, profile: { ...s.profile, ...patch } }));
 }
@@ -242,6 +260,12 @@ export function updateProfile(patch: Partial<Profile>) {
 // Each helper stands in for an API call (see content/student-demo.ts).
 
 export const isPlaced = (s: Session) => s.profile.accountType === "student" && Boolean(s.isPlaced);
+
+/** A student's unique PixelIT ID ("PIC-1002"), or null for everyone else. */
+export const pixelitIdOf = (s: Session): string | null =>
+  s.profile.accountType === "student" ? (studentByEmail(s.profile.email)?.pixelitId ?? s.pixelitId ?? null) : null;
+
+// An employee's role comes from the team list, which only admins change: see team.ts.
 
 /** Where PixelIT is with this student's resume, per job. */
 export const jobStatusesOf = (s: Session) => (isPlaced(s) ? placedJobStatuses : jobStatuses);
@@ -290,8 +314,4 @@ export const timesheetsOf = (s: Session) => s.timesheets ?? starterTimesheets;
 
 export function addTimesheet(t: Timesheet) {
   updateSession((s) => ({ ...s, timesheets: [t, ...timesheetsOf(s)] }));
-}
-
-export function setTasks(change: (tasks: Task[]) => Task[]) {
-  updateSession((s) => ({ ...s, tasks: change(s.tasks) }));
 }

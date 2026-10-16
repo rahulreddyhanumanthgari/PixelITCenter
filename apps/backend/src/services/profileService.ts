@@ -25,8 +25,8 @@ import {
 // Every function takes the acting user; a student only ever reaches the
 // profile whose userId is their own token's subject.
 
-export type Role = "student" | "recruiter" | "admin";
-export type Actor = { userId: string; role: Role; email?: string; ip?: string; userAgent?: string };
+export type { Actor, Role } from "../lib/roles.js";
+import type { Actor } from "../lib/roles.js";
 
 export type Deps = { db: Db; cipher: FieldCipher; store: FileStore; signer: FileSigner; scan: VirusScanner };
 

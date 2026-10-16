@@ -2,16 +2,23 @@
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
-import { initials } from "./session";
+import { Pencil } from "lucide-react";
+import { initials, setPhoto } from "./session";
 
 // Small pieces shared by the dashboard pages.
 
 const AVATAR_COLOURS = ["#041327", "#fc650d", "#0b7fa3", "#1d4ed8", "#c2410c", "#334155"];
 
-/** Initials in a circle; the same name always gets the same colour. */
-export function Avatar({ name, size = 36, className }: { name: string; size?: number; className?: string }) {
+/** The person's photo, or their initials in a circle (the same name always gets the same colour). */
+export function Avatar({ name, size = 36, className, photo }: { name: string; size?: number; className?: string; photo?: string | null }) {
   let hash = 0;
   for (const ch of name) hash = (hash * 31 + ch.charCodeAt(0)) >>> 0;
+  if (photo) {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element -- a data: URL from the browser; next/image can't optimise it
+      <img src={photo} alt="" aria-hidden="true" width={size} height={size} className={cn("dash-avatar object-cover", className)} style={{ width: size, height: size }} />
+    );
+  }
   return (
     <span
       aria-hidden="true"
@@ -75,7 +82,7 @@ export function Chip({ children, tone }: { children: string; tone?: Tone }) {
 }
 
 /** The profile-complete ring around the avatar. */
-export function ProfileRing({ name, percent, size = 76 }: { name: string; percent: number; size?: number }) {
+export function ProfileRing({ name, percent, size = 76, photo, editable = false }: { name: string; percent: number; size?: number; photo?: string | null; editable?: boolean }) {
   const r = 46;
   const c = 2 * Math.PI * r;
   return (
@@ -95,20 +102,95 @@ export function ProfileRing({ name, percent, size = 76 }: { name: string; percen
           style={{ transition: "stroke-dashoffset 0.6s cubic-bezier(0.22, 1, 0.36, 1)" }}
         />
       </svg>
-      <Avatar name={name || "?"} size={size - 16} />
+      {editable ? <PhotoEditor name={name || "?"} size={size - 16} photo={photo} /> : <Avatar name={name || "?"} size={size - 16} photo={photo} />}
     </span>
   );
 }
 
-/** Page heading + one line under it + optional buttons on the right. */
+/**
+ * Your own photo with a pencil on hover (and always on touch screens): pick a
+ * picture and it replaces your initials everywhere in the portal. JPG, PNG or
+ * WebP up to 10 MB; it's cropped to a square and shrunk to 256 px first.
+ * DEMO: kept in this browser with the session. With the backend it's uploaded
+ * to private storage like other documents.
+ */
+export function PhotoEditor({ name, size, photo }: { name: string; size: number; photo?: string | null }) {
+  const input = useRef<HTMLInputElement>(null);
+  const [toast, showToast] = useToast();
+  async function pick(file: File | undefined) {
+    if (!file) return;
+    if (!/^image\/(jpeg|png|webp)$/.test(file.type)) return showToast("Use a JPG, PNG or WebP picture.");
+    if (file.size > 10 * 1024 * 1024) return showToast("Pictures can be up to 10 MB.");
+    try {
+      setPhoto(await squarePhoto(file));
+      showToast("Photo updated.");
+    } catch {
+      showToast("That picture couldn't be read. Try another one.");
+    }
+  }
+  return (
+    <span className="group relative grid place-items-center" style={{ width: size, height: size }}>
+      <Avatar name={name} size={size} photo={photo} />
+      <button
+        type="button"
+        onClick={() => input.current?.click()}
+        aria-label={photo ? "Change your photo" : "Add your photo"}
+        className="absolute inset-0 grid place-items-center rounded-full bg-[rgb(4_19_39/0.55)] text-white opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100 [@media(hover:none)]:opacity-100 [@media(hover:none)]:bg-transparent"
+      >
+        <span className="grid size-9 place-items-center rounded-full bg-white/15 [@media(hover:none)]:absolute [@media(hover:none)]:right-0 [@media(hover:none)]:bottom-0 [@media(hover:none)]:size-8 [@media(hover:none)]:bg-[var(--dash-orange)] [@media(hover:none)]:ring-2 [@media(hover:none)]:ring-white">
+          <Pencil className="size-4" aria-hidden="true" />
+        </span>
+      </button>
+      {photo && (
+        <button
+          type="button"
+          onClick={() => {
+            setPhoto(null);
+            showToast("Photo removed.");
+          }}
+          className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-xs font-semibold whitespace-nowrap text-[var(--dash-muted)] opacity-0 transition-opacity group-hover:opacity-100 hover:text-[var(--dash-red-ink)] focus-visible:opacity-100 [@media(hover:none)]:opacity-100"
+        >
+          Remove
+        </button>
+      )}
+      <input ref={input} type="file" accept="image/jpeg,image/png,image/webp" className="sr-only" tabIndex={-1} aria-hidden="true" onChange={(e) => (pick(e.target.files?.[0]), (e.target.value = ""))} />
+      {toast}
+    </span>
+  );
+}
+
+/** Centre-crops a picture to a square and shrinks it to 256 px (JPEG, about 20–40 KB). */
+function squarePhoto(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      const side = Math.min(img.naturalWidth, img.naturalHeight);
+      const canvas = document.createElement("canvas");
+      canvas.width = canvas.height = 256;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return reject(new Error("no canvas"));
+      ctx.drawImage(img, (img.naturalWidth - side) / 2, (img.naturalHeight - side) / 2, side, side, 0, 0, 256, 256);
+      URL.revokeObjectURL(url);
+      resolve(canvas.toDataURL("image/jpeg", 0.85));
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      reject(new Error("bad image"));
+    };
+    img.src = url;
+  });
+}
+
+/** Page heading, centred: the title, one line under it, then any buttons. */
 export function PageHeader({ title, body, children }: { title: ReactNode; body?: ReactNode; children?: ReactNode }) {
   return (
-    <div className="flex flex-wrap items-end justify-between gap-4">
-      <div className="min-w-0">
+    <div className="flex flex-col items-center gap-4 text-center">
+      <div className="min-w-0 max-w-3xl">
         <h1 className="dash-title">{title}</h1>
         {body && <p className="mt-2 text-sm text-[var(--dash-muted)] sm:text-[0.9375rem]">{body}</p>}
       </div>
-      {children && <div className="flex flex-wrap gap-2">{children}</div>}
+      {children && <div className="flex flex-wrap justify-center gap-2">{children}</div>}
     </div>
   );
 }

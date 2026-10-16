@@ -732,6 +732,131 @@ will be, before the real one is built per account type.
 - To make it real: replace `session.ts` with Cognito + a profile lookup,
   and split `nav.ts` / the pages per account type.
 
+### Client section, admin only (2026-10-14, branch feature/client-dashboard)
+
+From the senior stakeholder's feedback: **clients never sign in.** They use their
+own VMS portals or email, so the "Client" account type, client sign-up, the
+client dashboard and the client-facing Projects, Tasks, Schedule and Billing
+pages are gone. The client section is an internal tool for PixelIT staff.
+(Earlier notes above that mention a client account or those pages are history.)
+
+- **Two demo logins only** (Manas, 2026-10-15: don't separate the logins):
+  `student@` / `placed@` (students) and `employee@` (Rahul), whose staff role
+  is **admin**, so the employee login sees the whole client section. The
+  other staff roles (accounts, verifier, recruiter) stay in the API and the
+  menu rules (`staffRoles`, `clientSectionPages`) for real accounts later.
+- **Pages** under `/portal/admin/` (`components/portal/dashboard/admin/`),
+  in the menu group "Client section", filtered by role in `nav.ts`
+  (`clientSectionPages`): Clients (admin, accounts), Placements (all staff;
+  rates only for admin and accounts), Timesheets (admin, verifier, accounts),
+  Billing & invoices (admin, accounts). The shell shows "This page is for
+  PixelIT staff with access" to anyone else. **The API enforces the same
+  rules on every request**; the UI only follows them.
+- **Dashboard** for staff: a work queue from `GET /api/admin/overview`
+  (`admin/StaffQueue.tsx`); other employees keep recent activity.
+- Forms and details open in a side panel (`Panel`, a native `<dialog>`;
+  full screen on phones). Tables scroll inside their card, never the page.
+- These pages talk to the real API (`apps/backend`, see its README) with a
+  dev token for the demo email + staff role, kept in sessionStorage so page
+  reloads don't hit the dev endpoint's rate limit. No demo data in the
+  browser: run `npm run db:seed` in `apps/backend`.
+- Messages stays for staff (they talk to students there); only the client
+  conversation was removed. Schedule is now student-only (the Calendar).
+- Old sessions saved with the client type are signed out on load.
+
+- **PixelIT IDs (2026-10-15, front end only):** every registered student
+  gets a unique ID, `PIC-1001`, `PIC-1002`… (never reused), so students with
+  the same name are never mixed up. Demo list: `content/registered-students.ts`
+  (two Manas, two Rahul on purpose). Students see it on Profile and in the
+  sidebar; staff see it on placement cards, can search by it, and pick the
+  student by name or ID as the first step of Add placement. An open
+  placement shows the student's whole profile (contact, work and visa,
+  education, interviews, masked identity, references) and their Documents.
+  With the backend: the server issues the next PIC at registration and the
+  profile comes from the student's saved Profile / Placement Details.
+
+- **Talent (2026-10-15, front end only):** sidebar group "Recruiting" →
+  Talent (admin, recruiter). Every registered student, placed or not, as big
+  cards; status Placed / Unplaced / On bench (bench = their placement ended or
+  they're marked so); "Match a job description" ranks students by how many of
+  the JD's keywords (comma-separated) appear in their title, headline and
+  skills; more filters: title, skills (must have all), visa, role type they're
+  open to, work mode, availability, experience, open to relocating; search by
+  name, email or PIC. A card opens to the full profile, current placement and
+  Documents. Data: `content/registered-students.ts` (10 demo students).
+- **Admin panel and access (2026-10-15, front end only):** admin is a
+  permission, not a name tag: the sidebar says "Employee · PixelIT staff"
+  for every employee. Admins get an extra menu group "Admin" → Admin panel
+  (Team & access, Portal settings, Activity log). The team list starts from
+  `launchTeam` (content/portal-demo.ts): Rahul (employee@) and Mansingh are
+  the admins written in at launch. An employee who signs up joins with no
+  access; only an admin gives a job role (Recruiter, Verifier, Accounts) or
+  makes someone an admin (always asks first; the last admin can't be
+  removed). Roles are read from the team store (`dashboard/team.ts`), not the
+  session. Portal settings (company details, default payment terms, reminder
+  days) are kept in the browser (`admin/portalSettings.ts`); the default
+  terms pre-fill Add client. The Activity log is the server's real audit log.
+  With the backend: team and settings become server tables only admins
+  change, and the API takes the role from there, not from the browser.
+- **Billing is admins only, as cards (2026-10-16):** the Billing menu item,
+  the page guard and the API (invoices, payments, billing report, reminders)
+  are admin-only; the Accounts role keeps the timesheet accounts check and
+  client records but no amounts. The page shows one card per student at a
+  company (billed / paid / unpaid, due or overdue, "not invoiced" count);
+  opening a card shows totals and each month's timesheet, invoice and
+  payment, and a month opens the invoice window (send, record payments).
+  "Email payment reminder" (card and detail) previews then sends a fixed
+  message listing the placement's unpaid invoices to the company's billing
+  email; only the invoices and amounts change (`POST
+  /api/admin/payments/reminders`, logged as PAYMENT_REMINDER + audit).
+- **Billing card money bar (2026-10-16):** Manas preferred the previous
+  billing page (tiles, stage filter, one list of cards, dot steps) over the
+  "at a glance" redesign, which was reverted. What stayed: each card has its
+  own "Money at a glance" bar under Billed / Paid / Unpaid, splitting what
+  that student billed into collected (blue), waiting (orange) and overdue
+  (red), each with its % and amount.
+- **Profile photos (2026-10-15, front end only):** everyone (students,
+  employees, admins) can add a photo: hover the avatar on Profile or the
+  Dashboard card for a pencil (on touch screens an orange pencil badge always
+  shows), pick a JPG/PNG/WebP up to 10 MB; it's centre-cropped and shrunk to
+  a 256 px JPEG and replaces the initials in the sidebar, top bar, Profile and
+  Dashboard. "Remove" goes back to initials. Demo: kept in the session in
+  this browser; with the backend it's uploaded to private storage.
+- **Website client logos as clients (2026-10-15, demo data):** the 18
+  companies on the homepage logo strip (`content/site.ts` clientProof) are
+  demo client records, added by `npm run db:seed` (only the missing ones, by
+  name; made-up `.example` billing emails). Client cards show the company's
+  logo from `public/clients/` when the name matches, else its initials.
+- **Admin panel, round 2 (2026-10-15):** the sidebar card shows an
+  "Admin" badge for admins and "Employee" for everyone else; the Admin menu
+  group sits last, after Settings. Admin panel tabs: Analytics (first),
+  Team & access, Portal settings, Activity log.
+  - **Analytics:** stat tiles with change vs last month (new registrations,
+    students placed, new clients, active placements, billed, overdue), four
+    6-month column charts (registrations vs placements, billed vs received,
+    new clients, expected margin), plus where students are and the work
+    queues. Plain SVG (`admin/charts.tsx`), no chart library; colours are
+    slots 1–2 of the dataviz reference palette (validated on white); every
+    chart has a hover/focus tooltip and a "Show table" view. Clients,
+    placements, billing and queues are live; registrations come from the demo
+    student list.
+  - **Activity log:** area cards (Everything, Clients, Placements,
+    Timesheets, Invoices, Payments, Reports) with counts, each opening a
+    panel with person, action, date range, newest/oldest, changes-only and
+    25/50/100 per page. Filtering, sorting and paging run on the server
+    (`GET /api/admin/audit-log` + `/audit-log/summary`), so it scales.
+- **Deleting a student (2026-10-15, front end only):** admins only. "Delete
+  student" on an open student in Talent and in Placements; the confirm window
+  needs DELETE typed in capitals before "Delete for good" works. Demo: the
+  student (and their placement cards) are hidden in this browser
+  (`admin/deletedStudents.ts`), with a "Restore" link on Talent. With the
+  backend: a real admin-only, logged delete or archive; what happens to their
+  placements, timesheets and invoices is decided then.
+- **Role type on placements (2026-10-15, backend):** Full-time, Part-time,
+  Contract, Contract-to-hire (`Placement.employmentType`, default Contract,
+  migration `20261015000000_placement_employment_type`). Asked in Add
+  placement, shown on cards, the open card and to the student.
+
 ### Student corner (reworked 2026-10-13)
 
 PixelIT is a staffing firm: students don't apply to jobs. PixelIT's
