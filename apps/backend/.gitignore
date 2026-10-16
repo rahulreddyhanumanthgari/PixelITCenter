@@ -1,0 +1,11 @@
+node_modules/
+dist/
+.env
+src/generated/
+# Uploaded student documents. Never commit, never serve statically.
+storage/
+coverage/
+# Embedded local database (npm run db:local)
+.local-db/
+# The template is committed; real .env files never are.
+!.env.example

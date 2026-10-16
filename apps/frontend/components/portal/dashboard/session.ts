@@ -2,7 +2,25 @@
 
 import { useSyncExternalStore } from "react";
 import { demoDirectory, starterTasks, type AccountType, type Task } from "@/content/portal-demo";
-import { resumes, starterApplications, type AppStage, type PracticeProject } from "@/content/student-demo";
+import {
+  defaultReminders,
+  jobStatuses,
+  placedFromPixelitDocs,
+  placedJobStatuses,
+  placedNotifications,
+  fromPixelitDocs,
+  resumeStatus,
+  resumeVersions,
+  starterAvailability,
+  starterStudentDocs,
+  starterTimesheets,
+  studentNotifications,
+  type AvailabilitySlot,
+  type ResumeStatus,
+  type ResumeVersion,
+  type StudentDoc,
+  type Timesheet,
+} from "@/content/student-demo";
 
 // DEMO sign-in. The "session" is a JSON blob in this browser's localStorage:
 // nothing is sent to a server and any password works. The real portal
@@ -38,11 +56,16 @@ export type Session = {
   readNotifications: string[];
   method: "password" | "google";
   signedInAt: string;
-  // Student corner. Optional: sessions saved before it existed lack them.
-  applications?: Record<string, AppStage>; // job id → stage
-  onboardingDone?: string[];
-  defaultResume?: string;
-  addedProjects?: PracticeProject[]; // added from GitHub
+  // Student corner. Optional: sessions saved before they existed lack them.
+  /** Placed with a client: Timesheets shows. Set by admins in the live portal. */
+  isPlaced?: boolean;
+  availability?: AvailabilitySlot[];
+  reminders?: typeof defaultReminders;
+  resume?: { versions: ResumeVersion[]; status: ResumeStatus };
+  documents?: StudentDoc[];
+  /** "I have neither a DL nor a State ID": a utility bill is asked for instead. */
+  noIdDocument?: boolean;
+  timesheets?: Timesheet[];
 };
 
 const KEY = "pixelit-portal-demo";
@@ -187,7 +210,7 @@ export function demoSignIn(email: string, method: Session["method"] = "password"
   const profile: Profile = known
     ? { ...blankProfile, ...demoDetails[known.accountType], email: known.email, fullName: known.fullName, accountType: known.accountType, headline: known.headline }
     : { ...blankProfile, email: email.trim(), fullName: nameFromEmail(email) };
-  write({ profile, tasks: starterTasks, readNotifications: [], method, signedInAt: new Date().toISOString() });
+  write({ profile, tasks: starterTasks, readNotifications: [], method, signedInAt: new Date().toISOString(), isPlaced: known?.isPlaced });
   return profile;
 }
 
@@ -216,42 +239,57 @@ export function updateProfile(patch: Partial<Profile>) {
 }
 
 // --- student corner ----------------------------------------------------------
+// Each helper stands in for an API call (see content/student-demo.ts).
 
-export const applicationsOf = (s: Session) => s.applications ?? starterApplications;
-export const onboardingOf = (s: Session) => s.onboardingDone ?? [];
-export const defaultResumeOf = (s: Session) => s.defaultResume ?? resumes[0].id;
+export const isPlaced = (s: Session) => s.profile.accountType === "student" && Boolean(s.isPlaced);
 
-export function applyToJob(jobId: string, resumeId: string) {
-  updateSession((s) => ({ ...s, applications: { ...applicationsOf(s), [jobId]: "Applied" }, defaultResume: resumeId }));
+/** Where PixelIT is with this student's resume, per job. */
+export const jobStatusesOf = (s: Session) => (isPlaced(s) ? placedJobStatuses : jobStatuses);
+
+export const notificationsOf = (s: Session) => (isPlaced(s) ? [...placedNotifications, ...studentNotifications] : studentNotifications);
+
+export const fromPixelitOf = (s: Session) => (isPlaced(s) ? placedFromPixelitDocs : fromPixelitDocs);
+
+export const availabilityOf = (s: Session) => s.availability ?? starterAvailability;
+
+export function addAvailability(slot: AvailabilitySlot) {
+  updateSession((s) => ({ ...s, availability: [...availabilityOf(s), slot] }));
 }
 
-export function withdrawApplication(jobId: string) {
+export function removeAvailability(id: string) {
+  updateSession((s) => ({ ...s, availability: availabilityOf(s).filter((a) => a.id !== id) }));
+}
+
+export const remindersOf = (s: Session) => s.reminders ?? defaultReminders;
+
+export function setReminders(patch: Partial<typeof defaultReminders>) {
+  updateSession((s) => ({ ...s, reminders: { ...remindersOf(s), ...patch } }));
+}
+
+export const resumeOf = (s: Session) => s.resume ?? { versions: resumeVersions, status: resumeStatus };
+
+/** A new version goes on top and waits for the recruiter again. */
+export function addResumeVersion(v: Omit<ResumeVersion, "version">) {
   updateSession((s) => {
-    const rest = { ...applicationsOf(s) };
-    delete rest[jobId];
-    return { ...s, applications: rest };
+    const r = resumeOf(s);
+    return { ...s, resume: { versions: [{ ...v, version: (r.versions[0]?.version ?? 0) + 1 }, ...r.versions], status: "Pending Review" } };
   });
 }
 
-export function toggleOnboarding(id: string) {
-  updateSession((s) => {
-    const done = onboardingOf(s);
-    return { ...s, onboardingDone: done.includes(id) ? done.filter((x) => x !== id) : [...done, id] };
-  });
+export const studentDocsOf = (s: Session) => s.documents ?? starterStudentDocs;
+
+export function setStudentDocs(change: (docs: StudentDoc[]) => StudentDoc[]) {
+  updateSession((s) => ({ ...s, documents: change(studentDocsOf(s)) }));
 }
 
-export const addedProjectsOf = (s: Session) => s.addedProjects ?? [];
-
-export function addProject(project: PracticeProject) {
-  updateSession((s) => ({ ...s, addedProjects: [project, ...addedProjectsOf(s)] }));
+export function setNoIdDocument(on: boolean) {
+  updateSession((s) => ({ ...s, noIdDocument: on }));
 }
 
-export function removeProject(id: string) {
-  updateSession((s) => ({ ...s, addedProjects: addedProjectsOf(s).filter((p) => p.id !== id) }));
-}
+export const timesheetsOf = (s: Session) => s.timesheets ?? starterTimesheets;
 
-export function setDefaultResume(id: string) {
-  updateSession((s) => ({ ...s, defaultResume: id }));
+export function addTimesheet(t: Timesheet) {
+  updateSession((s) => ({ ...s, timesheets: [t, ...timesheetsOf(s)] }));
 }
 
 export function setTasks(change: (tasks: Task[]) => Task[]) {

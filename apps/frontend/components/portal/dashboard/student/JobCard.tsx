@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { Building2, Check, MapPin } from "lucide-react";
-import type { AppStage, Job } from "@/content/student-demo";
+import { Building2, MapPin } from "lucide-react";
+import { submissionStatuses, type Job, type SubmissionStatus } from "@/content/student-demo";
 import { Chip } from "../ui";
 
 /** Job type and work style chips: "Permanent" "Hybrid". */
@@ -15,18 +15,37 @@ export function JobChips({ job }: { job: Job }) {
   );
 }
 
+const TONE: Record<SubmissionStatus, "good" | "warn" | "bad" | "ink" | undefined> = {
+  "Not Submitted": undefined,
+  "Resume Submitted": "ink",
+  "Under Review": "warn",
+  "Interview Scheduled": "warn",
+  Placed: "good",
+  Rejected: "bad",
+};
+
+export const statusHelp = (s: SubmissionStatus) => submissionStatuses.find((x) => x.status === s)?.help ?? "";
+
+/** Where PixelIT is with the student's resume for a job. Hover or long-press for what it means. */
+export function SubmissionBadge({ status }: { status: SubmissionStatus }) {
+  return (
+    <span className="dash-chip cursor-help" data-tone={TONE[status]} title={statusHelp(status)}>
+      {status}
+    </span>
+  );
+}
+
 /**
- * One job in the list. Line 1: the role and its type (Permanent / Contract /
- * Part-time, Remote / Hybrid / On-site). Line 2: company and place. Then
- * skills, a short brief and Apply at the bottom right. Clicking anywhere
- * else on the card opens the full JD (/portal/jobs/[id]).
+ * One job in the list: the role and its type, company and place, skills, a
+ * short brief, and whether PixelIT has submitted the student's resume.
+ * Students don't apply; the whole card opens the full JD (/portal/jobs/[id]).
  */
-export function JobCard({ job, stage, onApply }: { job: Job; stage?: AppStage; onApply: () => void }) {
+export function JobCard({ job, status }: { job: Job; status: SubmissionStatus }) {
   return (
     <li className="dash-card dash-card-pad relative flex flex-col transition hover:-translate-y-px hover:border-[var(--dash-line-strong)] hover:shadow-[0_14px_30px_-22px_rgb(4_19_39/0.45)] has-[.job-link:focus-visible]:outline-2 has-[.job-link:focus-visible]:outline-[var(--dash-orange)]">
       <div className="flex flex-wrap items-start justify-between gap-x-3 gap-y-2">
         <h2 className="min-w-0 text-base font-semibold">
-          {/* The link covers the whole card (after:inset-0); Apply sits above it. */}
+          {/* The link covers the whole card (after:inset-0). */}
           <Link href={`/portal/jobs/${job.id}`} className="job-link after:absolute after:inset-0 after:rounded-[1.25rem] focus-visible:outline-none">
             {job.title}
           </Link>
@@ -57,18 +76,9 @@ export function JobCard({ job, stage, onApply }: { job: Job; stage?: AppStage; o
         <span className="text-xs whitespace-nowrap text-[var(--dash-faint)]">
           {job.posted} · <span className="font-semibold text-[var(--dash-orange-ink)]">View details</span>
         </span>
-        {stage ? (
-          <span className="ml-auto flex items-center gap-2">
-            <span className="flex items-center gap-1 text-sm font-semibold text-[var(--dash-cyan-ink)]">
-              <Check className="size-4" aria-hidden="true" /> Applied
-            </span>
-            {stage !== "Applied" && <Chip>{stage}</Chip>}
-          </span>
-        ) : (
-          <button type="button" className="dash-btn relative z-10 ml-auto" data-tone="orange" onClick={onApply}>
-            Apply
-          </button>
-        )}
+        <span className="relative z-10 ml-auto">
+          <SubmissionBadge status={status} />
+        </span>
       </div>
     </li>
   );

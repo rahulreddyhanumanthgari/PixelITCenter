@@ -21,8 +21,11 @@ export const demoDirectory: {
   fullName: string;
   accountType: AccountType;
   headline: string;
+  /** Students only: placed with a client, so Timesheets shows. */
+  isPlaced?: boolean;
 }[] = [
   { email: "student@pixelitcenter.com", fullName: "Manas", accountType: "student", headline: "Cloud engineer, open to work" },
+  { email: "placed@pixelitcenter.com", fullName: "Manas", accountType: "student", headline: "Cloud Engineer at Brightline Finance", isPlaced: true },
   { email: "employee@pixelitcenter.com", fullName: "Rahul", accountType: "employee", headline: "Senior DevOps consultant" },
   { email: "client@pixelitcenter.com", fullName: "Joya", accountType: "client", headline: "IT Director, Northwind Health" },
 ];

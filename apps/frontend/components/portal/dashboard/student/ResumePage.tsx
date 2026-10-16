@@ -1,229 +1,206 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { CalendarDays, Check, Download, FileText, MessageSquareText, Star, Target, Upload } from "lucide-react";
-import { resumeChecklist, resumeFeedback, resumes as starter } from "@/content/student-demo";
-import { defaultResumeOf, setDefaultResume, useSession } from "../session";
+import { Check, Download, FileText, History, Info, MessageSquareText, Upload } from "lucide-react";
+import { resumeChecklist, resumeFeedback, type ResumeStatus } from "@/content/student-demo";
+import { addResumeVersion, resumeOf, useSession } from "../session";
 import { Avatar, PageHeader, useToast } from "../ui";
 
-type Resume = (typeof starter)[number];
-
 // What each status means, in words a student understands at a glance.
-const STATUS: Record<Resume["status"], { label: string; note: string; tone: "good" | "warn" | undefined }> = {
-  Reviewed: { label: "Reviewed", note: "Ready to send to employers", tone: "good" },
-  "Needs changes": { label: "Needs changes", note: "See the feedback below", tone: "warn" },
-  Draft: { label: "Draft", note: "Not reviewed yet", tone: undefined },
+const STATUS: Record<ResumeStatus, { note: string; tone: "good" | "warn" | undefined }> = {
+  "Pending Review": { note: "Your recruiter will review it soon. You'll get a notification.", tone: undefined },
+  "Needs Changes": { note: "Read the feedback below, then upload a new version.", tone: "warn" },
+  Approved: { note: "Ready. Your recruiter sends this version to clients.", tone: "good" },
 };
 
-/** "Manas, Cloud Engineer v3.pdf" → "Cloud Engineer v3" */
-const shortName = (name: string) => name.replace(/^Manas,\s*/, "").replace(/\.\w+$/, "");
+const MAX_MB = 5;
+const ACCEPT = ".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+const MIME_OK = ["application/pdf", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", ""];
 
-function StatusLine({ status }: { status: Resume["status"] }) {
-  const s = STATUS[status];
-  return (
-    <span className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
-      <span className="dash-chip" data-tone={s.tone}>
-        {s.label}
-      </span>
-      <span className="text-[var(--dash-muted)]">{s.note}</span>
-    </span>
-  );
+function sizeLabel(bytes: number) {
+  return bytes < 1024 * 1024 ? `${Math.max(1, Math.round(bytes / 1024))} KB` : `${(bytes / 1024 / 1024).toFixed(1)} MB`;
+}
+
+/** PDF or Word (.docx) only, up to 5 MB. The server checks the contents again. */
+function checkResume(file: File) {
+  if (!/\.(pdf|docx)$/i.test(file.name) || !MIME_OK.includes(file.type)) return "Upload a PDF or a Word file (.docx).";
+  if (file.size > MAX_MB * 1024 * 1024) return `This file is over ${MAX_MB} MB. Save it as a smaller PDF and try again.`;
+  if (file.size === 0) return "This file is empty.";
+  return null;
 }
 
 /**
- * Resume corner: one card per resume (what it's for, when it was updated,
- * its status in words, how many recruiter notes it has, default or not),
- * the recruiter feedback with the resume each note is about, and a
- * checklist. Uploads stay in the page (demo).
+ * Resume corner: one resume and its versions. The student uploads new
+ * versions; the recruiter reviews the latest and leaves feedback, which the
+ * student can only read. A new upload resets the status to Pending Review.
+ *
+ * TODO(backend): uploads stay in this browser (demo). The API stores the
+ * file (POST /api/student/resume/versions) and recruiters set the status and
+ * write feedback from the admin side.
  */
 export function ResumePage() {
   const session = useSession();
-  const [list, setList] = useState<Resume[]>(starter);
   const [checks, setChecks] = useState(resumeChecklist);
-  const [filter, setFilter] = useState<string>("all");
+  const [problem, setProblem] = useState<string | null>(null);
   const file = useRef<HTMLInputElement>(null);
-  const feedbackRef = useRef<HTMLElement>(null);
   const [toast, showToast] = useToast();
   if (!session) return null;
 
-  const main = defaultResumeOf(session);
+  const { versions, status } = resumeOf(session);
+  const current = versions[0];
   const ready = checks.filter((c) => c.done).length;
-  const notesFor = (id: string) => resumeFeedback.filter((f) => f.resumeId === id);
-  const shownNotes = filter === "all" ? resumeFeedback : notesFor(filter);
-  const nameOf = (id: string) => list.find((r) => r.id === id)?.name ?? "";
-
-  const showNotes = (id: string) => {
-    setFilter(id);
-    feedbackRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-  };
+  const versionNo = (id: string) => versions.find((v) => v.id === id)?.version;
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Resume corner" body="Keep a resume for each kind of role. Your recruiter reviews each one before it goes to an employer.">
+      <PageHeader title="Resume corner" body="Keep your latest resume here. Your recruiter reviews each new version before sending it to clients.">
         <button type="button" className="dash-btn" onClick={() => file.current?.click()}>
-          <Upload className="size-4" aria-hidden="true" /> Upload new version
+          <Upload className="size-4" aria-hidden="true" /> {current ? "Upload new version" : "Upload resume"}
         </button>
         <input
           ref={file}
           type="file"
-          accept=".pdf,.doc,.docx"
+          accept={ACCEPT}
           className="sr-only"
           tabIndex={-1}
           aria-hidden="true"
           onChange={(e) => {
             const f = e.target.files?.[0];
-            if (!f) return;
-            setList((l) => [{ id: `cv${Date.now()}`, name: f.name, target: "Not set yet", updated: "Just now", status: "Draft" }, ...l]);
-            showToast(`Uploaded “${f.name}”. Your recruiter will review it. (Demo)`);
             e.target.value = "";
+            if (!f) return;
+            const bad = checkResume(f);
+            setProblem(bad);
+            if (bad) return;
+            addResumeVersion({ id: `v${Date.now()}`, fileName: f.name, size: sizeLabel(f.size), uploaded: "Just now" });
+            showToast("New version uploaded. Status is back to Pending Review.");
           }}
         />
       </PageHeader>
 
+      {problem && (
+        <p className="portal-error" role="alert">
+          {problem}
+        </p>
+      )}
+
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_22rem]">
         <div className="min-w-0 space-y-8">
-          {/* Resumes */}
-          <section aria-labelledby="versions-heading">
-            <h2 id="versions-heading" className="dash-section-title">
-              Your resumes <span className="dash-count">{list.length}</span>
-            </h2>
-            <ul className="mt-3 space-y-3">
-              {list.map((r) => {
-                const isMain = r.id === main;
-                const notes = notesFor(r.id).length;
-                return (
-                  <li
-                    key={r.id}
-                    className={`dash-card overflow-hidden ${isMain ? "border-[var(--dash-orange)] shadow-[0_0_0_3px_rgb(252_101_13/0.1)]" : ""}`}
-                  >
-                    {isMain && (
-                      <p className="flex items-center gap-1.5 bg-[var(--dash-orange-tint)] px-4 py-1.5 text-xs font-semibold text-[var(--dash-orange-ink)] sm:px-5">
-                        <Star className="size-3.5 fill-current" aria-hidden="true" /> Default: this is the resume sent when you apply
-                      </p>
-                    )}
-                    <div className="flex gap-4 p-4 sm:p-5">
-                      <span className="grid size-12 flex-none place-items-center rounded-2xl bg-[var(--dash-cyan-tint)] text-[var(--dash-cyan-ink)]">
-                        <FileText className="size-6" aria-hidden="true" />
-                      </span>
-                      <div className="min-w-0 flex-1">
-                        <h3 className="text-base font-semibold break-words">{r.name}</h3>
-                        <p className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-sm text-[var(--dash-muted)]">
-                          <span className="flex items-center gap-1.5">
-                            <Target className="size-3.5" aria-hidden="true" /> For {r.target}
-                          </span>
-                          <span className="flex items-center gap-1.5">
-                            <CalendarDays className="size-3.5" aria-hidden="true" /> Updated {r.updated}
-                          </span>
-                        </p>
-                        <div className="mt-3">
-                          <StatusLine status={r.status} />
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex flex-wrap items-center justify-between gap-2 border-t border-[var(--dash-line)] px-4 py-3 sm:px-5">
-                      {notes ? (
-                        <button
-                          type="button"
-                          onClick={() => showNotes(r.id)}
-                          className="flex items-center gap-1.5 text-sm font-semibold text-[var(--dash-orange-ink)] hover:underline"
-                        >
-                          <MessageSquareText className="size-4" aria-hidden="true" /> {notes} feedback {notes === 1 ? "note" : "notes"}
-                        </button>
-                      ) : (
-                        <span className="flex items-center gap-1.5 text-sm text-[var(--dash-faint)]">
-                          <MessageSquareText className="size-4" aria-hidden="true" /> No feedback yet
-                        </span>
-                      )}
-                      <span className="flex items-center gap-2">
-                        {!isMain && (
-                          <button type="button" className="dash-btn-ghost h-9 px-3 text-xs" onClick={() => setDefaultResume(r.id)}>
-                            <Star className="size-3.5" aria-hidden="true" /> Make default
-                          </button>
-                        )}
-                        <button
-                          type="button"
-                          className="dash-btn-ghost h-9 px-3 text-xs"
-                          onClick={() => showToast("Demo: downloads open when the portal is live.")}
-                        >
-                          <Download className="size-3.5" aria-hidden="true" /> Download
-                        </button>
-                      </span>
-                    </div>
-                  </li>
-                );
-              })}
-            </ul>
-          </section>
+          {/* Current version and its status */}
+          {current ? (
+            <section aria-labelledby="current-heading" className="dash-card overflow-hidden">
+              <div className="flex gap-4 p-4 sm:p-5">
+                <span className="grid size-12 flex-none place-items-center rounded-2xl bg-[var(--dash-cyan-tint)] text-[var(--dash-cyan-ink)]">
+                  <FileText className="size-6" aria-hidden="true" />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs font-semibold tracking-[0.12em] text-[var(--dash-faint)] uppercase">Current · version {current.version}</p>
+                  <h2 id="current-heading" className="mt-0.5 text-base font-semibold break-words">
+                    {current.fileName}
+                  </h2>
+                  <p className="mt-0.5 text-sm text-[var(--dash-muted)]">
+                    Uploaded {current.uploaded} · {current.size}
+                  </p>
+                </div>
+              </div>
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 border-t border-[var(--dash-line)] px-4 py-3 text-sm sm:px-5">
+                <span className="dash-chip" data-tone={STATUS[status].tone}>
+                  {status}
+                </span>
+                <span className="text-[var(--dash-muted)]">{STATUS[status].note}</span>
+              </div>
+            </section>
+          ) : (
+            <div className="dash-card dash-card-pad py-10 text-center">
+              <p className="text-sm font-semibold">No resume yet</p>
+              <p className="mt-1 text-sm text-[var(--dash-muted)]">Upload a PDF or Word file. Your recruiter can&apos;t market your profile without it.</p>
+            </div>
+          )}
 
-          {/* Recruiter feedback, each note with the resume it's about */}
-          <section aria-labelledby="feedback-heading" ref={feedbackRef} className="scroll-mt-24">
+          {/* Recruiter feedback: read only */}
+          <section aria-labelledby="feedback-heading">
             <h2 id="feedback-heading" className="dash-section-title">
               Recruiter feedback <span className="dash-count">{resumeFeedback.length}</span>
             </h2>
-            <div className="dash-scroll-row -mx-4 mt-3 overflow-x-auto px-4 sm:mx-0 sm:px-0">
-              <div className="dash-tabs" role="group" aria-label="Show feedback for">
-                <button type="button" className="dash-tab" aria-pressed={filter === "all"} onClick={() => setFilter("all")}>
-                  All <span className="ml-1 text-[var(--dash-faint)]">{resumeFeedback.length}</span>
-                </button>
-                {list
-                  .filter((r) => notesFor(r.id).length)
-                  .map((r) => (
-                    <button key={r.id} type="button" className="dash-tab" aria-pressed={filter === r.id} onClick={() => setFilter(r.id)}>
-                      {shortName(r.name)} <span className="ml-1 text-[var(--dash-faint)]">{notesFor(r.id).length}</span>
-                    </button>
-                  ))}
-              </div>
-            </div>
-            <ul className="mt-3 space-y-3">
-              {shownNotes.map((f) => {
-                const about = list.find((r) => r.id === f.resumeId);
-                return (
+            <p className="mt-1 flex items-center gap-1.5 text-xs text-[var(--dash-muted)]">
+              <Info className="size-3.5" aria-hidden="true" /> Notes from your recruiter. To reply, use Messages.
+            </p>
+            {resumeFeedback.length ? (
+              <ul className="mt-3 space-y-3">
+                {resumeFeedback.map((f) => (
                   <li key={f.id} className="dash-card dash-card-pad">
                     <div className="flex items-start gap-3">
-                      <Avatar name={f.from} size={40} />
+                      <Avatar name={f.author} size={40} />
                       <div className="min-w-0 flex-1">
                         <p className="flex flex-wrap items-baseline justify-between gap-x-3">
                           <span className="text-sm font-semibold">
-                            {f.from} <span className="font-normal text-[var(--dash-muted)]">· {f.role}</span>
+                            {f.author} <span className="font-normal text-[var(--dash-muted)]">· {f.role}</span>
                           </span>
                           <span className="text-xs text-[var(--dash-faint)]">{f.date}</span>
                         </p>
-                        <button
-                          type="button"
-                          onClick={() => setFilter(f.resumeId)}
-                          className="mt-2 inline-flex max-w-full items-center gap-1.5 rounded-lg border border-[var(--dash-line-strong)] bg-[var(--dash-side)] px-2.5 py-1 text-xs hover:bg-white"
-                          aria-label={`About ${nameOf(f.resumeId)}. Show only its feedback`}
-                        >
-                          <FileText className="size-3.5 flex-none text-[var(--dash-cyan-ink)]" aria-hidden="true" />
-                          <span className="text-[var(--dash-muted)]">About</span>
-                          <span className="truncate font-semibold">{shortName(nameOf(f.resumeId))}</span>
-                          {about && (
-                            <span className="dash-chip h-5 px-1.5 text-[0.625rem]" data-tone={STATUS[about.status].tone}>
-                              {about.status}
-                            </span>
-                          )}
-                        </button>
-                        <p className="mt-2.5 text-sm leading-relaxed text-[#3b4458]">{f.text}</p>
+                        {versionNo(f.versionId) && (
+                          <p className="mt-1 text-xs text-[var(--dash-muted)]">
+                            About version {versionNo(f.versionId)}
+                            {f.versionId !== current?.id && " (an older version)"}
+                          </p>
+                        )}
+                        <p className="mt-2 text-sm leading-relaxed text-[#3b4458]">{f.text}</p>
                       </div>
                     </div>
                   </li>
-                );
-              })}
-            </ul>
+                ))}
+              </ul>
+            ) : (
+              <p className="dash-card dash-card-pad mt-3 text-sm text-[var(--dash-muted)]">
+                <MessageSquareText className="mr-1.5 inline size-4" aria-hidden="true" />
+                No feedback yet. You&apos;ll get a notification when your recruiter leaves a note.
+              </p>
+            )}
           </section>
+
+          {/* Version history */}
+          {versions.length > 0 && (
+            <section aria-labelledby="history-heading">
+              <h2 id="history-heading" className="flex items-center gap-2 dash-section-title">
+                <History className="size-4" aria-hidden="true" /> Version history <span className="dash-count">{versions.length}</span>
+              </h2>
+              <ul className="dash-card mt-3 divide-y divide-[var(--dash-line)] px-4 sm:px-5">
+                {versions.map((v, i) => (
+                  <li key={v.id} className="flex flex-wrap items-center gap-x-3 gap-y-1 py-3">
+                    <span className="w-8 flex-none text-sm font-semibold text-[var(--dash-muted)]">v{v.version}</span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-sm font-medium">{v.fileName}</span>
+                      <span className="block text-xs text-[var(--dash-muted)]">
+                        {v.uploaded} · {v.size}
+                      </span>
+                    </span>
+                    {i === 0 && <span className="dash-chip" data-tone="ink">Current</span>}
+                    <button
+                      type="button"
+                      className="dash-icon-btn size-8"
+                      aria-label={`Download version ${v.version}`}
+                      title="Download"
+                      onClick={() => showToast("Demo: downloads open when the portal is live.")}
+                    >
+                      <Download className="size-3.5" />
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
         </div>
 
         {/* Checklist */}
         <section aria-labelledby="check-heading" className="dash-card dash-card-pad self-start xl:sticky xl:top-24">
           <div className="flex items-center justify-between">
             <h2 id="check-heading" className="dash-section-title">
-              Resume checklist
+              Before you upload
             </h2>
             <span className="text-xs font-semibold">
               {ready}/{checks.length} done
             </span>
           </div>
-          <p className="mt-1 text-xs text-[var(--dash-muted)]">Tick each one off before you upload.</p>
+          <p className="mt-1 text-xs text-[var(--dash-muted)]">A quick self-check. Only you see this.</p>
           <div className="dash-bar mt-3" data-tone={ready === checks.length ? "good" : undefined}>
             <span style={{ width: `${(ready / checks.length) * 100}%` }} />
           </div>

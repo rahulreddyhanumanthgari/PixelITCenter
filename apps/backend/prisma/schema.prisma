@@ -1,0 +1,144 @@
+// Placement Details (skill matrix) for the student Profile page.
+// Columns ending in `Enc` hold AES-256-GCM ciphertext (see src/lib/crypto.ts),
+// never plain text.
+
+generator client {
+  provider            = "prisma-client"
+  output              = "../src/generated/prisma"
+  moduleFormat        = "esm"
+  importFileExtension = "js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum ProfileStatus {
+  DRAFT
+  SUBMITTED
+  UNDER_REVIEW
+  NEEDS_UPDATE
+  APPROVED
+}
+
+enum DocumentType {
+  RESUME
+  ID
+  VISA
+}
+
+model StudentProfile {
+  id     String        @id @default(uuid()) @db.Uuid
+  /// The student's user id: the `sub` of their auth token.
+  userId String        @unique
+  status ProfileStatus @default(DRAFT)
+
+  // Personal & professional
+  currentLocation         String?
+  relocation              Boolean?
+  relocationNote          String?
+  visaStatus              String?
+  contactNumber           String?
+  email                   String?
+  skypeId                 String?
+  linkedinUrl             String?
+  usExperienceYears       Float?
+  relevantExperienceYears Float?
+  passportNumberEnc       String?
+  ssnLast4Enc             String?
+  dateOfBirthEnc          String?
+  usEntryVisaType         String?
+  usEntryYear             Int?
+
+  // Education
+  bachelorsDegree     String?
+  bachelorsUniversity String?
+  bachelorsYear       Int?
+  mastersDegree       String?
+  mastersUniversity   String?
+  mastersYear         Int?
+
+  // Interview logistics
+  availability               String?
+  bestTimeForCalls           String?
+  preferredInterviewLocation String?
+
+  submittedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  references    Reference[]
+  documents     ProfileDocument[]
+  statusHistory ProfileStatusHistory[]
+  accessLogs    PiiAccessLog[]
+}
+
+/// Two per profile, `position` 1 and 2.
+model Reference {
+  id        String  @id @default(uuid()) @db.Uuid
+  profileId String  @db.Uuid
+  position  Int
+  name      String?
+  role      String?
+  location  String?
+  email     String?
+  phone     String?
+
+  profile StudentProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@unique([profileId, position])
+}
+
+/// One current file per type; uploading again replaces it.
+model ProfileDocument {
+  id           String       @id @default(uuid()) @db.Uuid
+  profileId    String       @db.Uuid
+  type         DocumentType
+  /// Display only. The file on disk is named by `storageKey`.
+  originalName String
+  /// Random name in private storage, never derived from user input.
+  storageKey   String       @unique
+  mimeType     String
+  sizeBytes    Int
+  sha256       String
+  /// SKIPPED until a virus scanner is wired in (src/lib/virusScan.ts).
+  scanStatus   String       @default("SKIPPED")
+  uploadedAt   DateTime     @default(now())
+
+  profile StudentProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@unique([profileId, type])
+}
+
+model ProfileStatusHistory {
+  id          String         @id @default(uuid()) @db.Uuid
+  profileId   String         @db.Uuid
+  fromStatus  ProfileStatus?
+  toStatus    ProfileStatus
+  comment     String?
+  actorUserId String
+  actorRole   String
+  createdAt   DateTime       @default(now())
+
+  profile StudentProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@index([profileId, createdAt])
+}
+
+/// Every time a recruiter/admin sees decrypted PII or opens a student's documents.
+model PiiAccessLog {
+  id          String   @id @default(uuid()) @db.Uuid
+  profileId   String   @db.Uuid
+  actorUserId String
+  actorRole   String
+  /// What was revealed, e.g. ["passportNumber", "document:VISA"].
+  fields      String[]
+  ipAddress   String?
+  userAgent   String?
+  createdAt   DateTime @default(now())
+
+  profile StudentProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@index([profileId, createdAt])
+  @@index([actorUserId, createdAt])
+}

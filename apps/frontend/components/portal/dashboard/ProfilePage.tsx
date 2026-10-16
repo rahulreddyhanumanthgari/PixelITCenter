@@ -6,6 +6,7 @@ import { accountTypes } from "@/content/portal-demo";
 import { AccountTypePicker, Field, RoleFields, SkillsField, TextField } from "./ProfileFields";
 import { profileCompletion, updateProfile, useSession, type Profile } from "./session";
 import { Chip, PageHeader, ProfileRing, useToast } from "./ui";
+import { PlacementDetails } from "./student/placement/PlacementDetails";
 
 function Section({ title, body, children }: { title: string; body: string; children: ReactNode }) {
   return (
@@ -23,7 +24,12 @@ function Section({ title, body, children }: { title: string; body: string; child
 export function ProfilePage() {
   const session = useSession();
   if (!session) return null;
-  return <ProfileForm saved={session.profile} />;
+  return (
+    <div className="space-y-10">
+      <ProfileForm saved={session.profile} />
+      {session.profile.accountType === "student" && session.profile.email && <PlacementDetails email={session.profile.email} />}
+    </div>
+  );
 }
 
 /** The whole profile, edited as a draft; the ring follows as you type. */

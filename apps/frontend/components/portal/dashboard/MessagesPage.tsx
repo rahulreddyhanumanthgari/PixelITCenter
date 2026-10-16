@@ -9,6 +9,10 @@ import { Avatar, PageHeader } from "./ui";
  * Conversations on the left, the open thread on the right (on phones: the
  * list, then the thread with a back arrow). Sending adds the message here
  * only; nothing leaves the browser.
+ *
+ * TODO(messaging): front-end placeholder. In-house messaging backend vs a
+ * third-party service is pending a cost / effort decision; don't wire one in
+ * until that's settled.
  */
 export function MessagesPage({
   starter: initial = starter,
